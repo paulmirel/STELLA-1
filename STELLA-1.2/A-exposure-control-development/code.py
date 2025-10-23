@@ -45,7 +45,9 @@ def main():
     spi_bus = board.SPI()
     main_display_group = initialize_display( spi_bus )
     palette = make_palette()
-    # set pins for encoder
+    pin_a = board.A3
+    pin_b = board.A4
+    pin_button = board.A2
     rotary_encoder = initialize_rotary_encoder( pin_a, pin_b, pin_button )
     i2c_bus = initialize_i2c_bus()
     touch_screen = initialize_touch_screen( i2c_bus )
@@ -56,7 +58,7 @@ def main():
     as7265x_spectrometer = initialize_as7265x_spectrometer()
     as7331_spectrometer = initialize_as7331_spectrometer()
     as7341_spectrometer = initialize_as7341_spectrometer()
-    
+
     exposure_control_page = make_exposure_control_page( palette, main_display_group )
 
     try:
