@@ -68,6 +68,8 @@ def main():
     #exposure_control_page.spare_function_text_area.text = "Auto Exp"
     #exposure_control_page.spare_function_text_area.text = "Return"
 
+    #exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
+    #exposure_control_page.exposure_label_text_area.text = "Exposure Max"
 
 
     try:
@@ -106,6 +108,8 @@ class Exposure_Control_Page( Page ):
         border_width = 2
         text_offset_x = 6
         text_offset_y = 14
+
+        # top row
         sensor_choice_select_x = 4
         sensor_choice_select_y = 4
         sensor_choice_select_width = 180
@@ -175,7 +179,7 @@ class Exposure_Control_Page( Page ):
 
 
 
-
+        # bottom row
         gain_select_x = 4
         gain_select_y = 240-40-select_width
         gain_select_width = 70
@@ -207,11 +211,6 @@ class Exposure_Control_Page( Page ):
         self.gain_text_area = label.Label(terminalio.FONT, text=gain_text, color=self.palette[0])
         gain_text_group.append(self.gain_text_area)
         self.group.append(gain_text_group)
-
-
-
-
-
 
         integration_time_select_x = gain_select_x + gain_select_width
         integration_time_select_y = 240-40-select_width
@@ -245,9 +244,6 @@ class Exposure_Control_Page( Page ):
         integration_time_text_group.append(self.integration_time_text_area)
         self.group.append(integration_time_text_group)
 
-
-
-
         lamp_current_select_x = integration_time_select_x + integration_time_select_width
         lamp_current_select_y = 240-40-select_width
         lamp_current_select_width = 70
@@ -279,16 +275,6 @@ class Exposure_Control_Page( Page ):
         self.lamp_current_text_area = label.Label(terminalio.FONT, text=lamp_current_text, color=self.palette[0])
         lamp_current_text_group.append(self.lamp_current_text_area)
         self.group.append(lamp_current_text_group)
-
-
-
-
-
-
-
-
-
-
 
         exposure_maximum_select_x = lamp_current_select_x + lamp_current_select_width + select_width
         exposure_maximum_select_y = 240-40-select_width
@@ -322,6 +308,37 @@ class Exposure_Control_Page( Page ):
         exposure_maximum_text_group.append(self.exposure_maximum_text_area)
         self.group.append(exposure_maximum_text_group)
 
+        value_label_text_x = 12 +14
+        value_label_text_y = gain_area_y - 10
+        value_label_text_group = displayio.Group(scale=1, x=value_label_text_x, y=value_label_text_y)
+        value_label_text = "Gain"
+        value_label_text_area = label.Label(terminalio.FONT, text=value_label_text, color=self.palette[0])
+        value_label_text_group.append(value_label_text_area)
+        self.group.append(value_label_text_group)
+
+        value_label_text_x = 80
+        value_label_text_y = gain_area_y - 10
+        value_label_text_group = displayio.Group(scale=1, x=value_label_text_x, y=value_label_text_y)
+        value_label_text = "Integ time ms"
+        value_label_text_area = label.Label(terminalio.FONT, text=value_label_text, color=self.palette[0])
+        value_label_text_group.append(value_label_text_area)
+        self.group.append(value_label_text_group)
+
+        value_label_text_x = 166+8
+        value_label_text_y = gain_area_y - 10
+        value_label_text_group = displayio.Group(scale=1, x=value_label_text_x, y=value_label_text_y)
+        value_label_text = "Lamp mA"
+        value_label_text_area = label.Label(terminalio.FONT, text=value_label_text, color=self.palette[0])
+        value_label_text_group.append(value_label_text_area)
+        self.group.append(value_label_text_group)
+
+        exposure_label_text_x = 240
+        exposure_label_text_y = gain_area_y - 10
+        exposure_label_text_group = displayio.Group(scale=1, x=exposure_label_text_x, y=value_label_text_y)
+        exposure_label_text = "Exposure Max"
+        self.exposure_label_text_area = label.Label(terminalio.FONT, text=exposure_label_text, color=self.palette[0])
+        exposure_label_text_group.append(self.exposure_label_text_area)
+        self.group.append(exposure_label_text_group)
 
 
 
