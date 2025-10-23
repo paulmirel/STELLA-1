@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.6.0"
+SOFTWARE_VERSION_NUMBER = "0.6.0.1"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # NASA open source software license
@@ -4962,7 +4962,7 @@ def initialize_sd_card( spi_bus, sd_cs_pin ):
 
 def get_uid():
     try:
-        UID = int.from_bytes(microcontroller.cpu.uid, "big") % 10000
+        UID = int.from_bytes(microcontroller.cpu.uid, "big") % 100000
         print("unique identifier (UID) : {0}".format( UID ))
     except:
         UID = False
