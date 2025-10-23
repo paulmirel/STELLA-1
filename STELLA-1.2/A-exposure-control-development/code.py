@@ -60,6 +60,14 @@ def main():
     as7341_spectrometer = initialize_as7341_spectrometer()
 
     exposure_control_page = make_exposure_control_page( palette, main_display_group )
+    time.sleep(2)
+    exposure_control_page.sensor_choice_text_area.text = "as7265x V+NIR"
+    time.sleep(2)
+    exposure_control_page.sensor_choice_text_area.text = "as7331 UV"
+    time.sleep(2)
+    exposure_control_page.sensor_choice_text_area.text = "as7341 Vis"
+    time.sleep(2)
+
 
     try:
         operational = True
@@ -95,13 +103,17 @@ class Exposure_Control_Page( Page ):
         self.group.append( exposure_control_background )
         select_width = 4
         border_width = 2
-        sensor_choice_select_x = 10
-        sensor_choice_select_y = 10
-        sensor_choice_select_width = 160
+        text_offset_x = 6
+        text_offset_y = 14
+        sensor_choice_select_x = 4
+        sensor_choice_select_y = 4
+        sensor_choice_select_width = 180
         sensor_choice_select_height = 40
         sensor_choice_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=sensor_choice_select_width,
                                                     height=sensor_choice_select_height, x=sensor_choice_select_x, y=sensor_choice_select_y )
         self.group.append( sensor_choice_select )
+        #sensor_choice_select.hidden = True
+
         sensor_choice_border_width = sensor_choice_select_width - 2*select_width
         sensor_choice_border_height = sensor_choice_select_height - 2*select_width
         sensor_choice_border_x = sensor_choice_select_x+select_width
@@ -110,7 +122,20 @@ class Exposure_Control_Page( Page ):
                                             height=sensor_choice_border_height, x=sensor_choice_border_x, y=sensor_choice_border_y )
         self.group.append( sensor_choice_border )
 
-
+        sensor_choice_area_width = sensor_choice_border_width - 2*border_width
+        sensor_choice_area_height = sensor_choice_border_height - 2*border_width
+        sensor_choice_area_x = sensor_choice_border_x+border_width
+        sensor_choice_area_y = sensor_choice_border_y+border_width
+        sensor_choice_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=sensor_choice_area_width,
+                                            height=sensor_choice_area_height, x=sensor_choice_area_x, y=sensor_choice_area_y )
+        self.group.append( sensor_choice_area )
+        sensor_choice_text_x = sensor_choice_area_x+text_offset_x
+        sensor_choice_text_y = sensor_choice_area_y+text_offset_y
+        sensor_choice_text_group = displayio.Group(scale=2, x=sensor_choice_text_x, y=sensor_choice_text_y)
+        sensor_choice_text = "none selected"
+        self.sensor_choice_text_area = label.Label(terminalio.FONT, text=sensor_choice_text, color=self.palette[0])
+        sensor_choice_text_group.append(self.sensor_choice_text_area)
+        self.group.append(sensor_choice_text_group)
 
 
         if False:
