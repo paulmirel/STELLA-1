@@ -71,6 +71,24 @@ def main():
     #exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
     #exposure_control_page.exposure_label_text_area.text = "Exposure Max"
 
+    for gain_value in range (1, 2048, 12):
+        exposure_control_page.gain_text_area.text = str(gain_value)
+        time.sleep(0.02)
+    gain_value = 2048
+    exposure_control_page.gain_text_area.text = str(gain_value)
+
+    for integration_time_ms in range (1, 16384, 48):
+        exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
+        time.sleep(0.02)
+    integration_time_ms = 16384
+    exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
+
+    for lamp_current_mA in range (1, 1000, 4):
+        exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
+        time.sleep(0.02)
+    lamp_current_mA = 1000
+    exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
+
 
     try:
         operational = True
