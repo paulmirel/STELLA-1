@@ -61,6 +61,12 @@ def main():
 
     exposure_control_page = make_exposure_control_page( palette, main_display_group )
     exposure_control_page.sensor_choice_text_area.text = "as7265x V+NIR"
+    #exposure_control_page.sensor_choice_text_area.text = "as7331 UV"
+    #exposure_control_page.sensor_choice_text_area.text = "as7341 Vis"
+
+    exposure_control_page.spare_function_text_area.text = "Set Exp"
+    #exposure_control_page.spare_function_text_area.text = "Auto Exp"
+    #exposure_control_page.spare_function_text_area.text = "Return"
 
 
 
@@ -107,7 +113,7 @@ class Exposure_Control_Page( Page ):
         self.sensor_choice_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=sensor_choice_select_width,
                                                     height=sensor_choice_select_height, x=sensor_choice_select_x, y=sensor_choice_select_y )
         self.group.append( self.sensor_choice_select )
-        #self.sensor_choice_select.hidden = True
+        self.sensor_choice_select.hidden = True
 
         sensor_choice_border_width = sensor_choice_select_width - 2*select_width
         sensor_choice_border_height = sensor_choice_select_height - 2*select_width
@@ -139,7 +145,7 @@ class Exposure_Control_Page( Page ):
         self.spare_function_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=spare_function_select_width,
                                                     height=spare_function_select_height, x=spare_function_select_x, y=spare_function_select_y )
         self.group.append( self.spare_function_select )
-        #self.spare_function_select.hidden = True
+        self.spare_function_select.hidden = True
 
         spare_function_border_width = spare_function_select_width - 2*select_width
         spare_function_border_height = spare_function_select_height - 2*select_width
@@ -163,6 +169,201 @@ class Exposure_Control_Page( Page ):
         self.spare_function_text_area = label.Label(terminalio.FONT, text=spare_function_text, color=self.palette[0])
         spare_function_text_group.append(self.spare_function_text_area)
         self.group.append(spare_function_text_group)
+
+
+
+
+
+
+
+        gain_select_x = 4
+        gain_select_y = 240-40-select_width
+        gain_select_width = 70
+        gain_select_height = 40
+        self.gain_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=gain_select_width,
+                                                    height=gain_select_height, x=gain_select_x, y=gain_select_y )
+        self.group.append( self.gain_select )
+        self.gain_select.hidden = True
+
+        gain_border_width = gain_select_width - 2*select_width
+        gain_border_height = gain_select_height - 2*select_width
+        gain_border_x = gain_select_x+select_width
+        gain_border_y = gain_select_y+select_width
+        gain_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=gain_border_width,
+                                            height=gain_border_height, x=gain_border_x, y=gain_border_y )
+        self.group.append( gain_border )
+
+        gain_area_width = gain_border_width - 2*border_width
+        gain_area_height = gain_border_height - 2*border_width
+        gain_area_x = gain_border_x+border_width
+        gain_area_y = gain_border_y+border_width
+        gain_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=gain_area_width,
+                                            height=gain_area_height, x=gain_area_x, y=gain_area_y )
+        self.group.append( gain_area )
+        gain_text_x = gain_area_x+text_offset_x
+        gain_text_y = gain_area_y+text_offset_y
+        gain_text_group = displayio.Group(scale=2, x=gain_text_x, y=gain_text_y)
+        gain_text = "2048"
+        self.gain_text_area = label.Label(terminalio.FONT, text=gain_text, color=self.palette[0])
+        gain_text_group.append(self.gain_text_area)
+        self.group.append(gain_text_group)
+
+
+
+
+
+
+        integration_time_select_x = gain_select_x + gain_select_width
+        integration_time_select_y = 240-40-select_width
+        integration_time_select_width = 84
+        integration_time_select_height = 40
+        self.integration_time_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_time_select_width,
+                                                    height=integration_time_select_height, x=integration_time_select_x, y=integration_time_select_y )
+        self.group.append( self.integration_time_select )
+        self.integration_time_select.hidden = True
+
+        integration_time_border_width = integration_time_select_width - 2*select_width
+        integration_time_border_height = integration_time_select_height - 2*select_width
+        integration_time_border_x = integration_time_select_x+select_width
+        integration_time_border_y = integration_time_select_y+select_width
+        integration_time_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_time_border_width,
+                                            height=integration_time_border_height, x=integration_time_border_x, y=integration_time_border_y )
+        self.group.append( integration_time_border )
+
+        integration_time_area_width = integration_time_border_width - 2*border_width
+        integration_time_area_height = integration_time_border_height - 2*border_width
+        integration_time_area_x = integration_time_border_x+border_width
+        integration_time_area_y = integration_time_border_y+border_width
+        integration_time_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=integration_time_area_width,
+                                            height=integration_time_area_height, x=integration_time_area_x, y=integration_time_area_y )
+        self.group.append( integration_time_area )
+        integration_time_text_x = integration_time_area_x+text_offset_x
+        integration_time_text_y = integration_time_area_y+text_offset_y
+        integration_time_text_group = displayio.Group(scale=2, x=integration_time_text_x, y=integration_time_text_y)
+        integration_time_text = "16384"
+        self.integration_time_text_area = label.Label(terminalio.FONT, text=integration_time_text, color=self.palette[0])
+        integration_time_text_group.append(self.integration_time_text_area)
+        self.group.append(integration_time_text_group)
+
+
+
+
+        lamp_current_select_x = integration_time_select_x + integration_time_select_width
+        lamp_current_select_y = 240-40-select_width
+        lamp_current_select_width = 70
+        lamp_current_select_height = 40
+        self.lamp_current_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_select_width,
+                                                    height=lamp_current_select_height, x=lamp_current_select_x, y=lamp_current_select_y )
+        self.group.append( self.lamp_current_select )
+        self.lamp_current_select.hidden = True
+
+        lamp_current_border_width = lamp_current_select_width - 2*select_width
+        lamp_current_border_height = lamp_current_select_height - 2*select_width
+        lamp_current_border_x = lamp_current_select_x+select_width
+        lamp_current_border_y = lamp_current_select_y+select_width
+        lamp_current_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_border_width,
+                                            height=lamp_current_border_height, x=lamp_current_border_x, y=lamp_current_border_y )
+        self.group.append( lamp_current_border )
+
+        lamp_current_area_width = lamp_current_border_width - 2*border_width
+        lamp_current_area_height = lamp_current_border_height - 2*border_width
+        lamp_current_area_x = lamp_current_border_x+border_width
+        lamp_current_area_y = lamp_current_border_y+border_width
+        lamp_current_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=lamp_current_area_width,
+                                            height=lamp_current_area_height, x=lamp_current_area_x, y=lamp_current_area_y )
+        self.group.append( lamp_current_area )
+        lamp_current_text_x = lamp_current_area_x+text_offset_x
+        lamp_current_text_y = lamp_current_area_y+text_offset_y
+        lamp_current_text_group = displayio.Group(scale=2, x=lamp_current_text_x, y=lamp_current_text_y)
+        lamp_current_text = "1000"
+        self.lamp_current_text_area = label.Label(terminalio.FONT, text=lamp_current_text, color=self.palette[0])
+        lamp_current_text_group.append(self.lamp_current_text_area)
+        self.group.append(lamp_current_text_group)
+
+
+
+
+
+
+
+
+
+
+
+        exposure_maximum_select_x = lamp_current_select_x + lamp_current_select_width + select_width
+        exposure_maximum_select_y = 240-40-select_width
+        exposure_maximum_select_width = 84
+        exposure_maximum_select_height = 40
+        self.exposure_maximum_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_maximum_select_width,
+                                                    height=exposure_maximum_select_height, x=exposure_maximum_select_x, y=exposure_maximum_select_y )
+        self.group.append( self.exposure_maximum_select )
+        self.exposure_maximum_select.hidden = True
+
+        exposure_maximum_border_width = exposure_maximum_select_width - 2*select_width
+        exposure_maximum_border_height = exposure_maximum_select_height - 2*select_width
+        exposure_maximum_border_x = exposure_maximum_select_x+select_width
+        exposure_maximum_border_y = exposure_maximum_select_y+select_width
+        exposure_maximum_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_maximum_border_width,
+                                            height=exposure_maximum_border_height, x=exposure_maximum_border_x, y=exposure_maximum_border_y )
+        self.group.append( exposure_maximum_border )
+
+        exposure_maximum_area_width = exposure_maximum_border_width - 2*border_width
+        exposure_maximum_area_height = exposure_maximum_border_height - 2*border_width
+        exposure_maximum_area_x = exposure_maximum_border_x+border_width
+        exposure_maximum_area_y = exposure_maximum_border_y+border_width
+        exposure_maximum_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=exposure_maximum_area_width,
+                                            height=exposure_maximum_area_height, x=exposure_maximum_area_x, y=exposure_maximum_area_y )
+        self.group.append( exposure_maximum_area )
+        exposure_maximum_text_x = exposure_maximum_area_x+text_offset_x
+        exposure_maximum_text_y = exposure_maximum_area_y+text_offset_y
+        exposure_maximum_text_group = displayio.Group(scale=2, x=exposure_maximum_text_x, y=exposure_maximum_text_y)
+        exposure_maximum_text = "65535"
+        self.exposure_maximum_text_area = label.Label(terminalio.FONT, text=exposure_maximum_text, color=self.palette[0])
+        exposure_maximum_text_group.append(self.exposure_maximum_text_area)
+        self.group.append(exposure_maximum_text_group)
+
+
+
+
+
+
+
+
+
+
+
+        if False:
+            spare_function_select_x = 186
+            spare_function_select_y = 4
+            spare_function_select_width = 130
+            spare_function_select_height = 40
+            self.spare_function_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=spare_function_select_width,
+                                                        height=spare_function_select_height, x=spare_function_select_x, y=spare_function_select_y )
+            self.group.append( self.spare_function_select )
+            #self.spare_function_select.hidden = True
+
+            spare_function_border_width = spare_function_select_width - 2*select_width
+            spare_function_border_height = spare_function_select_height - 2*select_width
+            spare_function_border_x = spare_function_select_x+select_width
+            spare_function_border_y = spare_function_select_y+select_width
+            spare_function_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=spare_function_border_width,
+                                                height=spare_function_border_height, x=spare_function_border_x, y=spare_function_border_y )
+            self.group.append( spare_function_border )
+
+            spare_function_area_width = spare_function_border_width - 2*border_width
+            spare_function_area_height = spare_function_border_height - 2*border_width
+            spare_function_area_x = spare_function_border_x+border_width
+            spare_function_area_y = spare_function_border_y+border_width
+            spare_function_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=spare_function_area_width,
+                                                height=spare_function_area_height, x=spare_function_area_x, y=spare_function_area_y )
+            self.group.append( spare_function_area )
+            spare_function_text_x = spare_function_area_x+text_offset_x
+            spare_function_text_y = spare_function_area_y+text_offset_y
+            spare_function_text_group = displayio.Group(scale=2, x=spare_function_text_x, y=spare_function_text_y)
+            spare_function_text = "spare"
+            self.spare_function_text_area = label.Label(terminalio.FONT, text=spare_function_text, color=self.palette[0])
+            spare_function_text_group.append(self.spare_function_text_area)
+            self.group.append(spare_function_text_group)
 
 
 
