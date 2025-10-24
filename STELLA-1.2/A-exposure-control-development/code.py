@@ -82,20 +82,41 @@ def main():
     lamp_current_mA = 1000
     exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
     exposure_high = 65535
+    exposure_max_value = 65535
+    exposure_max_value_log = math.log(exposure_max_value, 10)
+    #print( "exposure_max_value_log", exposure_max_value_log ) #4.81647
     exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
+    exposure_max_y = 50
+    exposure_min_y = 170
+    exposure_pixel_span = exposure_min_y - exposure_max_y
+    exposure_value_span_log = exposure_max_value_log
+    exposure_pixel_per_value_log = exposure_pixel_span/exposure_value_span_log
 
 
 
     try:
         operational = True
         while operational:
-            print( "code running" )
+            #print( "code running" )
             as7265x_spectrometer.read_counts()
-            print( max(as7265x_spectrometer.data_counts), min(as7265x_spectrometer.data_counts) )
+            #print( max(as7265x_spectrometer.data_counts), min(as7265x_spectrometer.data_counts) )
             exposure_high = max(as7265x_spectrometer.data_counts)
+            if exposure_high > 0:
+                exposure_high_log = math.log(exposure_high,10)
+            else:
+                exposure_high_log = 0
             exposure_low = min(as7265x_spectrometer.data_counts)
+            if exposure_low > 0:
+                exposure_low_log = math.log(exposure_low,10)
+            else:
+                exposure_low_log = 0
             print( exposure_high, exposure_low )
+            print( exposure_high_log, exposure_low_log )
             exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
+            exposure_high_pixel_offset = int( exposure_high_log * exposure_pixel_per_value_log )
+            exposure_low_pixel_offset = int( exposure_low_log * exposure_pixel_per_value_log )
+            exposure_control_page.exposure_bracket_high.y = exposure_min_y - exposure_high_pixel_offset
+            exposure_control_page.exposure_bracket_low.y = exposure_min_y - exposure_low_pixel_offset
             time.sleep( 1 )
 
     finally:
@@ -386,15 +407,15 @@ class Exposure_Control_Page( Page ):
         exposure_bracket_width = slider_width+12
         exposure_bracket_height = slider_height
         exposure_bracket_x = exposure_bracket_border_x + 3* border_width
-        self.exposure_bracket_high_y = 80
-        exposure_bracket_high = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
-                                            height=exposure_bracket_height, x=exposure_bracket_x, y=self.exposure_bracket_high_y )
-        self.group.append( exposure_bracket_high )
+        exposure_bracket_high_y = 170
+        self.exposure_bracket_high = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
+                                            height=exposure_bracket_height, x=exposure_bracket_x, y=exposure_bracket_high_y )
+        self.group.append( self.exposure_bracket_high )
 
-        self.exposure_bracket_low_y = 110
-        exposure_bracket_low = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
-                                            height=exposure_bracket_height, x=exposure_bracket_x, y=self.exposure_bracket_low_y )
-        self.group.append( exposure_bracket_low )
+        exposure_bracket_low_y = 170
+        self.exposure_bracket_low = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
+                                            height=exposure_bracket_height, x=exposure_bracket_x, y=exposure_bracket_low_y )
+        self.group.append( self.exposure_bracket_low )
 
         integration_time_select_x = gain_select_x + gain_select_width
         integration_time_select_y = 240-40-select_width
