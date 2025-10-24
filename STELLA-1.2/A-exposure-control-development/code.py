@@ -162,8 +162,8 @@ class Exposure_Control_Page( Page ):
         return_area_height = return_border_height - 2*border_width
         return_area_x = return_border_x+border_width
         return_area_y = return_border_y+border_width
-        return_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 19, width=return_area_width,
-                                            height=return_area_height, x=return_area_x, y=return_area_y )
+        return_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=return_area_width,
+                                            height=return_area_height, x=return_area_x, y=return_area_y ) #color_index = 19
         self.group.append( return_area )
 
         return_triangle_x = return_border_x
@@ -268,6 +268,49 @@ class Exposure_Control_Page( Page ):
         self.gain_text_area = label.Label(terminalio.FONT, text=gain_text, color=self.palette[0])
         gain_text_group.append(self.gain_text_area)
         self.group.append(gain_text_group)
+
+        ###
+        slider_select_y = 46
+        slider_select_width = 62
+        slider_select_height = 136
+        slider_border_width = slider_select_width - 2*border_width
+        slider_width = 46
+        slider_height = 8
+        gain_slider_select_x = gain_select_x + select_width
+        gain_slider_select_y = slider_select_y
+        gain_slider_select_width = slider_select_width
+        gain_slider_select_height = slider_select_height
+        self.gain_slider_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=gain_slider_select_width,
+                                                    height=gain_slider_select_height, x=gain_slider_select_x, y=gain_slider_select_y )
+        self.group.append( self.gain_slider_select )
+        self.gain_slider_select.hidden = True
+
+        gain_slider_border_width = slider_border_width
+        gain_slider_border_height = gain_slider_select_height - 2*select_width
+        gain_slider_border_x = gain_slider_select_x+select_width
+        gain_slider_border_y = gain_slider_select_y+select_width
+        gain_slider_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=gain_slider_border_width,
+                                            height=gain_slider_border_height, x=gain_slider_border_x, y=gain_slider_border_y )
+        self.group.append( gain_slider_border )
+
+        gain_slider_area_width = gain_slider_border_width - 2*border_width
+        gain_slider_area_height = gain_slider_border_height - 2*border_width
+        gain_slider_area_x = gain_slider_border_x+border_width
+        gain_slider_area_y = gain_slider_border_y+border_width
+        gain_slider_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=gain_slider_area_width,
+                                            height=gain_slider_area_height, x=gain_slider_area_x, y=gain_slider_area_y )
+        self.group.append( gain_slider_area )
+
+        gain_slider_width = slider_width
+        gain_slider_height = slider_height
+        gain_slider_x = gain_slider_border_x + 3* border_width
+        self.gain_slider_y = 120
+        gain_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=gain_slider_width,
+                                            height=gain_slider_height, x=gain_slider_x, y=self.gain_slider_y )
+        self.group.append( gain_slider )
+
+
+
 
         integration_time_select_x = gain_select_x + gain_select_width
         integration_time_select_y = 240-40-select_width
