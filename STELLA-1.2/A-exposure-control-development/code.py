@@ -55,7 +55,7 @@ def main():
     buzzer.mute = False
     buzzer.set(932, 130) # frequency in Hz, time in ms.
     buzzer.beep()
-    as7265x_spectrometer = initialize_as7265x_spectrometer()
+    as7265x_spectrometer = initialize_as7265x_spectrometer(i2c_bus)
     as7331_spectrometer = initialize_as7331_spectrometer()
     as7341_spectrometer = initialize_as7341_spectrometer()
 
@@ -73,39 +73,29 @@ def main():
     #exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
     #exposure_control_page.exposure_label_text_area.text = "Exposure Max"
 
-    if False:
-        for gain_value in range (1, 2048, 12):
-            exposure_control_page.gain_text_area.text = str(gain_value)
-            time.sleep(0.02)
-    gain_value = 2048
-    exposure_control_page.gain_text_area.text = str(gain_value)
-    if False:
-        for integration_time_ms in range (1, 16384, 48):
-            exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
-            time.sleep(0.02)
-    integration_time_ms = 16384
-    exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
-    if False:
-        for lamp_current_mA in range (1, 1000, 4):
-            exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
-            time.sleep(0.02)
-    lamp_current_mA = 1000
-    exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
-
     sensor_choice = 0
-    exposure_control_page.sensor_choice_text_area.text = " -- "
+    exposure_control_page.sensor_choice_text_area.text = "as7265x V+NIR"
     gain_value = 2048
     exposure_control_page.gain_text_area.text = str(gain_value)
     integration_time_ms = 16384
     exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
     lamp_current_mA = 1000
     exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
+    exposure_high = 65535
+    exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
+
 
 
     try:
         operational = True
         while operational:
             print( "code running" )
+            as7265x_spectrometer.read_counts()
+            print( max(as7265x_spectrometer.data_counts), min(as7265x_spectrometer.data_counts) )
+            exposure_high = max(as7265x_spectrometer.data_counts)
+            exposure_low = min(as7265x_spectrometer.data_counts)
+            print( exposure_high, exposure_low )
+            exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
             time.sleep( 1 )
 
     finally:
@@ -269,13 +259,15 @@ class Exposure_Control_Page( Page ):
         gain_text_group.append(self.gain_text_area)
         self.group.append(gain_text_group)
 
-        ###
+        # sliders
+
         slider_select_y = 46
         slider_select_width = 62
         slider_select_height = 136
-        slider_border_width = slider_select_width - 2*border_width
-        slider_width = 46
+        slider_border_width = slider_select_width - 2*select_width
+        slider_width = 42
         slider_height = 8
+
         gain_slider_select_x = gain_select_x + select_width
         gain_slider_select_y = slider_select_y
         gain_slider_select_width = slider_select_width
@@ -309,8 +301,100 @@ class Exposure_Control_Page( Page ):
                                             height=gain_slider_height, x=gain_slider_x, y=self.gain_slider_y )
         self.group.append( gain_slider )
 
+        integration_slider_select_x = 86
+        integration_slider_select_y = slider_select_y
+        integration_slider_select_width = slider_select_width
+        integration_slider_select_height = slider_select_height
+        self.integration_slider_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_slider_select_width,
+                                                    height=integration_slider_select_height, x=integration_slider_select_x, y=integration_slider_select_y )
+        self.group.append( self.integration_slider_select )
+        self.integration_slider_select.hidden = True
 
+        integration_slider_border_width = slider_border_width
+        integration_slider_border_height = integration_slider_select_height - 2*select_width
+        integration_slider_border_x = integration_slider_select_x+select_width
+        integration_slider_border_y = integration_slider_select_y+select_width
+        integration_slider_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_slider_border_width,
+                                            height=integration_slider_border_height, x=integration_slider_border_x, y=integration_slider_border_y )
+        self.group.append( integration_slider_border )
 
+        integration_slider_area_width = integration_slider_border_width - 2*border_width
+        integration_slider_area_height = integration_slider_border_height - 2*border_width
+        integration_slider_area_x = integration_slider_border_x+border_width
+        integration_slider_area_y = integration_slider_border_y+border_width
+        integration_slider_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=integration_slider_area_width,
+                                            height=integration_slider_area_height, x=integration_slider_area_x, y=integration_slider_area_y )
+        self.group.append( integration_slider_area )
+
+        integration_slider_width = slider_width
+        integration_slider_height = slider_height
+        integration_slider_x = integration_slider_border_x + 3* border_width
+        self.integration_slider_y = 120
+        integration_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_slider_width,
+                                            height=integration_slider_height, x=integration_slider_x, y=self.integration_slider_y )
+        self.group.append( integration_slider )
+
+        lamp_current_slider_select_x = 164
+        lamp_current_slider_select_y = slider_select_y
+        lamp_current_slider_select_width = slider_select_width
+        lamp_current_slider_select_height = slider_select_height
+        self.lamp_current_slider_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_slider_select_width,
+                                                    height=lamp_current_slider_select_height, x=lamp_current_slider_select_x, y=lamp_current_slider_select_y )
+        self.group.append( self.lamp_current_slider_select )
+        self.lamp_current_slider_select.hidden = True
+
+        lamp_current_slider_border_width = slider_border_width
+        lamp_current_slider_border_height = lamp_current_slider_select_height - 2*select_width
+        lamp_current_slider_border_x = lamp_current_slider_select_x+select_width
+        lamp_current_slider_border_y = lamp_current_slider_select_y+select_width
+        lamp_current_slider_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_slider_border_width,
+                                            height=lamp_current_slider_border_height, x=lamp_current_slider_border_x, y=lamp_current_slider_border_y )
+        self.group.append( lamp_current_slider_border )
+
+        lamp_current_slider_area_width = lamp_current_slider_border_width - 2*border_width
+        lamp_current_slider_area_height = lamp_current_slider_border_height - 2*border_width
+        lamp_current_slider_area_x = lamp_current_slider_border_x+border_width
+        lamp_current_slider_area_y = lamp_current_slider_border_y+border_width
+        lamp_current_slider_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=lamp_current_slider_area_width,
+                                            height=lamp_current_slider_area_height, x=lamp_current_slider_area_x, y=lamp_current_slider_area_y )
+        self.group.append( lamp_current_slider_area )
+
+        lamp_current_slider_width = slider_width
+        lamp_current_slider_height = slider_height
+        lamp_current_slider_x = lamp_current_slider_border_x + 3* border_width
+        self.lamp_current_slider_y = 120
+        lamp_current_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_slider_width,
+                                            height=lamp_current_slider_height, x=lamp_current_slider_x, y=self.lamp_current_slider_y )
+        self.group.append( lamp_current_slider )
+
+        exposure_bracket_border_width = slider_border_width+12
+        exposure_bracket_border_height = gain_slider_select_height - 2*select_width
+        exposure_bracket_border_x = 240
+        exposure_bracket_border_y = gain_slider_border_y
+        exposure_bracket_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_border_width,
+                                            height=exposure_bracket_border_height, x=exposure_bracket_border_x, y=exposure_bracket_border_y )
+        self.group.append( exposure_bracket_border )
+
+        exposure_bracket_area_width = exposure_bracket_border_width - 2*border_width
+        exposure_bracket_area_height = exposure_bracket_border_height - 2*border_width
+        exposure_bracket_area_x = exposure_bracket_border_x+border_width
+        exposure_bracket_area_y = exposure_bracket_border_y+border_width
+        exposure_bracket_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=exposure_bracket_area_width,
+                                            height=exposure_bracket_area_height, x=exposure_bracket_area_x, y=exposure_bracket_area_y )
+        self.group.append( exposure_bracket_area )
+
+        exposure_bracket_width = slider_width+12
+        exposure_bracket_height = slider_height
+        exposure_bracket_x = exposure_bracket_border_x + 3* border_width
+        self.exposure_bracket_high_y = 80
+        exposure_bracket_high = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
+                                            height=exposure_bracket_height, x=exposure_bracket_x, y=self.exposure_bracket_high_y )
+        self.group.append( exposure_bracket_high )
+
+        self.exposure_bracket_low_y = 110
+        exposure_bracket_low = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
+                                            height=exposure_bracket_height, x=exposure_bracket_x, y=self.exposure_bracket_low_y )
+        self.group.append( exposure_bracket_low )
 
         integration_time_select_x = gain_select_x + gain_select_width
         integration_time_select_y = 240-40-select_width
@@ -408,6 +492,7 @@ class Exposure_Control_Page( Page ):
         exposure_maximum_text_group.append(self.exposure_maximum_text_area)
         self.group.append(exposure_maximum_text_group)
 
+        # labels
         label_bar_width = 320
         label_bar_height = 18
         label_bar_x = 0
@@ -415,7 +500,6 @@ class Exposure_Control_Page( Page ):
         label_bar = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=label_bar_width,
                                             height=label_bar_height, x=label_bar_x, y=label_bar_y )
         self.group.append( label_bar )
-
 
         value_label_text_x = 12 +14
         value_label_text_y = gain_area_y - 10
@@ -448,75 +532,6 @@ class Exposure_Control_Page( Page ):
         self.exposure_label_text_area = label.Label(terminalio.FONT, text=exposure_label_text, color=self.palette[0])
         exposure_label_text_group.append(self.exposure_label_text_area)
         self.group.append(exposure_label_text_group)
-
-
-
-
-
-
-
-
-
-
-        if False:
-            setting_select_x = 186
-            setting_select_y = 4
-            setting_select_width = 130
-            setting_select_height = 40
-            self.setting_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=setting_select_width,
-                                                        height=setting_select_height, x=setting_select_x, y=setting_select_y )
-            self.group.append( self.setting_select )
-            #self.setting_select.hidden = True
-
-            setting_border_width = setting_select_width - 2*select_width
-            setting_border_height = setting_select_height - 2*select_width
-            setting_border_x = setting_select_x+select_width
-            setting_border_y = setting_select_y+select_width
-            setting_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=setting_border_width,
-                                                height=setting_border_height, x=setting_border_x, y=setting_border_y )
-            self.group.append( setting_border )
-
-            setting_area_width = setting_border_width - 2*border_width
-            setting_area_height = setting_border_height - 2*border_width
-            setting_area_x = setting_border_x+border_width
-            setting_area_y = setting_border_y+border_width
-            setting_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=setting_area_width,
-                                                height=setting_area_height, x=setting_area_x, y=setting_area_y )
-            self.group.append( setting_area )
-            setting_text_x = setting_area_x+text_offset_x
-            setting_text_y = setting_area_y+text_offset_y
-            setting_text_group = displayio.Group(scale=2, x=setting_text_x, y=setting_text_y)
-            setting_text = " -- "
-            self.setting_text_area = label.Label(terminalio.FONT, text=setting_text, color=self.palette[0])
-            setting_text_group.append(self.setting_text_area)
-            self.group.append(setting_text_group)
-
-
-
-
-        if False:
-            # RETURN
-            select_width = 4
-            return_height = 28
-            return_select_y = 240 - 4 - 2 - return_height - select_width
-            return_select_height = return_height + 2*select_width
-            return_y = return_select_y + select_width
-            return_text_y = return_y + 12
-            return_select_width = 100
-            return_select_x = 320 - 4 - return_select_width
-            return_x = return_select_x + select_width
-            self.return_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=return_select_width, height=return_select_height, x=return_select_x, y=return_select_y)
-            self.group.append( self.return_select )
-            #self.return_select.hidden = True
-            return_control_width = return_select_width - 2 * select_width
-            self.return_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=return_control_width, height=return_height, x=return_x, y=return_y)
-            self.group.append( self.return_color )
-            return_text_x = return_x + 10
-            return_group = displayio.Group(scale=2, x=return_text_x, y=return_text_y)
-            return_text = "RETURN"
-            self.return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
-            return_group.append(self.return_text_area)
-            self.group.append(return_group)
 
         return self.group
     def update_values( self ):
@@ -598,15 +613,15 @@ class Device: #parent class
             return False
 
 
-def initialize_as7265x_spectrometer():
+def initialize_as7265x_spectrometer( i2c_bus ):
     as7265x_spectrometer = Null_as7265x_Spectrometer()
     try:
-        as7265x_spectrometer = as7265x_Spectrometer( instrument.i2c_bus )
+        as7265x_spectrometer = as7265x_Spectrometer( i2c_bus )
         as7265x_spectrometer.lamps_on()
         time.sleep(0.1)
         as7265x_spectrometer.lamps_off()
     except Exception as err:
-        #print( "as7265x spectrometer failed: {}".format( err ))
+        print( "as7265x spectrometer failed: {}".format( err ))
         pass
     return as7265x_spectrometer
 
