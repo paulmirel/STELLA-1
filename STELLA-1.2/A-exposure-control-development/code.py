@@ -73,8 +73,6 @@ def main():
     #exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
     #exposure_control_page.exposure_label_text_area.text = "Exposure Max"
 
-    stall()
-
     if False:
         for gain_value in range (1, 2048, 12):
             exposure_control_page.gain_text_area.text = str(gain_value)
@@ -95,7 +93,7 @@ def main():
     exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
 
     sensor_choice = 0
-    exposure_control_page.sensor_choice_text_area.text = "none selected"
+    exposure_control_page.sensor_choice_text_area.text = " -- "
     gain_value = 2048
     exposure_control_page.gain_text_area.text = str(gain_value)
     integration_time_ms = 16384
@@ -168,13 +166,10 @@ class Exposure_Control_Page( Page ):
                                             height=return_area_height, x=return_area_x, y=return_area_y )
         self.group.append( return_area )
 
-        return_triangle_width = return_border_width - 2*border_width
-        return_triangle_height = return_border_height - 2*border_width
-        return_triangle_x = return_border_x+border_width
-        return_triangle_y = return_border_y+border_width
-        #return_triangle = vectorio.Polygon( pixel_shader=self.palette, color_index = 9, width=return_triangle_width,
-        #                                    height=return_triangle_height, x=return_triangle_x, y=return_triangle_y )
-        #self.group.append( return_triangle )
+        return_triangle_x = return_border_x
+        return_triangle_y = return_border_y
+        return_triangle = vectorio.Polygon( pixel_shader=self.palette, color_index = 0, points = [(4, 16), (25,4), (25,28)], x=return_triangle_x, y=return_triangle_y )
+        self.group.append( return_triangle )
 
         sensor_choice_select_x = return_select_x + return_select_width
         sensor_choice_select_y = top_row_y
@@ -203,7 +198,7 @@ class Exposure_Control_Page( Page ):
         sensor_choice_text_x = sensor_choice_area_x+text_offset_x
         sensor_choice_text_y = sensor_choice_area_y+text_offset_y
         sensor_choice_text_group = displayio.Group(scale=2, x=sensor_choice_text_x, y=sensor_choice_text_y)
-        sensor_choice_text = "none selected"
+        sensor_choice_text = " -- "
         self.sensor_choice_text_area = label.Label(terminalio.FONT, text=sensor_choice_text, color=self.palette[0])
         sensor_choice_text_group.append(self.sensor_choice_text_area)
         self.group.append(sensor_choice_text_group)
@@ -241,11 +236,6 @@ class Exposure_Control_Page( Page ):
         setting_text_group.append(self.setting_text_area)
         self.group.append(setting_text_group)
 
-
-
-
-
-
         # bottom row
         gain_select_x = 4
         gain_select_y = 240-40-select_width
@@ -274,7 +264,7 @@ class Exposure_Control_Page( Page ):
         gain_text_x = gain_area_x+text_offset_x
         gain_text_y = gain_area_y+text_offset_y
         gain_text_group = displayio.Group(scale=2, x=gain_text_x, y=gain_text_y)
-        gain_text = "2048"
+        gain_text = " -- "
         self.gain_text_area = label.Label(terminalio.FONT, text=gain_text, color=self.palette[0])
         gain_text_group.append(self.gain_text_area)
         self.group.append(gain_text_group)
@@ -286,7 +276,7 @@ class Exposure_Control_Page( Page ):
         self.integration_time_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_time_select_width,
                                                     height=integration_time_select_height, x=integration_time_select_x, y=integration_time_select_y )
         self.group.append( self.integration_time_select )
-        #self.integration_time_select.hidden = True
+        self.integration_time_select.hidden = True
 
         integration_time_border_width = integration_time_select_width - 2*select_width
         integration_time_border_height = integration_time_select_height - 2*select_width
@@ -306,7 +296,7 @@ class Exposure_Control_Page( Page ):
         integration_time_text_x = integration_time_area_x+text_offset_x
         integration_time_text_y = integration_time_area_y+text_offset_y
         integration_time_text_group = displayio.Group(scale=2, x=integration_time_text_x, y=integration_time_text_y)
-        integration_time_text = "16384"
+        integration_time_text = " -- "
         self.integration_time_text_area = label.Label(terminalio.FONT, text=integration_time_text, color=self.palette[0])
         integration_time_text_group.append(self.integration_time_text_area)
         self.group.append(integration_time_text_group)
@@ -338,7 +328,7 @@ class Exposure_Control_Page( Page ):
         lamp_current_text_x = lamp_current_area_x+text_offset_x
         lamp_current_text_y = lamp_current_area_y+text_offset_y
         lamp_current_text_group = displayio.Group(scale=2, x=lamp_current_text_x, y=lamp_current_text_y)
-        lamp_current_text = "1000"
+        lamp_current_text = " -- "
         self.lamp_current_text_area = label.Label(terminalio.FONT, text=lamp_current_text, color=self.palette[0])
         lamp_current_text_group.append(self.lamp_current_text_area)
         self.group.append(lamp_current_text_group)
@@ -370,7 +360,7 @@ class Exposure_Control_Page( Page ):
         exposure_maximum_text_x = exposure_maximum_area_x+text_offset_x
         exposure_maximum_text_y = exposure_maximum_area_y+text_offset_y
         exposure_maximum_text_group = displayio.Group(scale=2, x=exposure_maximum_text_x, y=exposure_maximum_text_y)
-        exposure_maximum_text = "65535"
+        exposure_maximum_text = " -- " #65535
         self.exposure_maximum_text_area = label.Label(terminalio.FONT, text=exposure_maximum_text, color=self.palette[0])
         exposure_maximum_text_group.append(self.exposure_maximum_text_area)
         self.group.append(exposure_maximum_text_group)
