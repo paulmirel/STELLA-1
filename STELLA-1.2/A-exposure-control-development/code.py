@@ -25,8 +25,8 @@ import qwiic_buzzer
 from adafruit_seesaw.seesaw import Seesaw
 from adafruit_as7341 import AS7341
 from adafruit_as7341 import Gain as AS7341_Gain
-import AS7265X_sparkfun
-from AS7265X_sparkfun import AS7265X
+import qwiic_i2c
+import qwiic_as7265x
 import iorodeo_as7331 as as7331
 
 ## check i2c devices present
@@ -65,6 +65,16 @@ def main():
     as7265x_gain_max_log = math.log( as7265x_gain_max, 10 )
     as7265x_gain_min_log = math.log( as7265x_gain_min, 10 )
     as7265x_gain_span_log = as7265x_gain_max_log - as7265x_gain_min_log
+
+
+    as7265x_integration_time_ms_min = 2.8
+    as7265x_integration_time_ms_max = 717
+    as7265x_integration_time_min_log = math.log( as7265x_integration_time_ms_min, 10)
+    as7265x_integration_time_max_log = math.log( as7265x_integration_time_ms_max, 10 )
+    as7265x_integration_time_span_log = as7265x_integration_time_max_log - as7265x_integration_time_min_log
+
+
+
     as7331_spectrometer = initialize_as7331_spectrometer()
     as7341_spectrometer = initialize_as7341_spectrometer()
 
@@ -92,8 +102,11 @@ def main():
     exposure_control_page.gain_text_area.text = str(gain_value)
     as7265x_gain_pixel_per_value_log = slider_pixel_span/as7265x_gain_span_log
 
-    integration_time_ms = 16384
+    as7265x_integration_number = 30
+    as7265x_integration_time_pixel_per_value_log = slider_pixel_span/as7265x_integration_time_span_log
+    integration_time_ms = 0
     exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
+
     lamp_current_mA = 1000
     exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
     exposure_high = 65535
@@ -104,7 +117,8 @@ def main():
     exposure_value_span_log = exposure_max_value_log
     exposure_pixel_per_value_log = slider_pixel_span/exposure_value_span_log
 
-
+    as7265x_integration_number = 80
+    as7265x_integration_time_ms = as7265x_spectrometer.set_integration_number( as7265x_integration_number )
 
     try:
         operational = True
@@ -116,6 +130,10 @@ def main():
             exposure_control_page.gain_text_area.text = str(as7265x_gain)
             gain_pixel_offset = int( as7265x_gain_log * as7265x_gain_pixel_per_value_log )
             exposure_control_page.gain_slider.y = slider_min_y - gain_pixel_offset
+
+
+            exposure_control_page.integration_time_text_area.text = str(as7265x_integration_time_ms)
+
             as7265x_spectrometer.read_counts()
             #print( max(as7265x_spectrometer.data_counts), min(as7265x_spectrometer.data_counts) )
             exposure_high = max(as7265x_spectrometer.data_counts)
@@ -135,12 +153,18 @@ def main():
             exposure_low_pixel_offset = int( exposure_low_log * exposure_pixel_per_value_log )
             exposure_control_page.exposure_bracket_high.y = slider_min_y - exposure_high_pixel_offset
             exposure_control_page.exposure_bracket_low.y = slider_min_y - exposure_low_pixel_offset
-            time.sleep( 1 )
+            time.sleep( 4 )
             if False: # if both selected and rotated
                 sensor_choice = ( sensor_choice + 1 ) % len( sensor_choice_dict )
             as7265x_spectrometer.set_gain_number( as7265x_gain_number )
-            if True: # if both selected and rotated
+            if False: # if both selected and rotated
                 as7265x_gain_number = (as7265x_gain_number + 1 ) % len( as7265x_gain_list )
+            if False:
+                as7265x_integration_number = ( as7265x_integration_number + 16 ) % 255
+                print( "as7265x_integration_number", as7265x_integration_number )
+            as7265x_integration_number = 8
+
+            as7265x_integration_time_ms = as7265x_spectrometer.set_integration_number( as7265x_integration_number )
 
     finally:
         displayio.release_displays()
@@ -242,10 +266,10 @@ class as7265x_Spectrometer( Device ):
     # custom library
     # cycle time is a little less than 1 whole second
     def __init__( self, com_bus ):
-        super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = AS7265X( com_bus ))
+        super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  )) #
         if self.swob:
             self.swob.disable_indicator()
-            self.swob.set_measurement_mode(AS7265X_sparkfun.MEASUREMENT_MODE_6CHAN_CONTINUOUS)
+            self.swob.set_measurement_mode(qwiic_as7265x.MEASUREMENT_MODE_6CHAN_CONTINUOUS)
             #MEASUREMENT_MODE_6CHAN_ONE_SHOT
             self.bands = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
             self.bandwidth = 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
@@ -255,7 +279,7 @@ class as7265x_Spectrometer( Device ):
             self.bands_sorted = sorted( self.bands )
             self.uncertainty_percent = 12
             self.gain_ratio = 16 #default, calibrated at
-            self.intg_time_ms = 166 #default, calibrated at
+            self.intg_time_ms = 56 #default, number = 20 out of 255
             self.afov_deg = (20.5 * 2) #datasheet reports half angle.
     def check_gain_ratio(self):
         gain_number = self.swob._gain
@@ -273,12 +297,12 @@ class as7265x_Spectrometer( Device ):
             self.swob.set_gain( gain_number )
         else:
             print( "out of range: set gain number to 0-3 to get gain_ratios of 1, 3.7, 16, 64" )
-    def set_integration_cycles( self, cycles ):
-        if cycles in range (0, 256):
-            self.swob.set_integration_cycles(cycles)
-            self.intg_time_ms = int(round((2.8*(cycles+1)),0))
+    def set_integration_number( self, number ):
+        if number in range (1, 256):
+            self.swob.set_integration_cycles(number)
+            self.intg_time_ms = int(round(2.78*number,0)) # This sensor does not use the ASTEP ATIME combination found in the as7341
         else:
-            print( "out of range: set integration cycles to 0-255 for 0-717ms integration time." )
+            print( "out of range: set integration cycles to 1-255 for 0-709ms integration time." )
         return self.intg_time_ms
     def read(self):
         self.chip_temp_c = {1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3)}
