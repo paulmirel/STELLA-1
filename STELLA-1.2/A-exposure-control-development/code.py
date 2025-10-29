@@ -68,7 +68,7 @@ def main():
 
 
     as7265x_integration_time_ms_min = 2.8
-    as7265x_integration_time_ms_max = 717
+    as7265x_integration_time_ms_max = 714
     as7265x_integration_time_min_log = math.log( as7265x_integration_time_ms_min, 10)
     as7265x_integration_time_max_log = math.log( as7265x_integration_time_ms_max, 10 )
     as7265x_integration_time_span_log = as7265x_integration_time_max_log - as7265x_integration_time_min_log
@@ -102,7 +102,7 @@ def main():
     exposure_control_page.gain_text_area.text = str(gain_value)
     as7265x_gain_pixel_per_value_log = slider_pixel_span/as7265x_gain_span_log
 
-    as7265x_integration_number = 30
+    as7265x_integration_number = 1
     as7265x_integration_time_pixel_per_value_log = slider_pixel_span/as7265x_integration_time_span_log
     integration_time_ms = 0
     exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
@@ -141,7 +141,7 @@ def main():
             as7265x_integration_time_ms = integration_time_ms
             as7265x_integration_time_log = math.log( as7265x_integration_time_ms, 10 )
             exposure_control_page.integration_time_text_area.text = str(as7265x_integration_time_ms)
-            integration_time_pixel_offset = int( as7265x_integration_time_log * as7265x_integration_time_pixel_per_value_log )
+            integration_time_pixel_offset = int( (as7265x_integration_time_log- as7265x_integration_time_min_log)* as7265x_integration_time_pixel_per_value_log )
             exposure_control_page.integration_time_slider.y = slider_min_y - integration_time_pixel_offset
 
 
@@ -179,9 +179,11 @@ def main():
                     as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain16x)
                 if gain_number == 3:
                     as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain64x)
-            if True: #False:
-                integration_number = ( integration_number + 16 ) % 255
-                print( "integration_number", integration_number )
+            if False:
+                integration_number = ( integration_number + 1 ) % 255
+                #print( "integration_number", integration_number )
+            else:
+                integration_number = 255
             as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
             time.sleep( 5 )
     finally:
