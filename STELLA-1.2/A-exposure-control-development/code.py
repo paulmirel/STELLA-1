@@ -119,13 +119,13 @@ def main():
 
     as7265x_integration_number = 80
     as7265x_integration_time_ms = as7265x_spectrometer.set_integration_number( as7265x_integration_number )
-
+    gain_number = 0
     try:
         operational = True
         while operational:
             exposure_control_page.sensor_choice_text_area.text = sensor_choice_dict[sensor_choice]
             #print( "code running" )
-            as7265x_gain = as7265x_spectrometer.check_gain_ratio()
+            as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
             as7265x_gain_log = math.log( as7265x_gain, 10 )
             exposure_control_page.gain_text_area.text = str(as7265x_gain)
             gain_pixel_offset = int( as7265x_gain_log * as7265x_gain_pixel_per_value_log )
@@ -269,8 +269,7 @@ class as7265x_Spectrometer( Device ):
         super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  )) #
         if self.swob:
             self.swob.disable_indicator()
-            self.swob.set_measurement_mode(qwiic_as7265x.MEASUREMENT_MODE_6CHAN_CONTINUOUS)
-            #MEASUREMENT_MODE_6CHAN_ONE_SHOT
+            self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
             self.bands = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
             self.bandwidth = 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
             self.chip_n = 1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   3
@@ -279,24 +278,22 @@ class as7265x_Spectrometer( Device ):
             self.bands_sorted = sorted( self.bands )
             self.uncertainty_percent = 12
             self.gain_ratio = 16 #default, calibrated at
+            self.gain_dict = {0:1, 1:3.7, 2:16, 3:64}
             self.intg_time_ms = 56 #default, number = 20 out of 255
             self.afov_deg = (20.5 * 2) #datasheet reports half angle.
-    def check_gain_ratio(self):
-        gain_number = self.swob._gain
-        if gain_number < 1:
-            self.gain_ratio = 1
-        elif gain_number == 1:
-            self.gain_ratio = 3.7
-        elif gain_number == 2:
-            self.gain_ratio = 16
-        elif gain_number == 3:
-            self.gain_ratio = 64
-        return self.gain_ratio
     def set_gain_number(self, gain_number):
-        if gain_number in range (0,4):
-            self.swob.set_gain( gain_number )
-        else:
-            print( "out of range: set gain number to 0-3 to get gain_ratios of 1, 3.7, 16, 64" )
+        # kGain1x  # 1x
+        # kGain37x # 3.7x
+        # kGain16x # 16x
+        # kGain64x # 64x
+        if gain_number < 1 :
+            self.swob.set_gain( self.swob.kGain1x )
+        elif gain_number == 1:
+            self.swob.set_gain( self.swob.kGain37x )
+        elif gain_number == 2:
+            self.swob.set_gain( self.swob.kGain16x )
+        elif gain_number > 2:
+            self.swob.set_gain( self.swob.kGain64x )
     def set_integration_number( self, number ):
         if number in range (1, 256):
             self.swob.set_integration_cycles(number)
@@ -317,7 +314,26 @@ class as7265x_Spectrometer( Device ):
         # TBD self.dict_uncty_scal = {key:value for key, value in zip(self.bands, (0))}
         # print( self.data_counts )
     def read_counts(self):
-        self.data_counts = self.swob.get_value(0) # 0th position raw counts, bands unsorted order
+        self.data_counts = []
+        self.data_counts.append(self.swob.get_g()) #get_value(0) # 0th position raw counts, bands unsorted order
+        self.data_counts.append(self.swob.get_h())
+        self.data_counts.append(self.swob.get_i())
+        self.data_counts.append(self.swob.get_j())
+        self.data_counts.append(self.swob.get_k())
+        self.data_counts.append(self.swob.get_l())
+        self.data_counts.append(self.swob.get_r())
+        self.data_counts.append(self.swob.get_s())
+        self.data_counts.append(self.swob.get_t())
+        self.data_counts.append(self.swob.get_u())
+        self.data_counts.append(self.swob.get_v())
+        self.data_counts.append(self.swob.get_w())
+        self.data_counts.append(self.swob.get_a())
+        self.data_counts.append(self.swob.get_b())
+        self.data_counts.append(self.swob.get_c())
+        self.data_counts.append(self.swob.get_d())
+        self.data_counts.append(self.swob.get_e())
+        self.data_counts.append(self.swob.get_f())
+        #print(self.data_counts)
         self.dict_counts = {key:value for key, value in zip(self.bands, self.data_counts)}
     def read_fcal(self):
         self.data_fcal = self.swob.get_value(1) # 1th position factory calibrated irrad value, bands unsorted order
