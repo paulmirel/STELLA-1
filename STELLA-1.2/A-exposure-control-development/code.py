@@ -125,6 +125,7 @@ def main():
         while operational:
             exposure_control_page.sensor_choice_text_area.text = sensor_choice_dict[sensor_choice]
             #print( "code running" )
+            print( "gain number", gain_number)
             as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
             as7265x_gain_log = math.log( as7265x_gain, 10 )
             exposure_control_page.gain_text_area.text = str(as7265x_gain)
@@ -146,8 +147,8 @@ def main():
                 exposure_low_log = math.log(exposure_low,10)
             else:
                 exposure_low_log = 0
-            print( exposure_high, exposure_low )
-            print( exposure_high_log, exposure_low_log )
+            #print( exposure_high, exposure_low )
+            #print( exposure_high_log, exposure_low_log )
             exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
             exposure_high_pixel_offset = int( exposure_high_log * exposure_pixel_per_value_log )
             exposure_low_pixel_offset = int( exposure_low_log * exposure_pixel_per_value_log )
@@ -157,8 +158,16 @@ def main():
             if False: # if both selected and rotated
                 sensor_choice = ( sensor_choice + 1 ) % len( sensor_choice_dict )
             as7265x_spectrometer.set_gain_number( as7265x_gain_number )
-            if False: # if both selected and rotated
-                as7265x_gain_number = (as7265x_gain_number + 1 ) % len( as7265x_gain_list )
+            if True: #False: # if both selected and rotated
+                gain_number = (gain_number + 1 ) % len( as7265x_gain_list ) #active sensor gain list
+                if gain_number == 0:
+                    as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain1x)
+                if gain_number == 1:
+                    as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain37x)
+                if gain_number == 2:
+                    as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain16x)
+                if gain_number == 3:
+                    as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain64x)
             if False:
                 as7265x_integration_number = ( as7265x_integration_number + 16 ) % 255
                 print( "as7265x_integration_number", as7265x_integration_number )
