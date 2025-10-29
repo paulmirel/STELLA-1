@@ -119,21 +119,25 @@ def main():
 
     as7265x_integration_number = 80
     as7265x_integration_time_ms = as7265x_spectrometer.set_integration_number( as7265x_integration_number )
-    gain_number = 0
+    gain_number = 3
+    integration_number = 1
     try:
         operational = True
         while operational:
             exposure_control_page.sensor_choice_text_area.text = sensor_choice_dict[sensor_choice]
             #print( "code running" )
-            print( "gain number", gain_number)
+            #print( "gain number", gain_number)
             as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
             as7265x_gain_log = math.log( as7265x_gain, 10 )
             exposure_control_page.gain_text_area.text = str(as7265x_gain)
             gain_pixel_offset = int( as7265x_gain_log * as7265x_gain_pixel_per_value_log )
             exposure_control_page.gain_slider.y = slider_min_y - gain_pixel_offset
 
-
-            exposure_control_page.integration_time_text_area.text = str(as7265x_integration_time_ms)
+            integration_time_ms = integration_number*2.8
+            if integration_time_ms > 99:
+                exposure_control_page.integration_time_text_area.text = str(int(round(integration_time_ms,0)))
+            else:
+                exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
 
             as7265x_spectrometer.read_counts()
             #print( max(as7265x_spectrometer.data_counts), min(as7265x_spectrometer.data_counts) )
@@ -154,11 +158,11 @@ def main():
             exposure_low_pixel_offset = int( exposure_low_log * exposure_pixel_per_value_log )
             exposure_control_page.exposure_bracket_high.y = slider_min_y - exposure_high_pixel_offset
             exposure_control_page.exposure_bracket_low.y = slider_min_y - exposure_low_pixel_offset
-            time.sleep( 4 )
+
             if False: # if both selected and rotated
                 sensor_choice = ( sensor_choice + 1 ) % len( sensor_choice_dict )
             as7265x_spectrometer.set_gain_number( as7265x_gain_number )
-            if True: #False: # if both selected and rotated
+            if False: # if both selected and rotated
                 gain_number = (gain_number + 1 ) % len( as7265x_gain_list ) #active sensor gain list
                 if gain_number == 0:
                     as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain1x)
@@ -168,13 +172,11 @@ def main():
                     as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain16x)
                 if gain_number == 3:
                     as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain64x)
-            if False:
-                as7265x_integration_number = ( as7265x_integration_number + 16 ) % 255
-                print( "as7265x_integration_number", as7265x_integration_number )
-            as7265x_integration_number = 8
-
-            as7265x_integration_time_ms = as7265x_spectrometer.set_integration_number( as7265x_integration_number )
-
+            if True: #False:
+                integration_number = ( integration_number + 4 ) % 255
+                print( "integration_number", integration_number )
+            as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
+            time.sleep( 5 )
     finally:
         displayio.release_displays()
         print( "displayio displays released" )
