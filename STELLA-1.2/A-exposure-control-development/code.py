@@ -56,6 +56,12 @@ def main():
     buzzer.set(932, 130) # frequency in Hz, time in ms.
     buzzer.beep()
     as7265x_spectrometer = initialize_as7265x_spectrometer(i2c_bus)
+    print("init as6265x")
+    as7331_spectrometer = initialize_as7331_spectrometer(i2c_bus)
+    print("init as7331")
+    as7341_spectrometer = initialize_as7341_spectrometer(i2c_bus)
+    print("init as7341")
+
     as7265x_gain_number_range = 0,3
     as7265x_gain_number = 3
     as7265x_gain_list = ( 1, 3.7, 16, 64 )
@@ -67,6 +73,7 @@ def main():
     as7265x_gain_span_log = as7265x_gain_max_log - as7265x_gain_min_log
 
 
+
     as7265x_integration_time_ms_min = 2.8
     as7265x_integration_time_ms_max = 714
     as7265x_integration_time_min_log = math.log( as7265x_integration_time_ms_min, 10)
@@ -75,8 +82,8 @@ def main():
 
 
 
-    as7331_spectrometer = initialize_as7331_spectrometer()
-    as7341_spectrometer = initialize_as7341_spectrometer()
+
+
 
     exposure_control_page = make_exposure_control_page( palette, main_display_group )
     exposure_control_page.sensor_choice_text_area.text = "as7265x V+NIR"
@@ -126,7 +133,7 @@ def main():
         operational = True
         while operational:
             exposure_control_page.sensor_choice_text_area.text = sensor_choice_dict[sensor_choice]
-            #print( "code running" )
+            print( "code running" )
             #print( "gain number", gain_number)
             as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
             as7265x_gain_log = math.log( as7265x_gain, 10 )
@@ -134,13 +141,9 @@ def main():
             gain_pixel_offset = int( as7265x_gain_log * as7265x_gain_pixel_per_value_log )
             exposure_control_page.gain_slider.y = slider_min_y - gain_pixel_offset
             integration_time_ms = integration_number*2.8
-            if integration_time_ms > 99:
-                exposure_control_page.integration_time_text_area.text = str(int(round(integration_time_ms,0)))
-            else:
-                exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
+            exposure_control_page.integration_time_text_area.text = str(int(round(integration_time_ms,0)))
             as7265x_integration_time_ms = integration_time_ms
             as7265x_integration_time_log = math.log( as7265x_integration_time_ms, 10 )
-            exposure_control_page.integration_time_text_area.text = str(as7265x_integration_time_ms)
             integration_time_pixel_offset = int( (as7265x_integration_time_log- as7265x_integration_time_min_log)* as7265x_integration_time_pixel_per_value_log )
             exposure_control_page.integration_time_slider.y = slider_min_y - integration_time_pixel_offset
 
@@ -449,15 +452,15 @@ class Null_as7265x_Spectrometer( Device ):
     def serial_log(self, wavelength):
         pass
 
-def initialize_as7331_spectrometer():
+def initialize_as7331_spectrometer(i2c_bus):
     as7331_spectrometer = Null_as7331_Spectrometer()
     try:
-        as7331_spectrometer = as7331_Spectrometer( instrument.i2c_bus )
+        as7331_spectrometer = as7331_Spectrometer( i2c_bus )
     except ValueError as err:
-        #print( "uv spectrometer failed to initialize: {}".format(err))
+        print( "uv spectrometer failed to initialize: {}".format(err))
         pass
     except Exception as err:
-        pass
+        print(err)
     return as7331_spectrometer
 
 class as7331_Spectrometer( Device ):
@@ -656,11 +659,12 @@ class Null_as7331_Spectrometer(Device):
     def serial_log(self, wavelength):
         pass
 
-def initialize_as7341_spectrometer():
+def initialize_as7341_spectrometer(i2c_bus):
     as7341_spectrometer = Null_as7341_Spectrometer()
     try:
-        as7341_spectrometer = as7341_Spectrometer( instrument.i2c_bus )
-    except:
+        as7341_spectrometer = as7341_Spectrometer( i2c_bus )
+    except Exception as err:
+        print(err)
         pass
     return as7341_spectrometer
 
