@@ -107,9 +107,9 @@ def main():
     integration_time_ms = 0
     exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
 
-    lamp_current_mA = 1000
+    lamp_current_mA = 0
     exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
-    exposure_high = 65535
+    exposure_high = 0
     exposure_max_value = 65535
     exposure_max_value_log = math.log(exposure_max_value, 10)
     #print( "exposure_max_value_log", exposure_max_value_log ) #4.81647
@@ -121,6 +121,7 @@ def main():
     as7265x_integration_time_ms = as7265x_spectrometer.set_integration_number( as7265x_integration_number )
     gain_number = 3
     integration_number = 1
+    as7265x_spectrometer.read_counts()
     try:
         operational = True
         while operational:
@@ -132,12 +133,18 @@ def main():
             exposure_control_page.gain_text_area.text = str(as7265x_gain)
             gain_pixel_offset = int( as7265x_gain_log * as7265x_gain_pixel_per_value_log )
             exposure_control_page.gain_slider.y = slider_min_y - gain_pixel_offset
-
             integration_time_ms = integration_number*2.8
             if integration_time_ms > 99:
                 exposure_control_page.integration_time_text_area.text = str(int(round(integration_time_ms,0)))
             else:
                 exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
+            as7265x_integration_time_ms = integration_time_ms
+            as7265x_integration_time_log = math.log( as7265x_integration_time_ms, 10 )
+            exposure_control_page.integration_time_text_area.text = str(as7265x_integration_time_ms)
+            integration_time_pixel_offset = int( as7265x_integration_time_log * as7265x_integration_time_pixel_per_value_log )
+            exposure_control_page.integration_time_slider.y = slider_min_y - integration_time_pixel_offset
+
+
 
             as7265x_spectrometer.read_counts()
             #print( max(as7265x_spectrometer.data_counts), min(as7265x_spectrometer.data_counts) )
@@ -173,7 +180,7 @@ def main():
                 if gain_number == 3:
                     as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain64x)
             if True: #False:
-                integration_number = ( integration_number + 4 ) % 255
+                integration_number = ( integration_number + 16 ) % 255
                 print( "integration_number", integration_number )
             as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
             time.sleep( 5 )
@@ -306,6 +313,7 @@ class as7265x_Spectrometer( Device ):
         elif gain_number > 2:
             self.swob.set_gain( self.swob.kGain64x )
     def set_integration_number( self, number ):
+        # must wait for at least 5 seconds before sending integration time again. If not, signal goes to 0.
         if number in range (1, 256):
             self.swob.set_integration_cycles(number)
             self.intg_time_ms = int(round(2.78*number,0)) # This sensor does not use the ASTEP ATIME combination found in the as7341
@@ -945,6 +953,7 @@ class Exposure_Control_Page( Page ):
         slider_select_y = 46
         slider_select_width = 62
         slider_select_height = 136
+        slider_min_y = 170
         slider_border_width = slider_select_width - 2*select_width
         slider_width = 42
         slider_height = 8
@@ -977,7 +986,7 @@ class Exposure_Control_Page( Page ):
         gain_slider_width = slider_width
         gain_slider_height = slider_height
         gain_slider_x = gain_slider_border_x + 3* border_width
-        gain_slider_y = 120
+        gain_slider_y = slider_min_y
         self.gain_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=gain_slider_width,
                                             height=gain_slider_height, x=gain_slider_x, y=gain_slider_y )
         self.group.append( self.gain_slider )
@@ -1010,10 +1019,10 @@ class Exposure_Control_Page( Page ):
         integration_slider_width = slider_width
         integration_slider_height = slider_height
         integration_slider_x = integration_slider_border_x + 3* border_width
-        self.integration_slider_y = 120
-        integration_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_slider_width,
+        self.integration_slider_y = slider_min_y
+        self.integration_time_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_slider_width,
                                             height=integration_slider_height, x=integration_slider_x, y=self.integration_slider_y )
-        self.group.append( integration_slider )
+        self.group.append( self.integration_time_slider )
 
         lamp_current_slider_select_x = 164
         lamp_current_slider_select_y = slider_select_y
@@ -1043,7 +1052,7 @@ class Exposure_Control_Page( Page ):
         lamp_current_slider_width = slider_width
         lamp_current_slider_height = slider_height
         lamp_current_slider_x = lamp_current_slider_border_x + 3* border_width
-        self.lamp_current_slider_y = 120
+        self.lamp_current_slider_y = slider_min_y
         lamp_current_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_slider_width,
                                             height=lamp_current_slider_height, x=lamp_current_slider_x, y=self.lamp_current_slider_y )
         self.group.append( lamp_current_slider )
