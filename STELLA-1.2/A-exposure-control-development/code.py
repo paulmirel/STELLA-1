@@ -89,18 +89,18 @@ def main():
     if False:
         for number in range (0,len(as7265x_spectrometer.gain_list)):
             gain_ratio = as7265x_spectrometer.set_gain( number )
-            print( "gain ratio =", gain_ratio)
+            print( "as7265x gain ratio =", gain_ratio)
             time.sleep( 5 )
     if False:
         print( "is the as7331 gain ratio inverted in the library or in the sensor? check actual value outputs" )
         for number in range (0,len(as7331_spectrometer.gain_list)):
             gain_ratio = as7331_spectrometer.set_gain( number )
-            print( "gain ratio =", gain_ratio)
+            print( "as7331 gain ratio =", gain_ratio)
             time.sleep( 5 )
-    if False:
+    if True:#False:
         for number in range (0,len(as7341_spectrometer.gain_list)):
             gain_ratio = as7341_spectrometer.set_gain( number )
-            print( "gain ratio =", gain_ratio)
+            print( "as7341 gain ratio =", gain_ratio)
             time.sleep( 5 )
 
     instrument.welcome_page.hide()
@@ -562,27 +562,29 @@ class as7341_Spectrometer( Device ):
         self.gain_number = 5 #default to 16x gain
     def set_gain(self, number):
         if number < 1:
-            self.swob._gain = self.swob.Gain.GAIN_0_5X
-        if number == 2:
-            self.swob._gain = adafruit_as7341.Gain.GAIN_1X
-        if number == 3:
-            self.swob.gain = self.swob.Gain.GAIN_2X
-        if number == 4:
-            self.swob.gain = self.swob.Gain.GAIN_4X
-        if number == 5:
-            self.swob.gain = self.swob.Gain.GAIN_8X
-        if number == 6:
-            self.swob.gain = self.swob.Gain.GAIN_16X
-        if number == 7:
-            self.swob.gain = self.swob.Gain.GAIN_32X
-        if number == 8:
-            self.swob.gain = self.swob.Gain.GAIN_64X
-        if number == 9:
-            self.swob.gain = self.swob.Gain.GAIN_128X
-        if number == 10:
-            self.swob.gain = self.swob.Gain.GAIN_256X
-        if number > 10:
-            self.swob.gain = self.swob.Gain.GAIN_512X
+            gain_constant = self.swob.Gain.GAIN_0_5X
+        if False:
+            if number == 1:
+                gain_constant = adafruit_as7341.Gain.GAIN_1X
+            if number == 2:
+                gain_constant = self.swob.Gain.GAIN_2X
+            if number == 3:
+                gain_constant = self.swob.Gain.GAIN_4X
+            if number == 4:
+                gain_constant = self.swob.Gain.GAIN_8X
+            if number == 5:
+                gain_constant = self.swob.Gain.GAIN_16X
+            if number == 6:
+                gain_constant = self.swob.Gain.GAIN_32X
+            if number == 7:
+                gain_constant = self.swob.Gain.GAIN_64X
+            if number == 8:
+                gain_constant = self.swob.Gain.GAIN_128X
+            if number == 9:
+                gain_constant = self.swob.Gain.GAIN_256X
+            if number > 9:
+                gain_constant = self.swob.Gain.GAIN_512X
+            self.swob._gain = gain_constant
         return self.gain_list[ self.swob._gain ]
     def lamps_on(self):
         self.swob.led = True
