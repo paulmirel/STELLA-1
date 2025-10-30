@@ -80,12 +80,23 @@ def main():
     instrument.welcome_page.show()
 
     as7265x_spectrometer = initialize_as7265x_spectrometer( instrument )
-    for number in range (0,len(as7265x_spectrometer.gain_list)):
-        gain_ratio = as7265x_spectrometer.set_gain( number )
-        print( "gain ratio =", gain_ratio)
-        time.sleep( 5 )
     as7331_spectrometer = initialize_as7331_spectrometer( instrument )
     as7341_spectrometer = initialize_as7341_spectrometer( instrument )
+
+
+
+    ### temporary -- gain setting tests
+    if False:
+        for number in range (0,len(as7265x_spectrometer.gain_list)):
+            gain_ratio = as7265x_spectrometer.set_gain( number )
+            print( "gain ratio =", gain_ratio)
+            time.sleep( 5 )
+    if False:
+        print( "is the as7331 gain ratio inverted in the library or in the sensor? check actual value outputs" )
+        for number in range (0,len(as7331_spectrometer.gain_list)):
+            gain_ratio = as7331_spectrometer.set_gain( number )
+            print( "gain ratio =", gain_ratio)
+            time.sleep( 5 )
     if False:
         for number in range (0,len(as7341_spectrometer.gain_list)):
             gain_ratio = as7341_spectrometer.set_gain( number )
@@ -402,66 +413,39 @@ class as7331_Spectrometer( Device ):
         #https://look.ams-osram.com/m/1856fd2c69c35605/original/AS7331-Spectral-UVA-B-C-Sensor.pdf
         self.afov_deg = (10 * 2)
         self.fcal_unct_percent = 0 # no reported value
-        self.gain_ratio = 0 #TBD what are the defaults?
         self.intg_time_ms = 0 #TBD what are the defaults?
-        self.gain_list = [ 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1 ]
-    def check_gain_ratio(self):
-        gain_callout = self.swob.gain
-        if gain_callout == 11:
-            self.gain_ratio = 1
-        elif gain_callout == 10:
-            self.gain_ratio = 2
-        elif gain_callout == 9:
-            self.gain_ratio = 4
-        elif gain_callout == 8:
-            self.gain_ratio = 8
-        elif gain_callout == 7:
-            self.gain_ratio = 16
-        elif gain_callout == 6:
-            self.gain_ratio = 32
-        elif gain_callout == 5:
-            self.gain_ratio = 64
-        elif gain_callout == 4:
-            self.gain_ratio = 128
-        elif gain_callout == 3:
-            self.gain_ratio = 256
-        elif gain_callout == 2:
-            self.gain_ratio = 512
-        elif gain_callout == 1:
-            self.gain_ratio = 1024
-        elif gain_callout == 0:
-            self.gain_ratio = 2048
-        return self.gain_ratio
+        self.gain_list = [ 1,2,4,8,16,32,64,128,256,512,1024,2048 ]
 
-    def set_gain_number(self, gain_number):
-        if gain_number in range (0,12):
-            if gain_number == 11:
-                gain_constant = as7331.GAIN_2048X
-            if gain_number == 10:
-                gain_constant = as7331.GAIN_1024X
-            if gain_number == 9:
-                gain_constant = as7331.GAIN_512X
-            if gain_number == 8:
-                gain_constant = as7331.GAIN_256X
-            if gain_number == 7:
-                gain_constant = as7331.GAIN_128X
-            if gain_number == 6:
-                gain_constant = as7331.GAIN_64X
-            if gain_number == 5:
-                gain_constant = as7331.GAIN_32X
-            if gain_number == 4:
-                gain_constant = as7331.GAIN_16X
-            if gain_number == 3:
-                gain_constant = as7331.GAIN_8X
-            if gain_number == 2:
-                gain_constant = as7331.GAIN_4X
-            if gain_number == 1:
-                gain_constant = as7331.GAIN_2X
-            if gain_number == 0:
-                gain_constant = as7331.GAIN_1X
-            self.swob.gain = gain_constant
-        else:
-            print( "out of range: set gain number to 0-11 to get gain_ratios from 1 to 2048" )
+
+    def set_gain(self, number):
+        if number < 1:
+            gain_constant = as7331.GAIN_1X
+        if number == 1:
+            gain_constant = as7331.GAIN_2X
+        if number == 2:
+            gain_constant = as7331.GAIN_4X
+        if number == 3:
+            gain_constant = as7331.GAIN_8X
+        if number == 4:
+            gain_constant = as7331.GAIN_16X
+        if number == 5:
+            gain_constant = as7331.GAIN_32X
+        if number == 6:
+            gain_constant = as7331.GAIN_64X
+        if number == 7:
+            gain_constant = as7331.GAIN_128X
+        if number == 8:
+            gain_constant = as7331.GAIN_256X
+        if number == 9:
+            gain_constant = as7331.GAIN_512X
+        if number == 10:
+            gain_constant = as7331.GAIN_1024X
+        if number > 10:
+            gain_constant = as7331.GAIN_2048X
+        self.swob.gain = gain_constant
+        return self.gain_list[ self.swob.gain ]
+
+
 
     def set_integration_time( self, intg_number ):
         if intg_number == 0:
