@@ -553,6 +553,7 @@ class as7341_Spectrometer( Device ):
         self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
         #self.tsis_cal_counts_per_irradiance = 1405.9, 2079.6, 2631.6, 3556.8, 4246.0, 5060.6, 6888.9, 9130.9
         # first principles calibration by Sten Odenwald of NASA Heliophysics
+        print( "as7341 Sten O cal counts per irradiance at what gain?  TBD " )
         self.steno_cal_counts_per_irradiance = 4398.0, 6104.0, 7583.0, 9972.0, 11536.0, 13374.0, 17115.0, 20916.0
         self.calibration_error = 0.6
         self.irradiance = [0,0,0,0,0,0,0,0]
@@ -562,29 +563,28 @@ class as7341_Spectrometer( Device ):
         self.gain_number = 5 #default to 16x gain
     def set_gain(self, number):
         if number < 1:
-            gain_constant = self.swob.Gain.GAIN_0_5X
-        if False:
-            if number == 1:
-                gain_constant = adafruit_as7341.Gain.GAIN_1X
-            if number == 2:
-                gain_constant = self.swob.Gain.GAIN_2X
-            if number == 3:
-                gain_constant = self.swob.Gain.GAIN_4X
-            if number == 4:
-                gain_constant = self.swob.Gain.GAIN_8X
-            if number == 5:
-                gain_constant = self.swob.Gain.GAIN_16X
-            if number == 6:
-                gain_constant = self.swob.Gain.GAIN_32X
-            if number == 7:
-                gain_constant = self.swob.Gain.GAIN_64X
-            if number == 8:
-                gain_constant = self.swob.Gain.GAIN_128X
-            if number == 9:
-                gain_constant = self.swob.Gain.GAIN_256X
-            if number > 9:
-                gain_constant = self.swob.Gain.GAIN_512X
-            self.swob._gain = gain_constant
+            gain_constant = AS7341_Gain.GAIN_0_5X
+        if number == 1:
+            gain_constant = AS7341_Gain.GAIN_1X
+        if number == 2:
+            gain_constant = AS7341_Gain.GAIN_2X
+        if number == 3:
+            gain_constant = AS7341_Gain.GAIN_4X
+        if number == 4:
+            gain_constant = AS7341_Gain.GAIN_8X
+        if number == 5:
+            gain_constant = AS7341_Gain.GAIN_16X
+        if number == 6:
+            gain_constant = AS7341_Gain.GAIN_32X
+        if number == 7:
+            gain_constant = AS7341_Gain.GAIN_64X
+        if number == 8:
+            gain_constant = AS7341_Gain.GAIN_128X
+        if number == 9:
+            gain_constant = AS7341_Gain.GAIN_256X
+        if number > 9:
+            gain_constant = AS7341_Gain.GAIN_512X
+        self.swob._gain = gain_constant
         return self.gain_list[ self.swob._gain ]
     def lamps_on(self):
         self.swob.led = True
