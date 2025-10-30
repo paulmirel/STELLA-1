@@ -75,6 +75,11 @@ def main():
     battery_indicator = initialize_led( board.LED )
 
     instrument = create_instrument( i2c_bus, spi_bus, gps_uart_bus, UID, buzzer )
+    instrument.welcome_page.show()
+
+    as7265x_spectrometer = initialize_as7265x_spectrometer( instrument )
+    as7331_spectrometer = initialize_as7331_spectrometer( instrument )
+    as7341_spectrometer = initialize_as7341_spectrometer( instrument )
     stall()
 
 
@@ -238,7 +243,7 @@ class Instrument:
         self.pages_list = []
         self.palette = make_palette()
         self.main_display_group = initialize_display( spi_bus )
-        #self.welcome_page = make_welcome_page( self )
+        self.welcome_page = make_welcome_page( self )
         #self.hardware_clock = initialize_hardware_clock( i2c_bus )
         #self.hardware_clock.report()
         #self.hardware_clock.sync_system_clock()
@@ -469,10 +474,13 @@ class Device: #parent class
             return False
 
 
-def initialize_as7265x_spectrometer( i2c_bus ):
+
+def initialize_as7265x_spectrometer( instrument ):
     as7265x_spectrometer = Null_as7265x_Spectrometer()
     try:
-        as7265x_spectrometer = as7265x_Spectrometer( i2c_bus )
+        as7265x_spectrometer = as7265x_Spectrometer( instrument.i2c_bus )
+        instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
+        instrument.spectral_sensors_present.append( as7265x_spectrometer )
         as7265x_spectrometer.lamps_on()
         time.sleep(0.1)
         as7265x_spectrometer.lamps_off()
@@ -648,15 +656,18 @@ class Null_as7265x_Spectrometer( Device ):
     def serial_log(self, wavelength):
         pass
 
-def initialize_as7331_spectrometer(i2c_bus):
+def initialize_as7331_spectrometer( instrument ):
     as7331_spectrometer = Null_as7331_Spectrometer()
     try:
-        as7331_spectrometer = as7331_Spectrometer( i2c_bus )
+        as7331_spectrometer = as7331_Spectrometer( instrument.i2c_bus )
+        instrument.welcome_page.announce( "initialize_as7331_spectrometer" )
+        instrument.spectral_sensors_present.append( as7331_spectrometer )
     except ValueError as err:
-        print( "uv spectrometer failed to initialize: {}".format(err))
+        #print( "uv spectrometer failed to initialize: {}".format(err))
         pass
     except Exception as err:
-        print(err)
+        print( "as7331_spectrometer", err )
+        pass
     return as7331_spectrometer
 
 class as7331_Spectrometer( Device ):
@@ -855,12 +866,14 @@ class Null_as7331_Spectrometer(Device):
     def serial_log(self, wavelength):
         pass
 
-def initialize_as7341_spectrometer(i2c_bus):
+def initialize_as7341_spectrometer( instrument ):
     as7341_spectrometer = Null_as7341_Spectrometer()
     try:
-        as7341_spectrometer = as7341_Spectrometer( i2c_bus )
+        as7341_spectrometer = as7341_Spectrometer( instrument.i2c_bus )
+        instrument.welcome_page.announce( "initialize_as7341_spectrometer" )
+        instrument.spectral_sensors_present.append( as7341_spectrometer )
     except Exception as err:
-        print(err)
+        print( "as7341_spectrometer", err )
         pass
     return as7341_spectrometer
 
@@ -1501,6 +1514,89 @@ class Rotary_Encoder( Device ):
         pass
     def printlog(self):
         pass
+
+class Welcome_Page( Page ):
+    def __init__( self ):
+        super().__init__()
+    def make_group( self ):
+        self.group = displayio.Group()
+        try:
+            bitmap = displayio.OnDiskBitmap("/lib/stella_logo.bmp")
+            #print( "Bitmap image file found" )
+            # Create a TileGrid to hold the bitmap
+            tile_grid = displayio.TileGrid(bitmap, pixel_shader=bitmap.pixel_shader)
+            self.group.append(tile_grid)
+
+            version_group = displayio.Group( scale=2, x=40, y=185 )
+            text = "STELLA-1.2 ver {}".format( SOFTWARE_VERSION_NUMBER )
+            version_area = label.Label( terminalio.FONT, text=text, color=0x000000 )
+            version_group.append( version_area )
+            self.group.append( version_group )
+
+            message_group = displayio.Group( scale=2, x=4, y=220 )
+            text = ""
+            self.message_area = label.Label( terminalio.FONT, text=text, color=0x000000 )
+            message_group.append( self.message_area )
+            self.group.append( message_group )
+
+            #battery_group = displayio.Group( scale=2, x=90, y=215 )
+            #text = "battery {}%".format( battery_level )
+            #battery_area = label.Label( terminalio.FONT, text=text, color=0x000000 )
+            #battery_group.append( battery_area )
+            #welcome_group.append( battery_group )
+            #print( "showing welcome screen with logo")
+        except (MemoryError, OSError):
+            print( "bitmap image file not found or memory not available" )
+            border_color = 0xFF0022 # red
+            front_color = 0x0000FF # blue
+            if (display == False):
+                print("No display")
+                return
+            border = displayio.Palette(1)
+            border[0] = border_color
+            front = displayio.Palette(1)
+            front[0] = front_color
+            outer_rectangle = vectorio.Rectangle(pixel_shader=border, width=320, height=240, x=0, y=0)
+            self.group.append( outer_rectangle )
+            front_rectangle = vectorio.Rectangle(pixel_shader=front, width=280, height=200, x=20, y=20)
+            self.group.append( front_rectangle )
+            text_group = displayio.Group( scale=4, x=45, y=110 )
+            text = "STELLA-1.2"
+            text_area = label.Label( terminalio.FONT, text=text, color=0xFFFFFF )
+            text_group.append( text_area )
+            self.group.append( text_group )
+
+            version_group = displayio.Group( scale=2, x=27, y=200 )
+            text = "software version {}".format( SOFTWARE_VERSION_NUMBER )
+            version_area = label.Label( terminalio.FONT, text=text, color=0xFFFFFF )
+            version_group.append( version_area )
+            self.group.append( version_group )
+
+            message_group = displayio.Group( scale=2, x=4, y=220 )
+            text = "message here"
+            self.message_area = label.Label( terminalio.FONT, text=text, color=0xFFFFFF )
+            message_group.append( self.message_area )
+            self.group.append( message_group )
+
+        return self.group
+    def announce( self, text ):
+        self.message_area.text = text
+        print( text )
+    def update_values( self ):
+        pass
+
+def make_welcome_page( instrument ):
+    welcome_page = Welcome_Page()
+    group = welcome_page.make_group()
+    welcome_page.hide()
+    instrument.main_display_group.append( group )
+    instrument.pages_list.append( welcome_page )
+    return welcome_page
+
+def hide_all_pages( pages_list ):
+    for page in pages_list:
+        page.hide()
+
 
 class Null_Rotary_Encoder(Device):
     def __init__( self ):
