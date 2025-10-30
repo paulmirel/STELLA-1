@@ -86,8 +86,8 @@ def main():
     instrument.welcome_page.hide()
     exposure_control_page = make_exposure_control_page( instrument )
     exposure_control_page.show()
-    time.sleep(10)
     stall()
+
 
 
 
@@ -941,10 +941,10 @@ def create_instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer ):
 
 #### begin exposure control page class definition
 
-class Exposure_Control_Page( instrument ):
-    def __init__( self, instrument):
+class Exposure_Control_Page( Page ):
+    def __init__( self, palette ):
         super().__init__()
-        self.palette = instrument.palette
+        self.palette = palette
     def make_group( self ):
         self.group = displayio.Group()
         exposure_control_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -1366,6 +1366,15 @@ class Exposure_Control_Page( instrument ):
             instrument.active_page_number = 2
             instrument.button_pressed = False
 
+def make_exposure_control_page( instrument ):
+    page = Exposure_Control_Page( instrument.palette )
+    group = page.make_group()
+    #page.hide()
+    instrument.main_display_group.append( group )
+    return page
+
+
+
 def make_palette():
     # TBD make a color name dictionary
     palette = displayio.Palette(40)
@@ -1462,17 +1471,6 @@ class Null_Qwiic_Buzzer(Device):
         pass
     def header(self):
         pass
-
-
-
-
-def make_exposure_control_page( instrument ):
-    page = Exposure_Control_Page( instrument )
-    group = page.make_group()
-    #page.hide()
-    instrument.main_display_group.append( group )
-    return page
-
 
 
 def increment_select( page ):
