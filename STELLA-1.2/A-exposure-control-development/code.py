@@ -80,8 +80,17 @@ def main():
     instrument.welcome_page.show()
 
     as7265x_spectrometer = initialize_as7265x_spectrometer( instrument )
+    for number in range (0,len(as7265x_spectrometer.gain_list)):
+        gain_ratio = as7265x_spectrometer.set_gain( number )
+        print( "gain ratio =", gain_ratio)
+        time.sleep( 5 )
     as7331_spectrometer = initialize_as7331_spectrometer( instrument )
     as7341_spectrometer = initialize_as7341_spectrometer( instrument )
+    if False:
+        for number in range (0,len(as7341_spectrometer.gain_list)):
+            gain_ratio = as7341_spectrometer.set_gain( number )
+            print( "gain ratio =", gain_ratio)
+            time.sleep( 5 )
 
     instrument.welcome_page.hide()
     exposure_control_page = make_exposure_control_page( instrument )
@@ -278,23 +287,19 @@ class as7265x_Spectrometer( Device ):
             self.dict_bandwidths = {key:value for key, value in zip(self.bands, self.bandwidth )}
             self.bands_sorted = sorted( self.bands )
             self.uncertainty_percent = 12
-            self.gain_ratio = 16 #default, calibrated at
-            self.gain_dict = {0:1, 1:3.7, 2:16, 3:64}
+            self.gain_list = [ 1, 3.7, 16, 64 ]
             self.intg_time_ms = 56 #default, number = 20 out of 255
             self.afov_deg = (20.5 * 2) #datasheet reports half angle.
-    def set_gain_number(self, gain_number):
-        # kGain1x  # 1x
-        # kGain37x # 3.7x
-        # kGain16x # 16x
-        # kGain64x # 64x
-        if gain_number < 1 :
+    def set_gain(self, number):
+        if number < 1 :
             self.swob.set_gain( self.swob.kGain1x )
-        elif gain_number == 1:
+        elif number == 1:
             self.swob.set_gain( self.swob.kGain37x )
-        elif gain_number == 2:
+        elif number == 2:
             self.swob.set_gain( self.swob.kGain16x )
-        elif gain_number > 2:
+        elif number > 2:
             self.swob.set_gain( self.swob.kGain64x )
+        return self.gain_list[ number ]
     def set_integration_number( self, number ):
         # must wait for at least 5 seconds before sending integration time again. If not, signal goes to 0.
         if number in range (1, 256):
@@ -399,6 +404,7 @@ class as7331_Spectrometer( Device ):
         self.fcal_unct_percent = 0 # no reported value
         self.gain_ratio = 0 #TBD what are the defaults?
         self.intg_time_ms = 0 #TBD what are the defaults?
+        self.gain_list = [ 2048, 1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1 ]
     def check_gain_ratio(self):
         gain_callout = self.swob.gain
         if gain_callout == 11:
@@ -568,8 +574,32 @@ class as7341_Spectrometer( Device ):
         self.irradiance = [0,0,0,0,0,0,0,0]
         self.dict_stenocal = {}
         self.swob.led_current = 50
-    def check_gain_ratio(self):
-        pass
+        self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256 ]
+        self.gain_number = 5 #default to 16x gain
+    def set_gain(self, number):
+        if number < 1:
+            self.swob._gain = self.swob.Gain.GAIN_0_5X
+        if number == 2:
+            self.swob._gain = adafruit_as7341.Gain.GAIN_1X
+        if number == 3:
+            self.swob.gain = self.swob.Gain.GAIN_2X
+        if number == 4:
+            self.swob.gain = self.swob.Gain.GAIN_4X
+        if number == 5:
+            self.swob.gain = self.swob.Gain.GAIN_8X
+        if number == 6:
+            self.swob.gain = self.swob.Gain.GAIN_16X
+        if number == 7:
+            self.swob.gain = self.swob.Gain.GAIN_32X
+        if number == 8:
+            self.swob.gain = self.swob.Gain.GAIN_64X
+        if number == 9:
+            self.swob.gain = self.swob.Gain.GAIN_128X
+        if number == 10:
+            self.swob.gain = self.swob.Gain.GAIN_256X
+        if number > 10:
+            self.swob.gain = self.swob.Gain.GAIN_512X
+        return self.gain_list[ self.swob._gain ]
     def lamps_on(self):
         self.swob.led = True
     def lamps_off(self):
