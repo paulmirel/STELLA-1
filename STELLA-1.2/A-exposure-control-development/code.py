@@ -49,6 +49,8 @@ i2c_bus.unlock()
 
 spectral_sensors_detected = True
 
+#### begin main definition
+
 def main():
     BLUE = ( 0, 0, 255 )
     GREEN = ( 255, 0, 0 )
@@ -80,6 +82,11 @@ def main():
     as7265x_spectrometer = initialize_as7265x_spectrometer( instrument )
     as7331_spectrometer = initialize_as7331_spectrometer( instrument )
     as7341_spectrometer = initialize_as7341_spectrometer( instrument )
+
+    instrument.welcome_page.hide()
+    exposure_control_page = make_exposure_control_page( instrument )
+    exposure_control_page.show()
+    time.sleep(10)
     stall()
 
 
@@ -89,12 +96,6 @@ def main():
 
 ###
 
-    as7265x_spectrometer = initialize_as7265x_spectrometer(i2c_bus)
-    print("init as6265x")
-    as7331_spectrometer = initialize_as7331_spectrometer(i2c_bus)
-    print("init as7331")
-    as7341_spectrometer = initialize_as7341_spectrometer(i2c_bus)
-    print("init as7341")
 
     as7265x_gain_number_range = 0,3
     as7265x_gain_number = 3
@@ -119,7 +120,7 @@ def main():
 
 
 
-    exposure_control_page = make_exposure_control_page( palette, main_display_group )
+
     exposure_control_page.sensor_choice_text_area.text = "as7265x V+NIR"
 
     #exposure_control_page.sensor_choice_text_area.text = "as7331 UV"
@@ -228,6 +229,544 @@ def main():
         print( "displayio displays released" )
         i2c_bus.deinit()
         print( "i2c_bus deinitialized" )
+
+
+#### begin parent class definitions ###
+
+class Page:
+    def __init__( self ):
+        pass
+    def show(self):
+        self.group.hidden = False
+    def hide(self):
+        self.group.hidden = True
+    def update_values(self):
+        pass
+
+class Device: #parent class
+    def __init__(self, name = None, pn = None, address = None, swob = None ):
+        self.name = name
+        self.swob = swob
+        self.pn = pn
+        self.address = address
+    def report(self):
+        found = False
+        if self.swob is not None:
+            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
+            found = True
+        return found
+    def found(self):
+        if self.swob is not None:
+            return True
+        else:
+            return False
+
+#### begin spectrometer sensor device classes
+
+class as7265x_Spectrometer( Device ):
+    # custom library
+    # cycle time is a little less than 1 whole second
+    def __init__( self, com_bus ):
+        super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  )) #
+        if self.swob:
+            self.swob.disable_indicator()
+            self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
+            self.bands = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
+            self.bandwidth = 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
+            self.chip_n = 1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   3
+            self.dict_chip_n = {key:value for key, value in zip(self.bands, self.chip_n )}
+            self.dict_bandwidths = {key:value for key, value in zip(self.bands, self.bandwidth )}
+            self.bands_sorted = sorted( self.bands )
+            self.uncertainty_percent = 12
+            self.gain_ratio = 16 #default, calibrated at
+            self.gain_dict = {0:1, 1:3.7, 2:16, 3:64}
+            self.intg_time_ms = 56 #default, number = 20 out of 255
+            self.afov_deg = (20.5 * 2) #datasheet reports half angle.
+    def set_gain_number(self, gain_number):
+        # kGain1x  # 1x
+        # kGain37x # 3.7x
+        # kGain16x # 16x
+        # kGain64x # 64x
+        if gain_number < 1 :
+            self.swob.set_gain( self.swob.kGain1x )
+        elif gain_number == 1:
+            self.swob.set_gain( self.swob.kGain37x )
+        elif gain_number == 2:
+            self.swob.set_gain( self.swob.kGain16x )
+        elif gain_number > 2:
+            self.swob.set_gain( self.swob.kGain64x )
+    def set_integration_number( self, number ):
+        # must wait for at least 5 seconds before sending integration time again. If not, signal goes to 0.
+        if number in range (1, 256):
+            self.swob.set_integration_cycles(number)
+            self.intg_time_ms = int(round(2.78*number,0)) # This sensor does not use the ASTEP ATIME combination found in the as7341
+        else:
+            print( "out of range: set integration cycles to 1-255 for 0-709ms integration time." )
+        return self.intg_time_ms
+    def read(self):
+        self.chip_temp_c = {1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3)}
+        self.data_counts = self.swob.get_value(0) # 0th position raw counts, bands unsorted order
+        # dictionary where key = WL and value = raw counts
+        self.dict_counts = {key:value for key, value in zip(self.bands, self.data_counts)}
+        self.data_fcal = self.swob.get_value(1) # 1th position factory calibrated irrad value, bands unsorted order
+        # dictionary where key = WL and value = factory cal irradiance
+        self.dict_fcal = {key:value for key, value in zip(self.bands, self.data_fcal)}
+        # OMIT as it's always 12% # self.dict_uncty_fcal = {key:value for key, value in zip(self.bands, (self.data_fcal*self.uncert_percent/100))}
+        # TBD self.dict_scal = {key:value for key, value in zip(self.bands, 0)}
+        # TBD self.dict_uncty_scal = {key:value for key, value in zip(self.bands, (0))}
+        # print( self.data_counts )
+    def read_counts(self):
+        self.data_counts = []
+        self.data_counts.append(self.swob.get_g()) #get_value(0) # 0th position raw counts, bands unsorted order
+        self.data_counts.append(self.swob.get_h())
+        self.data_counts.append(self.swob.get_i())
+        self.data_counts.append(self.swob.get_j())
+        self.data_counts.append(self.swob.get_k())
+        self.data_counts.append(self.swob.get_l())
+        self.data_counts.append(self.swob.get_r())
+        self.data_counts.append(self.swob.get_s())
+        self.data_counts.append(self.swob.get_t())
+        self.data_counts.append(self.swob.get_u())
+        self.data_counts.append(self.swob.get_v())
+        self.data_counts.append(self.swob.get_w())
+        self.data_counts.append(self.swob.get_a())
+        self.data_counts.append(self.swob.get_b())
+        self.data_counts.append(self.swob.get_c())
+        self.data_counts.append(self.swob.get_d())
+        self.data_counts.append(self.swob.get_e())
+        self.data_counts.append(self.swob.get_f())
+        #print(self.data_counts)
+        self.dict_counts = {key:value for key, value in zip(self.bands, self.data_counts)}
+    def read_fcal(self):
+        self.data_fcal = self.swob.get_value(1) # 1th position factory calibrated irrad value, bands unsorted order
+        self.dict_fcal = {key:value for key, value in zip(self.bands, self.data_fcal)}
+        #print( self.data_fcal )
+    def read_temperatures(self):
+        self.chip_temp_c = {1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3)}
+    def list_channels():
+        return self.bands_sorted
+    def header( self ):
+        return "WL.nm, irrad.uW/(cm^2), irrad.uncty.uW/(cm^2), counts, chip_num, chip_temp_C"
+    def get_bandwidth(self, wavelength):
+        return self.dict_bandwidths[wavelength]
+    def log( self, wavelength):
+        if wavelength in self.bands:
+            logline = "{}".format( self.pn )
+            logline += ", {}".format( wavelength )
+            logline += ", {}".format( self.dict_bandwidths[wavelength] )
+            logline += ", {}".format( self.dict_counts[wavelength] )
+            logline += ", {}".format( self.dict_fcal[wavelength] )
+            logline += ", {}".format( self.dict_fcal[wavelength]*self.uncertainty_percent/100 )
+            logline += ", {}".format( self.gain_ratio )#gain
+            logline += ", {}".format( self.intg_time_ms )#integration time
+            logline += ", {}".format( self.dict_chip_n[wavelength] )#chip number
+            logline += ", {}".format( self.chip_temp_c[self.dict_chip_n[wavelength]] )#chip temperature
+            return logline
+    def serial_log(self, wavelength):
+        if wavelength in self.bands:
+            loglist = "pn: {}".format( self.pn )
+            loglist += ", WL-!-nm: {}".format( wavelength )
+            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
+            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
+            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_fcal[wavelength] )
+            loglist += ", gain-!-: {}".format( self.gain_ratio )
+            loglist += ", intg-!-ms: {}".format( self.intg_time_ms )
+            return loglist
+
+    def printlog(self,ch):
+        print( self.log(ch) )
+    def lamps_on(self):
+        #print( "turn on the lamps")
+        self.swob.enable_bulb(0)   # white
+        self.swob.enable_bulb(1)   # NIR
+        self.swob.enable_bulb(2)   # UV
+    def lamps_off(self):
+        #print( "turn off the lamps")
+        self.swob.disable_bulb(0)   # white
+        self.swob.disable_bulb(1)   # NIR
+        self.swob.disable_bulb(2)   # UV
+
+class as7331_Spectrometer( Device ):
+    def __init__( self, com_bus ):
+        super().__init__(name = "as7331_spectrometer", pn = "as7331", address = 0x74, swob = as7331.AS7331( com_bus ))
+        self.bands = 360, 300, 260
+        self.bandwidth = 80, 40, 40
+        self.chip_n = 1, 1, 1
+        self.dict_chip_n = {key:value for key, value in zip(self.bands, self.chip_n )}
+        self.dict_bandwidths = {key:value for key, value in zip(self.bands, self.bandwidth )}
+        #https://look.ams-osram.com/m/1856fd2c69c35605/original/AS7331-Spectral-UVA-B-C-Sensor.pdf
+        self.afov_deg = (10 * 2)
+        self.fcal_unct_percent = 0 # no reported value
+        self.gain_ratio = 0 #TBD what are the defaults?
+        self.intg_time_ms = 0 #TBD what are the defaults?
+    def check_gain_ratio(self):
+        gain_callout = self.swob.gain
+        if gain_callout == 11:
+            self.gain_ratio = 1
+        elif gain_callout == 10:
+            self.gain_ratio = 2
+        elif gain_callout == 9:
+            self.gain_ratio = 4
+        elif gain_callout == 8:
+            self.gain_ratio = 8
+        elif gain_callout == 7:
+            self.gain_ratio = 16
+        elif gain_callout == 6:
+            self.gain_ratio = 32
+        elif gain_callout == 5:
+            self.gain_ratio = 64
+        elif gain_callout == 4:
+            self.gain_ratio = 128
+        elif gain_callout == 3:
+            self.gain_ratio = 256
+        elif gain_callout == 2:
+            self.gain_ratio = 512
+        elif gain_callout == 1:
+            self.gain_ratio = 1024
+        elif gain_callout == 0:
+            self.gain_ratio = 2048
+        return self.gain_ratio
+
+    def set_gain_number(self, gain_number):
+        if gain_number in range (0,12):
+            if gain_number == 11:
+                gain_constant = as7331.GAIN_2048X
+            if gain_number == 10:
+                gain_constant = as7331.GAIN_1024X
+            if gain_number == 9:
+                gain_constant = as7331.GAIN_512X
+            if gain_number == 8:
+                gain_constant = as7331.GAIN_256X
+            if gain_number == 7:
+                gain_constant = as7331.GAIN_128X
+            if gain_number == 6:
+                gain_constant = as7331.GAIN_64X
+            if gain_number == 5:
+                gain_constant = as7331.GAIN_32X
+            if gain_number == 4:
+                gain_constant = as7331.GAIN_16X
+            if gain_number == 3:
+                gain_constant = as7331.GAIN_8X
+            if gain_number == 2:
+                gain_constant = as7331.GAIN_4X
+            if gain_number == 1:
+                gain_constant = as7331.GAIN_2X
+            if gain_number == 0:
+                gain_constant = as7331.GAIN_1X
+            self.swob.gain = gain_constant
+        else:
+            print( "out of range: set gain number to 0-11 to get gain_ratios from 1 to 2048" )
+
+    def set_integration_time( self, intg_number ):
+        if intg_number == 0:
+            self.integration_time = as7331.INTEGRATION_TIME_1MS
+            self.intg_time_ms = 1
+        if intg_number == 1:
+            self.integration_time = as7331.INTEGRATION_TIME_2MS
+            self.intg_time_ms = 2
+        if intg_number == 2:
+            self.integration_time = as7331.INTEGRATION_TIME_4MS
+            self.intg_time_ms = 4
+        if intg_number == 3:
+            self.integration_time = as7331.INTEGRATION_TIME_8MS
+            self.intg_time_ms = 8
+        if intg_number == 4:
+            self.integration_time = as7331.INTEGRATION_TIME_16MS
+            self.intg_time_ms = 16
+        if intg_number == 5:
+            self.integration_time = as7331.INTEGRATION_TIME_32MS
+            self.intg_time_ms = 32
+        if intg_number == 6:
+            self.integration_time = as7331.INTEGRATION_TIME_64MS
+            self.intg_time_ms = 64
+        if intg_number == 7:
+            self.integration_time = as7331.INTEGRATION_TIME_128MS
+            self.intg_time_ms = 128
+        if intg_number == 8:
+            self.integration_time = as7331.INTEGRATION_TIME_256MS
+            self.intg_time_ms = 256
+        if intg_number == 9:
+            self.integration_time = as7331.INTEGRATION_TIME_512MS
+            self.intg_time_ms = 512
+        if intg_number == 10:
+            self.integration_time = as7331.INTEGRATION_TIME_1024MS
+            self.intg_time_ms = 1024
+        if intg_number == 11:
+            self.integration_time = as7331.INTEGRATION_TIME_2048MS
+            self.intg_time_ms = 2048
+        if intg_number == 12:
+            self.integration_time = as7331.INTEGRATION_TIME_4096MS
+            self.intg_time_ms = 4096
+        if intg_number == 13:
+            self.integration_time = as7331.INTEGRATION_TIME_8192MS
+            self.intg_time_ms = 8192
+        if intg_number == 14:
+            self.integration_time = as7331.INTEGRATION_TIME_16384MS
+            self.intg_time_ms = 16384
+        return self.intg_time_ms
+    def lamps_on(self):
+        pass
+    def lamps_off(self):
+        pass
+    def read(self):
+        self.UVA_counts, self.UVB_counts, self.UVC_counts, self.chip_temp_c_counts = self.swob.raw_values
+        self.dict_counts = {360:self.UVA_counts, 300:self.UVB_counts, 260:self.UVC_counts}
+        self.UVA, self.UVB, self.UVC, self.chip_temp_c = self.swob.values
+        self.dict_fcal = {360:self.UVA, 300:self.UVB, 260:self.UVC}
+    def read_counts(self):
+        self.UVA_counts, self.UVB_counts, self.UVC_counts, self.chip_temp_c_counts = self.swob.raw_values
+        self.dict_counts = {360:self.UVA_counts, 300:self.UVB_counts, 260:self.UVC_counts}
+    def read_fcal(self):
+        self.UVA, self.UVB, self.UVC, self.chip_temp_c = self.swob.values
+        self.dict_fcal = {360:self.UVA, 300:self.UVB, 260:self.UVC}
+    def read_temperatures(self):
+        pass
+    def header(self):
+        return "sensorPN, Wl.nm, raw_counts, irrad.stella.cal, irrad.stella.uncty, irrad_factory.cal, irrad_factory.uncty, gain, integration_time_ms, chip_temp_C"
+        #return "UVC.WL.nm, UVC_uncal, UVB.WL.nm, UVB_uncal, UVA.WL.nm, UVA_uncal, UVS.temp.C"
+    def log( self, wavelength):
+        if wavelength in self.bands:
+            logline = "{}".format( self.pn )
+            logline += ", {}".format( wavelength )
+            logline += ", {}".format( self.dict_bandwidths[wavelength] )
+            logline += ", {}".format( self.dict_counts[wavelength] )
+            logline += ", {}".format( self.dict_fcal[wavelength] )
+            logline += ", {}".format( " - " )
+            logline += ", {}".format( self.gain_ratio )#gain
+            logline += ", {}".format( self.intg_time_ms )#integration time
+            logline += ", {}".format( self.dict_chip_n[wavelength] )#chip number
+            logline += ", {}".format( " - " )#self.chip_temp_c[self.dict_chip_n[wavelength]] )#chip temperature
+            return logline
+    def serial_log(self, wavelength):
+        if wavelength in self.bands:
+            loglist = "pn: {}".format( self.pn )
+            loglist += ", WL-!-nm: {}".format( wavelength )
+            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
+            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
+            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_fcal[wavelength] )
+            loglist += ", gain-!-: {}".format( self.gain_ratio )
+            loglist += ", intg-!-ms: {}".format( self.intg_time_ms )
+            return loglist
+    def get_bandwidth(self, wavelength):
+        return self.dict_bandwidths[wavelength]
+    def printlog(self):
+        print( self.log())
+
+class as7341_Spectrometer( Device ):
+    def __init__( self, com_bus ):
+        super().__init__(name = "as7341_spectrometer", pn = "as7341", address = 0x39, swob = AS7341( com_bus ))
+        self.bands = 415, 445, 480, 515, 555, 590, 630, 682
+        self.bandwidth = 26, 30, 36, 39, 39, 40, 50, 52
+        self.chip_n = 1, 1, 1, 1, 1, 1, 1, 1
+        self.dict_chip_n = {key:value for key, value in zip(self.bands, self.chip_n )}
+        self.dict_bandwidths = {key:value for key, value in zip(self.bands, self.bandwidth )}
+        self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
+        #self.tsis_cal_counts_per_irradiance = 1405.9, 2079.6, 2631.6, 3556.8, 4246.0, 5060.6, 6888.9, 9130.9
+        # first principles calibration by Sten Odenwald of NASA Heliophysics
+        self.steno_cal_counts_per_irradiance = 4398.0, 6104.0, 7583.0, 9972.0, 11536.0, 13374.0, 17115.0, 20916.0
+        self.calibration_error = 0.6
+        self.irradiance = [0,0,0,0,0,0,0,0]
+        self.dict_stenocal = {}
+        self.swob.led_current = 50
+    def check_gain_ratio(self):
+        pass
+    def lamps_on(self):
+        self.swob.led = True
+    def lamps_off(self):
+        self.swob.led = False
+    def blink( self, duration ):
+        self.swob.led_current = 50
+        self.swob.led = True
+        time.sleep( duration )
+        self.swob.led = False
+    def read(self):
+        self.raw = self.swob.all_channels
+        self.dict_counts = {key:value for key, value in zip(self.bands, self.raw )}
+        for ch in range (0,8):
+            self.irradiance[ch] = self.raw[ch]/self.steno_cal_counts_per_irradiance[ch]
+        self.dict_stenocal = {key:value for key, value in zip(self.bands, self.irradiance )}
+    def list_channels():
+        return self.center_wavelengths
+    def header(self, ch):
+        return " {}.WL.nm, {}.counts, {}.W/(m^2*nm), {}.uncty.W/(m^2*nm)".format( self.colors[ch], self.colors[ch], self.colors[ch], self.colors[ch] )
+    def log( self, wavelength):
+        if wavelength in self.bands:
+            logline = "{}".format( self.pn )
+            logline += ", {}".format( wavelength )
+            logline += ", {}".format( self.dict_bandwidths[wavelength] )
+            logline += ", {}".format( self.dict_counts[wavelength] )
+            logline += ", {}".format( self.dict_stenocal[wavelength] )
+            logline += ", {}".format( " - " )
+            logline += ", {}".format( " - " )#gain
+            logline += ", {}".format( " - " )#integration time
+            logline += ", {}".format( " - " )#chip number
+            logline += ", {}".format( " - " )#chip temperature
+            return logline
+    def serial_log(self, wavelength):
+        if wavelength in self.bands:
+            loglist = "pn: {}".format( self.pn )
+            loglist += ", WL-!-nm: {}".format( wavelength )
+            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
+            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
+            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_stenocal[wavelength] )
+            loglist += ", gain-!-: {}".format( '-' ) #self.gain_ratio )
+            loglist += ", intg-!-ms: {}".format( '-' )#self.intg_time_ms )
+            return loglist
+    def get_bandwidth(self, wavelength):
+        return self.dict_bandwidths[wavelength]
+    def printlog(self,ch):
+        print( self.log(ch))
+
+
+#### begin spectrometer sensor initialization definitions
+def initialize_as7265x_spectrometer( instrument ):
+    as7265x_spectrometer = Null_as7265x_Spectrometer()
+    try:
+        as7265x_spectrometer = as7265x_Spectrometer( instrument.i2c_bus )
+        instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
+        instrument.spectral_sensors_present.append( as7265x_spectrometer )
+        as7265x_spectrometer.lamps_on()
+        time.sleep(0.1)
+        as7265x_spectrometer.lamps_off()
+    except Exception as err:
+        print( "as7265x spectrometer failed: {}".format( err ))
+        pass
+    return as7265x_spectrometer
+
+def initialize_as7331_spectrometer( instrument ):
+    as7331_spectrometer = Null_as7331_Spectrometer()
+    try:
+        as7331_spectrometer = as7331_Spectrometer( instrument.i2c_bus )
+        instrument.welcome_page.announce( "initialize_as7331_spectrometer" )
+        instrument.spectral_sensors_present.append( as7331_spectrometer )
+    except ValueError as err:
+        #print( "uv spectrometer failed to initialize: {}".format(err))
+        pass
+    except Exception as err:
+        print( "as7331_spectrometer", err )
+        pass
+    return as7331_spectrometer
+
+def initialize_as7341_spectrometer( instrument ):
+    as7341_spectrometer = Null_as7341_Spectrometer()
+    try:
+        as7341_spectrometer = as7341_Spectrometer( instrument.i2c_bus )
+        instrument.welcome_page.announce( "initialize_as7341_spectrometer" )
+        instrument.spectral_sensors_present.append( as7341_spectrometer )
+    except Exception as err:
+        print( "as7341_spectrometer", err )
+        pass
+    return as7341_spectrometer
+
+
+#### begin spectrometer sensor null class definitions
+
+class Null_as7265x_Spectrometer( Device ):
+    def __init__( self ):
+        super().__init__(name = None, swob = None)
+        self.swob = None
+        self.bands = None
+        self.bands_sorted = [0,0]   # empty list
+        self.dict_chip_n = [0,0]
+        self.chip_temps = [0,0]
+        self.dict_fcal = {0:0}      # empty dictionary
+        self.dict_counts = {0:0}
+        self.uncert_percent = 10
+    def check_gain_ratio(self):
+        pass
+    def set_gain_number(self, gain_number):
+        pass
+    def read(self):
+        pass
+    def read_counts(self):
+        pass
+    def read_fcal(self):
+        pass
+    def read_temperatures(self):
+        pass
+    def log(self, value):
+        pass
+    def get_bandwidth(self, wavelength):
+        pass
+    def report(self):
+        pass
+    def printlog(self):
+        pass
+    def blink(self, duration):
+        pass
+    def header(self):
+        pass
+    def lamps_on(self):
+        pass
+    def lamps_off(self):
+        pass
+    def set_integration_cycles(self):
+        pass
+    def serial_log(self, wavelength):
+        pass
+
+
+class Null_as7331_Spectrometer(Device):
+    def __init__( self ):
+        super().__init__(name = None, swob = None)
+    def read(self):
+        pass
+    def read_counts(self):
+        pass
+    def read_fcal(self):
+        pass
+    def read_temperatures(self):
+        pass
+    def lamps_on(self):
+        pass
+    def lamps_off(self):
+        pass
+    def log(self, value):
+        pass
+    def report(self):
+        pass
+    def printlog(self):
+        pass
+    def get_bandwidth(self, wavelength):
+        pass
+    def header(self):
+        pass
+    def check_gain_ratio(self):
+        pass
+    def serial_log(self, wavelength):
+        pass
+
+
+class Null_as7341_Spectrometer(Device):
+    def __init__( self ):
+        super().__init__(name = None, swob = None)
+    def read(self):
+        pass
+    def log(self, value):
+        pass
+    def serial_log(self, wavelength):
+        pass
+    def report(self):
+        pass
+    def printlog(self):
+        pass
+    def lamps_on(self):
+        pass
+    def lamps_off(self):
+        pass
+    def blink(self, duration):
+        pass
+    def get_bandwidth(self, wavelength):
+        pass
+    def header(self):
+        pass
+    def check_gain_ratio(self):
+        pass
+
+
+
+
+#### begin instrument class definition
 
 class Instrument:
     def __init__( self, i2c_bus, spi_bus, uart_bus, UID, buzzer):
@@ -400,630 +939,12 @@ def create_instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer ):
 
 
 
-class Page:
-    def __init__( self ):
-        pass
-    def show(self):
-        self.group.hidden = False
-    def hide(self):
-        self.group.hidden = True
-    def update_values(self):
-        pass
+#### begin exposure control page class definition
 
-def make_palette():
-    # TBD make a color name dictionary
-    palette = displayio.Palette(40)
-    palette[0] = 0x000000 # black
-    palette[1] = 0xA0522D # brown
-    palette[2] = 0xFF0000 # red
-    palette[3] = 0xFF8C00 # orange
-    palette[4] = 0xFFFF00 # yellow
-    palette[5] = 0x00FF00 # green
-    palette[6] = 0x0000FF # blue
-    palette[7] = 0x9400D3 # violet
-    palette[8] = 0x808080 # grey
-    palette[9] = 0xFFFFFF # white
-    palette[10] = 0xFF99FF # light
-    palette[11] = 0xFF751A # heat
-    palette[12] = 0x66CCFF # light blue, air analyzer
-    palette[13] = 0x6FDC6F # plants
-    palette[14] = 0xCE954B # here
-    palette[15] = 0x8C8C8C # dark grey
-    palette[16] = 0x00998F # burst
-    palette[17] = 0x0066FF # border
-    palette[18] = 0x009900 # GPS flag
-    palette[19] = 0xCCCCCC # light grey
-    palette[20] = 0x00CC00 # remote sens green
-    palette[21] = 0x00CCBE # sensors
-    palette[22] = 0xA6A6A6 # medium grey, return
-    palette[23] = 0xFF6666 # medium red, not used yet
-    palette[24] = 0x000000 # placeholder
-    palette[25] = 0x7E00DB # blueviolet, 410nm
-    palette[26] = 0x2300FF # blue, 435nm
-    palette[27] = 0x007BFF # royalblue, 460nm
-    palette[28] = 0x00EAFF # darkturquoise,485nm
-    palette[29] = 0x00FF00 # lime, 510nm
-    palette[30] = 0x70FF00 # chartreuse, 535nm
-    palette[31] = 0xC3FF00 # greenyellow, 560nm
-    palette[32] = 0xFFEF00 # yellow, 585nm
-    palette[33] = 0xFF9B00 # orange, 610nm
-    palette[34] = 0xFE0000 # red1, 645nm
-    palette[35] = 0xDF0000 # red2, 680nm
-    palette[36] = 0xC90000 # red3, 705nm
-    palette[37] = 0xB10000 # firebrick, 730nm
-    palette[38] = 0x940000 # darkred, 760nm
-    return palette
-
-
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
-
-
-
-def initialize_as7265x_spectrometer( instrument ):
-    as7265x_spectrometer = Null_as7265x_Spectrometer()
-    try:
-        as7265x_spectrometer = as7265x_Spectrometer( instrument.i2c_bus )
-        instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
-        instrument.spectral_sensors_present.append( as7265x_spectrometer )
-        as7265x_spectrometer.lamps_on()
-        time.sleep(0.1)
-        as7265x_spectrometer.lamps_off()
-    except Exception as err:
-        print( "as7265x spectrometer failed: {}".format( err ))
-        pass
-    return as7265x_spectrometer
-
-class as7265x_Spectrometer( Device ):
-    # custom library
-    # cycle time is a little less than 1 whole second
-    def __init__( self, com_bus ):
-        super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  )) #
-        if self.swob:
-            self.swob.disable_indicator()
-            self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
-            self.bands = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
-            self.bandwidth = 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
-            self.chip_n = 1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   3
-            self.dict_chip_n = {key:value for key, value in zip(self.bands, self.chip_n )}
-            self.dict_bandwidths = {key:value for key, value in zip(self.bands, self.bandwidth )}
-            self.bands_sorted = sorted( self.bands )
-            self.uncertainty_percent = 12
-            self.gain_ratio = 16 #default, calibrated at
-            self.gain_dict = {0:1, 1:3.7, 2:16, 3:64}
-            self.intg_time_ms = 56 #default, number = 20 out of 255
-            self.afov_deg = (20.5 * 2) #datasheet reports half angle.
-    def set_gain_number(self, gain_number):
-        # kGain1x  # 1x
-        # kGain37x # 3.7x
-        # kGain16x # 16x
-        # kGain64x # 64x
-        if gain_number < 1 :
-            self.swob.set_gain( self.swob.kGain1x )
-        elif gain_number == 1:
-            self.swob.set_gain( self.swob.kGain37x )
-        elif gain_number == 2:
-            self.swob.set_gain( self.swob.kGain16x )
-        elif gain_number > 2:
-            self.swob.set_gain( self.swob.kGain64x )
-    def set_integration_number( self, number ):
-        # must wait for at least 5 seconds before sending integration time again. If not, signal goes to 0.
-        if number in range (1, 256):
-            self.swob.set_integration_cycles(number)
-            self.intg_time_ms = int(round(2.78*number,0)) # This sensor does not use the ASTEP ATIME combination found in the as7341
-        else:
-            print( "out of range: set integration cycles to 1-255 for 0-709ms integration time." )
-        return self.intg_time_ms
-    def read(self):
-        self.chip_temp_c = {1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3)}
-        self.data_counts = self.swob.get_value(0) # 0th position raw counts, bands unsorted order
-        # dictionary where key = WL and value = raw counts
-        self.dict_counts = {key:value for key, value in zip(self.bands, self.data_counts)}
-        self.data_fcal = self.swob.get_value(1) # 1th position factory calibrated irrad value, bands unsorted order
-        # dictionary where key = WL and value = factory cal irradiance
-        self.dict_fcal = {key:value for key, value in zip(self.bands, self.data_fcal)}
-        # OMIT as it's always 12% # self.dict_uncty_fcal = {key:value for key, value in zip(self.bands, (self.data_fcal*self.uncert_percent/100))}
-        # TBD self.dict_scal = {key:value for key, value in zip(self.bands, 0)}
-        # TBD self.dict_uncty_scal = {key:value for key, value in zip(self.bands, (0))}
-        # print( self.data_counts )
-    def read_counts(self):
-        self.data_counts = []
-        self.data_counts.append(self.swob.get_g()) #get_value(0) # 0th position raw counts, bands unsorted order
-        self.data_counts.append(self.swob.get_h())
-        self.data_counts.append(self.swob.get_i())
-        self.data_counts.append(self.swob.get_j())
-        self.data_counts.append(self.swob.get_k())
-        self.data_counts.append(self.swob.get_l())
-        self.data_counts.append(self.swob.get_r())
-        self.data_counts.append(self.swob.get_s())
-        self.data_counts.append(self.swob.get_t())
-        self.data_counts.append(self.swob.get_u())
-        self.data_counts.append(self.swob.get_v())
-        self.data_counts.append(self.swob.get_w())
-        self.data_counts.append(self.swob.get_a())
-        self.data_counts.append(self.swob.get_b())
-        self.data_counts.append(self.swob.get_c())
-        self.data_counts.append(self.swob.get_d())
-        self.data_counts.append(self.swob.get_e())
-        self.data_counts.append(self.swob.get_f())
-        #print(self.data_counts)
-        self.dict_counts = {key:value for key, value in zip(self.bands, self.data_counts)}
-    def read_fcal(self):
-        self.data_fcal = self.swob.get_value(1) # 1th position factory calibrated irrad value, bands unsorted order
-        self.dict_fcal = {key:value for key, value in zip(self.bands, self.data_fcal)}
-        #print( self.data_fcal )
-    def read_temperatures(self):
-        self.chip_temp_c = {1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3)}
-    def list_channels():
-        return self.bands_sorted
-    def header( self ):
-        return "WL.nm, irrad.uW/(cm^2), irrad.uncty.uW/(cm^2), counts, chip_num, chip_temp_C"
-    def get_bandwidth(self, wavelength):
-        return self.dict_bandwidths[wavelength]
-    def log( self, wavelength):
-        if wavelength in self.bands:
-            logline = "{}".format( self.pn )
-            logline += ", {}".format( wavelength )
-            logline += ", {}".format( self.dict_bandwidths[wavelength] )
-            logline += ", {}".format( self.dict_counts[wavelength] )
-            logline += ", {}".format( self.dict_fcal[wavelength] )
-            logline += ", {}".format( self.dict_fcal[wavelength]*self.uncertainty_percent/100 )
-            logline += ", {}".format( self.gain_ratio )#gain
-            logline += ", {}".format( self.intg_time_ms )#integration time
-            logline += ", {}".format( self.dict_chip_n[wavelength] )#chip number
-            logline += ", {}".format( self.chip_temp_c[self.dict_chip_n[wavelength]] )#chip temperature
-            return logline
-    def serial_log(self, wavelength):
-        if wavelength in self.bands:
-            loglist = "pn: {}".format( self.pn )
-            loglist += ", WL-!-nm: {}".format( wavelength )
-            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
-            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
-            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_fcal[wavelength] )
-            loglist += ", gain-!-: {}".format( self.gain_ratio )
-            loglist += ", intg-!-ms: {}".format( self.intg_time_ms )
-            return loglist
-
-    def printlog(self,ch):
-        print( self.log(ch) )
-    def lamps_on(self):
-        #print( "turn on the lamps")
-        self.swob.enable_bulb(0)   # white
-        self.swob.enable_bulb(1)   # NIR
-        self.swob.enable_bulb(2)   # UV
-    def lamps_off(self):
-        #print( "turn off the lamps")
-        self.swob.disable_bulb(0)   # white
-        self.swob.disable_bulb(1)   # NIR
-        self.swob.disable_bulb(2)   # UV
-
-class Null_as7265x_Spectrometer( Device ):
-    def __init__( self ):
-        super().__init__(name = None, swob = None)
-        self.swob = None
-        self.bands = None
-        self.bands_sorted = [0,0]   # empty list
-        self.dict_chip_n = [0,0]
-        self.chip_temps = [0,0]
-        self.dict_fcal = {0:0}      # empty dictionary
-        self.dict_counts = {0:0}
-        self.uncert_percent = 10
-    def check_gain_ratio(self):
-        pass
-    def set_gain_number(self, gain_number):
-        pass
-    def read(self):
-        pass
-    def read_counts(self):
-        pass
-    def read_fcal(self):
-        pass
-    def read_temperatures(self):
-        pass
-    def log(self, value):
-        pass
-    def get_bandwidth(self, wavelength):
-        pass
-    def report(self):
-        pass
-    def printlog(self):
-        pass
-    def blink(self, duration):
-        pass
-    def header(self):
-        pass
-    def lamps_on(self):
-        pass
-    def lamps_off(self):
-        pass
-    def set_integration_cycles(self):
-        pass
-    def serial_log(self, wavelength):
-        pass
-
-def initialize_as7331_spectrometer( instrument ):
-    as7331_spectrometer = Null_as7331_Spectrometer()
-    try:
-        as7331_spectrometer = as7331_Spectrometer( instrument.i2c_bus )
-        instrument.welcome_page.announce( "initialize_as7331_spectrometer" )
-        instrument.spectral_sensors_present.append( as7331_spectrometer )
-    except ValueError as err:
-        #print( "uv spectrometer failed to initialize: {}".format(err))
-        pass
-    except Exception as err:
-        print( "as7331_spectrometer", err )
-        pass
-    return as7331_spectrometer
-
-class as7331_Spectrometer( Device ):
-    def __init__( self, com_bus ):
-        super().__init__(name = "as7331_spectrometer", pn = "as7331", address = 0x74, swob = as7331.AS7331( com_bus ))
-        self.bands = 360, 300, 260
-        self.bandwidth = 80, 40, 40
-        self.chip_n = 1, 1, 1
-        self.dict_chip_n = {key:value for key, value in zip(self.bands, self.chip_n )}
-        self.dict_bandwidths = {key:value for key, value in zip(self.bands, self.bandwidth )}
-        #https://look.ams-osram.com/m/1856fd2c69c35605/original/AS7331-Spectral-UVA-B-C-Sensor.pdf
-        self.afov_deg = (10 * 2)
-        self.fcal_unct_percent = 0 # no reported value
-        self.gain_ratio = 0 #TBD what are the defaults?
-        self.intg_time_ms = 0 #TBD what are the defaults?
-    def check_gain_ratio(self):
-        gain_callout = self.swob.gain
-        if gain_callout == 11:
-            self.gain_ratio = 1
-        elif gain_callout == 10:
-            self.gain_ratio = 2
-        elif gain_callout == 9:
-            self.gain_ratio = 4
-        elif gain_callout == 8:
-            self.gain_ratio = 8
-        elif gain_callout == 7:
-            self.gain_ratio = 16
-        elif gain_callout == 6:
-            self.gain_ratio = 32
-        elif gain_callout == 5:
-            self.gain_ratio = 64
-        elif gain_callout == 4:
-            self.gain_ratio = 128
-        elif gain_callout == 3:
-            self.gain_ratio = 256
-        elif gain_callout == 2:
-            self.gain_ratio = 512
-        elif gain_callout == 1:
-            self.gain_ratio = 1024
-        elif gain_callout == 0:
-            self.gain_ratio = 2048
-        return self.gain_ratio
-
-    def set_gain_number(self, gain_number):
-        if gain_number in range (0,12):
-            if gain_number == 11:
-                gain_constant = as7331.GAIN_2048X
-            if gain_number == 10:
-                gain_constant = as7331.GAIN_1024X
-            if gain_number == 9:
-                gain_constant = as7331.GAIN_512X
-            if gain_number == 8:
-                gain_constant = as7331.GAIN_256X
-            if gain_number == 7:
-                gain_constant = as7331.GAIN_128X
-            if gain_number == 6:
-                gain_constant = as7331.GAIN_64X
-            if gain_number == 5:
-                gain_constant = as7331.GAIN_32X
-            if gain_number == 4:
-                gain_constant = as7331.GAIN_16X
-            if gain_number == 3:
-                gain_constant = as7331.GAIN_8X
-            if gain_number == 2:
-                gain_constant = as7331.GAIN_4X
-            if gain_number == 1:
-                gain_constant = as7331.GAIN_2X
-            if gain_number == 0:
-                gain_constant = as7331.GAIN_1X
-            self.swob.gain = gain_constant
-        else:
-            print( "out of range: set gain number to 0-11 to get gain_ratios from 1 to 2048" )
-
-    def set_integration_time( self, intg_number ):
-        if intg_number == 0:
-            self.integration_time = as7331.INTEGRATION_TIME_1MS
-            self.intg_time_ms = 1
-        if intg_number == 1:
-            self.integration_time = as7331.INTEGRATION_TIME_2MS
-            self.intg_time_ms = 2
-        if intg_number == 2:
-            self.integration_time = as7331.INTEGRATION_TIME_4MS
-            self.intg_time_ms = 4
-        if intg_number == 3:
-            self.integration_time = as7331.INTEGRATION_TIME_8MS
-            self.intg_time_ms = 8
-        if intg_number == 4:
-            self.integration_time = as7331.INTEGRATION_TIME_16MS
-            self.intg_time_ms = 16
-        if intg_number == 5:
-            self.integration_time = as7331.INTEGRATION_TIME_32MS
-            self.intg_time_ms = 32
-        if intg_number == 6:
-            self.integration_time = as7331.INTEGRATION_TIME_64MS
-            self.intg_time_ms = 64
-        if intg_number == 7:
-            self.integration_time = as7331.INTEGRATION_TIME_128MS
-            self.intg_time_ms = 128
-        if intg_number == 8:
-            self.integration_time = as7331.INTEGRATION_TIME_256MS
-            self.intg_time_ms = 256
-        if intg_number == 9:
-            self.integration_time = as7331.INTEGRATION_TIME_512MS
-            self.intg_time_ms = 512
-        if intg_number == 10:
-            self.integration_time = as7331.INTEGRATION_TIME_1024MS
-            self.intg_time_ms = 1024
-        if intg_number == 11:
-            self.integration_time = as7331.INTEGRATION_TIME_2048MS
-            self.intg_time_ms = 2048
-        if intg_number == 12:
-            self.integration_time = as7331.INTEGRATION_TIME_4096MS
-            self.intg_time_ms = 4096
-        if intg_number == 13:
-            self.integration_time = as7331.INTEGRATION_TIME_8192MS
-            self.intg_time_ms = 8192
-        if intg_number == 14:
-            self.integration_time = as7331.INTEGRATION_TIME_16384MS
-            self.intg_time_ms = 16384
-        return self.intg_time_ms
-    def lamps_on(self):
-        pass
-    def lamps_off(self):
-        pass
-    def read(self):
-        self.UVA_counts, self.UVB_counts, self.UVC_counts, self.chip_temp_c_counts = self.swob.raw_values
-        self.dict_counts = {360:self.UVA_counts, 300:self.UVB_counts, 260:self.UVC_counts}
-        self.UVA, self.UVB, self.UVC, self.chip_temp_c = self.swob.values
-        self.dict_fcal = {360:self.UVA, 300:self.UVB, 260:self.UVC}
-    def read_counts(self):
-        self.UVA_counts, self.UVB_counts, self.UVC_counts, self.chip_temp_c_counts = self.swob.raw_values
-        self.dict_counts = {360:self.UVA_counts, 300:self.UVB_counts, 260:self.UVC_counts}
-    def read_fcal(self):
-        self.UVA, self.UVB, self.UVC, self.chip_temp_c = self.swob.values
-        self.dict_fcal = {360:self.UVA, 300:self.UVB, 260:self.UVC}
-    def read_temperatures(self):
-        pass
-    def header(self):
-        return "sensorPN, Wl.nm, raw_counts, irrad.stella.cal, irrad.stella.uncty, irrad_factory.cal, irrad_factory.uncty, gain, integration_time_ms, chip_temp_C"
-        #return "UVC.WL.nm, UVC_uncal, UVB.WL.nm, UVB_uncal, UVA.WL.nm, UVA_uncal, UVS.temp.C"
-    def log( self, wavelength):
-        if wavelength in self.bands:
-            logline = "{}".format( self.pn )
-            logline += ", {}".format( wavelength )
-            logline += ", {}".format( self.dict_bandwidths[wavelength] )
-            logline += ", {}".format( self.dict_counts[wavelength] )
-            logline += ", {}".format( self.dict_fcal[wavelength] )
-            logline += ", {}".format( " - " )
-            logline += ", {}".format( self.gain_ratio )#gain
-            logline += ", {}".format( self.intg_time_ms )#integration time
-            logline += ", {}".format( self.dict_chip_n[wavelength] )#chip number
-            logline += ", {}".format( " - " )#self.chip_temp_c[self.dict_chip_n[wavelength]] )#chip temperature
-            return logline
-    def serial_log(self, wavelength):
-        if wavelength in self.bands:
-            loglist = "pn: {}".format( self.pn )
-            loglist += ", WL-!-nm: {}".format( wavelength )
-            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
-            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
-            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_fcal[wavelength] )
-            loglist += ", gain-!-: {}".format( self.gain_ratio )
-            loglist += ", intg-!-ms: {}".format( self.intg_time_ms )
-            return loglist
-    def get_bandwidth(self, wavelength):
-        return self.dict_bandwidths[wavelength]
-    def printlog(self):
-        print( self.log())
-
-class Null_as7331_Spectrometer(Device):
-    def __init__( self ):
-        super().__init__(name = None, swob = None)
-    def read(self):
-        pass
-    def read_counts(self):
-        pass
-    def read_fcal(self):
-        pass
-    def read_temperatures(self):
-        pass
-    def lamps_on(self):
-        pass
-    def lamps_off(self):
-        pass
-    def log(self, value):
-        pass
-    def report(self):
-        pass
-    def printlog(self):
-        pass
-    def get_bandwidth(self, wavelength):
-        pass
-    def header(self):
-        pass
-    def check_gain_ratio(self):
-        pass
-    def serial_log(self, wavelength):
-        pass
-
-def initialize_as7341_spectrometer( instrument ):
-    as7341_spectrometer = Null_as7341_Spectrometer()
-    try:
-        as7341_spectrometer = as7341_Spectrometer( instrument.i2c_bus )
-        instrument.welcome_page.announce( "initialize_as7341_spectrometer" )
-        instrument.spectral_sensors_present.append( as7341_spectrometer )
-    except Exception as err:
-        print( "as7341_spectrometer", err )
-        pass
-    return as7341_spectrometer
-
-class as7341_Spectrometer( Device ):
-    def __init__( self, com_bus ):
-        super().__init__(name = "as7341_spectrometer", pn = "as7341", address = 0x39, swob = AS7341( com_bus ))
-        self.bands = 415, 445, 480, 515, 555, 590, 630, 682
-        self.bandwidth = 26, 30, 36, 39, 39, 40, 50, 52
-        self.chip_n = 1, 1, 1, 1, 1, 1, 1, 1
-        self.dict_chip_n = {key:value for key, value in zip(self.bands, self.chip_n )}
-        self.dict_bandwidths = {key:value for key, value in zip(self.bands, self.bandwidth )}
-        self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
-        #self.tsis_cal_counts_per_irradiance = 1405.9, 2079.6, 2631.6, 3556.8, 4246.0, 5060.6, 6888.9, 9130.9
-        # first principles calibration by Sten Odenwald of NASA Heliophysics
-        self.steno_cal_counts_per_irradiance = 4398.0, 6104.0, 7583.0, 9972.0, 11536.0, 13374.0, 17115.0, 20916.0
-        self.calibration_error = 0.6
-        self.irradiance = [0,0,0,0,0,0,0,0]
-        self.dict_stenocal = {}
-        self.swob.led_current = 50
-    def check_gain_ratio(self):
-        pass
-    def lamps_on(self):
-        self.swob.led = True
-    def lamps_off(self):
-        self.swob.led = False
-    def blink( self, duration ):
-        self.swob.led_current = 50
-        self.swob.led = True
-        time.sleep( duration )
-        self.swob.led = False
-    def read(self):
-        self.raw = self.swob.all_channels
-        self.dict_counts = {key:value for key, value in zip(self.bands, self.raw )}
-        for ch in range (0,8):
-            self.irradiance[ch] = self.raw[ch]/self.steno_cal_counts_per_irradiance[ch]
-        self.dict_stenocal = {key:value for key, value in zip(self.bands, self.irradiance )}
-    def list_channels():
-        return self.center_wavelengths
-    def header(self, ch):
-        return " {}.WL.nm, {}.counts, {}.W/(m^2*nm), {}.uncty.W/(m^2*nm)".format( self.colors[ch], self.colors[ch], self.colors[ch], self.colors[ch] )
-    def log( self, wavelength):
-        if wavelength in self.bands:
-            logline = "{}".format( self.pn )
-            logline += ", {}".format( wavelength )
-            logline += ", {}".format( self.dict_bandwidths[wavelength] )
-            logline += ", {}".format( self.dict_counts[wavelength] )
-            logline += ", {}".format( self.dict_stenocal[wavelength] )
-            logline += ", {}".format( " - " )
-            logline += ", {}".format( " - " )#gain
-            logline += ", {}".format( " - " )#integration time
-            logline += ", {}".format( " - " )#chip number
-            logline += ", {}".format( " - " )#chip temperature
-            return logline
-    def serial_log(self, wavelength):
-        if wavelength in self.bands:
-            loglist = "pn: {}".format( self.pn )
-            loglist += ", WL-!-nm: {}".format( wavelength )
-            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
-            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
-            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_stenocal[wavelength] )
-            loglist += ", gain-!-: {}".format( '-' ) #self.gain_ratio )
-            loglist += ", intg-!-ms: {}".format( '-' )#self.intg_time_ms )
-            return loglist
-    def get_bandwidth(self, wavelength):
-        return self.dict_bandwidths[wavelength]
-    def printlog(self,ch):
-        print( self.log(ch))
-
-class Null_as7341_Spectrometer(Device):
-    def __init__( self ):
-        super().__init__(name = None, swob = None)
-    def read(self):
-        pass
-    def log(self, value):
-        pass
-    def serial_log(self, wavelength):
-        pass
-    def report(self):
-        pass
-    def printlog(self):
-        pass
-    def lamps_on(self):
-        pass
-    def lamps_off(self):
-        pass
-    def blink(self, duration):
-        pass
-    def get_bandwidth(self, wavelength):
-        pass
-    def header(self):
-        pass
-    def check_gain_ratio(self):
-        pass
-
-def initialize_qwiic_buzzer( i2c_bus ):
-    buzzer = Null_Qwiic_Buzzer()
-    try:
-        buzzer = Qwiic_Buzzer( i2c_bus )
-    except Exception as err:
-        print( "buzzer failed to initialize: {}".format(err) )
-        pass
-    return buzzer
-
-class Qwiic_Buzzer( Device ):
-    def __init__( self, com_bus ):
-        super().__init__(name = "qwiic_buzzer", pn = "BOB-24474", address = 0x34, swob = qwiic_buzzer.QwiicBuzzer(i2c_driver = com_bus))
-        self.swob.configure( self.swob.VOLUME_MAX )
-        self.mute = False
-    def read(self):
-        pass
-    def beep(self):
-        if self.mute:
-            pass
-        else:
-            self.swob.on()
-    def stop(self):
-        self.swob.off()
-    def set(self, frequency_hz, time_ms ):
-        self.swob.configure( frequency_hz, time_ms )
-    def header(self):
-        return ""
-    def log(self):
-        return ""
-    def printlog(self):
-        print( self.log())
-
-class Null_Qwiic_Buzzer(Device):
-    def __init__( self ):
-        super().__init__(name = None, swob = None)
-    def read(self):
-        pass
-    def beep(self):
-        pass
-    def stop(self):
-        pass
-    def set(self):
-        pass
-    def log(self):
-        pass
-    def report(self):
-        pass
-    def printlog(self):
-        pass
-    def header(self):
-        pass
-
-class Exposure_Control_Page( Page ):
-    def __init__( self, palette):
+class Exposure_Control_Page( instrument ):
+    def __init__( self, instrument):
         super().__init__()
-        self.palette = palette
+        self.palette = instrument.palette
     def make_group( self ):
         self.group = displayio.Group()
         exposure_control_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -1445,12 +1366,111 @@ class Exposure_Control_Page( Page ):
             instrument.active_page_number = 2
             instrument.button_pressed = False
 
+def make_palette():
+    # TBD make a color name dictionary
+    palette = displayio.Palette(40)
+    palette[0] = 0x000000 # black
+    palette[1] = 0xA0522D # brown
+    palette[2] = 0xFF0000 # red
+    palette[3] = 0xFF8C00 # orange
+    palette[4] = 0xFFFF00 # yellow
+    palette[5] = 0x00FF00 # green
+    palette[6] = 0x0000FF # blue
+    palette[7] = 0x9400D3 # violet
+    palette[8] = 0x808080 # grey
+    palette[9] = 0xFFFFFF # white
+    palette[10] = 0xFF99FF # light
+    palette[11] = 0xFF751A # heat
+    palette[12] = 0x66CCFF # light blue, air analyzer
+    palette[13] = 0x6FDC6F # plants
+    palette[14] = 0xCE954B # here
+    palette[15] = 0x8C8C8C # dark grey
+    palette[16] = 0x00998F # burst
+    palette[17] = 0x0066FF # border
+    palette[18] = 0x009900 # GPS flag
+    palette[19] = 0xCCCCCC # light grey
+    palette[20] = 0x00CC00 # remote sens green
+    palette[21] = 0x00CCBE # sensors
+    palette[22] = 0xA6A6A6 # medium grey, return
+    palette[23] = 0xFF6666 # medium red, not used yet
+    palette[24] = 0x000000 # placeholder
+    palette[25] = 0x7E00DB # blueviolet, 410nm
+    palette[26] = 0x2300FF # blue, 435nm
+    palette[27] = 0x007BFF # royalblue, 460nm
+    palette[28] = 0x00EAFF # darkturquoise,485nm
+    palette[29] = 0x00FF00 # lime, 510nm
+    palette[30] = 0x70FF00 # chartreuse, 535nm
+    palette[31] = 0xC3FF00 # greenyellow, 560nm
+    palette[32] = 0xFFEF00 # yellow, 585nm
+    palette[33] = 0xFF9B00 # orange, 610nm
+    palette[34] = 0xFE0000 # red1, 645nm
+    palette[35] = 0xDF0000 # red2, 680nm
+    palette[36] = 0xC90000 # red3, 705nm
+    palette[37] = 0xB10000 # firebrick, 730nm
+    palette[38] = 0x940000 # darkred, 760nm
+    return palette
 
-def make_exposure_control_page( palette, main_display_group ):
-    page = Exposure_Control_Page( palette )
+
+def initialize_qwiic_buzzer( i2c_bus ):
+    buzzer = Null_Qwiic_Buzzer()
+    try:
+        buzzer = Qwiic_Buzzer( i2c_bus )
+    except Exception as err:
+        print( "buzzer failed to initialize: {}".format(err) )
+        pass
+    return buzzer
+
+class Qwiic_Buzzer( Device ):
+    def __init__( self, com_bus ):
+        super().__init__(name = "qwiic_buzzer", pn = "BOB-24474", address = 0x34, swob = qwiic_buzzer.QwiicBuzzer(i2c_driver = com_bus))
+        self.swob.configure( self.swob.VOLUME_MAX )
+        self.mute = False
+    def read(self):
+        pass
+    def beep(self):
+        if self.mute:
+            pass
+        else:
+            self.swob.on()
+    def stop(self):
+        self.swob.off()
+    def set(self, frequency_hz, time_ms ):
+        self.swob.configure( frequency_hz, time_ms )
+    def header(self):
+        return ""
+    def log(self):
+        return ""
+    def printlog(self):
+        print( self.log())
+
+class Null_Qwiic_Buzzer(Device):
+    def __init__( self ):
+        super().__init__(name = None, swob = None)
+    def read(self):
+        pass
+    def beep(self):
+        pass
+    def stop(self):
+        pass
+    def set(self):
+        pass
+    def log(self):
+        pass
+    def report(self):
+        pass
+    def printlog(self):
+        pass
+    def header(self):
+        pass
+
+
+
+
+def make_exposure_control_page( instrument ):
+    page = Exposure_Control_Page( instrument )
     group = page.make_group()
     #page.hide()
-    main_display_group.append( group )
+    instrument.main_display_group.append( group )
     return page
 
 
