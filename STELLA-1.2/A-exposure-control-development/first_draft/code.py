@@ -183,7 +183,10 @@ def main():
                 if gain_number == 3:
                     as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain64x)
             if True:#False:
-                integration_number = ( integration_number + 31 ) % 255
+                step = 31
+                integration_number = ( integration_number + step ) % 255
+                if integration_number > (255 - step):
+                    integration_number = 255
                 #print( "integration_number", integration_number )
             else:
                 integration_number = 255
