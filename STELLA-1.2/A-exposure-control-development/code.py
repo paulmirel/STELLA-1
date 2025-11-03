@@ -106,11 +106,12 @@ def main():
     instrument.welcome_page.hide()
     exposure_control_page = make_exposure_control_page( instrument )
     exposure_control_page.show()
-    for count in range (0,4):
-        exposure_control_page.slider_scale_select.hidden = False
-        time.sleep(1)
-        exposure_control_page.slider_scale_select.hidden = True
-        time.sleep(1)
+    for count in range (0,exposure_control_page.exposure_select_range):
+        exposure_control_page.exposure_select_choice = count
+        print("exposure_select_choice", count)
+        exposure_control_page.update_values()
+        time.sleep( 1 )
+
     stall()
 
 
@@ -966,6 +967,8 @@ class Exposure_Control_Page( Page ):
     def __init__( self, palette ):
         super().__init__()
         self.palette = palette
+        self.exposure_select_choice = 1
+        self.exposure_select_range = 8
     def make_group( self ):
         self.group = displayio.Group()
         exposure_control_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -1273,9 +1276,11 @@ class Exposure_Control_Page( Page ):
         slider_scale_area_height = slider_scale_border_height - 2*border_width
         slider_scale_area_x = slider_scale_border_x+border_width
         slider_scale_area_y = slider_scale_border_y+border_width
-        slider_scale_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=slider_scale_area_width,
+        self.slider_scale_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=slider_scale_area_width,
                                             height=slider_scale_area_height, x=slider_scale_area_x, y=slider_scale_area_y )
-        self.group.append( slider_scale_area )
+        self.group.append( self.slider_scale_area )
+        self.slider_scale_area.hidden = True
+
         slider_scale_text_x = slider_scale_area_x+text_offset_x
         slider_scale_text_y = slider_scale_area_y+6
         slider_scale_text_group = displayio.Group(scale=1, x=slider_scale_text_x, y=slider_scale_text_y)
@@ -1425,9 +1430,26 @@ class Exposure_Control_Page( Page ):
 
         return self.group
     def update_values( self ):
-        #if instrument.active_page_number == 3:
-        if instrument.button_pressed:
-            instrument.active_page_number = 2
+        if self.exposure_select_choice == 0:
+            self.return_select.hidden = False
+        else:
+            self.return_select.hidden = True
+
+        if self.exposure_select_choice == 1:
+            self.sensor_choice_select.hidden = False
+        else:
+            self.sensor_choice_select.hidden = True
+
+        if self.exposure_select_choice == 3:
+            self.slider_scale_area.hidden = False
+            self.slider_scale_select.hidden = False
+        else:
+            self.slider_scale_area.hidden = True
+            self.slider_scale_select.hidden = True
+
+
+        if False:#instrument.button_pressed:
+            print("button pressed")
             instrument.button_pressed = False
 
 def make_exposure_control_page( instrument ):
