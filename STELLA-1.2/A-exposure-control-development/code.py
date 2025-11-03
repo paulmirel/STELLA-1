@@ -106,22 +106,6 @@ def main():
     instrument.welcome_page.hide()
     exposure_control_page = make_exposure_control_page( instrument )
     exposure_control_page.show()
-    for count in range (0,exposure_control_page.exposure_select_range):
-        exposure_control_page.exposure_select_choice = count
-        print("exposure_select_choice", count)
-        exposure_control_page.update_values()
-        time.sleep( 1 )
-
-    stall()
-
-
-
-
-
-
-
-###
-
 
     as7265x_gain_number_range = 0,3
     as7265x_gain_number = 3
@@ -133,19 +117,11 @@ def main():
     as7265x_gain_min_log = math.log( as7265x_gain_min, 10 )
     as7265x_gain_span_log = as7265x_gain_max_log - as7265x_gain_min_log
 
-
-
     as7265x_integration_time_ms_min = 2.8
     as7265x_integration_time_ms_max = 714
     as7265x_integration_time_min_log = math.log( as7265x_integration_time_ms_min, 10)
     as7265x_integration_time_max_log = math.log( as7265x_integration_time_ms_max, 10 )
     as7265x_integration_time_span_log = as7265x_integration_time_max_log - as7265x_integration_time_min_log
-
-
-
-
-
-
 
     exposure_control_page.sensor_choice_text_area.text = "as7265x V+NIR"
 
@@ -163,7 +139,7 @@ def main():
     sensor_choice = 0
 
     slider_max_y = 54
-    slider_min_y = 178
+    slider_min_y = 174
     slider_pixel_span = slider_min_y - slider_max_y
 
     gain_value = 0
@@ -193,14 +169,16 @@ def main():
     try:
         operational = True
         while operational:
+            exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + 1) % exposure_control_page.exposure_select_range
+            exposure_control_page.update_values()
             exposure_control_page.sensor_choice_text_area.text = sensor_choice_dict[sensor_choice]
             print( "code running" )
             #print( "gain number", gain_number)
-            as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
-            as7265x_gain_log = math.log( as7265x_gain, 10 )
-            exposure_control_page.gain_text_area.text = str(as7265x_gain)
-            gain_pixel_offset = int( as7265x_gain_log * as7265x_gain_pixel_per_value_log )
-            exposure_control_page.gain_slider.y = slider_min_y - gain_pixel_offset
+            #as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
+            #as7265x_gain_log = math.log( as7265x_gain, 10 )
+            #exposure_control_page.gain_text_area.text = str(as7265x_gain)
+            #gain_pixel_offset = int( as7265x_gain_log * as7265x_gain_pixel_per_value_log )
+            #exposure_control_page.gain_slider.y = slider_min_y - gain_pixel_offset
             integration_time_ms = integration_number*2.8
             exposure_control_page.integration_time_text_area.text = str(int(round(integration_time_ms,0)))
             as7265x_integration_time_ms = integration_time_ms
@@ -232,8 +210,9 @@ def main():
 
             if False: # if both selected and rotated
                 sensor_choice = ( sensor_choice + 1 ) % len( sensor_choice_dict )
-            as7265x_spectrometer.set_gain_number( as7265x_gain_number )
+
             if False: # if both selected and rotated
+                as7265x_spectrometer.set_gain_number( as7265x_gain_number )
                 gain_number = (gain_number + 1 ) % len( as7265x_gain_list ) #active sensor gain list
                 if gain_number == 0:
                     as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain1x)
@@ -1118,7 +1097,7 @@ class Exposure_Control_Page( Page ):
         slider_select_y = 50
         slider_select_width = 62
         slider_select_height = 136
-        slider_min_y = 170
+        slider_min_y = 174
         slider_border_width = slider_select_width - 2*select_width
         slider_width = 42
         slider_height = 8
@@ -1241,12 +1220,12 @@ class Exposure_Control_Page( Page ):
         exposure_bracket_width = slider_width+12
         exposure_bracket_height = slider_height
         exposure_bracket_x = exposure_bracket_border_x + 3* border_width
-        exposure_bracket_high_y = 170
+        exposure_bracket_high_y = 174
         self.exposure_bracket_high = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
                                             height=exposure_bracket_height, x=exposure_bracket_x, y=exposure_bracket_high_y )
         self.group.append( self.exposure_bracket_high )
 
-        exposure_bracket_low_y = 170
+        exposure_bracket_low_y = 174
         self.exposure_bracket_low = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
                                             height=exposure_bracket_height, x=exposure_bracket_x, y=exposure_bracket_low_y )
         self.group.append( self.exposure_bracket_low )
