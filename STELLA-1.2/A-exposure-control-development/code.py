@@ -236,10 +236,9 @@ def main():
                 time.sleep(0.1)
 
             if instrument.input_flag:
-                if instrument.encoder_increment != 0:
-                    exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
-                    exposure_control_page.update_values()
-                    instrument.encoder_increment = 0
+                exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
+                exposure_control_page.update_values()
+                instrument.encoder_increment = 0
                 instrument.input_flag = False
     finally:
         displayio.release_displays()
@@ -955,10 +954,11 @@ def create_instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer ):
 #### begin exposure control page class definition
 
 class Exposure_Control_Page( Page ):
-    def __init__( self, palette ):
+    def __init__( self, instrument ):
         super().__init__()
-        self.palette = palette
-        self.exposure_select_choice = 1
+        self.instrument = instrument
+        self.palette = self.instrument.palette
+        self.exposure_select_choice = 0
         self.exposure_select_range = 8
         self.selection_color_index = 6
     def make_group( self ):
@@ -1423,7 +1423,11 @@ class Exposure_Control_Page( Page ):
         return self.group
     def update_values( self ):
         if self.exposure_select_choice == 0:
+            print( "selection == 0" )
             self.return_select.hidden = False
+            if self.instrument.button_pressed:
+                print( "return whence" )
+                self.instrument.button_pressed = False
         else:
             self.return_select.hidden = True
 
@@ -1466,7 +1470,7 @@ class Exposure_Control_Page( Page ):
             instrument.button_pressed = False
 
 def make_exposure_control_page( instrument ):
-    page = Exposure_Control_Page( instrument.palette )
+    page = Exposure_Control_Page( instrument )
     group = page.make_group()
     #page.hide()
     instrument.main_display_group.append( group )
