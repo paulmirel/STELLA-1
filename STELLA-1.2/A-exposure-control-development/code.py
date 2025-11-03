@@ -961,6 +961,16 @@ class Exposure_Control_Page( Page ):
         self.exposure_select_choice = 0
         self.exposure_select_range = 8
         self.selection_color_index = 6
+        self.field_selected_color_index = 5
+        self.field_not_selected_color_index = 9
+        self.sensor_choice_field_selected = False
+        self.setting_field_selected = False
+        self.scale_field_selected = False
+        self.gain_field_selected = False
+        self.integration_time_field_selected = False
+        self.lamp_choice_field_selected = False
+        self.lamp_current_field_selected = False
+
     def make_group( self ):
         self.group = displayio.Group()
         exposure_control_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -1023,9 +1033,9 @@ class Exposure_Control_Page( Page ):
         sensor_choice_area_height = sensor_choice_border_height - 2*border_width
         sensor_choice_area_x = sensor_choice_border_x+border_width
         sensor_choice_area_y = sensor_choice_border_y+border_width
-        sensor_choice_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=sensor_choice_area_width,
+        self.sensor_choice_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=sensor_choice_area_width,
                                             height=sensor_choice_area_height, x=sensor_choice_area_x, y=sensor_choice_area_y )
-        self.group.append( sensor_choice_area )
+        self.group.append( self.sensor_choice_area )
         sensor_choice_text_x = sensor_choice_area_x+text_offset_x
         sensor_choice_text_y = sensor_choice_area_y+text_offset_y
         sensor_choice_text_group = displayio.Group(scale=2, x=sensor_choice_text_x, y=sensor_choice_text_y)
@@ -1433,28 +1443,47 @@ class Exposure_Control_Page( Page ):
 
         if self.exposure_select_choice == 1:
             self.sensor_choice_select.hidden = False
+            if self.instrument.button_pressed:
+                print( "enter field selection" )
+                self.sensor_choice_field_selected = not self.sensor_choice_field_selected
+                self.instrument.button_pressed = False
         else:
             self.sensor_choice_select.hidden = True
         if self.exposure_select_choice == 2:
             self.setting_select.hidden = False
+            if self.instrument.button_pressed:
+                print( "enter field selection" )
+                self.instrument.button_pressed = False
         else:
             self.setting_select.hidden = True
 
         if self.exposure_select_choice == 3:
             self.slider_scale_area.hidden = False
             self.slider_scale_select.hidden = False
+            if self.instrument.button_pressed:
+                print( "enter field selection" )
+                self.instrument.button_pressed = False
         else:
             self.slider_scale_area.hidden = True
             self.slider_scale_select.hidden = True
         if self.exposure_select_choice == 4:
             self.gain_select.hidden = False
+            if self.instrument.button_pressed:
+                print( "enter field selection" )
+                self.instrument.button_pressed = False
         else:
             self.gain_select.hidden = True
         if self.exposure_select_choice == 5:
             self.integration_time_select.hidden = False
+            if self.instrument.button_pressed:
+                print( "enter field selection" )
+                self.instrument.button_pressed = False
         else:
             self.integration_time_select.hidden = True
         if self.exposure_select_choice == 6:
+            if self.instrument.button_pressed:
+                print( "enter field selection" )
+                self.instrument.button_pressed = False
             pass
             #self.lamp_choice_select.hidden = False
         else:
@@ -1462,9 +1491,16 @@ class Exposure_Control_Page( Page ):
             pass
         if self.exposure_select_choice == 7:
             self.lamp_current_select.hidden = False
+            if self.instrument.button_pressed:
+                print( "enter field selection" )
+                self.instrument.button_pressed = False
         else:
             self.lamp_current_select.hidden = True
 
+        if self.sensor_choice_field_selected:
+            self.sensor_choice_area.color_index = self.field_selected_color_index
+        else:
+            self.sensor_choice_area.color_index = self.field_not_selected_color_index
         if False:#instrument.button_pressed:
             print("button pressed")
             instrument.button_pressed = False
