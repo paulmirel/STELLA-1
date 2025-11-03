@@ -166,11 +166,13 @@ def main():
     gain_number = 3
     integration_number = 1
     as7265x_spectrometer.read_counts()
+    wait_time = 5
+    exposure_control_page.update_values()
     try:
         operational = True
         while operational:
-            exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + 1) % exposure_control_page.exposure_select_range
-            exposure_control_page.update_values()
+            instrument.check_inputs()
+
             exposure_control_page.sensor_choice_text_area.text = sensor_choice_dict[sensor_choice]
             print( "code running" )
             #print( "gain number", gain_number)
@@ -228,7 +230,17 @@ def main():
             else:
                 integration_number = 255
             as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
-            time.sleep( 5 )
+            wait_start = time.monotonic()
+            while (time.monotonic() < wait_start + wait_time) and not instrument.input_flag:
+                instrument.check_inputs()
+                time.sleep(0.1)
+
+            if instrument.input_flag:
+                if instrument.encoder_increment != 0:
+                    exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
+                    exposure_control_page.update_values()
+                    instrument.encoder_increment = 0
+                instrument.input_flag = False
     finally:
         displayio.release_displays()
         print( "displayio displays released" )
@@ -948,6 +960,7 @@ class Exposure_Control_Page( Page ):
         self.palette = palette
         self.exposure_select_choice = 1
         self.exposure_select_range = 8
+        self.selection_color_index = 6
     def make_group( self ):
         self.group = displayio.Group()
         exposure_control_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -963,7 +976,7 @@ class Exposure_Control_Page( Page ):
         return_select_y = top_row_y
         return_select_width = 40
         return_select_height = 40
-        self.return_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=return_select_width,
+        self.return_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = self.selection_color_index, width=return_select_width,
                                                     height=return_select_height, x=return_select_x, y=return_select_y )
         self.group.append( self.return_select )
         self.return_select.hidden = True
@@ -993,7 +1006,7 @@ class Exposure_Control_Page( Page ):
         sensor_choice_select_y = top_row_y
         sensor_choice_select_width = 180
         sensor_choice_select_height = 40
-        self.sensor_choice_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=sensor_choice_select_width,
+        self.sensor_choice_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = self.selection_color_index, width=sensor_choice_select_width,
                                                     height=sensor_choice_select_height, x=sensor_choice_select_x, y=sensor_choice_select_y )
         self.group.append( self.sensor_choice_select )
         self.sensor_choice_select.hidden = True
@@ -1026,7 +1039,7 @@ class Exposure_Control_Page( Page ):
         setting_select_y = top_row_y
         setting_select_width = 94
         setting_select_height = 40
-        self.setting_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=setting_select_width,
+        self.setting_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = self.selection_color_index, width=setting_select_width,
                                                     height=setting_select_height, x=setting_select_x, y=setting_select_y )
         self.group.append( self.setting_select )
         self.setting_select.hidden = True
@@ -1064,7 +1077,7 @@ class Exposure_Control_Page( Page ):
         gain_select_y = 240-40-select_width
         gain_select_width = 70
         gain_select_height = 40
-        self.gain_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=gain_select_width,
+        self.gain_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = self.selection_color_index, width=gain_select_width,
                                                     height=gain_select_height, x=gain_select_x, y=gain_select_y )
         self.group.append( self.gain_select )
         self.gain_select.hidden = True
@@ -1236,7 +1249,7 @@ class Exposure_Control_Page( Page ):
         slider_scale_select_y = 35
         slider_scale_select_width = 100
         slider_scale_select_height = 24
-        self.slider_scale_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=slider_scale_select_width,
+        self.slider_scale_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = self.selection_color_index, width=slider_scale_select_width,
                                                     height=slider_scale_select_height, x=slider_scale_select_x, y=slider_scale_select_y )
         self.group.append( self.slider_scale_select )
         self.slider_scale_select.hidden = True
@@ -1274,7 +1287,7 @@ class Exposure_Control_Page( Page ):
         integration_time_select_y = 240-40-select_width
         integration_time_select_width = 84
         integration_time_select_height = 40
-        self.integration_time_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_time_select_width,
+        self.integration_time_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = self.selection_color_index, width=integration_time_select_width,
                                                     height=integration_time_select_height, x=integration_time_select_x, y=integration_time_select_y )
         self.group.append( self.integration_time_select )
         self.integration_time_select.hidden = True
@@ -1306,7 +1319,7 @@ class Exposure_Control_Page( Page ):
         lamp_current_select_y = 240-40-select_width
         lamp_current_select_width = 70
         lamp_current_select_height = 40
-        self.lamp_current_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_select_width,
+        self.lamp_current_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = self.selection_color_index, width=lamp_current_select_width,
                                                     height=lamp_current_select_height, x=lamp_current_select_x, y=lamp_current_select_y )
         self.group.append( self.lamp_current_select )
         self.lamp_current_select.hidden = True
