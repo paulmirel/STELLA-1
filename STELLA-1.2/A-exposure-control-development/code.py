@@ -1421,12 +1421,40 @@ class Exposure_Control_Page( Page ):
         value_label_text_group.append(value_label_text_area)
         self.group.append(value_label_text_group)
 
+        ### Lamp select area
+
+        lamp_choice_select_x = 162
+        lamp_choice_select_y = gain_area_y - 22
+        lamp_choice_select_width = 66
+        lamp_choice_select_height = 26
+        self.lamp_choice_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = self.selection_color_index, width=lamp_choice_select_width,
+                                                    height=lamp_choice_select_height, x=lamp_choice_select_x, y=lamp_choice_select_y )
+        self.group.append( self.lamp_choice_select )
+        #self.lamp_choice_select.hidden = True
+
+        lamp_choice_border_width = lamp_choice_select_width - 2*select_width
+        lamp_choice_border_height = lamp_choice_select_height - 2*select_width
+        lamp_choice_border_x = lamp_choice_select_x+select_width
+        lamp_choice_border_y = lamp_choice_select_y+select_width
+        if False:
+            lamp_choice_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_choice_border_width,
+                                            height=lamp_choice_border_height, x=lamp_choice_border_x, y=lamp_choice_border_y )
+            self.group.append( lamp_choice_border )
+
+        lamp_choice_area_width = lamp_choice_border_width - 2*border_width
+        lamp_choice_area_height = lamp_choice_border_height - 2*border_width
+        lamp_choice_area_x = lamp_choice_border_x+border_width
+        lamp_choice_area_y = lamp_choice_border_y+border_width
+        self.lamp_choice_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=lamp_choice_area_width,
+                                            height=lamp_choice_area_height, x=lamp_choice_area_x, y=lamp_choice_area_y )
+        self.group.append( self.lamp_choice_area )
+
         value_label_text_x = 166+8
         value_label_text_y = gain_area_y - 10
         value_label_text_group = displayio.Group(scale=1, x=value_label_text_x, y=value_label_text_y)
         value_label_text = "Lamp mA"
-        value_label_text_area = label.Label(terminalio.FONT, text=value_label_text, color=self.palette[0])
-        value_label_text_group.append(value_label_text_area)
+        self.value_label_text_area = label.Label(terminalio.FONT, text=value_label_text, color=self.palette[0])
+        value_label_text_group.append(self.value_label_text_area)
         self.group.append(value_label_text_group)
 
         exposure_label_text_x = 240
