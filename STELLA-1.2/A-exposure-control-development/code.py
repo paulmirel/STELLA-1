@@ -1439,6 +1439,10 @@ class Exposure_Control_Page( Page ):
             self.sensor_choice_select.hidden = False
         else:
             self.sensor_choice_select.hidden = True
+        if self.exposure_select_choice == 2:
+            self.setting_select.hidden = False
+        else:
+            self.setting_select.hidden = True
 
         if self.exposure_select_choice == 3:
             self.slider_scale_area.hidden = False
@@ -1446,7 +1450,24 @@ class Exposure_Control_Page( Page ):
         else:
             self.slider_scale_area.hidden = True
             self.slider_scale_select.hidden = True
-
+        if self.exposure_select_choice == 4:
+            self.gain_select.hidden = False
+        else:
+            self.gain_select.hidden = True
+        if self.exposure_select_choice == 5:
+            self.integration_time_select.hidden = False
+        else:
+            self.integration_time_select.hidden = True
+        if self.exposure_select_choice == 6:
+            pass
+            #self.lamp_choice_select.hidden = False
+        else:
+            #self.lamp_choice_select.hidden = True
+            pass
+        if self.exposure_select_choice == 7:
+            self.lamp_current_select.hidden = False
+        else:
+            self.lamp_current_select.hidden = True
 
         if False:#instrument.button_pressed:
             print("button pressed")
