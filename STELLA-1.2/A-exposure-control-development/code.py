@@ -972,7 +972,7 @@ class Exposure_Control_Page( Page ):
         self.field_not_selected_color_index = 9
         self.sensor_choice_field_selected = False
         self.setting_field_selected = False
-        self.scale_field_selected = False
+        self.slider_scale_field_selected = False
         self.gain_field_selected = False
         self.integration_time_field_selected = False
         self.lamp_choice_field_selected = False
@@ -1073,9 +1073,9 @@ class Exposure_Control_Page( Page ):
         setting_area_height = setting_border_height - 2*border_width
         setting_area_x = setting_border_x+border_width
         setting_area_y = setting_border_y+border_width
-        setting_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=setting_area_width,
+        self.setting_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=setting_area_width,
                                             height=setting_area_height, x=setting_area_x, y=setting_area_y )
-        self.group.append( setting_area )
+        self.group.append( self.setting_area )
         setting_text_x = setting_area_x+text_offset_x
         setting_text_y = setting_area_y+text_offset_y
         setting_text_group = displayio.Group(scale=2, x=setting_text_x, y=setting_text_y)
@@ -1111,9 +1111,9 @@ class Exposure_Control_Page( Page ):
         gain_area_height = gain_border_height - 2*border_width
         gain_area_x = gain_border_x+border_width
         gain_area_y = gain_border_y+border_width
-        gain_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=gain_area_width,
+        self.gain_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=gain_area_width,
                                             height=gain_area_height, x=gain_area_x, y=gain_area_y )
-        self.group.append( gain_area )
+        self.group.append( self.gain_area )
         gain_text_x = gain_area_x+text_offset_x
         gain_text_y = gain_area_y+text_offset_y
         gain_text_group = displayio.Group(scale=2, x=gain_text_x, y=gain_text_y)
@@ -1321,9 +1321,9 @@ class Exposure_Control_Page( Page ):
         integration_time_area_height = integration_time_border_height - 2*border_width
         integration_time_area_x = integration_time_border_x+border_width
         integration_time_area_y = integration_time_border_y+border_width
-        integration_time_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=integration_time_area_width,
+        self.integration_time_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=integration_time_area_width,
                                             height=integration_time_area_height, x=integration_time_area_x, y=integration_time_area_y )
-        self.group.append( integration_time_area )
+        self.group.append( self.integration_time_area )
         integration_time_text_x = integration_time_area_x+text_offset_x
         integration_time_text_y = integration_time_area_y+text_offset_y
         integration_time_text_group = displayio.Group(scale=2, x=integration_time_text_x, y=integration_time_text_y)
@@ -1488,6 +1488,7 @@ class Exposure_Control_Page( Page ):
             self.setting_select.hidden = False
             if self.instrument.button_pressed:
                 print( "enter field selection" )
+                self.setting_field_selected = not self.setting_field_selected
                 self.instrument.button_pressed = False
         else:
             self.setting_select.hidden = True
@@ -1497,6 +1498,7 @@ class Exposure_Control_Page( Page ):
             self.slider_scale_select.hidden = False
             if self.instrument.button_pressed:
                 print( "enter field selection" )
+                self.slider_scale_field_selected = not self.slider_scale_field_selected
                 self.instrument.button_pressed = False
         else:
             self.slider_scale_area.hidden = True
@@ -1505,6 +1507,7 @@ class Exposure_Control_Page( Page ):
             self.gain_select.hidden = False
             if self.instrument.button_pressed:
                 print( "enter field selection" )
+                self.gain_field_selected = not self.gain_field_selected
                 self.instrument.button_pressed = False
         else:
             self.gain_select.hidden = True
@@ -1512,6 +1515,7 @@ class Exposure_Control_Page( Page ):
             self.integration_time_select.hidden = False
             if self.instrument.button_pressed:
                 print( "enter field selection" )
+                self.integration_time_field_selected = not self.integration_time_field_selected
                 self.instrument.button_pressed = False
         else:
             self.integration_time_select.hidden = True
@@ -1533,19 +1537,30 @@ class Exposure_Control_Page( Page ):
                 self.lamp_current_field_selected = not self.lamp_current_field_selected
         else:
             self.lamp_current_select.hidden = True
-
         if self.sensor_choice_field_selected:
             self.sensor_choice_area.color_index = self.field_selected_color_index
         else:
             self.sensor_choice_area.color_index = self.field_not_selected_color_index
-
-
-
+        if self.setting_field_selected:
+            self.setting_area.color_index = self.field_selected_color_index
+        else:
+            self.setting_area.color_index = self.field_not_selected_color_index
+        if self.slider_scale_field_selected:
+            self.slider_scale_area.color_index = self.field_selected_color_index
+        else:
+            self.slider_scale_area.color_index = self.field_not_selected_color_index
+        if self.gain_field_selected:
+            self.gain_area.color_index = self.field_selected_color_index
+        else:
+            self.gain_area.color_index = self.field_not_selected_color_index
+        if self.integration_time_field_selected:
+            self.integration_time_area.color_index = self.field_selected_color_index
+        else:
+            self.integration_time_area.color_index = self.field_not_selected_color_index
         if self.lamp_choice_field_selected:
             self.lamp_choice_area.color_index = self.field_selected_color_index
         else:
             self.lamp_choice_area.color_index = self.field_not_selected_color_index
-
         if self.lamp_current_field_selected:
             self.lamp_current_area.color_index = self.field_selected_color_index
         else:
