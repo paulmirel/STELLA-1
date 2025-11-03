@@ -97,7 +97,7 @@ def main():
             gain_ratio = as7331_spectrometer.set_gain( number )
             print( "as7331 gain ratio =", gain_ratio)
             time.sleep( 5 )
-    if True:#False:
+    if False:
         for number in range (0,len(as7341_spectrometer.gain_list)):
             gain_ratio = as7341_spectrometer.set_gain( number )
             print( "as7341 gain ratio =", gain_ratio)
@@ -106,6 +106,11 @@ def main():
     instrument.welcome_page.hide()
     exposure_control_page = make_exposure_control_page( instrument )
     exposure_control_page.show()
+    for count in range (0,4):
+        exposure_control_page.slider_scale_select.hidden = False
+        time.sleep(1)
+        exposure_control_page.slider_scale_select.hidden = True
+        time.sleep(1)
     stall()
 
 
@@ -156,8 +161,8 @@ def main():
     sensor_choice_dict = {0:"as7265x V+NIR", 1:"as7331 UV", 2:"as7341 Vis"}
     sensor_choice = 0
 
-    slider_max_y = 50
-    slider_min_y = 170
+    slider_max_y = 54
+    slider_min_y = 178
     slider_pixel_span = slider_min_y - slider_max_y
 
     gain_value = 0
@@ -1067,6 +1072,11 @@ class Exposure_Control_Page( Page ):
         setting_text_group.append(self.setting_text_area)
         self.group.append(setting_text_group)
 
+
+
+
+
+
         # bottom row
         gain_select_x = 4
         gain_select_y = 240-40-select_width
@@ -1102,7 +1112,7 @@ class Exposure_Control_Page( Page ):
 
         # sliders
 
-        slider_select_y = 46
+        slider_select_y = 50
         slider_select_width = 62
         slider_select_height = 136
         slider_min_y = 170
@@ -1237,6 +1247,44 @@ class Exposure_Control_Page( Page ):
         self.exposure_bracket_low = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
                                             height=exposure_bracket_height, x=exposure_bracket_x, y=exposure_bracket_low_y )
         self.group.append( self.exposure_bracket_low )
+
+        # slider scale header
+
+        slider_scale_select_x = 106
+        slider_scale_select_y = 35
+        slider_scale_select_width = 100
+        slider_scale_select_height = 24
+        self.slider_scale_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=slider_scale_select_width,
+                                                    height=slider_scale_select_height, x=slider_scale_select_x, y=slider_scale_select_y )
+        self.group.append( self.slider_scale_select )
+        self.slider_scale_select.hidden = True
+
+
+        slider_scale_border_width = slider_scale_select_width - 2*select_width
+        slider_scale_border_height = slider_scale_select_height - 2*select_width
+        slider_scale_border_x = slider_scale_select_x+select_width
+        slider_scale_border_y = slider_scale_select_y+select_width
+        if False:
+            slider_scale_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=slider_scale_border_width,
+                                                height=slider_scale_border_height, x=slider_scale_border_x, y=slider_scale_border_y )
+            self.group.append( slider_scale_border )
+
+        slider_scale_area_width = slider_scale_border_width - 2*border_width
+        slider_scale_area_height = slider_scale_border_height - 2*border_width
+        slider_scale_area_x = slider_scale_border_x+border_width
+        slider_scale_area_y = slider_scale_border_y+border_width
+        slider_scale_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=slider_scale_area_width,
+                                            height=slider_scale_area_height, x=slider_scale_area_x, y=slider_scale_area_y )
+        self.group.append( slider_scale_area )
+        slider_scale_text_x = slider_scale_area_x+text_offset_x
+        slider_scale_text_y = slider_scale_area_y+6
+        slider_scale_text_group = displayio.Group(scale=1, x=slider_scale_text_x, y=slider_scale_text_y)
+        slider_scale_text = "linear scale"
+        self.slider_scale_text_area = label.Label(terminalio.FONT, text=slider_scale_text, color=self.palette[0])
+        slider_scale_text_group.append(self.slider_scale_text_area)
+        self.group.append(slider_scale_text_group)
+
+
 
         integration_time_select_x = gain_select_x + gain_select_width
         integration_time_select_y = 240-40-select_width
