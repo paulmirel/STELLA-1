@@ -236,7 +236,14 @@ def main():
                 time.sleep(0.1)
 
             if instrument.input_flag:
-                exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
+                if exposure_control_page.sensor_choice_field_selected:
+                    print( "increment sensor choice" )
+                #if
+                #if
+                #if
+
+                else:
+                    exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
                 exposure_control_page.update_values()
                 instrument.encoder_increment = 0
                 instrument.input_flag = False
