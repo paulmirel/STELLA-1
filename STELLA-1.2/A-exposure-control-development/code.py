@@ -166,12 +166,14 @@ def main():
     as7265x_spectrometer.read_counts()
     wait_time = 5
     exposure_control_page.update_values()
+    slider_scale_list = "linear scale", "log scale"
+    slider_scale_choice = 1
     try:
         operational = True
         while operational:
             instrument.check_inputs()
             exposure_control_page.sensor_choice_text_area.text = instrument.spectral_sensors_present[sensor_choice].choice_label
-
+            exposure_control_page.slider_scale_text_area.text = slider_scale_list[slider_scale_choice]
             print( "code running" )
             #print( "gain number", gain_number)
             #as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
@@ -237,19 +239,18 @@ def main():
                 if instrument.encoder_increment != 0:
                     if exposure_control_page.sensor_choice_field_selected:
                         sensor_choice = (sensor_choice + 1) % len(instrument.spectral_sensors_present)
-                        print( "increment sensor choice" )
                     elif exposure_control_page.setting_field_selected:
-                        print( "increment setting" )
+                        print( "TBD increment setting" )
                     elif exposure_control_page.slider_scale_field_selected:
-                        print( "toggle slider scale" )
+                        slider_scale_choice = (slider_scale_choice + 1) % len(slider_scale_list)
                     elif exposure_control_page.gain_field_selected:
-                        print( "increment gain" )
+                        print( "TBD increment gain" )
                     elif exposure_control_page.integration_time_field_selected:
-                        print( "increment integration time" )
+                        print( "TBD increment integration time" )
                     elif exposure_control_page.lamp_choice_field_selected:
-                        print( "increment lamp choice" )
+                        print( "TBD increment lamp choice" )
                     elif exposure_control_page.lamp_current_field_selected:
-                        print( "increment lamp current" )
+                        print( "TBD increment lamp current" )
                     else:
                         exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
                 exposure_control_page.update_values()
