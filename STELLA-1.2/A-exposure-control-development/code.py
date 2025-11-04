@@ -220,6 +220,7 @@ def main():
                 exposure_low_log = math.log(exposure_low,10)
             else:
                 exposure_low_log = 0
+
             #print( exposure_high, exposure_low )
             #print( exposure_high_log, exposure_low_log )
             exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
@@ -227,6 +228,12 @@ def main():
             exposure_low_pixel_offset = int( exposure_low_log * exposure_pixel_per_value_log )
             exposure_control_page.exposure_bracket_high.y = exposure_control_page.slider_min_y - exposure_high_pixel_offset
             exposure_control_page.exposure_bracket_low.y = exposure_control_page.slider_min_y - exposure_low_pixel_offset
+            if exposure_high < exposure_max_value:
+                exposure_control_page.exposure_label_text_area.text = "Exposure Max"
+            else:
+                exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
+
+                print( "SATURATED" )
 
             if False: # if both selected and rotated
                 sensor_choice = ( sensor_choice + 1 ) % len( sensor_choice_dict )
