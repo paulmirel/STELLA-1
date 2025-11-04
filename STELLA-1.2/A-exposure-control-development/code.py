@@ -236,14 +236,23 @@ def main():
                 time.sleep(0.1)
 
             if instrument.input_flag:
-                if exposure_control_page.sensor_choice_field_selected:
-                    print( "increment sensor choice" )
-                #if
-                #if
-                #if
-
-                else:
-                    exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
+                if instrument.encoder_increment != 0:
+                    if exposure_control_page.sensor_choice_field_selected:
+                        print( "increment sensor choice" )
+                    if exposure_control_page.setting_field_selected:
+                        print( "increment setting" )
+                    if exposure_control_page.slider_scale_field_selected:
+                        print( "toggle slider scale" )
+                    if exposure_control_page.gain_field_selected:
+                        print( "increment gain" )
+                    if exposure_control_page.integration_time_field_selected:
+                        print( "increment integration time" )
+                    if exposure_control_page.lamp_choice_field_selected:
+                        print( "increment lamp choice" )
+                    if exposure_control_page.lamp_current_field_selected:
+                        print( "increment lamp current" )
+                    else:
+                        exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
                 exposure_control_page.update_values()
                 instrument.encoder_increment = 0
                 instrument.input_flag = False
@@ -1466,6 +1475,7 @@ class Exposure_Control_Page( Page ):
         self.group.append(exposure_label_text_group)
 
         return self.group
+
     def update_values( self ):
         if self.exposure_select_choice == 0:
             print( "selection == 0" )
@@ -1484,6 +1494,7 @@ class Exposure_Control_Page( Page ):
                 self.instrument.button_pressed = False
         else:
             self.sensor_choice_select.hidden = True
+
         if self.exposure_select_choice == 2:
             self.setting_select.hidden = False
             if self.instrument.button_pressed:
@@ -1537,6 +1548,9 @@ class Exposure_Control_Page( Page ):
                 self.lamp_current_field_selected = not self.lamp_current_field_selected
         else:
             self.lamp_current_select.hidden = True
+
+
+
         if self.sensor_choice_field_selected:
             self.sensor_choice_area.color_index = self.field_selected_color_index
         else:
