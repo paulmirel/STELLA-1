@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.0.3"
+SOFTWARE_VERSION_NUMBER = "0.0.2"
 DEVICE_TYPE = "STELLA-1.2_Exposure_control"
 # Paul Mirel 2025
 
@@ -84,46 +84,96 @@ def main():
     as7341_spectrometer = initialize_as7341_spectrometer( instrument )
 
 
+    ### temporary -- gain setting tests
+    if False:
+        for number in range (0,len(as7265x_spectrometer.gain_list)):
+            gain_ratio = as7265x_spectrometer.set_gain( number )
+            print( "as7265x gain ratio =", gain_ratio)
+            time.sleep( 5 )
+    if False:
+        print( "is the as7331 gain ratio inverted in the library or in the sensor? check actual value outputs" )
+        for number in range (0,len(as7331_spectrometer.gain_list)):
+            gain_ratio = as7331_spectrometer.set_gain( number )
+            print( "as7331 gain ratio =", gain_ratio)
+            time.sleep( 5 )
+    if False:
+        for number in range (0,len(as7341_spectrometer.gain_list)):
+            gain_ratio = as7341_spectrometer.set_gain( number )
+            print( "as7341 gain ratio =", gain_ratio)
+            time.sleep( 5 )
+
     instrument.welcome_page.hide()
     exposure_control_page = make_exposure_control_page( instrument )
     exposure_control_page.show()
 
-    ### local working values
+    as7265x_gain_number_range = 0,3
+    as7265x_gain_number = 3
+    as7265x_gain_list = ( 1, 3.7, 16, 64 )
+    as7265x_gain_max = max( as7265x_gain_list )
+    as7265x_gain_min = min( as7265x_gain_list )
+    as7265x_gain_span = as7265x_gain_max - as7265x_gain_min
+    as7265x_gain_max_log = math.log( as7265x_gain_max, 10 )
+    as7265x_gain_min_log = math.log( as7265x_gain_min, 10 )
+    as7265x_gain_span_log = as7265x_gain_max_log - as7265x_gain_min_log
+
+    as7265x_integration_time_ms_min = 2.8
+    as7265x_integration_time_ms_max = 714
+    as7265x_integration_time_min_log = math.log( as7265x_integration_time_ms_min, 10)
+    as7265x_integration_time_max_log = math.log( as7265x_integration_time_ms_max, 10 )
+    as7265x_integration_time_span_log = as7265x_integration_time_max_log - as7265x_integration_time_min_log
+
+
+    #exposure_control_page.sensor_choice_text_area.text = "as7331 UV"
+    #exposure_control_page.sensor_choice_text_area.text = "as7341 Vis"
+
+    exposure_control_page.setting_text_area.text = "Manual"
+    #exposure_control_page.setting_text_area.text = "Pre 1" #Preset
+    #exposure_control_page.setting_text_area.text = "Auto"
+    #exposure_control_page.setting_text_area.text = "Save"  #increment preset number and save current values to that preset
+
+    #exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
+    #exposure_control_page.exposure_label_text_area.text = "Exposure Max"
     sensor_choice = 0
-    setting_list = [ "Manual", "Auto", "Preset 1", "Preset 2" ]
-    setting_choice = 0
+
+
+    gain_value = 0
+    exposure_control_page.gain_text_area.text = str(gain_value)
+    as7265x_gain_pixel_per_value_log = exposure_control_page.slider_pixel_span/as7265x_gain_span_log
+
+    as7265x_integration_number = 1
+    as7265x_integration_time_pixel_per_value_log = exposure_control_page.slider_pixel_span/as7265x_integration_time_span_log
+    integration_time_ms = 0
+    exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
+
+    lamp_current_mA = 0
+    exposure_control_page.lamp_current_text_area.text = str(lamp_current_mA)
+    exposure_high = 0
+    exposure_max_value = 65535
+    exposure_max_value_log = math.log(exposure_max_value, 10)
+    #print( "exposure_max_value_log", exposure_max_value_log ) #4.81647
+    exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
+    exposure_value_span_log = exposure_max_value_log
+    exposure_pixel_per_value_log = exposure_control_page.slider_pixel_span/exposure_value_span_log
+
+    as7265x_integration_number = 80
+    as7265x_integration_time_ms = as7265x_spectrometer.set_integration_number( as7265x_integration_number )
+    integration_number = 1
+    as7265x_spectrometer.read_counts()
+
+    exposure_control_page.update_values()
     slider_scale_list = "log scale", "linear scale"
     slider_scale_choice = 0
-    slider_pixel_span = exposure_control_page.slider_pixel_span
-    working_gain_choice = 0
-    working_gain = 0
-    working_integration_time_choice = 0
-    working_integration_time_ms = 0
-    working_lamp_choice = 0
-    working_lamp_current_mA = 0
-    exposure_high = 0
-    exposure_max_value = []
-    decimal_16_bits = 65535
-    exposure_value_span = []
-    exposure_value_span.append( math.log(decimal_16_bits, 10))
-    exposure_value_span.append( decimal_16_bits )
-    exposure_control_page.update_values()
-
-    last_sensor_gain_choices = []
-    sensor_gain_choices = []
+    last_gain_choices = []
+    gain_choices = []
     for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
-        last_sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
-        sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
-
-
-    last_sensor_integration_time_choices = []
-    sensor_integration_time_choices = []
-    for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
-        last_sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
-        sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
-    stall()
-
+        last_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
+        gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
+    sensor_choice = 0
     wait_time = 1
+    #exposure_control_page.slider_max_y
+    #exposure_control_page.slider_min_y
+    #exposure_control_page.slider_pixel_span
+
     try:
         operational = True
         while operational:
@@ -293,8 +343,6 @@ class as7265x_Spectrometer( Device ):
             self.gain_list = [ 1, 3.7, 16, 64 ]
             self.gain_choice = 2
             self.set_gain( self.gain_choice )
-            self.integration_time_ms_list = [] #TBD values
-            self.integration_time_choice = 0 #TBD default
             self.intg_time_ms = 56 #default, number = 20 out of 255
             self.afov_deg = (20.5 * 2) #datasheet reports half angle.
     def set_gain(self, number):
@@ -414,8 +462,6 @@ class as7331_Spectrometer( Device ):
         self.gain_choice = 5
         self.gain_list = [ 1,2,4,8,16,32,64,128,256,512,1024,2048 ]
         self.set_gain( self.gain_choice )
-        self.integration_time_ms_list = [] #TBD values
-        self.integration_time_choice = 0 #TBD default
 
 
     def set_gain(self, number):
@@ -555,7 +601,7 @@ class as7341_Spectrometer( Device ):
         self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
         #self.tsis_cal_counts_per_irradiance = 1405.9, 2079.6, 2631.6, 3556.8, 4246.0, 5060.6, 6888.9, 9130.9
         # first principles calibration by Sten Odenwald of NASA Heliophysics
-        # TBD print( "as7341 Sten O cal counts per irradiance at what gain?  TBD " )
+        print( "as7341 Sten O cal counts per irradiance at what gain?  TBD " )
         self.steno_cal_counts_per_irradiance = 4398.0, 6104.0, 7583.0, 9972.0, 11536.0, 13374.0, 17115.0, 20916.0
         self.calibration_error = 0.6
         self.irradiance = [0,0,0,0,0,0,0,0]
@@ -564,8 +610,6 @@ class as7341_Spectrometer( Device ):
         self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256 ]
         self.gain_choice = 5 #default to 16x gain
         self.set_gain( self.gain_choice )
-        self.integration_time_ms_list = [] #TBD values
-        self.integration_time_choice = 0 #TBD default
     def set_gain(self, number):
         if number < 1:
             gain_constant = AS7341_Gain.GAIN_0_5X
@@ -1474,7 +1518,7 @@ class Exposure_Control_Page( Page ):
 
     def update_values( self ):
         if self.exposure_select_choice == 0:
-            #print( "selection == 0" )
+            print( "selection == 0" )
             self.return_select.hidden = False
             if self.instrument.button_pressed:
                 print( "return whence" )
