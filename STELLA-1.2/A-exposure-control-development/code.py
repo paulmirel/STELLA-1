@@ -88,19 +88,19 @@ def main():
     exposure_control_page = make_exposure_control_page( instrument )
     exposure_control_page.show()
 
-    ### local working values
-    sensor_choice = 0
+    ### local local values
+    scale_choice = 0
+    scale_list = "log scale", "linear scale"
     setting_list = [ "Manual", "Auto", "Preset 1", "Preset 2" ]
     setting_choice = 0
-    slider_scale_list = "log scale", "linear scale"
-    slider_scale_choice = 0
     slider_pixel_span = exposure_control_page.slider_pixel_span
-    working_gain_choice = 0
-    working_gain = 0
-    working_integration_time_choice = 0
-    working_integration_time_ms = 0
-    working_lamp_choice = 0
-    working_lamp_current_mA = 0
+    slider_min_y = exposure_control_page.slider_min_y
+    local_gain_choice = 0
+    local_gain = 0
+    local_integration_time_choice = 0
+    local_integration_time_ms = 0
+    local_lamp_choice = 0
+    local_lamp_current_mA = 0
     exposure_high = 0
     exposure_max_value = []
     decimal_16_bits = 65535
@@ -115,96 +115,91 @@ def main():
         last_sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
         sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
 
-
     last_sensor_integration_time_choices = []
     sensor_integration_time_choices = []
     for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
         last_sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
         sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
-    stall()
+    sensor_choice = 0
+    # TBD lamp selection, lamp current
 
     wait_time = 1
     try:
         operational = True
         while operational:
             instrument.check_inputs()
-            working_sensor = instrument.spectral_sensors_present[sensor_choice]
-            working_gain = []
-            working_gain.append(math.log(working_sensor.gain_list[gain_choices[sensor_choice]],10))
-            working_gain.append(working_sensor.gain_list[gain_choices[sensor_choice]])
-            working_gain_range = max(working_sensor.gain_list) - min(working_sensor.gain_list)
-            working_gain_per_pixel = []
-            working_gain_per_pixel.append(math.log(working_gain_range,10)/exposure_control_page.slider_pixel_span)
-            working_gain_per_pixel.append(working_gain_range/exposure_control_page.slider_pixel_span)
-            exposure_control_page.gain_slider.y = exposure_control_page.slider_min_y - int(working_gain[slider_scale_choice] / working_gain_per_pixel[slider_scale_choice])
-
-
-            exposure_control_page.sensor_choice_text_area.text = working_sensor.choice_label
-            exposure_control_page.slider_scale_text_area.text = slider_scale_list[slider_scale_choice]
-            # TBD don't ask the sensor every time
-            exposure_control_page.gain_text_area.text = str(working_gain[1])
-            print( "code running" )
-            #print( "gain number", gain_number)
-            #as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
-            #as7265x_gain_log = math.log( as7265x_gain, 10 )
-            #exposure_control_page.gain_text_area.text = str(as7265x_gain)
-            #gain_pixel_offset = int( as7265x_gain_log * as7265x_gain_pixel_per_value_log )
-            #exposure_control_page.gain_slider.y = slider_min_y - gain_pixel_offset
-            #integration_time_ms = integration_number*2.8
-            #exposure_control_page.integration_time_text_area.text = str(int(round(integration_time_ms,0)))
-            #as7265x_integration_time_ms = integration_time_ms
-            #as7265x_integration_time_log = math.log( as7265x_integration_time_ms, 10 )
-            #integration_time_pixel_offset = int( (as7265x_integration_time_log- as7265x_integration_time_min_log)* as7265x_integration_time_pixel_per_value_log )
-            #exposure_control_page.integration_time_slider.y = exposure_control_page.slider_min_y - integration_time_pixel_offset
-
-
-            instrument.spectral_sensors_present[sensor_choice].read_counts()
-            #print( max(as7265x_spectrometer.data_counts), min(as7265x_spectrometer.data_counts) )
-            exposure_high = max(instrument.spectral_sensors_present[sensor_choice].data_counts)
-            if exposure_high > 0:
-                exposure_high_log = math.log(exposure_high,10)
+            if instrument.input_flag:
+                pass
             else:
-                exposure_high_log = 0
-            exposure_low = min(as7265x_spectrometer.data_counts)
-            if exposure_low > 0:
-                exposure_low_log = math.log(exposure_low,10)
-            else:
-                exposure_low_log = 0
+                exposure_control_page.slider_scale_text_area.text = scale_list[ scale_choice ]
 
-            #print( exposure_high, exposure_low )
-            #print( exposure_high_log, exposure_low_log )
-            exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
-            exposure_high_pixel_offset = int( exposure_high_log * exposure_pixel_per_value_log )
-            exposure_low_pixel_offset = int( exposure_low_log * exposure_pixel_per_value_log )
-            exposure_control_page.exposure_bracket_high.y = exposure_control_page.slider_min_y - exposure_high_pixel_offset
-            exposure_control_page.exposure_bracket_low.y = exposure_control_page.slider_min_y - exposure_low_pixel_offset
-            if exposure_high < exposure_max_value:
-                exposure_control_page.exposure_label_text_area.text = "Exposure Max"
-            else:
-                exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
+                local_sensor = instrument.spectral_sensors_present[sensor_choice]
+                exposure_control_page.sensor_choice_text_area.text = local_sensor.choice_label
 
-                print( "SATURATED" )
+                local_gain = []
+                local_gain.append(math.log(local_sensor.gain_list[sensor_gain_choices[sensor_choice]],10))
+                local_gain.append(local_sensor.gain_list[sensor_gain_choices[sensor_choice]])
+                local_gain_range = max(local_sensor.gain_list) - min(local_sensor.gain_list)
+                local_gain_per_pixel = []
+                local_gain_per_pixel.append(math.log(local_gain_range,10)/slider_pixel_span)
+                local_gain_per_pixel.append(local_gain_range/slider_pixel_span)
+                exposure_control_page.gain_slider.y = slider_min_y - int( local_gain[ scale_choice ] / local_gain_per_pixel[ scale_choice ])
+                exposure_control_page.gain_text_area.text = str(local_gain[1]) #display linear gain value
 
-            if False: # if both selected and rotated
-                sensor_choice = ( sensor_choice + 1 ) % len( sensor_choice_dict )
+                local_integration_time_ms = []
+                local_integration_time_ms.append(math.log(local_sensor.integration_time_list[sensor_integration_time_choices[sensor_choice]],10))
+                local_integration_time_ms.append(local_sensor.integration_time_list[sensor_integration_time_choices[sensor_choice]])
+                local_integration_time_range_ms = max(local_sensor.integration_time_list) - min(local_sensor.integration_time_list)
+                local_integration_time_ms_per_pixel = []
+                local_integration_time_ms_per_pixel.append(math.log(local_integration_time_range_ms,10)/slider_pixel_span)
+                local_integration_time_ms_per_pixel.append(local_integration_time_range_ms/slider_pixel_span)
+                exposure_control_page.integration_time_slider.y = slider_min_y - int( local_integration_time_ms[ scale_choice ] / local_integration_time_ms_per_pixel[ scale_choice ])
+                exposure_control_page.integration_time_text_area.text = str(local_gain[1]) #display linear gain value
 
-            if False: # if both selected and rotated
-                as7265x_spectrometer.set_gain_number( as7265x_gain_number )
-                gain_number = (gain_number + 1 ) % len( as7265x_gain_list ) #active sensor gain list
-                if gain_number == 0:
-                    as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain1x)
-                if gain_number == 1:
-                    as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain37x)
-                if gain_number == 2:
-                    as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain16x)
-                if gain_number == 3:
-                    as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain64x)
-            if False:
-                integration_number = ( integration_number + 1 ) % 255
-                #print( "integration_number", integration_number )
-            else:
-                integration_number = 255
-            as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
+                if False: #TBD implement both log and linear scales
+                    instrument.spectral_sensors_present[sensor_choice].read_counts()
+                    exposure_high = max(instrument.spectral_sensors_present[sensor_choice].data_counts)
+                    if exposure_high > 0:
+                        exposure_high_log = math.log(exposure_high,10)
+                    else:
+                        exposure_high_log = 0
+                    exposure_low = min(as7265x_spectrometer.data_counts)
+                    if exposure_low > 0:
+                        exposure_low_log = math.log(exposure_low,10)
+                    else:
+                        exposure_low_log = 0
+                    exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
+                    exposure_high_pixel_offset = int( exposure_high_log * exposure_pixel_per_value_log )
+                    exposure_low_pixel_offset = int( exposure_low_log * exposure_pixel_per_value_log )
+                    exposure_control_page.exposure_bracket_high.y = exposure_control_page.slider_min_y - exposure_high_pixel_offset
+                    exposure_control_page.exposure_bracket_low.y = exposure_control_page.slider_min_y - exposure_low_pixel_offset
+                    if exposure_high < exposure_max_value:
+                        exposure_control_page.exposure_label_text_area.text = "Exposure Max"
+                    else:
+                        exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
+
+                        print( "SATURATED" )
+
+                    if False: # if both selected and rotated
+                        sensor_choice = ( sensor_choice + 1 ) % len( sensor_choice_dict )
+
+                    if False: # if both selected and rotated
+                        as7265x_spectrometer.set_gain_number( as7265x_gain_number )
+                        gain_number = (gain_number + 1 ) % len( as7265x_gain_list ) #active sensor gain list
+                        if gain_number == 0:
+                            as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain1x)
+                        if gain_number == 1:
+                            as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain37x)
+                        if gain_number == 2:
+                            as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain16x)
+                        if gain_number == 3:
+                            as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain64x)
+                    if False:
+                        integration_number = ( integration_number + 1 ) % 255
+                        #print( "integration_number", integration_number )
+                    else:
+                        integration_number = 255
+                    as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
             wait_start = time.monotonic()
             while (time.monotonic() < wait_start + wait_time) and not instrument.input_flag:
                 instrument.check_inputs()
