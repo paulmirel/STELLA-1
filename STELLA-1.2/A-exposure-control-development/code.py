@@ -84,7 +84,6 @@ def main():
     as7341_spectrometer = initialize_as7341_spectrometer( instrument )
 
 
-
     ### temporary -- gain setting tests
     if False:
         for number in range (0,len(as7265x_spectrometer.gain_list)):
@@ -135,7 +134,6 @@ def main():
 
     #exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
     #exposure_control_page.exposure_label_text_area.text = "Exposure Max"
-    sensor_choice_dict = {0:"as7265x V+NIR", 1:"as7331 UV", 2:"as7341 Vis"}
     sensor_choice = 0
 
     slider_max_y = 54
@@ -172,8 +170,8 @@ def main():
         operational = True
         while operational:
             instrument.check_inputs()
+            exposure_control_page.sensor_choice_text_area.text = instrument.spectral_sensors_present[sensor_choice].choice_label
 
-            exposure_control_page.sensor_choice_text_area.text = sensor_choice_dict[sensor_choice]
             print( "code running" )
             #print( "gain number", gain_number)
             #as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
@@ -238,18 +236,19 @@ def main():
             if instrument.input_flag:
                 if instrument.encoder_increment != 0:
                     if exposure_control_page.sensor_choice_field_selected:
+                        sensor_choice = (sensor_choice + 1) % len(instrument.spectral_sensors_present)
                         print( "increment sensor choice" )
-                    if exposure_control_page.setting_field_selected:
+                    elif exposure_control_page.setting_field_selected:
                         print( "increment setting" )
-                    if exposure_control_page.slider_scale_field_selected:
+                    elif exposure_control_page.slider_scale_field_selected:
                         print( "toggle slider scale" )
-                    if exposure_control_page.gain_field_selected:
+                    elif exposure_control_page.gain_field_selected:
                         print( "increment gain" )
-                    if exposure_control_page.integration_time_field_selected:
+                    elif exposure_control_page.integration_time_field_selected:
                         print( "increment integration time" )
-                    if exposure_control_page.lamp_choice_field_selected:
+                    elif exposure_control_page.lamp_choice_field_selected:
                         print( "increment lamp choice" )
-                    if exposure_control_page.lamp_current_field_selected:
+                    elif exposure_control_page.lamp_current_field_selected:
                         print( "increment lamp current" )
                     else:
                         exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
@@ -300,6 +299,7 @@ class as7265x_Spectrometer( Device ):
     # cycle time is a little less than 1 whole second
     def __init__( self, com_bus ):
         super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  )) #
+        self.choice_label = "as7256x V+NIR"
         if self.swob:
             self.swob.disable_indicator()
             self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
@@ -417,6 +417,7 @@ class as7265x_Spectrometer( Device ):
 class as7331_Spectrometer( Device ):
     def __init__( self, com_bus ):
         super().__init__(name = "as7331_spectrometer", pn = "as7331", address = 0x74, swob = as7331.AS7331( com_bus ))
+        self.choice_label = "as7331 UV"
         self.bands = 360, 300, 260
         self.bandwidth = 80, 40, 40
         self.chip_n = 1, 1, 1
@@ -557,6 +558,7 @@ class as7331_Spectrometer( Device ):
 class as7341_Spectrometer( Device ):
     def __init__( self, com_bus ):
         super().__init__(name = "as7341_spectrometer", pn = "as7341", address = 0x39, swob = AS7341( com_bus ))
+        self.choice_label = "as7341 VIS"
         self.bands = 415, 445, 480, 515, 555, 590, 630, 682
         self.bandwidth = 26, 30, 36, 39, 39, 40, 50, 52
         self.chip_n = 1, 1, 1, 1, 1, 1, 1, 1
