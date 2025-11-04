@@ -122,7 +122,6 @@ def main():
     as7265x_integration_time_max_log = math.log( as7265x_integration_time_ms_max, 10 )
     as7265x_integration_time_span_log = as7265x_integration_time_max_log - as7265x_integration_time_min_log
 
-    exposure_control_page.sensor_choice_text_area.text = "as7265x V+NIR"
 
     #exposure_control_page.sensor_choice_text_area.text = "as7331 UV"
     #exposure_control_page.sensor_choice_text_area.text = "as7341 Vis"
@@ -136,16 +135,13 @@ def main():
     #exposure_control_page.exposure_label_text_area.text = "Exposure Max"
     sensor_choice = 0
 
-    slider_max_y = 54
-    slider_min_y = 174
-    slider_pixel_span = slider_min_y - slider_max_y
 
     gain_value = 0
     exposure_control_page.gain_text_area.text = str(gain_value)
-    as7265x_gain_pixel_per_value_log = slider_pixel_span/as7265x_gain_span_log
+    as7265x_gain_pixel_per_value_log = exposure_control_page.slider_pixel_span/as7265x_gain_span_log
 
     as7265x_integration_number = 1
-    as7265x_integration_time_pixel_per_value_log = slider_pixel_span/as7265x_integration_time_span_log
+    as7265x_integration_time_pixel_per_value_log = exposure_control_page.slider_pixel_span/as7265x_integration_time_span_log
     integration_time_ms = 0
     exposure_control_page.integration_time_text_area.text = str(integration_time_ms)
 
@@ -157,23 +153,46 @@ def main():
     #print( "exposure_max_value_log", exposure_max_value_log ) #4.81647
     exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
     exposure_value_span_log = exposure_max_value_log
-    exposure_pixel_per_value_log = slider_pixel_span/exposure_value_span_log
+    exposure_pixel_per_value_log = exposure_control_page.slider_pixel_span/exposure_value_span_log
 
     as7265x_integration_number = 80
     as7265x_integration_time_ms = as7265x_spectrometer.set_integration_number( as7265x_integration_number )
-    gain_number = 3
     integration_number = 1
     as7265x_spectrometer.read_counts()
-    wait_time = 5
+
     exposure_control_page.update_values()
-    slider_scale_list = "linear scale", "log scale"
-    slider_scale_choice = 1
+    slider_scale_list = "log scale", "linear scale"
+    slider_scale_choice = 0
+    last_gain_choices = []
+    gain_choices = []
+    for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
+        last_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
+        gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
+    sensor_choice = 0
+    wait_time = 1
+    #exposure_control_page.slider_max_y
+    #exposure_control_page.slider_min_y
+    #exposure_control_page.slider_pixel_span
+
     try:
         operational = True
         while operational:
             instrument.check_inputs()
-            exposure_control_page.sensor_choice_text_area.text = instrument.spectral_sensors_present[sensor_choice].choice_label
+            working_sensor = instrument.spectral_sensors_present[sensor_choice]
+            working_gain = []
+            working_gain.append(math.log(working_sensor.gain_list[gain_choices[sensor_choice]],10))
+            working_gain.append(working_sensor.gain_list[gain_choices[sensor_choice]])
+            working_gain_range = max(working_sensor.gain_list) - min(working_sensor.gain_list)
+            working_gain_per_pixel = []
+            working_gain_per_pixel.append(math.log(working_gain_range,10)/exposure_control_page.slider_pixel_span)
+            working_gain_per_pixel.append(working_gain_range/exposure_control_page.slider_pixel_span)
+            exposure_control_page.gain_slider.y = exposure_control_page.slider_min_y - int(working_gain[slider_scale_choice] / working_gain_per_pixel[slider_scale_choice])
+
+
+            exposure_control_page.sensor_choice_text_area.text = working_sensor.choice_label
             exposure_control_page.slider_scale_text_area.text = slider_scale_list[slider_scale_choice]
+            # TBD don't ask the sensor every time
+            exposure_control_page.gain_text_area.text = str(working_gain[1])
             print( "code running" )
             #print( "gain number", gain_number)
             #as7265x_gain = as7265x_spectrometer.gain_dict[gain_number]
@@ -181,18 +200,17 @@ def main():
             #exposure_control_page.gain_text_area.text = str(as7265x_gain)
             #gain_pixel_offset = int( as7265x_gain_log * as7265x_gain_pixel_per_value_log )
             #exposure_control_page.gain_slider.y = slider_min_y - gain_pixel_offset
-            integration_time_ms = integration_number*2.8
-            exposure_control_page.integration_time_text_area.text = str(int(round(integration_time_ms,0)))
-            as7265x_integration_time_ms = integration_time_ms
-            as7265x_integration_time_log = math.log( as7265x_integration_time_ms, 10 )
-            integration_time_pixel_offset = int( (as7265x_integration_time_log- as7265x_integration_time_min_log)* as7265x_integration_time_pixel_per_value_log )
-            exposure_control_page.integration_time_slider.y = slider_min_y - integration_time_pixel_offset
+            #integration_time_ms = integration_number*2.8
+            #exposure_control_page.integration_time_text_area.text = str(int(round(integration_time_ms,0)))
+            #as7265x_integration_time_ms = integration_time_ms
+            #as7265x_integration_time_log = math.log( as7265x_integration_time_ms, 10 )
+            #integration_time_pixel_offset = int( (as7265x_integration_time_log- as7265x_integration_time_min_log)* as7265x_integration_time_pixel_per_value_log )
+            #exposure_control_page.integration_time_slider.y = exposure_control_page.slider_min_y - integration_time_pixel_offset
 
 
-
-            as7265x_spectrometer.read_counts()
+            instrument.spectral_sensors_present[sensor_choice].read_counts()
             #print( max(as7265x_spectrometer.data_counts), min(as7265x_spectrometer.data_counts) )
-            exposure_high = max(as7265x_spectrometer.data_counts)
+            exposure_high = max(instrument.spectral_sensors_present[sensor_choice].data_counts)
             if exposure_high > 0:
                 exposure_high_log = math.log(exposure_high,10)
             else:
@@ -207,8 +225,8 @@ def main():
             exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
             exposure_high_pixel_offset = int( exposure_high_log * exposure_pixel_per_value_log )
             exposure_low_pixel_offset = int( exposure_low_log * exposure_pixel_per_value_log )
-            exposure_control_page.exposure_bracket_high.y = slider_min_y - exposure_high_pixel_offset
-            exposure_control_page.exposure_bracket_low.y = slider_min_y - exposure_low_pixel_offset
+            exposure_control_page.exposure_bracket_high.y = exposure_control_page.slider_min_y - exposure_high_pixel_offset
+            exposure_control_page.exposure_bracket_low.y = exposure_control_page.slider_min_y - exposure_low_pixel_offset
 
             if False: # if both selected and rotated
                 sensor_choice = ( sensor_choice + 1 ) % len( sensor_choice_dict )
@@ -244,7 +262,11 @@ def main():
                     elif exposure_control_page.slider_scale_field_selected:
                         slider_scale_choice = (slider_scale_choice + 1) % len(slider_scale_list)
                     elif exposure_control_page.gain_field_selected:
-                        print( "TBD increment gain" )
+                        gain_choices[ sensor_choice ] = (gain_choices[ sensor_choice ] + instrument.encoder_increment) % len( instrument.spectral_sensors_present[sensor_choice].gain_list)
+                        if gain_choices[ sensor_choice ] != last_gain_choices[ sensor_choice ]:
+                            instrument.spectral_sensors_present[sensor_choice].set_gain(gain_choices[ sensor_choice ])
+                            print( "attempt to set gain of sensor labeled: ", instrument.spectral_sensors_present[sensor_choice].choice_label )
+                            last_gain_choices[ sensor_choice ] = gain_choices[ sensor_choice ]
                     elif exposure_control_page.integration_time_field_selected:
                         print( "TBD increment integration time" )
                     elif exposure_control_page.lamp_choice_field_selected:
@@ -312,6 +334,8 @@ class as7265x_Spectrometer( Device ):
             self.bands_sorted = sorted( self.bands )
             self.uncertainty_percent = 12
             self.gain_list = [ 1, 3.7, 16, 64 ]
+            self.gain_choice = 2
+            self.set_gain( self.gain_choice )
             self.intg_time_ms = 56 #default, number = 20 out of 255
             self.afov_deg = (20.5 * 2) #datasheet reports half angle.
     def set_gain(self, number):
@@ -428,7 +452,9 @@ class as7331_Spectrometer( Device ):
         self.afov_deg = (10 * 2)
         self.fcal_unct_percent = 0 # no reported value
         self.intg_time_ms = 0 #TBD what are the defaults?
+        self.gain_choice = 5
         self.gain_list = [ 1,2,4,8,16,32,64,128,256,512,1024,2048 ]
+        self.set_gain( self.gain_choice )
 
 
     def set_gain(self, number):
@@ -575,7 +601,8 @@ class as7341_Spectrometer( Device ):
         self.dict_stenocal = {}
         self.swob.led_current = 50
         self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256 ]
-        self.gain_number = 5 #default to 16x gain
+        self.gain_choice = 5 #default to 16x gain
+        self.set_gain( self.gain_choice )
     def set_gain(self, number):
         if number < 1:
             gain_constant = AS7341_Gain.GAIN_0_5X
@@ -610,7 +637,7 @@ class as7341_Spectrometer( Device ):
         self.swob.led = True
         time.sleep( duration )
         self.swob.led = False
-    def read(self):
+    def read_counts(self):
         self.raw = self.swob.all_channels
         self.dict_counts = {key:value for key, value in zip(self.bands, self.raw )}
         for ch in range (0,8):
@@ -989,6 +1016,9 @@ class Exposure_Control_Page( Page ):
         self.integration_time_field_selected = False
         self.lamp_choice_field_selected = False
         self.lamp_current_field_selected = False
+        self.slider_max_y = 54
+        self.slider_min_y = 174
+        self.slider_pixel_span = self.slider_min_y - self.slider_max_y
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -1492,7 +1522,6 @@ class Exposure_Control_Page( Page ):
         if self.exposure_select_choice == 1:
             self.sensor_choice_select.hidden = False
             if self.instrument.button_pressed:
-                print( "enter field selection" )
                 self.sensor_choice_field_selected = not self.sensor_choice_field_selected
                 self.instrument.button_pressed = False
         else:
@@ -1501,7 +1530,6 @@ class Exposure_Control_Page( Page ):
         if self.exposure_select_choice == 2:
             self.setting_select.hidden = False
             if self.instrument.button_pressed:
-                print( "enter field selection" )
                 self.setting_field_selected = not self.setting_field_selected
                 self.instrument.button_pressed = False
         else:
@@ -1511,7 +1539,6 @@ class Exposure_Control_Page( Page ):
             self.slider_scale_area.hidden = False
             self.slider_scale_select.hidden = False
             if self.instrument.button_pressed:
-                print( "enter field selection" )
                 self.slider_scale_field_selected = not self.slider_scale_field_selected
                 self.instrument.button_pressed = False
         else:
@@ -1520,7 +1547,6 @@ class Exposure_Control_Page( Page ):
         if self.exposure_select_choice == 4:
             self.gain_select.hidden = False
             if self.instrument.button_pressed:
-                print( "enter field selection" )
                 self.gain_field_selected = not self.gain_field_selected
                 self.instrument.button_pressed = False
         else:
@@ -1528,14 +1554,12 @@ class Exposure_Control_Page( Page ):
         if self.exposure_select_choice == 5:
             self.integration_time_select.hidden = False
             if self.instrument.button_pressed:
-                print( "enter field selection" )
                 self.integration_time_field_selected = not self.integration_time_field_selected
                 self.instrument.button_pressed = False
         else:
             self.integration_time_select.hidden = True
         if self.exposure_select_choice == 6:
             if self.instrument.button_pressed:
-                print( "enter field selection" )
                 self.instrument.button_pressed = False
                 self.lamp_choice_field_selected = not self.lamp_choice_field_selected
             pass
@@ -1546,7 +1570,6 @@ class Exposure_Control_Page( Page ):
         if self.exposure_select_choice == 7:
             self.lamp_current_select.hidden = False
             if self.instrument.button_pressed:
-                print( "enter field selection" )
                 self.instrument.button_pressed = False
                 self.lamp_current_field_selected = not self.lamp_current_field_selected
         else:
@@ -1582,7 +1605,6 @@ class Exposure_Control_Page( Page ):
             self.lamp_current_area.color_index = self.field_selected_color_index
         else:
             self.lamp_current_area.color_index = self.field_not_selected_color_index
-
 
         if False:#instrument.button_pressed:
             print("button pressed")
