@@ -145,6 +145,8 @@ def main():
                 local_gain_per_pixel.append(math.log(local_gain_range,10)/slider_pixel_span)
                 local_gain_per_pixel.append(local_gain_range/slider_pixel_span)
                 exposure_control_page.gain_slider.y = slider_min_y - int( local_gain[ scale_choice ] / local_gain_per_pixel[ scale_choice ])
+                exposure_control_page.gain_shading.y = exposure_control_page.gain_slider.y
+                exposure_control_page.gain_shading.height = slider_min_y + 6 - exposure_control_page.gain_shading.y
                 exposure_control_page.gain_text_area.text = str(local_gain[1]) #display linear gain value
 
                 if False:
@@ -1124,6 +1126,9 @@ class Exposure_Control_Page( Page ):
         slider_min_y = 174
         slider_border_width = slider_select_width - 2*select_width
         slider_width = 42
+        shading_fraction = 0.3
+        slider_shading_width = int(slider_width*shading_fraction)
+        slider_shading_offset_x = int((slider_width - slider_shading_width)/2)
         slider_height = 8
 
         gain_slider_select_x = gain_select_x + select_width
@@ -1155,6 +1160,9 @@ class Exposure_Control_Page( Page ):
         gain_slider_height = slider_height
         gain_slider_x = gain_slider_border_x + 3* border_width
         gain_slider_y = slider_min_y
+        self.gain_shading = vectorio.Rectangle( pixel_shader=self.palette, color_index = 19, width=slider_shading_width,
+                                            height=1, x=gain_slider_x+slider_shading_offset_x, y=gain_slider_y )
+        self.group.append( self.gain_shading )
         self.gain_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=gain_slider_width,
                                             height=gain_slider_height, x=gain_slider_x, y=gain_slider_y )
         self.group.append( self.gain_slider )
