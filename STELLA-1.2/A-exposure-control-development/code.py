@@ -1126,7 +1126,7 @@ class Exposure_Control_Page( Page ):
         slider_min_y = 174
         slider_border_width = slider_select_width - 2*select_width
         slider_width = 42
-        shading_fraction = 0.3
+        shading_fraction = 1#0.3
         slider_shading_width = int(slider_width*shading_fraction)
         slider_shading_offset_x = int((slider_width - slider_shading_width)/2)
         slider_height = 8
@@ -1195,15 +1195,19 @@ class Exposure_Control_Page( Page ):
         integration_slider_width = slider_width
         integration_slider_height = slider_height
         integration_slider_x = integration_slider_border_x + 3* border_width
-        self.integration_slider_y = slider_min_y
+        integration_slider_y = slider_min_y
+        self.integration_time_shading = vectorio.Rectangle( pixel_shader=self.palette, color_index = 19, width=slider_shading_width,
+                                            height=1, x=integration_slider_x+slider_shading_offset_x, y=integration_slider_y )
+        self.group.append( self.integration_time_shading )
         self.integration_time_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=integration_slider_width,
-                                            height=integration_slider_height, x=integration_slider_x, y=self.integration_slider_y )
+                                            height=integration_slider_height, x=integration_slider_x, y=integration_slider_y )
         self.group.append( self.integration_time_slider )
 
         lamp_current_slider_select_x = 164
         lamp_current_slider_select_y = slider_select_y
         lamp_current_slider_select_width = slider_select_width
         lamp_current_slider_select_height = slider_select_height
+
         self.lamp_current_slider_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_slider_select_width,
                                                     height=lamp_current_slider_select_height, x=lamp_current_slider_select_x, y=lamp_current_slider_select_y )
         self.group.append( self.lamp_current_slider_select )
@@ -1228,9 +1232,12 @@ class Exposure_Control_Page( Page ):
         lamp_current_slider_width = slider_width
         lamp_current_slider_height = slider_height
         lamp_current_slider_x = lamp_current_slider_border_x + 3* border_width
-        self.lamp_current_slider_y = slider_min_y
+        lamp_current_slider_y = slider_min_y
+        self.lamp_current_shading = vectorio.Rectangle( pixel_shader=self.palette, color_index = 19, width=slider_shading_width,
+                                            height=1, x=lamp_current_slider_x+slider_shading_offset_x, y=lamp_current_slider_y )
+        self.group.append( self.lamp_current_shading )
         lamp_current_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_slider_width,
-                                            height=lamp_current_slider_height, x=lamp_current_slider_x, y=self.lamp_current_slider_y )
+                                            height=lamp_current_slider_height, x=lamp_current_slider_x, y=lamp_current_slider_y )
         self.group.append( lamp_current_slider )
 
         exposure_bracket_border_width = slider_border_width+12
