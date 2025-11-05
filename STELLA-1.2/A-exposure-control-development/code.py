@@ -115,13 +115,14 @@ def main():
         last_sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
         sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
 
-    last_sensor_integration_time_choices = []
-    sensor_integration_time_choices = []
-    for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
-        last_sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
-        sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
+    if False:
+        last_sensor_integration_time_choices = []
+        sensor_integration_time_choices = []
+        for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
+            last_sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
+            sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
     sensor_choice = 0
-    # TBD lamp selection, lamp current
+        # TBD lamp selection, lamp current
 
     wait_time = 1
     try:
@@ -146,15 +147,16 @@ def main():
                 exposure_control_page.gain_slider.y = slider_min_y - int( local_gain[ scale_choice ] / local_gain_per_pixel[ scale_choice ])
                 exposure_control_page.gain_text_area.text = str(local_gain[1]) #display linear gain value
 
-                local_integration_time_ms = []
-                local_integration_time_ms.append(math.log(local_sensor.integration_time_list[sensor_integration_time_choices[sensor_choice]],10))
-                local_integration_time_ms.append(local_sensor.integration_time_list[sensor_integration_time_choices[sensor_choice]])
-                local_integration_time_range_ms = max(local_sensor.integration_time_list) - min(local_sensor.integration_time_list)
-                local_integration_time_ms_per_pixel = []
-                local_integration_time_ms_per_pixel.append(math.log(local_integration_time_range_ms,10)/slider_pixel_span)
-                local_integration_time_ms_per_pixel.append(local_integration_time_range_ms/slider_pixel_span)
-                exposure_control_page.integration_time_slider.y = slider_min_y - int( local_integration_time_ms[ scale_choice ] / local_integration_time_ms_per_pixel[ scale_choice ])
-                exposure_control_page.integration_time_text_area.text = str(local_gain[1]) #display linear gain value
+                if False:
+                    local_integration_time_ms = []
+                    local_integration_time_ms.append(math.log(local_sensor.integration_time_list[sensor_integration_time_choices[sensor_choice]],10))
+                    local_integration_time_ms.append(local_sensor.integration_time_list[sensor_integration_time_choices[sensor_choice]])
+                    local_integration_time_range_ms = max(local_sensor.integration_time_list) - min(local_sensor.integration_time_list)
+                    local_integration_time_ms_per_pixel = []
+                    local_integration_time_ms_per_pixel.append(math.log(local_integration_time_range_ms,10)/slider_pixel_span)
+                    local_integration_time_ms_per_pixel.append(local_integration_time_range_ms/slider_pixel_span)
+                    exposure_control_page.integration_time_slider.y = slider_min_y - int( local_integration_time_ms[ scale_choice ] / local_integration_time_ms_per_pixel[ scale_choice ])
+                    exposure_control_page.integration_time_text_area.text = str(local_gain[1]) #display linear gain value
 
                 if False: #TBD implement both log and linear scales
                     instrument.spectral_sensors_present[sensor_choice].read_counts()
@@ -214,11 +216,11 @@ def main():
                     elif exposure_control_page.slider_scale_field_selected:
                         slider_scale_choice = (slider_scale_choice + 1) % len(slider_scale_list)
                     elif exposure_control_page.gain_field_selected:
-                        gain_choices[ sensor_choice ] = (gain_choices[ sensor_choice ] + instrument.encoder_increment) % len( instrument.spectral_sensors_present[sensor_choice].gain_list)
-                        if gain_choices[ sensor_choice ] != last_gain_choices[ sensor_choice ]:
-                            instrument.spectral_sensors_present[sensor_choice].set_gain(gain_choices[ sensor_choice ])
+                        sensor_gain_choices[ sensor_choice ] = (sensor_gain_choices[ sensor_choice ] + instrument.encoder_increment) % len( instrument.spectral_sensors_present[sensor_choice].gain_list)
+                        if sensor_gain_choices[ sensor_choice ] != last_sensor_gain_choices[ sensor_choice ]:
+                            instrument.spectral_sensors_present[sensor_choice].set_gain(sensor_gain_choices[ sensor_choice ])
                             print( "attempt to set gain of sensor labeled: ", instrument.spectral_sensors_present[sensor_choice].choice_label )
-                            last_gain_choices[ sensor_choice ] = gain_choices[ sensor_choice ]
+                            last_sensor_gain_choices[ sensor_choice ] = sensor_gain_choices[ sensor_choice ]
                     elif exposure_control_page.integration_time_field_selected:
                         print( "TBD increment integration time" )
                     elif exposure_control_page.lamp_choice_field_selected:
