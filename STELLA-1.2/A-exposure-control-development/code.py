@@ -102,8 +102,8 @@ def main():
     local_lamp_choice = 0
     local_lamp_current_mA = 0
     exposure_high = 0
-    exposure_max_value = []
     decimal_16_bits = 65535
+    exposure_max_value = decimal_16_bits
     exposure_value_span = []
     exposure_value_span.append( math.log(decimal_16_bits, 10))
     exposure_value_span.append( decimal_16_bits )
@@ -158,50 +158,42 @@ def main():
                     exposure_control_page.integration_time_slider.y = slider_min_y - int( local_integration_time_ms[ scale_choice ] / local_integration_time_ms_per_pixel[ scale_choice ])
                     exposure_control_page.integration_time_text_area.text = str(local_gain[1]) #display linear gain value
 
-                if False: #TBD implement both log and linear scales
-                    instrument.spectral_sensors_present[sensor_choice].read_counts()
-                    exposure_high = max(instrument.spectral_sensors_present[sensor_choice].data_counts)
+                #TBD implement both log and linear scales
+                instrument.spectral_sensors_present[sensor_choice].read_counts()
+                exposure_high = max(instrument.spectral_sensors_present[sensor_choice].data_counts)
+                if exposure_high < exposure_max_value:
+                    exposure_control_page.exposure_label_text_area.text = "Exposure Max"
+                else:
+                    exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
+                    print( "SATURATED" )
+                exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
+                exposure_low = min(instrument.spectral_sensors_present[sensor_choice].data_counts)
+                exposure_value_span = exposure_max_value
+                if scale_choice == 0:
                     if exposure_high > 0:
-                        exposure_high_log = math.log(exposure_high,10)
+                        exposure_high = math.log(exposure_high,10)
                     else:
-                        exposure_high_log = 0
-                    exposure_low = min(as7265x_spectrometer.data_counts)
+                        exposure_high = 0
                     if exposure_low > 0:
-                        exposure_low_log = math.log(exposure_low,10)
+                        exposure_low = math.log(exposure_low,10)
                     else:
-                        exposure_low_log = 0
-                    exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
-                    exposure_high_pixel_offset = int( exposure_high_log * exposure_pixel_per_value_log )
-                    exposure_low_pixel_offset = int( exposure_low_log * exposure_pixel_per_value_log )
-                    exposure_control_page.exposure_bracket_high.y = exposure_control_page.slider_min_y - exposure_high_pixel_offset
-                    exposure_control_page.exposure_bracket_low.y = exposure_control_page.slider_min_y - exposure_low_pixel_offset
-                    if exposure_high < exposure_max_value:
-                        exposure_control_page.exposure_label_text_area.text = "Exposure Max"
+                        exposure_low = 0
+                    if exposure_value_span > 0:
+                        exposure_value_span = math.log(exposure_value_span,10)
                     else:
-                        exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
+                        exposure_value_span = 0
 
-                        print( "SATURATED" )
+                exposure_value_per_pixel = exposure_value_span/ slider_pixel_span
+                exposure_high_pixel_offset = int(exposure_high/exposure_value_per_pixel)
+                exposure_low_pixel_offset = int(exposure_low/exposure_value_per_pixel)
+                exposure_control_page.exposure_bracket_high.y = exposure_control_page.slider_min_y - exposure_high_pixel_offset
+                exposure_control_page.exposure_bracket_low.y = exposure_control_page.slider_min_y - exposure_low_pixel_offset
+                exposure_control_page.exposure_bracket_shading.y = exposure_control_page.exposure_bracket_high.y
+                exposure_control_page.exposure_bracket_shading.height = exposure_control_page.exposure_bracket_low.y - exposure_control_page.exposure_bracket_high.y
 
-                    if False: # if both selected and rotated
-                        sensor_choice = ( sensor_choice + 1 ) % len( sensor_choice_dict )
 
-                    if False: # if both selected and rotated
-                        as7265x_spectrometer.set_gain_number( as7265x_gain_number )
-                        gain_number = (gain_number + 1 ) % len( as7265x_gain_list ) #active sensor gain list
-                        if gain_number == 0:
-                            as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain1x)
-                        if gain_number == 1:
-                            as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain37x)
-                        if gain_number == 2:
-                            as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain16x)
-                        if gain_number == 3:
-                            as7265x_spectrometer.swob.set_gain(as7265x_spectrometer.swob.kGain64x)
-                    if False:
-                        integration_number = ( integration_number + 1 ) % 255
-                        #print( "integration_number", integration_number )
-                    else:
-                        integration_number = 255
-                    as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
+
+            #as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
             wait_start = time.monotonic()
             while (time.monotonic() < wait_start + wait_time) and not instrument.input_flag:
                 instrument.check_inputs()
@@ -214,7 +206,7 @@ def main():
                     elif exposure_control_page.setting_field_selected:
                         print( "TBD increment setting" )
                     elif exposure_control_page.slider_scale_field_selected:
-                        slider_scale_choice = (slider_scale_choice + 1) % len(slider_scale_list)
+                        scale_choice = (scale_choice + 1) % len(scale_list)
                     elif exposure_control_page.gain_field_selected:
                         sensor_gain_choices[ sensor_choice ] = (sensor_gain_choices[ sensor_choice ] + instrument.encoder_increment) % len( instrument.spectral_sensors_present[sensor_choice].gain_list)
                         if sensor_gain_choices[ sensor_choice ] != last_sensor_gain_choices[ sensor_choice ]:
@@ -1253,14 +1245,18 @@ class Exposure_Control_Page( Page ):
         exposure_bracket_height = slider_height
         exposure_bracket_x = exposure_bracket_border_x + 3* border_width
         exposure_bracket_high_y = 174
+        exposure_bracket_low_y = 174
+        exposure_bracket_shading_height = 1
+        self.exposure_bracket_shading = vectorio.Rectangle( pixel_shader=self.palette, color_index = 19, width=exposure_bracket_width,
+                                            height=exposure_bracket_shading_height, x=exposure_bracket_x, y=exposure_bracket_low_y )
+        self.group.append( self.exposure_bracket_shading )
         self.exposure_bracket_high = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
                                             height=exposure_bracket_height, x=exposure_bracket_x, y=exposure_bracket_high_y )
         self.group.append( self.exposure_bracket_high )
-
-        exposure_bracket_low_y = 174
         self.exposure_bracket_low = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=exposure_bracket_width,
                                             height=exposure_bracket_height, x=exposure_bracket_x, y=exposure_bracket_low_y )
         self.group.append( self.exposure_bracket_low )
+
 
         # slider scale header
 
