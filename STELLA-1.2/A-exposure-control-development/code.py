@@ -150,7 +150,6 @@ def main():
                 exposure_control_page.gain_text_area.text = str(local_gain[1]) #display linear gain value
 
                 local_integration_time_ms_value = local_sensor.integration_time_ms_list[local_integration_time_choice]
-                print( local_integration_time_ms_value )
                 local_integration_time_ms = []
                 local_integration_time_ms.append(math.log(local_integration_time_ms_value,10))
                 local_integration_time_ms.append(local_integration_time_ms_value)
@@ -1299,6 +1298,20 @@ class Exposure_Control_Page( Page ):
                                             height=exposure_bracket_height, x=exposure_bracket_x, y=exposure_bracket_low_y )
         self.group.append( self.exposure_bracket_low )
 
+        exposure_target_triangle_x = 306
+        exposure_target_triangle_size = 12
+        exposure_target_triangle_low_y = slider_min_y - 4
+        exposure_target_triangle_high_y = slider_min_y - 4
+        self.exposure_target_triangle_low = vectorio.Polygon(
+                            pixel_shader=self.palette, color_index = 0, points = [(0, 0), (exposure_target_triangle_size,0),
+                            (exposure_target_triangle_size,exposure_target_triangle_size)],
+                            x=exposure_target_triangle_x, y=exposure_target_triangle_low_y )
+        self.group.append( self.exposure_target_triangle_low )
+        self.exposure_target_triangle_high = vectorio.Polygon(
+                            pixel_shader=self.palette, color_index = 0, points = [(0, 0), (exposure_target_triangle_size,0),
+                            (exposure_target_triangle_size,-exposure_target_triangle_size)],
+                            x=exposure_target_triangle_x, y=exposure_target_triangle_high_y )
+        self.group.append( self.exposure_target_triangle_high )
 
         # slider scale header
 
