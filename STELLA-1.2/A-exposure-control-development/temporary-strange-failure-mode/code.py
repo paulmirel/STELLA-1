@@ -291,13 +291,14 @@ class as7265x_Spectrometer( Device ):
             self.integration_time_ms_list = []
             self.integration_time_ms_list.append( self.integration_time_ms_step )
             for choice in range( 0, self.integration_time_choices_count ):
-                integration_time_ms_value = ((choice + 1) * self.integration_time_number_per_choice * self.integration_time_ms_step)
-                if integration_time_ms_value < 100:
-                    integration_time_ms_value = round(integration_time_ms_value, 1)
-                else:
-                    integration_time_ms_value = int( integration_time_ms_value )
-                self.integration_time_ms_list.append( integration_time_ms_value )
+                self.integration_time_ms_list.append( round ((( choice + 1 ) * self.integration_time_number_per_choice )*self.integration_time_ms_step),1)
             print( self.integration_time_ms_list )
+            stall()
+
+
+
+
+
             self.integration_time_choice = 0 #TBD default
             self.intg_time_ms = 56 #default, number = 20 out of 255
             self.afov_deg = (20.5 * 2) #datasheet reports half angle.
