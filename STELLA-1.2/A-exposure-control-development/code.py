@@ -150,6 +150,7 @@ def main():
                 exposure_control_page.gain_text_area.text = str(local_gain[1]) #display linear gain value
 
                 local_integration_time_ms_value = local_sensor.integration_time_ms_list[local_integration_time_choice]
+                print( local_integration_time_ms_value )
                 local_integration_time_ms = []
                 local_integration_time_ms.append(math.log(local_integration_time_ms_value,10))
                 local_integration_time_ms.append(local_integration_time_ms_value)
@@ -157,7 +158,10 @@ def main():
                 local_integration_time_ms_per_pixel = []
                 local_integration_time_ms_per_pixel.append(math.log(local_integration_time_range_ms,10)/slider_pixel_span)
                 local_integration_time_ms_per_pixel.append(local_integration_time_range_ms/slider_pixel_span)
-                exposure_control_page.integration_time_slider.y = slider_min_y - int( local_integration_time_ms[ scale_choice ] / local_integration_time_ms_per_pixel[ scale_choice ])
+                local_integration_time_pixel_offset = local_integration_time_ms[ scale_choice ] / local_integration_time_ms_per_pixel[ scale_choice ]
+                if local_integration_time_ms_value == min(local_sensor.integration_time_ms_list):
+                    local_integration_time_pixel_offset = 0
+                exposure_control_page.integration_time_slider.y = slider_min_y - int( local_integration_time_pixel_offset )
                 exposure_control_page.integration_time_shading.y = exposure_control_page.integration_time_slider.y
                 exposure_control_page.integration_time_shading.height = slider_min_y + 6 - exposure_control_page.integration_time_shading.y
                 exposure_control_page.integration_time_text_area.text = str(local_integration_time_ms_value)
