@@ -8,6 +8,8 @@ preset_sample_interval_s = 10.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
 preset_burst_count = 1
 usb_serial_out_enabled = False
 record_on_startup = True #False #
+exposure_target_fraction_high = 0.9
+exposure_target_fraction_low = 0.5
 
 import gc
 import time
@@ -197,8 +199,15 @@ def main():
                 exposure_control_page.exposure_bracket_low.y = exposure_control_page.slider_min_y - exposure_low_pixel_offset
                 exposure_control_page.exposure_bracket_shading.y = exposure_control_page.exposure_bracket_high.y
                 exposure_control_page.exposure_bracket_shading.height = exposure_control_page.exposure_bracket_low.y - exposure_control_page.exposure_bracket_high.y
-                exposure_control_page.exposure_target_triangle_high.y = 70
-                exposure_control_page.exposure_target_triangle_low.y = 80
+                exposure_high_triangle_pixel_offset = int(exposure_target_fraction_high * exposure_max_value/exposure_value_per_pixel)
+                exposure_low_triangle_pixel_offset = int(exposure_target_fraction_low * exposure_max_value/exposure_value_per_pixel)
+                if scale_choice == 0:
+                    exposure_high_triangle_pixel_offset = math.log(exposure_target_fraction_high * exposure_max_value,10)/exposure_value_per_pixel
+                    exposure_high_triangle_pixel_offset = int(exposure_high_triangle_pixel_offset)
+                    exposure_low_triangle_pixel_offset = math.log(exposure_target_fraction_low * exposure_max_value,10)/exposure_value_per_pixel
+                    exposure_low_triangle_pixel_offset = int(exposure_low_triangle_pixel_offset)
+                exposure_control_page.exposure_target_triangle_high.y = exposure_control_page.slider_min_y - exposure_high_triangle_pixel_offset
+                exposure_control_page.exposure_target_triangle_low.y =exposure_control_page.slider_min_y - exposure_low_triangle_pixel_offset
 
 
             #as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
@@ -1300,7 +1309,7 @@ class Exposure_Control_Page( Page ):
         self.group.append( self.exposure_bracket_low )
 
         exposure_target_triangle_x = 306
-        exposure_target_triangle_size = 11
+        exposure_target_triangle_size = 10
         exposure_target_triangle_low_y = slider_min_y - 4
         exposure_target_triangle_high_y = exposure_target_triangle_low_y
         self.exposure_target_triangle_low = vectorio.Polygon(
