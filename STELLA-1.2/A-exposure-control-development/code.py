@@ -197,7 +197,8 @@ def main():
                 exposure_control_page.exposure_bracket_low.y = exposure_control_page.slider_min_y - exposure_low_pixel_offset
                 exposure_control_page.exposure_bracket_shading.y = exposure_control_page.exposure_bracket_high.y
                 exposure_control_page.exposure_bracket_shading.height = exposure_control_page.exposure_bracket_low.y - exposure_control_page.exposure_bracket_high.y
-
+                exposure_control_page.exposure_target_triangle_high.y = 70
+                exposure_control_page.exposure_target_triangle_low.y = 80
 
 
             #as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
@@ -1299,9 +1300,9 @@ class Exposure_Control_Page( Page ):
         self.group.append( self.exposure_bracket_low )
 
         exposure_target_triangle_x = 306
-        exposure_target_triangle_size = 12
+        exposure_target_triangle_size = 11
         exposure_target_triangle_low_y = slider_min_y - 4
-        exposure_target_triangle_high_y = slider_min_y - 4
+        exposure_target_triangle_high_y = exposure_target_triangle_low_y
         self.exposure_target_triangle_low = vectorio.Polygon(
                             pixel_shader=self.palette, color_index = 0, points = [(0, 0), (exposure_target_triangle_size,0),
                             (exposure_target_triangle_size,exposure_target_triangle_size)],
