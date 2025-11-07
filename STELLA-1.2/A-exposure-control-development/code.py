@@ -83,6 +83,12 @@ def main():
     as7331_spectrometer = initialize_as7331_spectrometer( instrument )
     as7341_spectrometer = initialize_as7341_spectrometer( instrument )
 
+    for local_integration_time_choice in range ( 0, as7265x_spectrometer.integration_time_choices_count):
+        local_integration_time_ms = as7265x_spectrometer.integration_time_ms_list[local_integration_time_choice]
+        print( local_integration_time_ms )
+        as7265x_spectrometer.set_integration_time_ms( local_integration_time_ms )
+        time.sleep(5)
+
 
     instrument.welcome_page.hide()
     exposure_control_page = make_exposure_control_page( instrument )
@@ -286,6 +292,7 @@ class as7265x_Spectrometer( Device ):
             self.set_gain( self.gain_choice )
             self.integration_time_ms_step = 2.78
             self.integration_time_number_maximum = 255
+            self.integration_time_ms_maximum = self.integration_time_ms_step * self.integration_time_number_maximum
             self.integration_time_choices_count = 16
             self.integration_time_number_per_choice = self.integration_time_number_maximum/self.integration_time_choices_count
             self.integration_time_ms_list = []
@@ -297,7 +304,7 @@ class as7265x_Spectrometer( Device ):
                 else:
                     integration_time_ms_value = int( integration_time_ms_value )
                 self.integration_time_ms_list.append( integration_time_ms_value )
-            print( self.integration_time_ms_list )
+            #print( self.integration_time_ms_list )
             self.integration_time_choice = 0 #TBD default
             self.intg_time_ms = 56 #default, number = 20 out of 255
             self.afov_deg = (20.5 * 2) #datasheet reports half angle.
@@ -311,14 +318,19 @@ class as7265x_Spectrometer( Device ):
         elif number > 2:
             self.swob.set_gain( self.swob.kGain64x )
         return self.gain_list[ number ]
-    def set_integration_number( self, number ):
+    def set_integration_time_ms( self, integration_time_ms ):
         # must wait for at least 5 seconds before sending integration time again. If not, signal goes to 0.
-        if number in range (1, 256):
-            self.swob.set_integration_cycles(number)
-            self.intg_time_ms = int(round(2.78*number,0)) # This sensor does not use the ASTEP ATIME combination found in the as7341
-        else:
-            print( "out of range: set integration cycles to 1-255 for 0-709ms integration time." )
-        return self.intg_time_ms
+        try:
+            if (integration_time_ms < self.integration_time_ms_step) or (integration_time_ms > self.integration_time_ms_maximum):
+                print( "out of range: choose {} to {}ms integration time.".format(self.integration_time_ms_step,  self.integration_time_ms_maximum))
+            else:
+                integration_number = integration_time_ms / self.integration_time_ms_step
+                integration_number = int( integration_number )
+                self.swob.set_integration_cycles(integration_number)
+            return True
+        except Exception as err:
+            print( "as7265x set integration time failed: ", err )
+            return False
     def read(self):
         self.chip_temp_c = {1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3)}
         self.data_counts = self.swob.get_value(0) # 0th position raw counts, bands unsorted order
