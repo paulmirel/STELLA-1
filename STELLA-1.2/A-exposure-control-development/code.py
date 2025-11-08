@@ -581,8 +581,8 @@ class as7341_Spectrometer( Device ):
         self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256 ]
         self.gain_choice = 5 #default to 16x gain
         self.set_gain( self.gain_choice )
-        self.integration_time_ms_list = [1,2,4,8] #TBD values
-        self.integration_time_choices_count = len(self.integration_time_ms_list)
+        self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180]
+        self.integration_time_choices_count = len(self.integration_time_ms_list)-1
         self.integration_time_choice = 0 #TBD default
     def set_gain(self, number):
         if number < 1:
@@ -609,6 +609,77 @@ class as7341_Spectrometer( Device ):
             gain_constant = AS7341_Gain.GAIN_512X
         self.swob._gain = gain_constant
         return self.gain_list[ self.swob._gain ]
+    def set_integration_time_ms( self, integration_time_ms ):
+        try:
+            if integration_time_ms < 2:
+                astep = 127
+                atime = 2
+            elif integration_time_ms == 10:
+                astep = 127
+                atime = 27
+            elif integration_time_ms == 20:
+                astep = 127
+                atime = 54
+            elif integration_time_ms == 30:
+                astep = 127
+                atime = 82
+            elif integration_time_ms == 40:
+                astep = 127
+                atime = 111
+            elif integration_time_ms == 50:
+                astep = 127
+                atime = 140
+            elif integration_time_ms == 60:
+                astep = 127
+                atime = 167
+            elif integration_time_ms == 70:
+                astep = 127
+                atime = 196
+            elif integration_time_ms == 80:
+                astep = 127
+                atime = 225
+            elif integration_time_ms == 90:
+                astep = 127
+                atime = 252
+            elif integration_time_ms == 100:
+                astep = 255
+                atime = 140
+            elif integration_time_ms == 110:
+                astep = 255
+                atime = 154
+            elif integration_time_ms == 120:
+                astep = 255
+                atime = 168
+            elif integration_time_ms == 130:
+                astep = 255
+                atime = 182
+            elif integration_time_ms == 140:
+                astep = 255
+                atime = 196
+            elif integration_time_ms == 150:
+                astep = 255
+                atime = 210
+            elif integration_time_ms == 160:
+                astep = 255
+                atime = 224
+            elif integration_time_ms == 170:
+                astep = 255
+                atime = 238
+            elif integration_time_ms == 180:
+                astep = 255
+                atime = 252
+
+
+
+
+
+
+
+            # TBD push the settings to the sensor
+            return True
+        except Exception as err:
+            print( "as7331 set integration time failed: ", err )
+            return False
     def lamps_on(self):
         self.swob.led = True
     def lamps_off(self):
