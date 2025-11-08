@@ -585,6 +585,7 @@ class as7341_Spectrometer( Device ):
         self.integration_time_choices_count = len(self.integration_time_ms_list)-1
         self.integration_time_choice = 0 #TBD default
     def set_gain(self, number):
+        # library sets gain to 128
         if number < 1:
             gain_constant = AS7341_Gain.GAIN_0_5X
         if number == 1:
@@ -610,6 +611,7 @@ class as7341_Spectrometer( Device ):
         self.swob._gain = gain_constant
         return self.gain_list[ self.swob._gain ]
     def set_integration_time_ms( self, integration_time_ms ):
+        #library sets atime = 100, astep = 999
         try:
             if integration_time_ms < 2:
                 astep = 127
@@ -668,14 +670,8 @@ class as7341_Spectrometer( Device ):
             elif integration_time_ms == 180:
                 astep = 255
                 atime = 252
-
-
-
-
-
-
-
-            # TBD push the settings to the sensor
+            self.swob.atime = atime
+            self.swob.astep = astep
             return True
         except Exception as err:
             print( "as7331 set integration time failed: ", err )
