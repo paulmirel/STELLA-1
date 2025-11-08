@@ -150,7 +150,8 @@ def main():
                 exposure_control_page.gain_shading.y = exposure_control_page.gain_slider.y
                 exposure_control_page.gain_shading.height = slider_min_y + 6 - exposure_control_page.gain_shading.y
                 exposure_control_page.gain_text_area.text = str(local_gain[1]) #display linear gain value
-
+                if local_sensor == as7331_spectrometer:
+                    print( local_integration_time_choice, local_sensor.integration_time_ms_list, local_sensor.integration_time_ms_list[local_integration_time_choice] )
                 local_integration_time_ms_value = local_sensor.integration_time_ms_list[local_integration_time_choice]
                 local_integration_time_ms = []
                 local_integration_time_ms.append(math.log(local_integration_time_ms_value,10))
@@ -441,7 +442,8 @@ class as7331_Spectrometer( Device ):
         self.gain_choice = 5
         self.gain_list = [ 1,2,4,8,16,32,64,128,256,512,1024,2048 ]
         self.set_gain( self.gain_choice )
-        self.integration_time_ms_list = [] #TBD values
+        self.integration_time_ms_list = [1,2,4,8,16,32,64,128,256,512,1024,2048,4196,8192,16384]
+        self.integration_time_choices_count = len(integration_time_ms_list)
         self.integration_time_choice = 0 #TBD default
 
 
@@ -471,57 +473,44 @@ class as7331_Spectrometer( Device ):
         if number > 10:
             gain_constant = as7331.GAIN_2048X
         self.swob.gain = gain_constant
-        return self.gain_list[ self.swob.gain ]
+        return self.gain_list[ number ]
 
-
-
-    def set_integration_time( self, intg_number ):
-        if intg_number == 0:
-            self.integration_time = as7331.INTEGRATION_TIME_1MS
-            self.intg_time_ms = 1
-        if intg_number == 1:
-            self.integration_time = as7331.INTEGRATION_TIME_2MS
-            self.intg_time_ms = 2
-        if intg_number == 2:
-            self.integration_time = as7331.INTEGRATION_TIME_4MS
-            self.intg_time_ms = 4
-        if intg_number == 3:
-            self.integration_time = as7331.INTEGRATION_TIME_8MS
-            self.intg_time_ms = 8
-        if intg_number == 4:
-            self.integration_time = as7331.INTEGRATION_TIME_16MS
-            self.intg_time_ms = 16
-        if intg_number == 5:
-            self.integration_time = as7331.INTEGRATION_TIME_32MS
-            self.intg_time_ms = 32
-        if intg_number == 6:
-            self.integration_time = as7331.INTEGRATION_TIME_64MS
-            self.intg_time_ms = 64
-        if intg_number == 7:
-            self.integration_time = as7331.INTEGRATION_TIME_128MS
-            self.intg_time_ms = 128
-        if intg_number == 8:
-            self.integration_time = as7331.INTEGRATION_TIME_256MS
-            self.intg_time_ms = 256
-        if intg_number == 9:
-            self.integration_time = as7331.INTEGRATION_TIME_512MS
-            self.intg_time_ms = 512
-        if intg_number == 10:
-            self.integration_time = as7331.INTEGRATION_TIME_1024MS
-            self.intg_time_ms = 1024
-        if intg_number == 11:
-            self.integration_time = as7331.INTEGRATION_TIME_2048MS
-            self.intg_time_ms = 2048
-        if intg_number == 12:
-            self.integration_time = as7331.INTEGRATION_TIME_4096MS
-            self.intg_time_ms = 4096
-        if intg_number == 13:
-            self.integration_time = as7331.INTEGRATION_TIME_8192MS
-            self.intg_time_ms = 8192
-        if intg_number == 14:
-            self.integration_time = as7331.INTEGRATION_TIME_16384MS
-            self.intg_time_ms = 16384
-        return self.intg_time_ms
+    def set_integration_time_ms( self, integration_time_ms ):
+        try:
+            if integration_time_ms < 2:
+                self.integration_time = as7331.INTEGRATION_TIME_1MS
+            if integration_time_ms == 2:
+                self.integration_time = as7331.INTEGRATION_TIME_2MS
+            if integration_time_ms == 4:
+                self.integration_time = as7331.INTEGRATION_TIME_4MS
+            if integration_time_ms == 8:
+                self.integration_time = as7331.INTEGRATION_TIME_8MS
+            if integration_time_ms == 16:
+                self.integration_time = as7331.INTEGRATION_TIME_16MS
+            if integration_time_ms == 32:
+                self.integration_time = as7331.INTEGRATION_TIME_32MS
+            if integration_time_ms == 64:
+                self.integration_time = as7331.INTEGRATION_TIME_64MS
+            if integration_time_ms == 128:
+                self.integration_time = as7331.INTEGRATION_TIME_128MS
+            if integration_time_ms == 256:
+                self.integration_time = as7331.INTEGRATION_TIME_256MS
+            if integration_time_ms == 512:
+                self.integration_time = as7331.INTEGRATION_TIME_512MS
+            if integration_time_ms == 1024:
+                self.integration_time = as7331.INTEGRATION_TIME_1024MS
+            if integration_time_ms == 2048:
+                self.integration_time = as7331.INTEGRATION_TIME_2048MS
+            if integration_time_ms == 4096:
+                self.integration_time = as7331.INTEGRATION_TIME_4096MS
+            if integration_time_ms == 8192:
+                self.integration_time = as7331.INTEGRATION_TIME_8192MS
+            if integration_time_ms > 8192:
+                self.integration_time = as7331.INTEGRATION_TIME_16384MS
+            return True
+        except Exception as err:
+            print( "as7331 set integration time failed: ", err )
+            return False
     def lamps_on(self):
         pass
     def lamps_off(self):
@@ -531,9 +520,11 @@ class as7331_Spectrometer( Device ):
         self.dict_counts = {360:self.UVA_counts, 300:self.UVB_counts, 260:self.UVC_counts}
         self.UVA, self.UVB, self.UVC, self.chip_temp_c = self.swob.values
         self.dict_fcal = {360:self.UVA, 300:self.UVB, 260:self.UVC}
+        self.data_counts = [ self.UVC_counts, self.UVB_counts, self.UVA_counts]
     def read_counts(self):
         self.UVA_counts, self.UVB_counts, self.UVC_counts, self.chip_temp_c_counts = self.swob.raw_values
         self.dict_counts = {360:self.UVA_counts, 300:self.UVB_counts, 260:self.UVC_counts}
+        self.data_counts = [ self.UVC_counts, self.UVB_counts, self.UVA_counts]
     def read_fcal(self):
         self.UVA, self.UVB, self.UVC, self.chip_temp_c = self.swob.values
         self.dict_fcal = {360:self.UVA, 300:self.UVB, 260:self.UVC}
