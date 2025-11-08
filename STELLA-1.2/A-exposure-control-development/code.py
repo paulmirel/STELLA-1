@@ -152,6 +152,7 @@ def main():
                 exposure_control_page.gain_text_area.text = str(local_gain[1]) #display linear gain value
                 if False: #local_sensor == as7331_spectrometer:
                     print( local_integration_time_choice, local_sensor.integration_time_ms_list, local_sensor.integration_time_ms_list[local_integration_time_choice] )
+
                 local_integration_time_ms_value = local_sensor.integration_time_ms_list[local_integration_time_choice]
                 local_integration_time_ms = []
                 local_integration_time_ms.append(math.log(local_integration_time_ms_value,10))
@@ -175,7 +176,7 @@ def main():
                     exposure_control_page.exposure_label_text_area.text = "Exposure Max"
                 else:
                     exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
-                    print( "SATURATED" )
+                    #print( "SATURATED" )
                 exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
                 exposure_low = min(instrument.spectral_sensors_present[sensor_choice].data_counts)
                 exposure_value_span = exposure_max_value
@@ -580,7 +581,8 @@ class as7341_Spectrometer( Device ):
         self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256 ]
         self.gain_choice = 5 #default to 16x gain
         self.set_gain( self.gain_choice )
-        self.integration_time_ms_list = [] #TBD values
+        self.integration_time_ms_list = [1,2,4,8] #TBD values
+        self.integration_time_choices_count = len(self.integration_time_ms_list)
         self.integration_time_choice = 0 #TBD default
     def set_gain(self, number):
         if number < 1:
@@ -618,6 +620,9 @@ class as7341_Spectrometer( Device ):
         self.swob.led = False
     def read_counts(self):
         self.raw = self.swob.all_channels
+        self.data_counts = []
+        for item in self.raw:
+            self.data_counts.append(item)
         self.dict_counts = {key:value for key, value in zip(self.bands, self.raw )}
         for ch in range (0,8):
             self.irradiance[ch] = self.raw[ch]/self.steno_cal_counts_per_irradiance[ch]
