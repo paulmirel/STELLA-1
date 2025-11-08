@@ -150,7 +150,7 @@ def main():
                 exposure_control_page.gain_shading.y = exposure_control_page.gain_slider.y
                 exposure_control_page.gain_shading.height = slider_min_y + 6 - exposure_control_page.gain_shading.y
                 exposure_control_page.gain_text_area.text = str(local_gain[1]) #display linear gain value
-                if local_sensor == as7331_spectrometer:
+                if False: #local_sensor == as7331_spectrometer:
                     print( local_integration_time_choice, local_sensor.integration_time_ms_list, local_sensor.integration_time_ms_list[local_integration_time_choice] )
                 local_integration_time_ms_value = local_sensor.integration_time_ms_list[local_integration_time_choice]
                 local_integration_time_ms = []
@@ -442,11 +442,9 @@ class as7331_Spectrometer( Device ):
         self.gain_choice = 5
         self.gain_list = [ 1,2,4,8,16,32,64,128,256,512,1024,2048 ]
         self.set_gain( self.gain_choice )
-        self.integration_time_ms_list = [1,2,4,8,16,32,64,128,256,512,1024,2048,4196,8192,16384]
-        self.integration_time_choices_count = len(integration_time_ms_list)
-        self.integration_time_choice = 0 #TBD default
-
-
+        self.integration_time_ms_list = [ 1,2,4,8,16,32,64,128,256,512,1024,2048,4196,8192,16384 ]
+        self.integration_time_choices_count = len(self.integration_time_ms_list)
+        self.integration_time_choice = 8 #TBD default
     def set_gain(self, number):
         if number < 1:
             gain_constant = as7331.GAIN_1X
