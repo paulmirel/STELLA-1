@@ -223,7 +223,7 @@ def main():
                     if exposure_control_page.sensor_choice_field_selected:
                         sensor_choice = (sensor_choice + 1) % len(instrument.spectral_sensors_present)
                     elif exposure_control_page.setting_field_selected:
-                        print( "TBD increment setting" )
+                        exposure_control_page.setting_mode = ( exposure_control_page.setting_mode + instrument.encoder_increment ) % exposure_control_page.number_of_setting_modes
                     elif exposure_control_page.slider_scale_field_selected:
                         scale_choice = (scale_choice + 1) % len(scale_list)
                     elif exposure_control_page.gain_field_selected:
@@ -611,7 +611,7 @@ class as7341_Spectrometer( Device ):
         self.swob._gain = gain_constant
         return self.gain_list[ self.swob._gain ]
     def set_integration_time_ms( self, integration_time_ms ):
-        #library sets atime = 100, astep = 999
+        #library sets atime = 100, astep = 999, which is an unusable combination, ADC saturated at 101000.
         try:
             if integration_time_ms < 2:
                 astep = 127
@@ -1070,6 +1070,9 @@ class Exposure_Control_Page( Page ):
         self.slider_max_y = 54
         self.slider_min_y = 174
         self.slider_pixel_span = self.slider_min_y - self.slider_max_y
+        self.setting_modes_list = [ "Manual", "Auto", "Set 1" ]
+        self.number_of_setting_modes = len( self.setting_modes_list )
+        self.setting_mode = 0
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -1592,6 +1595,9 @@ class Exposure_Control_Page( Page ):
         return self.group
 
     def update_values( self ):
+        self.setting_text_area.text = self.setting_modes_list[ self.setting_mode ]
+        ### bring the other page parameters in here as above
+
         if self.exposure_select_choice == 0:
             #print( "selection == 0" )
             self.return_select.hidden = False
