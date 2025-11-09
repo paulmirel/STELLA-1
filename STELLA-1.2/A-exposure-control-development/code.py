@@ -138,6 +138,12 @@ def main():
 
                 local_sensor = instrument.spectral_sensors_present[sensor_choice]
                 exposure_control_page.sensor_choice_text_area.text = local_sensor.choice_label
+                if exposure_control_page.setting_mode != 0:
+                    exposure_control_page.gain_area.color_index = 19
+                    exposure_control_page.integration_time_area.color_index = 19
+                else:
+                    exposure_control_page.gain_area.color_index = 9
+                    exposure_control_page.integration_time_area.color_index = 9
 
                 local_gain = []
                 local_gain.append(math.log(local_sensor.gain_list[sensor_gain_choices[sensor_choice]],10))
@@ -218,6 +224,13 @@ def main():
                 instrument.check_inputs()
                 time.sleep(0.1)
 
+            if exposure_control_page.setting_modes_list[ exposure_control_page.setting_mode ] == "Auto":
+                exposure_control_page.auto_engaged = True
+                #print( "auto_engaged" )
+            else:
+                exposure_control_page.auto_engaged = False
+
+
             if instrument.input_flag:
                 if instrument.encoder_increment != 0:
                     if exposure_control_page.sensor_choice_field_selected:
@@ -230,7 +243,6 @@ def main():
                         sensor_gain_choices[ sensor_choice ] = (sensor_gain_choices[ sensor_choice ] + instrument.encoder_increment) % len( instrument.spectral_sensors_present[sensor_choice].gain_list)
                         if sensor_gain_choices[ sensor_choice ] != last_sensor_gain_choices[ sensor_choice ]:
                             instrument.spectral_sensors_present[sensor_choice].set_gain(sensor_gain_choices[ sensor_choice ])
-                            #print( "attempt to set gain of sensor labeled: ", instrument.spectral_sensors_present[sensor_choice].choice_label )
                             last_sensor_gain_choices[ sensor_choice ] = sensor_gain_choices[ sensor_choice ]
                     elif exposure_control_page.integration_time_field_selected:
                         local_integration_time_choice = (local_integration_time_choice + instrument.encoder_increment ) % (local_sensor.integration_time_choices_count+1)
@@ -241,7 +253,18 @@ def main():
                     elif exposure_control_page.lamp_current_field_selected:
                         print( "TBD increment lamp current" )
                     else:
-                        exposure_control_page.exposure_select_choice = (exposure_control_page.exposure_select_choice + instrument.encoder_increment) % exposure_control_page.exposure_select_range
+                        new_choice = exposure_control_page.exposure_select_choice + instrument.encoder_increment
+                        if exposure_control_page.setting_mode != 0:
+                                if new_choice == 4 and exposure_control_page.exposure_select_choice == 3:
+                                    new_choice = 6
+                                if new_choice == 5 and exposure_control_page.exposure_select_choice == 6:
+                                    new_choice = 3
+                        exposure_control_page.exposure_select_choice = (new_choice) % exposure_control_page.exposure_select_range
+
+
+
+
+
                 exposure_control_page.update_values()
                 instrument.encoder_increment = 0
                 instrument.input_flag = False
@@ -1070,9 +1093,10 @@ class Exposure_Control_Page( Page ):
         self.slider_max_y = 54
         self.slider_min_y = 174
         self.slider_pixel_span = self.slider_min_y - self.slider_max_y
-        self.setting_modes_list = [ "Manual", "Auto", "Set 1" ]
+        self.setting_modes_list = [ "Manual", "Auto", "Sunny", "Cloudy", "Indoor", "Dark" ] #, "Hold", "Set 1" ]
         self.number_of_setting_modes = len( self.setting_modes_list )
         self.setting_mode = 0
+        self.auto_engaged = False
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -1622,6 +1646,7 @@ class Exposure_Control_Page( Page ):
                 self.instrument.button_pressed = False
         else:
             self.setting_select.hidden = True
+            self.auto_engaged = False
 
         if self.exposure_select_choice == 3:
             self.slider_scale_area.hidden = False
