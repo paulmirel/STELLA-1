@@ -53,42 +53,18 @@ class as7331_Spectrometer( Device ):
             print( "failed to set gain: ", err )
             return False
 
-    def set_integration_time_ms( self, integration_time_ms ):
+    def set_integration_time( self, index ):
+        integration_time_constant_list = [ as7331.INTEGRATION_TIME_1MS, as7331.INTEGRATION_TIME_2MS, as7331.INTEGRATION_TIME_4MS, as7331.INTEGRATION_TIME_8MS, as7331.INTEGRATION_TIME_16MS, as7331.INTEGRATION_TIME_32MS, as7331.INTEGRATION_TIME_64MS, as7331.INTEGRATION_TIME_128MS, as7331.INTEGRATION_TIME_256MS, as7331.INTEGRATION_TIME_512MS, as7331.INTEGRATION_TIME_1024MS, as7331.INTEGRATION_TIME_2048MS, as7331.INTEGRATION_TIME_4096MS, as7331.INTEGRATION_TIME_8192MS, as7331.INTEGRATION_TIME_16384MS ]
         try:
-            if integration_time_ms < 2:
-                self.integration_time = as7331.INTEGRATION_TIME_1MS
-            if integration_time_ms == 2:
-                self.integration_time = as7331.INTEGRATION_TIME_2MS
-            if integration_time_ms == 4:
-                self.integration_time = as7331.INTEGRATION_TIME_4MS
-            if integration_time_ms == 8:
-                self.integration_time = as7331.INTEGRATION_TIME_8MS
-            if integration_time_ms == 16:
-                self.integration_time = as7331.INTEGRATION_TIME_16MS
-            if integration_time_ms == 32:
-                self.integration_time = as7331.INTEGRATION_TIME_32MS
-            if integration_time_ms == 64:
-                self.integration_time = as7331.INTEGRATION_TIME_64MS
-            if integration_time_ms == 128:
-                self.integration_time = as7331.INTEGRATION_TIME_128MS
-            if integration_time_ms == 256:
-                self.integration_time = as7331.INTEGRATION_TIME_256MS
-            if integration_time_ms == 512:
-                self.integration_time = as7331.INTEGRATION_TIME_512MS
-            if integration_time_ms == 1024:
-                self.integration_time = as7331.INTEGRATION_TIME_1024MS
-            if integration_time_ms == 2048:
-                self.integration_time = as7331.INTEGRATION_TIME_2048MS
-            if integration_time_ms == 4096:
-                self.integration_time = as7331.INTEGRATION_TIME_4096MS
-            if integration_time_ms == 8192:
-                self.integration_time = as7331.INTEGRATION_TIME_8192MS
-            if integration_time_ms > 8192:
-                self.integration_time = as7331.INTEGRATION_TIME_16384MS
-            return True
+            self.integration_time = integration_time_constant_list[ index ]
+            return self.integration_time_ms_list[ index ]
         except Exception as err:
             print( "as7331 set integration time failed: ", err )
             return False
+    '''
+    def read_chip_temperatures(self):
+        pass
+
     def lamps_on(self):
         pass
     def lamps_off(self):
@@ -106,8 +82,7 @@ class as7331_Spectrometer( Device ):
     def read_fcal(self):
         self.UVA, self.UVB, self.UVC, self.chip_temp_c = self.swob.values
         self.dict_fcal = {360:self.UVA, 300:self.UVB, 260:self.UVC}
-    def read_temperatures(self):
-        pass
+    
     def header(self):
         return "sensorPN, Wl.nm, raw_counts, irrad.stella.cal, irrad.stella.uncty, irrad_factory.cal, irrad_factory.uncty, gain, integration_time_ms, chip_temp_C"
         #return "UVC.WL.nm, UVC_uncal, UVB.WL.nm, UVB_uncal, UVA.WL.nm, UVA_uncal, UVS.temp.C"
@@ -138,7 +113,7 @@ class as7331_Spectrometer( Device ):
         return self.dict_bandwidths[wavelength]
     def printlog(self):
         print( self.log())
-
+    '''
 
 class Null_as7331_Spectrometer(Device):
     def __init__( self ):
