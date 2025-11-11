@@ -374,6 +374,10 @@ class Exposure_Control_Page( Page ):
     def update_values( self ):
         number_of_selections = len(self.selection_list)
         self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
+        if self.selection == 3:
+            self.slider_scale_area.hidden = False
+        else:
+            self.slider_scale_area.hidden = True
         for index in range( 0, number_of_selections):
             if index == self.selection:
                 self.selection_list[ index ].hidden = False
@@ -788,10 +792,6 @@ class Exposure_Control_Page( Page ):
         slider_scale_border_height = slider_scale_select_height - 2*select_width
         slider_scale_border_x = slider_scale_select_x+select_width
         slider_scale_border_y = slider_scale_select_y+select_width
-        if False:
-            slider_scale_border = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=slider_scale_border_width,
-                                                height=slider_scale_border_height, x=slider_scale_border_x, y=slider_scale_border_y )
-            self.group.append( slider_scale_border )
 
         slider_scale_area_width = slider_scale_border_width - 2*border_width
         slider_scale_area_height = slider_scale_border_height - 2*border_width
