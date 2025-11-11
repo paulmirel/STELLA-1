@@ -97,7 +97,9 @@ def main():
 
 
 
-
+    # move most of the variables and functionality into the page class.
+    # at the main level we only need to know about the instrument.spectral_sensors_present, instrument.input_flag, and instrument.encoder_increment
+    # the sensors hold the settings, so we don't need to carry them around
 
 
 
@@ -110,7 +112,6 @@ def main():
     ### local local values
     scale_choice = 0
     scale_list = "log scale", "linear scale"
-    setting_list = [ "Manual", "Auto", "Preset 1", "Preset 2" ]
     setting_choice = 0
     slider_pixel_span = exposure_control_page.slider_pixel_span
     slider_min_y = exposure_control_page.slider_min_y
