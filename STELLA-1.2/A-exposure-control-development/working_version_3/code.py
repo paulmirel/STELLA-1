@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.0.4"
+SOFTWARE_VERSION_NUMBER = "0.0.3"
 DEVICE_TYPE = "STELLA-1.2_Exposure_control"
 # Paul Mirel 2025
 
@@ -38,8 +38,6 @@ from adafruit_as7341 import Gain as AS7341_Gain
 import qwiic_i2c
 import qwiic_as7265x
 import iorodeo_as7331 as as7331
-import software_modules
-from software_modules import as7265x_spectral_sensor_module
 
 ## check i2c devices present
 i2c_bus = board.I2C()
@@ -83,28 +81,13 @@ def main():
     instrument = create_instrument( i2c_bus, spi_bus, gps_uart_bus, UID, buzzer )
     instrument.welcome_page.show()
 
-    as7265x_spectrometer = as7265x_spectral_sensor_module.initialize_as7265x_spectrometer( instrument )
+    as7265x_spectrometer = initialize_as7265x_spectrometer( instrument )
     as7331_spectrometer = initialize_as7331_spectrometer( instrument )
     as7341_spectrometer = initialize_as7341_spectrometer( instrument )
 
     instrument.welcome_page.hide()
     exposure_control_page = make_exposure_control_page( instrument )
     exposure_control_page.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    stall()
 
     ### local local values
     scale_choice = 0
@@ -127,25 +110,18 @@ def main():
     exposure_value_span.append( decimal_16_bits )
     exposure_control_page.update_values()
 
-
-
-
-
-
-
-
     last_sensor_gain_choices = []
     sensor_gain_choices = []
     for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
-        last_sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].default_gain_index)
-        sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].default_gain_index)
+        last_sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
+        sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].gain_choice)
 
     if False:
         last_sensor_integration_time_choices = []
         sensor_integration_time_choices = []
         for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
-            last_sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].default_integration_time_index)
-            sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].default_integration_time_index)
+            last_sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
+            sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].integration_time_choice)
     sensor_choice = 0
     local_integration_time_choice = 0
         # TBD lamp selection, lamp current
@@ -333,6 +309,149 @@ class Device: #parent class
             return False
 
 #### begin spectrometer sensor device classes
+
+class as7265x_Spectrometer( Device ):
+    # custom library
+    # cycle time is a little less than 1 whole second
+    def __init__( self, com_bus ):
+        super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  )) #
+        self.choice_label = "as7256x V+NIR"
+        if self.swob:
+            self.swob.disable_indicator()
+            self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
+            self.bands = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
+            self.bandwidth = 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
+            self.chip_n = 1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   3
+            self.dict_chip_n = {key:value for key, value in zip(self.bands, self.chip_n )}
+            self.dict_bandwidths = {key:value for key, value in zip(self.bands, self.bandwidth )}
+            self.bands_sorted = sorted( self.bands )
+            self.uncertainty_percent = 12
+            self.gain_list = [ 1, 3.7, 16, 64 ]
+            self.gain_choice = 2
+            self.set_gain( self.gain_choice )
+            self.integration_time_ms_step = 2.78
+            self.integration_time_number_maximum = 255
+            self.integration_time_ms_maximum = self.integration_time_ms_step * self.integration_time_number_maximum
+            self.integration_time_choices_count = 16
+            self.integration_time_number_per_choice = self.integration_time_number_maximum/self.integration_time_choices_count
+            self.integration_time_ms_list = []
+            self.integration_time_ms_list.append( self.integration_time_ms_step )
+            for choice in range( 0, self.integration_time_choices_count ):
+                integration_time_ms_value = ((choice + 1) * self.integration_time_number_per_choice * self.integration_time_ms_step)
+                if integration_time_ms_value < 100:
+                    integration_time_ms_value = round(integration_time_ms_value, 1)
+                else:
+                    integration_time_ms_value = int( integration_time_ms_value )
+                self.integration_time_ms_list.append( integration_time_ms_value )
+            #print( self.integration_time_ms_list )
+            self.integration_time_choice = 0 #TBD default
+            self.intg_time_ms = 56 #default, number = 20 out of 255
+            self.afov_deg = (20.5 * 2) #datasheet reports half angle.
+    def set_gain(self, number):
+        if number < 1 :
+            self.swob.set_gain( self.swob.kGain1x )
+        elif number == 1:
+            self.swob.set_gain( self.swob.kGain37x )
+        elif number == 2:
+            self.swob.set_gain( self.swob.kGain16x )
+        elif number > 2:
+            self.swob.set_gain( self.swob.kGain64x )
+        return self.gain_list[ number ]
+    def set_integration_time_ms( self, integration_time_ms ):
+        # must wait for at least 5 seconds before sending integration time again. If not, signal goes to 0.
+        try:
+            if (integration_time_ms < self.integration_time_ms_step) or (integration_time_ms > self.integration_time_ms_maximum):
+                print( "out of range: choose {} to {}ms integration time.".format(self.integration_time_ms_step,  self.integration_time_ms_maximum))
+            else:
+                integration_number = integration_time_ms / self.integration_time_ms_step
+                integration_number = int( integration_number )
+                self.swob.set_integration_cycles(integration_number)
+            return True
+        except Exception as err:
+            print( "as7265x set integration time failed: ", err )
+            return False
+    def read(self):
+        self.chip_temp_c = {1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3)}
+        self.data_counts = self.swob.get_value(0) # 0th position raw counts, bands unsorted order
+        # dictionary where key = WL and value = raw counts
+        self.dict_counts = {key:value for key, value in zip(self.bands, self.data_counts)}
+        self.data_fcal = self.swob.get_value(1) # 1th position factory calibrated irrad value, bands unsorted order
+        # dictionary where key = WL and value = factory cal irradiance
+        self.dict_fcal = {key:value for key, value in zip(self.bands, self.data_fcal)}
+        # OMIT as it's always 12% # self.dict_uncty_fcal = {key:value for key, value in zip(self.bands, (self.data_fcal*self.uncert_percent/100))}
+        # TBD self.dict_scal = {key:value for key, value in zip(self.bands, 0)}
+        # TBD self.dict_uncty_scal = {key:value for key, value in zip(self.bands, (0))}
+        # print( self.data_counts )
+    def read_counts(self):
+        self.data_counts = []
+        self.data_counts.append(self.swob.get_g()) #get_value(0) # 0th position raw counts, bands unsorted order
+        self.data_counts.append(self.swob.get_h())
+        self.data_counts.append(self.swob.get_i())
+        self.data_counts.append(self.swob.get_j())
+        self.data_counts.append(self.swob.get_k())
+        self.data_counts.append(self.swob.get_l())
+        self.data_counts.append(self.swob.get_r())
+        self.data_counts.append(self.swob.get_s())
+        self.data_counts.append(self.swob.get_t())
+        self.data_counts.append(self.swob.get_u())
+        self.data_counts.append(self.swob.get_v())
+        self.data_counts.append(self.swob.get_w())
+        self.data_counts.append(self.swob.get_a())
+        self.data_counts.append(self.swob.get_b())
+        self.data_counts.append(self.swob.get_c())
+        self.data_counts.append(self.swob.get_d())
+        self.data_counts.append(self.swob.get_e())
+        self.data_counts.append(self.swob.get_f())
+        #print(self.data_counts)
+        self.dict_counts = {key:value for key, value in zip(self.bands, self.data_counts)}
+    def read_fcal(self):
+        self.data_fcal = self.swob.get_value(1) # 1th position factory calibrated irrad value, bands unsorted order
+        self.dict_fcal = {key:value for key, value in zip(self.bands, self.data_fcal)}
+        #print( self.data_fcal )
+    def read_temperatures(self):
+        self.chip_temp_c = {1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3)}
+    def list_channels():
+        return self.bands_sorted
+    def header( self ):
+        return "WL.nm, irrad.uW/(cm^2), irrad.uncty.uW/(cm^2), counts, chip_num, chip_temp_C"
+    def get_bandwidth(self, wavelength):
+        return self.dict_bandwidths[wavelength]
+    def log( self, wavelength):
+        if wavelength in self.bands:
+            logline = "{}".format( self.pn )
+            logline += ", {}".format( wavelength )
+            logline += ", {}".format( self.dict_bandwidths[wavelength] )
+            logline += ", {}".format( self.dict_counts[wavelength] )
+            logline += ", {}".format( self.dict_fcal[wavelength] )
+            logline += ", {}".format( self.dict_fcal[wavelength]*self.uncertainty_percent/100 )
+            logline += ", {}".format( self.gain_ratio )#gain
+            logline += ", {}".format( self.intg_time_ms )#integration time
+            logline += ", {}".format( self.dict_chip_n[wavelength] )#chip number
+            logline += ", {}".format( self.chip_temp_c[self.dict_chip_n[wavelength]] )#chip temperature
+            return logline
+    def serial_log(self, wavelength):
+        if wavelength in self.bands:
+            loglist = "pn: {}".format( self.pn )
+            loglist += ", WL-!-nm: {}".format( wavelength )
+            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
+            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
+            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_fcal[wavelength] )
+            loglist += ", gain-!-: {}".format( self.gain_ratio )
+            loglist += ", intg-!-ms: {}".format( self.intg_time_ms )
+            return loglist
+
+    def printlog(self,ch):
+        print( self.log(ch) )
+    def lamps_on(self):
+        #print( "turn on the lamps")
+        self.swob.enable_bulb(0)   # white
+        self.swob.enable_bulb(1)   # NIR
+        self.swob.enable_bulb(2)   # UV
+    def lamps_off(self):
+        #print( "turn off the lamps")
+        self.swob.disable_bulb(0)   # white
+        self.swob.disable_bulb(1)   # NIR
+        self.swob.disable_bulb(2)   # UV
 
 class as7331_Spectrometer( Device ):
     def __init__( self, com_bus ):
@@ -635,6 +754,19 @@ class as7341_Spectrometer( Device ):
 
 
 #### begin spectrometer sensor initialization definitions
+def initialize_as7265x_spectrometer( instrument ):
+    as7265x_spectrometer = Null_as7265x_Spectrometer()
+    try:
+        as7265x_spectrometer = as7265x_Spectrometer( instrument.i2c_bus )
+        instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
+        instrument.spectral_sensors_present.append( as7265x_spectrometer )
+        as7265x_spectrometer.lamps_on()
+        time.sleep(0.1)
+        as7265x_spectrometer.lamps_off()
+    except Exception as err:
+        print( "as7265x spectrometer failed: {}".format( err ))
+        pass
+    return as7265x_spectrometer
 
 def initialize_as7331_spectrometer( instrument ):
     as7331_spectrometer = Null_as7331_Spectrometer()
@@ -663,6 +795,51 @@ def initialize_as7341_spectrometer( instrument ):
 
 
 #### begin spectrometer sensor null class definitions
+
+class Null_as7265x_Spectrometer( Device ):
+    def __init__( self ):
+        super().__init__(name = None, swob = None)
+        self.swob = None
+        self.bands = None
+        self.bands_sorted = [0,0]   # empty list
+        self.dict_chip_n = [0,0]
+        self.chip_temps = [0,0]
+        self.dict_fcal = {0:0}      # empty dictionary
+        self.dict_counts = {0:0}
+        self.uncert_percent = 10
+    def check_gain_ratio(self):
+        pass
+    def set_gain_number(self, gain_number):
+        pass
+    def read(self):
+        pass
+    def read_counts(self):
+        pass
+    def read_fcal(self):
+        pass
+    def read_temperatures(self):
+        pass
+    def log(self, value):
+        pass
+    def get_bandwidth(self, wavelength):
+        pass
+    def report(self):
+        pass
+    def printlog(self):
+        pass
+    def blink(self, duration):
+        pass
+    def header(self):
+        pass
+    def lamps_on(self):
+        pass
+    def lamps_off(self):
+        pass
+    def set_integration_cycles(self):
+        pass
+    def serial_log(self, wavelength):
+        pass
+
 
 class Null_as7331_Spectrometer(Device):
     def __init__( self ):
