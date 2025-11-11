@@ -153,15 +153,16 @@ def main():
         # TBD lamp selection, lamp current
     '''
     wait_time = 1
-
+    exposure_control_page.update_values()
     try:
         operational = True
         while operational:
             instrument.check_inputs()
             if instrument.input_flag:
                 pass
-            '''
             else:
+                pass
+            '''
                 exposure_control_page.slider_scale_text_area.text = scale_list[ scale_choice ]
 
                 local_sensor = instrument.spectral_sensors_present[sensor_choice]
@@ -269,6 +270,7 @@ def main():
             '''
             if instrument.input_flag:
                 if instrument.encoder_increment != 0:
+                    exposure_control_page.update_values()
                     '''
                     if exposure_control_page.sensor_choice_field_selected:
                         sensor_choice = (sensor_choice + 1) % len(instrument.spectral_sensors_present)
@@ -347,11 +349,10 @@ class Exposure_Control_Page( Page ):
         super().__init__()
         self.instrument = instrument
         self.palette = self.instrument.palette
-        self.exposure_select_choice = 0
-        self.exposure_select_range = 8
         self.selection_color_index = 6
         self.field_selected_color_index = 5
         self.field_not_selected_color_index = 9
+        '''
         self.sensor_choice_field_selected = False
         self.setting_field_selected = False
         self.slider_scale_field_selected = False
@@ -359,6 +360,8 @@ class Exposure_Control_Page( Page ):
         self.integration_time_field_selected = False
         self.lamp_choice_field_selected = False
         self.lamp_current_field_selected = False
+        '''
+
         self.slider_max_y = 54
         self.slider_min_y = 174
         self.slider_pixel_span = self.slider_min_y - self.slider_max_y
@@ -366,10 +369,19 @@ class Exposure_Control_Page( Page ):
         self.number_of_setting_modes = len( self.setting_modes_list )
         self.default_setting_mode = 0
         self.auto_exposure_engaged = False
-
-
+        self.selection = 0
 
     def update_values( self ):
+        number_of_selections = len(self.selection_list)
+        self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
+        for index in range( 0, number_of_selections):
+            if index == self.selection:
+                self.selection_list[ index ].hidden = False
+            else:
+                self.selection_list[ index ].hidden = True
+
+
+        '''
         self.setting_text_area.text = self.setting_modes_list[ self.setting_mode ]
         ### bring the other page parameters in here as above
 
@@ -479,6 +491,15 @@ class Exposure_Control_Page( Page ):
             print("button pressed")
             instrument.button_pressed = False
 
+        '''
+
+
+
+
+
+
+
+
     def make_group( self ):
         self.group = displayio.Group()
         exposure_control_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -487,6 +508,7 @@ class Exposure_Control_Page( Page ):
         border_width = 2
         text_offset_x = 6
         text_offset_y = 14
+        self.selection_list = []
 
         ## top row
         top_row_y = 4
@@ -498,6 +520,7 @@ class Exposure_Control_Page( Page ):
                                                     height=return_select_height, x=return_select_x, y=return_select_y )
         self.group.append( self.return_select )
         self.return_select.hidden = True
+        self.selection_list.append(self.return_select)
 
         return_border_width = return_select_width - 2*select_width
         return_border_height = return_select_height - 2*select_width
@@ -528,6 +551,7 @@ class Exposure_Control_Page( Page ):
                                                     height=sensor_choice_select_height, x=sensor_choice_select_x, y=sensor_choice_select_y )
         self.group.append( self.sensor_choice_select )
         self.sensor_choice_select.hidden = True
+        self.selection_list.append(self.sensor_choice_select)
 
         sensor_choice_border_width = sensor_choice_select_width - 2*select_width
         sensor_choice_border_height = sensor_choice_select_height - 2*select_width
@@ -561,6 +585,8 @@ class Exposure_Control_Page( Page ):
                                                     height=setting_select_height, x=setting_select_x, y=setting_select_y )
         self.group.append( self.setting_select )
         self.setting_select.hidden = True
+        self.selection_list.append(self.setting_select)
+
 
         setting_border_width = setting_select_width - 2*select_width
         setting_border_height = setting_select_height - 2*select_width
@@ -594,6 +620,7 @@ class Exposure_Control_Page( Page ):
                                                     height=gain_select_height, x=gain_select_x, y=gain_select_y )
         self.group.append( self.gain_select )
         self.gain_select.hidden = True
+        self.selection_list.append(self.gain_select)
 
         gain_border_width = gain_select_width - 2*select_width
         gain_border_height = gain_select_height - 2*select_width
@@ -626,6 +653,8 @@ class Exposure_Control_Page( Page ):
                                                     height=integration_time_select_height, x=integration_time_select_x, y=integration_time_select_y )
         self.group.append( self.integration_time_select )
         self.integration_time_select.hidden = True
+        self.selection_list.append(self.integration_time_select)
+
 
         integration_time_border_width = integration_time_select_width - 2*select_width
         integration_time_border_height = integration_time_select_height - 2*select_width
@@ -658,6 +687,7 @@ class Exposure_Control_Page( Page ):
                                                     height=lamp_current_select_height, x=lamp_current_select_x, y=lamp_current_select_y )
         self.group.append( self.lamp_current_select )
         self.lamp_current_select.hidden = True
+        self.selection_list.append(self.lamp_current_select)
 
         lamp_current_border_width = lamp_current_select_width - 2*select_width
         lamp_current_border_height = lamp_current_select_height - 2*select_width
@@ -690,6 +720,7 @@ class Exposure_Control_Page( Page ):
                                                     height=exposure_maximum_select_height, x=exposure_maximum_select_x, y=exposure_maximum_select_y )
         self.group.append( self.exposure_maximum_select )
         self.exposure_maximum_select.hidden = True
+        #self.selection_list.append(self.exposure_maximum_select)
 
         exposure_maximum_border_width = exposure_maximum_select_width - 2*select_width
         exposure_maximum_border_height = exposure_maximum_select_height - 2*select_width
@@ -891,6 +922,7 @@ class Exposure_Control_Page( Page ):
                                                     height=slider_scale_select_height, x=slider_scale_select_x, y=slider_scale_select_y )
         self.group.append( self.slider_scale_select )
         self.slider_scale_select.hidden = True
+        self.selection_list.append(self.slider_scale_select)
 
         slider_scale_border_width = slider_scale_select_width - 2*select_width
         slider_scale_border_height = slider_scale_select_height - 2*select_width
@@ -909,6 +941,7 @@ class Exposure_Control_Page( Page ):
                                             height=slider_scale_area_height, x=slider_scale_area_x, y=slider_scale_area_y )
         self.group.append( self.slider_scale_area )
         self.slider_scale_area.hidden = True
+
 
         slider_scale_text_x = slider_scale_area_x+text_offset_x
         slider_scale_text_y = slider_scale_area_y+6
@@ -952,6 +985,7 @@ class Exposure_Control_Page( Page ):
                                                     height=lamp_choice_select_height, x=lamp_choice_select_x, y=lamp_choice_select_y )
         self.group.append( self.lamp_choice_select )
         self.lamp_choice_select.hidden = True
+        self.selection_list.append(self.lamp_choice_select)
 
         lamp_choice_border_width = lamp_choice_select_width - 2*select_width
         lamp_choice_border_height = lamp_choice_select_height - 2*select_width
