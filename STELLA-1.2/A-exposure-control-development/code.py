@@ -107,7 +107,7 @@ def main():
 
 
 
-    stall()
+    '''
 
     ### local local values
     scale_choice = 0
@@ -151,14 +151,16 @@ def main():
     sensor_choice = 0
     local_integration_time_choice = 0
         # TBD lamp selection, lamp current
-
+    '''
     wait_time = 1
+
     try:
         operational = True
         while operational:
             instrument.check_inputs()
             if instrument.input_flag:
                 pass
+            '''
             else:
                 exposure_control_page.slider_scale_text_area.text = scale_list[ scale_choice ]
 
@@ -240,11 +242,12 @@ def main():
 
 
             #as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
+            '''
             wait_start = time.monotonic()
             while (time.monotonic() < wait_start + wait_time) and not instrument.input_flag:
                 instrument.check_inputs()
                 time.sleep(0.1)
-
+            '''
             if exposure_control_page.setting_modes_list[ exposure_control_page.setting_mode ] == "Auto":
                 exposure_control_page.auto_engaged = True
                 if exposure_high < exposure_target_fraction_low * exposure_max_value:
@@ -263,8 +266,10 @@ def main():
                     exposure_control_page.gain_area.color_index = 9
                 if not exposure_control_page.integration_time_field_selected:
                     exposure_control_page.integration_time_area.color_index = 9
+            '''
             if instrument.input_flag:
                 if instrument.encoder_increment != 0:
+                    '''
                     if exposure_control_page.sensor_choice_field_selected:
                         sensor_choice = (sensor_choice + 1) % len(instrument.spectral_sensors_present)
                     elif exposure_control_page.setting_field_selected:
@@ -295,6 +300,7 @@ def main():
                                 new_choice = 3
                         exposure_control_page.exposure_select_choice = (new_choice) % exposure_control_page.exposure_select_range
                 exposure_control_page.update_values()
+                '''
                 instrument.encoder_increment = 0
                 instrument.input_flag = False
     finally:
@@ -333,179 +339,6 @@ class Device: #parent class
             return True
         else:
             return False
-
-#### begin instrument class definition
-
-class Instrument:
-    def __init__( self, i2c_bus, spi_bus, uart_bus, UID, buzzer):
-        self.i2c_bus = i2c_bus
-        self.uart_bus = uart_bus
-        self.device_type = DEVICE_TYPE
-        self.uid = UID
-        self.buzzer = buzzer
-        self.usb_serial_out_enabled = usb_serial_out_enabled
-        self.sample_interval_s = preset_sample_interval_s
-        self.burst_count = preset_burst_count
-        self.usb_serial_out_enabled = usb_serial_out_enabled
-        self.pages_list = []
-        self.palette = make_palette()
-        self.main_display_group = initialize_display( spi_bus )
-        self.welcome_page = make_welcome_page( self )
-        #self.hardware_clock = initialize_hardware_clock( i2c_bus )
-        #self.hardware_clock.report()
-        #self.hardware_clock.sync_system_clock()
-        #self.clock_battery_ok_text =  "clock battery OK: {}".format( self.hardware_clock.battery_ok() )
-        #self.welcome_page.announce( self.clock_battery_ok_text )
-        #self.datestamp = self.hardware_clock.get_datestamp_now()
-        #self.last_datestamp = self.datestamp
-        #self.iso_time = self.hardware_clock.get_iso_time_now()
-        #self.batch_number = update_batch(self.datestamp)
-        #print( "batch number = {}".format( self.batch_number ))
-        self.filename = None
-        self.sensors_present = []
-        self.spectral_sensors_present = []
-        self.spectrometry = spectral_sensors_detected
-        self.record = record_on_startup
-        #self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
-        self.measurement_counter = 0
-        self.rotary_encoder = initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
-        self.encoder_increment = 0
-        self.button_pressed = False
-        self.touch_screen = initialize_touch_screen( self.i2c_bus )
-        self.input_flag = False
-        self.input_interval_start = 0
-        self.input_interval = 1
-        self.active_page_number = 2
-        self.last_active_page_number = 0
-        self.take_burst = False
-        self.main_menu_select = 6  # default to first main menu item selected
-        self.main_menu_select_count = 17
-        self.remote_sensing_select = 2  # default to record/pause
-        self.remote_sensing_select_count = 17
-    def update_batch(self):
-        self.batch_number = update_batch(self.datestamp)
-    def update_time(self):
-        self.datestamp = self.hardware_clock.get_datestamp_now()
-        self.iso_time = self.hardware_clock.get_iso_time_now()
-        self.decimal_time = self.hardware_clock.get_decimal_hour_now()
-    def update_filename(self):
-        update_filename( self )
-        print( "filename_in_use:", self.filename )
-    def check_calendar_day( self ):
-        self.datestamp = self.hardware_clock.get_datestamp_now()
-        if self.datestamp != self.last_datestamp:
-            self.last_datestamp = self.datestamp
-            print( "new calendar day, updating system values" )
-            self.update_batch()
-            self.update_filename()
-            self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
-            self.measurement_counter = 0
-    def make_band_list( self ):
-        self.wavelength_bands_list = []
-        for sensor in self.spectral_sensors_present:
-            for band in sensor.bands:
-                self.wavelength_bands_list.append(band)
-        self.wavelength_bands_list_sorted = sorted( self.wavelength_bands_list )
-        #print( "line 411 -- wavelength_bands_list_sorted: ")
-        #print( self.wavelength_bands_list_sorted  )
-        self.number_of_plot_points = len( self.wavelength_bands_list_sorted )
-        #print( "number of bands: ", end = "")
-        #print( self.number_of_plot_points )
-    def make_header( self ):
-        self.header = "unique_identifier"
-        self.header += ", unique_measurement_number"
-        self.header += ", timestamp-!-iso8601utc"
-        self.header += ", batch_number"
-        self.header += ", burst_counter"
-        self.header += ", decimal_time-!-hour"
-        self.system_header = self.header
-        spectral_header_list = []
-        spectral_header_list.append( "spectral_sensor_part_number" )
-        spectral_header_list.append( "spectral_wavelength-!-nm" )
-        spectral_header_list.append( "spectral_bandwidth-!-nm" )
-        spectral_header_list.append( "spectral_photodetector_digital_number-!-counts" )
-        spectral_header_list.append( "spectral_irradiance-!-uW_per_cm_sq" )
-        spectral_header_list.append( "spectral_uncertainty_in_irradiance-!-uW_per_cm_sq" )
-        spectral_header_list.append( "spectral_gain-!-" )
-        spectral_header_list.append( "spectral_integration_time-!-ms" )
-        spectral_header_list.append( "spectral_detector_chip_number" )
-        spectral_header_list.append( "spectral_detector_chip_temperature-!-C" )
-        self.spectral_header_count = len( spectral_header_list )
-        if self.spectrometry:
-            for item in spectral_header_list:
-                self.header += ", {}".format( item )
-        for sensor in self.sensors_present:
-            self.header += ", "
-            self.header += sensor.header()
-        self.header += ("\n")
-        #print( self.header )
-        #print( "spectral_header_count: ", self.spectral_header_count )
-        self.update_filename()
-    def hide_all_pages( self ):
-        for item in self.pages_list:
-            item.hide()
-    def build_unique_measurement_number( self ):
-        self.unique_measurement_number = "{}{}".format(self.session_tag, self.measurement_counter)
-        return self.unique_measurement_number
-    def get_system_log( self ):
-        self.update_time()
-        self.build_unique_measurement_number()
-        system_log = "{}".format( self.uid )
-        system_log += ", {}".format( self.unique_measurement_number )
-        system_log += ", {}".format( self.iso_time )
-        system_log += ", {}".format( self.batch_number )
-        system_log += ", {}".format( self.burst_counter )
-        system_log += ", {}".format( self.decimal_time )
-        return system_log
-    def check_inputs( self ):
-        self.touch_screen.read()
-        if not self.touch_screen.flag and self.touch_screen.is_touched:
-            self.touch_tx = self.touch_screen.tx
-            self.touch_ty = self.touch_screen.ty
-            self.input_flag = True
-            self.input_interval_start = time.monotonic()
-        self.rotary_encoder.read_button()
-        if self.rotary_encoder.button_flag:
-            self.buzzer.beep()
-            self.button_pressed = True
-            self.rotary_encoder.button_flag = False
-            self.input_flag = True
-            self.input_interval_start = time.monotonic()
-        self.rotary_encoder.read_encoder()
-        if self.rotary_encoder.encoder_flag:
-            self.encoder_increment = self.rotary_encoder.last_value
-            self.rotary_encoder.encoder_flag = False
-            self.input_flag = True
-            self.input_interval_start = time.monotonic()
-    def add_spectral_graph_page( self, spectral_graph_page ):
-        self.spectral_graph_page = spectral_graph_page
-    def show_active_page( self ):
-        if self.active_page_number != self.last_active_page_number:
-            self.last_active_page_number = self.active_page_number
-            hide_all_pages( self.pages_list )
-            self.pages_list[ self.active_page_number ].show()
-            if self.active_page_number == 2 or self.active_page_number == 9: # main menu, remote sensing
-                self.pages_list[ 1 ].show()  # controls
-            if self.active_page_number == 9:
-                if spectral_sensors_detected:
-                    self.pages_list[ 10 ].show() # spectral graph
-    def update_active_page( self ):
-        self.pages_list[ self.active_page_number ].update_values( self )
-        if self.active_page_number == 9:
-            if spectral_sensors_detected:
-                self.spectral_graph_page.update_plot_data()
-        if self.encoder_increment != 0:
-            if self.active_page_number == 2:
-                self.main_menu_select = (self.main_menu_select + self.encoder_increment) % self.main_menu_select_count
-            if self.active_page_number == 9:
-                self.remote_sensing_select = (self.remote_sensing_select + self.encoder_increment) % self.remote_sensing_select_count
-            self.encoder_increment = 0
-
-def create_instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer ):
-    instrument = Instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer )
-    return instrument
-
-
 
 #### begin exposure control page class definition
 
@@ -1170,6 +1003,180 @@ def make_exposure_control_page( instrument ):
     #page.hide()
     instrument.main_display_group.append( group )
     return page
+
+
+#### begin instrument class definition
+
+class Instrument:
+    def __init__( self, i2c_bus, spi_bus, uart_bus, UID, buzzer):
+        self.i2c_bus = i2c_bus
+        self.uart_bus = uart_bus
+        self.device_type = DEVICE_TYPE
+        self.uid = UID
+        self.buzzer = buzzer
+        self.usb_serial_out_enabled = usb_serial_out_enabled
+        self.sample_interval_s = preset_sample_interval_s
+        self.burst_count = preset_burst_count
+        self.usb_serial_out_enabled = usb_serial_out_enabled
+        self.pages_list = []
+        self.palette = make_palette()
+        self.main_display_group = initialize_display( spi_bus )
+        self.welcome_page = make_welcome_page( self )
+        #self.hardware_clock = initialize_hardware_clock( i2c_bus )
+        #self.hardware_clock.report()
+        #self.hardware_clock.sync_system_clock()
+        #self.clock_battery_ok_text =  "clock battery OK: {}".format( self.hardware_clock.battery_ok() )
+        #self.welcome_page.announce( self.clock_battery_ok_text )
+        #self.datestamp = self.hardware_clock.get_datestamp_now()
+        #self.last_datestamp = self.datestamp
+        #self.iso_time = self.hardware_clock.get_iso_time_now()
+        #self.batch_number = update_batch(self.datestamp)
+        #print( "batch number = {}".format( self.batch_number ))
+        self.filename = None
+        self.sensors_present = []
+        self.spectral_sensors_present = []
+        self.spectrometry = spectral_sensors_detected
+        self.record = record_on_startup
+        #self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
+        self.measurement_counter = 0
+        self.rotary_encoder = initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
+        self.encoder_increment = 0
+        self.button_pressed = False
+        self.touch_screen = initialize_touch_screen( self.i2c_bus )
+        self.input_flag = False
+        self.input_interval_start = 0
+        self.input_interval = 1
+        self.active_page_number = 2
+        self.last_active_page_number = 0
+        self.take_burst = False
+        self.main_menu_select = 6  # default to first main menu item selected
+        self.main_menu_select_count = 17
+        self.remote_sensing_select = 2  # default to record/pause
+        self.remote_sensing_select_count = 17
+    def update_batch(self):
+        self.batch_number = update_batch(self.datestamp)
+    def update_time(self):
+        self.datestamp = self.hardware_clock.get_datestamp_now()
+        self.iso_time = self.hardware_clock.get_iso_time_now()
+        self.decimal_time = self.hardware_clock.get_decimal_hour_now()
+    def update_filename(self):
+        update_filename( self )
+        print( "filename_in_use:", self.filename )
+    def check_calendar_day( self ):
+        self.datestamp = self.hardware_clock.get_datestamp_now()
+        if self.datestamp != self.last_datestamp:
+            self.last_datestamp = self.datestamp
+            print( "new calendar day, updating system values" )
+            self.update_batch()
+            self.update_filename()
+            self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
+            self.measurement_counter = 0
+    def make_band_list( self ):
+        self.wavelength_bands_list = []
+        for sensor in self.spectral_sensors_present:
+            for band in sensor.bands:
+                self.wavelength_bands_list.append(band)
+        self.wavelength_bands_list_sorted = sorted( self.wavelength_bands_list )
+        #print( "line 411 -- wavelength_bands_list_sorted: ")
+        #print( self.wavelength_bands_list_sorted  )
+        self.number_of_plot_points = len( self.wavelength_bands_list_sorted )
+        #print( "number of bands: ", end = "")
+        #print( self.number_of_plot_points )
+    def make_header( self ):
+        self.header = "unique_identifier"
+        self.header += ", unique_measurement_number"
+        self.header += ", timestamp-!-iso8601utc"
+        self.header += ", batch_number"
+        self.header += ", burst_counter"
+        self.header += ", decimal_time-!-hour"
+        self.system_header = self.header
+        spectral_header_list = []
+        spectral_header_list.append( "spectral_sensor_part_number" )
+        spectral_header_list.append( "spectral_wavelength-!-nm" )
+        spectral_header_list.append( "spectral_bandwidth-!-nm" )
+        spectral_header_list.append( "spectral_photodetector_digital_number-!-counts" )
+        spectral_header_list.append( "spectral_irradiance-!-uW_per_cm_sq" )
+        spectral_header_list.append( "spectral_uncertainty_in_irradiance-!-uW_per_cm_sq" )
+        spectral_header_list.append( "spectral_gain-!-" )
+        spectral_header_list.append( "spectral_integration_time-!-ms" )
+        spectral_header_list.append( "spectral_detector_chip_number" )
+        spectral_header_list.append( "spectral_detector_chip_temperature-!-C" )
+        self.spectral_header_count = len( spectral_header_list )
+        if self.spectrometry:
+            for item in spectral_header_list:
+                self.header += ", {}".format( item )
+        for sensor in self.sensors_present:
+            self.header += ", "
+            self.header += sensor.header()
+        self.header += ("\n")
+        #print( self.header )
+        #print( "spectral_header_count: ", self.spectral_header_count )
+        self.update_filename()
+    def hide_all_pages( self ):
+        for item in self.pages_list:
+            item.hide()
+    def build_unique_measurement_number( self ):
+        self.unique_measurement_number = "{}{}".format(self.session_tag, self.measurement_counter)
+        return self.unique_measurement_number
+    def get_system_log( self ):
+        self.update_time()
+        self.build_unique_measurement_number()
+        system_log = "{}".format( self.uid )
+        system_log += ", {}".format( self.unique_measurement_number )
+        system_log += ", {}".format( self.iso_time )
+        system_log += ", {}".format( self.batch_number )
+        system_log += ", {}".format( self.burst_counter )
+        system_log += ", {}".format( self.decimal_time )
+        return system_log
+    def check_inputs( self ):
+        self.touch_screen.read()
+        if not self.touch_screen.flag and self.touch_screen.is_touched:
+            self.touch_tx = self.touch_screen.tx
+            self.touch_ty = self.touch_screen.ty
+            self.input_flag = True
+            self.input_interval_start = time.monotonic()
+        self.rotary_encoder.read_button()
+        if self.rotary_encoder.button_flag:
+            self.buzzer.beep()
+            self.button_pressed = True
+            self.rotary_encoder.button_flag = False
+            self.input_flag = True
+            self.input_interval_start = time.monotonic()
+        self.rotary_encoder.read_encoder()
+        if self.rotary_encoder.encoder_flag:
+            self.encoder_increment = self.rotary_encoder.last_value
+            self.rotary_encoder.encoder_flag = False
+            self.input_flag = True
+            self.input_interval_start = time.monotonic()
+    def add_spectral_graph_page( self, spectral_graph_page ):
+        self.spectral_graph_page = spectral_graph_page
+    def show_active_page( self ):
+        if self.active_page_number != self.last_active_page_number:
+            self.last_active_page_number = self.active_page_number
+            hide_all_pages( self.pages_list )
+            self.pages_list[ self.active_page_number ].show()
+            if self.active_page_number == 2 or self.active_page_number == 9: # main menu, remote sensing
+                self.pages_list[ 1 ].show()  # controls
+            if self.active_page_number == 9:
+                if spectral_sensors_detected:
+                    self.pages_list[ 10 ].show() # spectral graph
+    def update_active_page( self ):
+        self.pages_list[ self.active_page_number ].update_values( self )
+        if self.active_page_number == 9:
+            if spectral_sensors_detected:
+                self.spectral_graph_page.update_plot_data()
+        if self.encoder_increment != 0:
+            if self.active_page_number == 2:
+                self.main_menu_select = (self.main_menu_select + self.encoder_increment) % self.main_menu_select_count
+            if self.active_page_number == 9:
+                self.remote_sensing_select = (self.remote_sensing_select + self.encoder_increment) % self.remote_sensing_select_count
+            self.encoder_increment = 0
+
+def create_instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer ):
+    instrument = Instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer )
+    return instrument
+
+
 
 
 
