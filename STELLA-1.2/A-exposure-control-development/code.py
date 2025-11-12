@@ -269,38 +269,37 @@ def main():
                     exposure_control_page.integration_time_area.color_index = 9
             '''
             if instrument.input_flag:
-                if instrument.encoder_increment != 0:
-                    exposure_control_page.update_values()
-                    '''
-                    if exposure_control_page.sensor_choice_field_selected:
-                        sensor_choice = (sensor_choice + 1) % len(instrument.spectral_sensors_present)
-                    elif exposure_control_page.setting_field_selected:
-                        exposure_control_page.setting_mode = ( exposure_control_page.setting_mode + instrument.encoder_increment ) % exposure_control_page.number_of_setting_modes
-                    elif exposure_control_page.slider_scale_field_selected:
-                        scale_choice = (scale_choice + 1) % len(scale_list)
-                    elif exposure_control_page.gain_field_selected:
-                        sensor_gain_choices[ sensor_choice ] = (sensor_gain_choices[ sensor_choice ] + instrument.encoder_increment) % len( instrument.spectral_sensors_present[sensor_choice].gain_list)
-                        if sensor_gain_choices[ sensor_choice ] != last_sensor_gain_choices[ sensor_choice ]:
-                            instrument.spectral_sensors_present[sensor_choice].set_gain(sensor_gain_choices[ sensor_choice ])
-                            last_sensor_gain_choices[ sensor_choice ] = sensor_gain_choices[ sensor_choice ]
-                    elif exposure_control_page.integration_time_field_selected:
-                        local_integration_time_choice = (local_integration_time_choice + instrument.encoder_increment ) % (local_sensor.integration_time_choices_count+1)
-                        local_integration_time_ms = local_sensor.integration_time_ms_list[local_integration_time_choice]
-                        local_sensor.set_integration_time_ms( local_integration_time_ms )
-                    elif exposure_control_page.lamp_choice_field_selected:
-                        print( "TBD increment lamp choice" )
-                    elif exposure_control_page.lamp_current_field_selected:
-                        print( "TBD increment lamp current" )
+                exposure_control_page.update_values()
+                '''
+                if exposure_control_page.sensor_choice_field_selected:
+                    sensor_choice = (sensor_choice + 1) % len(instrument.spectral_sensors_present)
+                elif exposure_control_page.setting_field_selected:
+                    exposure_control_page.setting_mode = ( exposure_control_page.setting_mode + instrument.encoder_increment ) % exposure_control_page.number_of_setting_modes
+                elif exposure_control_page.slider_scale_field_selected:
+                    scale_choice = (scale_choice + 1) % len(scale_list)
+                elif exposure_control_page.gain_field_selected:
+                    sensor_gain_choices[ sensor_choice ] = (sensor_gain_choices[ sensor_choice ] + instrument.encoder_increment) % len( instrument.spectral_sensors_present[sensor_choice].gain_list)
+                    if sensor_gain_choices[ sensor_choice ] != last_sensor_gain_choices[ sensor_choice ]:
+                        instrument.spectral_sensors_present[sensor_choice].set_gain(sensor_gain_choices[ sensor_choice ])
+                        last_sensor_gain_choices[ sensor_choice ] = sensor_gain_choices[ sensor_choice ]
+                elif exposure_control_page.integration_time_field_selected:
+                    local_integration_time_choice = (local_integration_time_choice + instrument.encoder_increment ) % (local_sensor.integration_time_choices_count+1)
+                    local_integration_time_ms = local_sensor.integration_time_ms_list[local_integration_time_choice]
+                    local_sensor.set_integration_time_ms( local_integration_time_ms )
+                elif exposure_control_page.lamp_choice_field_selected:
+                    print( "TBD increment lamp choice" )
+                elif exposure_control_page.lamp_current_field_selected:
+                    print( "TBD increment lamp current" )
+                else:
+                    new_choice = exposure_control_page.exposure_select_choice + instrument.encoder_increment
+                    if exposure_control_page.setting_mode == 0:
+                        pass
                     else:
-                        new_choice = exposure_control_page.exposure_select_choice + instrument.encoder_increment
-                        if exposure_control_page.setting_mode == 0:
-                            pass
-                        else:
-                            if new_choice == 4 and exposure_control_page.exposure_select_choice == 3:
-                                new_choice = 6
-                            if new_choice == 5 and exposure_control_page.exposure_select_choice == 6:
-                                new_choice = 3
-                        exposure_control_page.exposure_select_choice = (new_choice) % exposure_control_page.exposure_select_range
+                        if new_choice == 4 and exposure_control_page.exposure_select_choice == 3:
+                            new_choice = 6
+                        if new_choice == 5 and exposure_control_page.exposure_select_choice == 6:
+                            new_choice = 3
+                    exposure_control_page.exposure_select_choice = (new_choice) % exposure_control_page.exposure_select_range
                 exposure_control_page.update_values()
                 '''
                 instrument.encoder_increment = 0
@@ -370,6 +369,7 @@ class Exposure_Control_Page( Page ):
         self.default_setting_mode = 0
         self.auto_exposure_engaged = False
         self.selection = 0
+        self.spectral_sensors = self.instrument.spectral_sensors_present
 
     def update_values( self ):
         number_of_selections = len(self.selection_list)
@@ -381,9 +381,19 @@ class Exposure_Control_Page( Page ):
         for index in range( 0, number_of_selections):
             if index == self.selection:
                 self.selection_list[ index ].hidden = False
+                if self.instrument.button_pressed:
+                    if index == 0:
+                        print( "return whence" )
+                    else:
+                        print( "pressed in field ", index )
+                    self.instrument.button_pressed = False
             else:
                 self.selection_list[ index ].hidden = True
 
+
+        #drop in to field
+
+        #choose active sensor from spectral_sensors
 
         '''
         self.setting_text_area.text = self.setting_modes_list[ self.setting_mode ]
