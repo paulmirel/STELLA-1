@@ -371,8 +371,12 @@ class Exposure_Control_Page( Page ):
         self.auto_exposure_engaged = False
         self.selection = 0
         self.spectral_sensors = self.instrument.spectral_sensors_present
+        self.active_sensor_index = 0
 
     def update_values( self ):
+        number_of_sensors = len( self.spectral_sensors )
+
+
         number_of_selections = len(self.selection_list)
         if any( self.field_selected ):
             pass
@@ -397,7 +401,20 @@ class Exposure_Control_Page( Page ):
                 if self.field_selected[index]:
                     self.field_list[index].color_index = self.field_selected_color_index
                     if self.instrument.encoder_increment != 0:
-                        print( self.instrument.encoder_increment )
+                        if index == 1:
+                            self.active_sensor_index = ( self.active_sensor_index + self.instrument.encoder_increment ) % number_of_sensors
+                        elif index == 2:
+                            pass #setting_index
+                        elif index == 3:
+                            pass #scale choice
+                        elif index == 4:
+                            pass # active sensor gain
+                        elif index == 5:
+                            pass # active sensor integration time
+                        elif index == 6:
+                            pass # active sensor led lamp current
+                        elif index == 7:
+                            pass # active sensor led lamp choice
                         self.instrument.encoder_increment = 0
                 else:
                     self.field_list[index].color_index = self.field_not_selected_color_index
@@ -405,8 +422,10 @@ class Exposure_Control_Page( Page ):
             else:
                 self.selection_list[ index ].hidden = True
 
+        self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
+        #self.spectral_sensors[self.active_sensor_index].read_counts_all_channels()
+        #print( self.spectral_sensors[self.active_sensor_index].dict_counts )
 
-        #choose active sensor from spectral_sensors
 
         '''
         self.setting_text_area.text = self.setting_modes_list[ self.setting_mode ]
