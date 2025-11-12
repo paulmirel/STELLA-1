@@ -378,11 +378,11 @@ class Exposure_Control_Page( Page ):
             pass
         else:
             self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
+            self.instrument.encoder_increment = 0
             if self.selection == 3:
                 self.slider_scale_area.hidden = False
             else:
                 self.slider_scale_area.hidden = True
-            self.instrument.encoder_increment = 0
 
 
         for index in range( 0, number_of_selections):
@@ -392,19 +392,19 @@ class Exposure_Control_Page( Page ):
                     if index == 0:
                         print( "return whence" )
                     else:
-                        print( "pressed in field ", index )
                         self.field_selected[index] = not self.field_selected[index]
-                        if self.field_selected[index]:
-                            self.field_list[index].color_index = self.field_selected_color_index
-                        else:
-                            self.field_list[index].color_index = self.field_not_selected_color_index
                     self.instrument.button_pressed = False
+                if self.field_selected[index]:
+                    self.field_list[index].color_index = self.field_selected_color_index
+                    if self.instrument.encoder_increment != 0:
+                        print( self.instrument.encoder_increment )
+                        self.instrument.encoder_increment = 0
+                else:
+                    self.field_list[index].color_index = self.field_not_selected_color_index
+
             else:
                 self.selection_list[ index ].hidden = True
 
-
-
-        #drop in to field
 
         #choose active sensor from spectral_sensors
 
