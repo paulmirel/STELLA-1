@@ -351,6 +351,7 @@ class Exposure_Control_Page( Page ):
         self.selection_color_index = 6
         self.field_selected_color_index = 5
         self.field_not_selected_color_index = 9
+        self.field_selected = []
         '''
         self.sensor_choice_field_selected = False
         self.setting_field_selected = False
@@ -373,11 +374,17 @@ class Exposure_Control_Page( Page ):
 
     def update_values( self ):
         number_of_selections = len(self.selection_list)
-        self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
-        if self.selection == 3:
-            self.slider_scale_area.hidden = False
+        if any( self.field_selected ):
+            pass
         else:
-            self.slider_scale_area.hidden = True
+            self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
+            if self.selection == 3:
+                self.slider_scale_area.hidden = False
+            else:
+                self.slider_scale_area.hidden = True
+            self.instrument.encoder_increment = 0
+
+
         for index in range( 0, number_of_selections):
             if index == self.selection:
                 self.selection_list[ index ].hidden = False
@@ -386,9 +393,15 @@ class Exposure_Control_Page( Page ):
                         print( "return whence" )
                     else:
                         print( "pressed in field ", index )
+                        self.field_selected[index] = not self.field_selected[index]
+                        if self.field_selected[index]:
+                            self.field_list[index].color_index = self.field_selected_color_index
+                        else:
+                            self.field_list[index].color_index = self.field_not_selected_color_index
                     self.instrument.button_pressed = False
             else:
                 self.selection_list[ index ].hidden = True
+
 
 
         #drop in to field
@@ -517,6 +530,7 @@ class Exposure_Control_Page( Page ):
         text_offset_x = 6
         text_offset_y = 14
         self.selection_list = []
+        self.field_list = []
 
         ## sliders
         slider_select_y = 50
@@ -710,9 +724,11 @@ class Exposure_Control_Page( Page ):
         return_area_height = return_border_height - 2*border_width
         return_area_x = return_border_x+border_width
         return_area_y = return_border_y+border_width
-        return_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=return_area_width,
+        self.return_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=return_area_width,
                                             height=return_area_height, x=return_area_x, y=return_area_y ) #color_index = 19
-        self.group.append( return_area )
+        self.group.append( self.return_area )
+        self.field_list.append( self.return_area )
+        self.field_selected.append( False )
 
         return_triangle_x = return_border_x
         return_triangle_y = return_border_y
@@ -744,6 +760,9 @@ class Exposure_Control_Page( Page ):
         self.sensor_choice_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=sensor_choice_area_width,
                                             height=sensor_choice_area_height, x=sensor_choice_area_x, y=sensor_choice_area_y )
         self.group.append( self.sensor_choice_area )
+        self.field_list.append( self.sensor_choice_area )
+        self.field_selected.append( False )
+
         sensor_choice_text_x = sensor_choice_area_x+text_offset_x
         sensor_choice_text_y = sensor_choice_area_y+text_offset_y
         sensor_choice_text_group = displayio.Group(scale=2, x=sensor_choice_text_x, y=sensor_choice_text_y)
@@ -779,6 +798,9 @@ class Exposure_Control_Page( Page ):
         self.setting_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=setting_area_width,
                                             height=setting_area_height, x=setting_area_x, y=setting_area_y )
         self.group.append( self.setting_area )
+        self.field_list.append( self.setting_area )
+        self.field_selected.append( False )
+
         setting_text_x = setting_area_x+text_offset_x
         setting_text_y = setting_area_y+text_offset_y
         setting_text_group = displayio.Group(scale=2, x=setting_text_x, y=setting_text_y)
@@ -810,6 +832,8 @@ class Exposure_Control_Page( Page ):
         self.slider_scale_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=slider_scale_area_width,
                                             height=slider_scale_area_height, x=slider_scale_area_x, y=slider_scale_area_y )
         self.group.append( self.slider_scale_area )
+        self.field_list.append( self.slider_scale_area )
+        self.field_selected.append( False )
         #self.slider_scale_area.hidden = True
 
 
@@ -847,6 +871,9 @@ class Exposure_Control_Page( Page ):
         self.gain_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=gain_area_width,
                                             height=gain_area_height, x=gain_area_x, y=gain_area_y )
         self.group.append( self.gain_area )
+        self.field_list.append( self.gain_area )
+        self.field_selected.append( False )
+
         gain_text_x = gain_area_x+text_offset_x
         gain_text_y = gain_area_y+text_offset_y
         gain_text_group = displayio.Group(scale=2, x=gain_text_x, y=gain_text_y)
@@ -881,6 +908,9 @@ class Exposure_Control_Page( Page ):
         self.integration_time_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=integration_time_area_width,
                                             height=integration_time_area_height, x=integration_time_area_x, y=integration_time_area_y )
         self.group.append( self.integration_time_area )
+        self.field_list.append( self.integration_time_area )
+        self.field_selected.append( False )
+
         integration_time_text_x = integration_time_area_x+text_offset_x
         integration_time_text_y = integration_time_area_y+text_offset_y
         integration_time_text_group = displayio.Group(scale=2, x=integration_time_text_x, y=integration_time_text_y)
@@ -914,6 +944,9 @@ class Exposure_Control_Page( Page ):
         self.lamp_current_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=lamp_current_area_width,
                                             height=lamp_current_area_height, x=lamp_current_area_x, y=lamp_current_area_y )
         self.group.append( self.lamp_current_area )
+        self.field_list.append( self.lamp_current_area )
+        self.field_selected.append( False )
+
         lamp_current_text_x = lamp_current_area_x+text_offset_x
         lamp_current_text_y = lamp_current_area_y+text_offset_y
         lamp_current_text_group = displayio.Group(scale=2, x=lamp_current_text_x, y=lamp_current_text_y)
@@ -954,24 +987,6 @@ class Exposure_Control_Page( Page ):
         self.exposure_maximum_text_area = label.Label(terminalio.FONT, text=exposure_maximum_text, color=self.palette[0])
         exposure_maximum_text_group.append(self.exposure_maximum_text_area)
         self.group.append(exposure_maximum_text_group)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         ## bottom row titles
         label_bar_width = 320
@@ -1025,6 +1040,8 @@ class Exposure_Control_Page( Page ):
         self.lamp_choice_area = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=lamp_choice_area_width,
                                             height=lamp_choice_area_height, x=lamp_choice_area_x, y=lamp_choice_area_y )
         self.group.append( self.lamp_choice_area )
+        self.field_list.append( self.lamp_choice_area )
+        self.field_selected.append( False )
 
         value_label_text_x = 166+8
         value_label_text_y = gain_area_y - 10
