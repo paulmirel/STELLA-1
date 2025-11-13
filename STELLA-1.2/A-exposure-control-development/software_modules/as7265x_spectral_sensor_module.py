@@ -33,7 +33,6 @@ class as7265x_Spectrometer( Device ):
         self.wavelength_bands_nm = 410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 940
         self.number_of_channels = len( self.wavelength_bands_nm )
         self.band_designations_in_wavelength_order = "A","B","C","D","E","F","G","H","R","I","S","J","T","U","V","W","K","L"
-        self.read_counts_function_list = [ self.swob.get_a(), self.swob.get_b(), self.swob.get_c(), self.swob.get_d(), self.swob.get_e(), self.swob.get_f(), self.swob.get_g(), self.swob.get_h(), self.swob.get_r(), self.swob.get_i(), self.swob.get_s(), self.swob.get_j(), self.swob.get_t(), self.swob.get_u(), self.swob.get_v(), self.swob.get_w(), self.swob.get_k(), self.swob.get_l() ]
         self.default_counts = []
         for index in range( 0, self.number_of_channels): self.default_counts.append(0)
         self.data_dict_counts = {key:value for key, value in zip(self.wavelength_bands_nm, self.default_counts )}
@@ -100,19 +99,31 @@ class as7265x_Spectrometer( Device ):
             
     def read_counts_by_wavelength( self, wavelength ):
         index = self.wavelength_bands_nm.index(wavelength)
-        try:
-            counts = self.read_counts_function_list[ index ]
-            self.data_dict_counts[wavelength] = counts
-            return counts
-        except Exception as err:
-            print( "read channel counts failed: ", err )
-            return False
+        return self.read_counts_by_index( index )
+
     
     def read_counts_by_index( self, index ):
         try:
-            counts = self.read_counts_function_list[ index ]
+            if index == 0: counts = self.swob.get_a()
+            if index == 1: counts = self.swob.get_b()
+            if index == 2: counts = self.swob.get_c()
+            if index == 3: counts = self.swob.get_d()
+            if index == 4: counts = self.swob.get_e()
+            if index == 5: counts = self.swob.get_f()
+            if index == 6: counts = self.swob.get_g()
+            if index == 7: counts = self.swob.get_h()
+            if index == 8: counts = self.swob.get_r()
+            if index == 9: counts = self.swob.get_i()
+            if index == 10: counts = self.swob.get_s()
+            if index == 11: counts = self.swob.get_j()
+            if index == 12: counts = self.swob.get_t()
+            if index == 13: counts = self.swob.get_u()
+            if index == 14: counts = self.swob.get_v()
+            if index == 15: counts = self.swob.get_w()
+            if index == 16: counts = self.swob.get_k()
+            if index == 17: counts = self.swob.get_l()
             wavelength_key = self.wavelength_bands_nm[ index ]
-            #print( wavelength_key, counts )
+            print( wavelength_key, counts )
             self.data_dict_counts[wavelength_key] = counts
             return counts
         except Exception as err:
