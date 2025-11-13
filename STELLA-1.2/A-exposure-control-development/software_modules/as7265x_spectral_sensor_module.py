@@ -29,7 +29,6 @@ class as7265x_Spectrometer( Device ):
     def __init__( self, com_bus ):
         super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  ))
         self.choice_label = "as7256x V+NIR"
-        
         #self.wavelength_bands_nm = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
         self.wavelength_bands_nm = 410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 940
         self.number_of_channels = len( self.wavelength_bands_nm )
@@ -38,6 +37,8 @@ class as7265x_Spectrometer( Device ):
         self.default_counts = []
         for index in range( 0, self.number_of_channels): self.default_counts.append(0)
         self.data_dict_counts = {key:value for key, value in zip(self.wavelength_bands_nm, self.default_counts )}
+        self.max_counts = 0
+        self.min_counts = 0
         self.chip_number_in_wavelength_order = 3,3,3,3,3,3,2,2,1,2,1,2,2,2,2,1,1
         #self.band_designations_in_read_all_order = ("R", "S", "T", "U", "V", "W", "G", "H", "I", "J", "K", "L", "A", "B", "C", "D", "E", "F" )
         self.bandwidths_nm = 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
@@ -67,6 +68,7 @@ class as7265x_Spectrometer( Device ):
             self.integration_time_ms_list.append( integration_time_ms )
         self.lamp_current_mA_list = [ 12.5, 25, 50, 100 ]
         if self.swob:
+            self.swob.begin()
             self.swob.disable_indicator()
             self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
             self.set_gain( self.default_gain_index )
@@ -92,6 +94,9 @@ class as7265x_Spectrometer( Device ):
             return integration_time_ms
         except Exception as err:
             print( "as7265x set integration time failed: ", err )
+    
+    def acquire_measurement( self ):
+        self.swob.take_measurements()
             
     def read_counts_by_wavelength( self, wavelength ):
         index = self.wavelength_bands_nm.index(wavelength)
@@ -126,6 +131,12 @@ class as7265x_Spectrometer( Device ):
     def report_counts_all( self ):
         for index in range( 0, self.number_of_channels):
             self.report_counts_by_index( index )
+    
+    def get_max_min_counts( self ):
+        self.max_counts = max(self.data_dict_counts.values())
+        self.min_counts = min(self.data_dict_counts.values())
+        return self.max_counts, self.min_counts
+        
         
     def read_chip_temperatures( self ):
         self.chip_temperatures_c_dict = { 1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3) }
