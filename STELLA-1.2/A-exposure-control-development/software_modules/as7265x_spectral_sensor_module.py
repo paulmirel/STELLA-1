@@ -29,13 +29,22 @@ class as7265x_Spectrometer( Device ):
     def __init__( self, com_bus ):
         super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  ))
         self.choice_label = "as7256x V+NIR"
-        self.wavelength_bands_nm = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
-        self.band_designations_in_read_all_order = ("R", "S", "T", "U", "V", "W", "G", "H", "I", "J", "K", "L", "A", "B", "C", "D", "E", "F" )
+        
+        #self.wavelength_bands_nm = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
+        self.wavelength_bands_nm = 410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 940
+        self.number_of_channels = len( self.wavelength_bands_nm )
+        self.band_designations_in_wavelength_order = "A","B","C","D","E","F","G","H","R","I","S","J","T","U","V","W","K","L"
+        self.read_counts_function_list = [ self.swob.get_a(), self.swob.get_b(), self.swob.get_c(), self.swob.get_d(), self.swob.get_e(), self.swob.get_f(), self.swob.get_g(), self.swob.get_h(), self.swob.get_r(), self.swob.get_i(), self.swob.get_s(), self.swob.get_j(), self.swob.get_t(), self.swob.get_u(), self.swob.get_v(), self.swob.get_w(), self.swob.get_k(), self.swob.get_l() ]
+        self.default_counts = []
+        for index in range( 0, self.number_of_channels): self.default_counts.append(0)
+        self.data_dict_counts = {key:value for key, value in zip(self.wavelength_bands_nm, self.default_counts )}
+        self.chip_number_in_wavelength_order = 3,3,3,3,3,3,2,2,1,2,1,2,2,2,2,1,1
+        #self.band_designations_in_read_all_order = ("R", "S", "T", "U", "V", "W", "G", "H", "I", "J", "K", "L", "A", "B", "C", "D", "E", "F" )
         self.bandwidths_nm = 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
-        self.chip_number = 1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   3
-        self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
-        self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
-        self.bands_sorted = sorted( self.wavelength_bands_nm )
+        
+        #self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
+        #self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
+        #self.bands_sorted = sorted( self.wavelength_bands_nm )
         self.uncertainty_percent = 12
         self.afov_deg = (20.5 * 2) #datasheet reports half angle.
         # settings
@@ -84,27 +93,50 @@ class as7265x_Spectrometer( Device ):
         except Exception as err:
             print( "as7265x set integration time failed: ", err )
             
+    def read_counts_by_wavelength( self, wavelength ):
+        index = self.wavelength_bands_nm.index(wavelength)
+        try:
+            counts = self.read_counts_function_list[ index ]
+            self.data_dict_counts[wavelength] = counts
+            return counts
+        except Exception as err:
+            print( "read channel counts failed: ", err )
+            return False
+    
+    def read_counts_by_index( self, index ):
+        try:
+            counts = self.read_counts_function_list[ index ]
+            wavelength_key = self.wavelength_bands_nm[ index ]
+            #print( wavelength_key, counts )
+            self.data_dict_counts[wavelength_key] = counts
+            return counts
+        except Exception as err:
+            print( "read channel counts failed: ", err )
+            return False
+            
+    def read_counts_all( self ):
+        for index in range( 0, self.number_of_channels):
+            self.read_counts_by_index( index )
+    
+    def report_counts_by_index( self, index ):
+        wavelength_key = self.wavelength_bands_nm[ index ]
+        counts = self.data_dict_counts[wavelength_key]
+        return wavelength_key, counts
+    
+    def report_counts_all( self ):
+        for index in range( 0, self.number_of_channels):
+            self.report_counts_by_index( index )
+        
     def read_chip_temperatures( self ):
         self.chip_temperatures_c_dict = { 1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3) }
         
-    def read_counts_all_channels( self ):
-        self.data_counts = self.swob.get_value(0) # 0 index returns raw counts, bands in unsorted order
-        self.dict_counts = {key:value for key, value in zip(self.wavelength_bands_nm, self.data_counts)}
+
     
     def read_irradiances_all_channels( self ):
         self.data_fcal_irradiances = self.swob.get_value(1) # 1 index returns factory calibrated irradiance values, bands in unsorted order
         self.dict_fcal_irradiances = {key:value for key, value in zip(self.wavelength_bands_nm, self.data_fcal_irradiances)}
 
-    def read_counts( self, index ):
-        #self.wavelength_bands_nm = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
-        #self.band_designations_in_read_all_order = ("R", "S", "T", "U", "V", "W", "G", "H", "I", "J", "K", "L", "A", "B", "C", "D", "E", "F" )
-        function_list = [ get_a(), get_b(), get_c(), get_d(), get_e(), get_f(), get_g(), get_h(), get_r(), get_i(), get_s(), get_j(), get_t(), get_u(), get_v(), get_w(), get_k(), get_l() ]
-        try:
-            counts = self.swob.function_list[ index ]
-            return counts
-        except Exception as err:
-            print( "read channel counts failed: ", err )
-            return False
+
     def list_wavelength_bands_nm( self ):
         return self.bands_sorted
     def header( self ):

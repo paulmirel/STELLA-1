@@ -158,6 +158,7 @@ def main():
         operational = True
         while operational:
             instrument.check_inputs()
+            exposure_control_page.update_values()
             if instrument.input_flag:
                 pass
             else:
@@ -245,7 +246,8 @@ def main():
             #as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
             '''
             wait_start = time.monotonic()
-            while (time.monotonic() < wait_start + wait_time) and not instrument.input_flag:
+            while (time.monotonic() - wait_start < wait_time) and not instrument.input_flag:
+                #print( time.monotonic() - wait_start )
                 instrument.check_inputs()
                 time.sleep(0.1)
             '''
@@ -269,7 +271,6 @@ def main():
                     exposure_control_page.integration_time_area.color_index = 9
             '''
             if instrument.input_flag:
-                exposure_control_page.update_values()
                 '''
                 if exposure_control_page.sensor_choice_field_selected:
                     sensor_choice = (sensor_choice + 1) % len(instrument.spectral_sensors_present)
@@ -423,6 +424,11 @@ class Exposure_Control_Page( Page ):
                 self.selection_list[ index ].hidden = True
 
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
+        self.spectral_sensors[self.active_sensor_index].read_counts_all()
+        self.spectral_sensors[self.active_sensor_index].report_counts_all()
+
+        stall()
+        print()
         #self.spectral_sensors[self.active_sensor_index].read_counts_all_channels()
         #print( self.spectral_sensors[self.active_sensor_index].dict_counts )
 
