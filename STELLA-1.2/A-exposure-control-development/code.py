@@ -424,7 +424,7 @@ class Exposure_Control_Page( Page ):
                 self.selection_list[ index ].hidden = True
 
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
-        #self.spectral_sensors[self.active_sensor_index].acquire_measurement()
+        self.spectral_sensors[self.active_sensor_index].acquire_measurement()
         channel_index = 8
         self.spectral_sensors[self.active_sensor_index].read_counts_by_index(channel_index)
         print(self.spectral_sensors[self.active_sensor_index].report_counts_by_index(channel_index))
