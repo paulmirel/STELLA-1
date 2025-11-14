@@ -196,42 +196,6 @@ def main():
                 exposure_control_page.integration_time_shading.height = slider_min_y + 6 - exposure_control_page.integration_time_shading.y
                 exposure_control_page.integration_time_text_area.text = str(local_integration_time_ms_value)
 
-                #TBD implement both log and linear scales
-                instrument.spectral_sensors_present[sensor_choice].read_counts()
-                exposure_high = max(instrument.spectral_sensors_present[sensor_choice].data_counts)
-
-                exposure_low = min(instrument.spectral_sensors_present[sensor_choice].data_counts)
-                exposure_value_span = exposure_max_value
-                if scale_choice == 0:
-                    if exposure_high > 0:
-                        exposure_high = math.log(exposure_high,10)
-                    else:
-                        exposure_high = 0
-                    if exposure_low > 0:
-                        exposure_low = math.log(exposure_low,10)
-                    else:
-                        exposure_low = 0
-                    if exposure_value_span > 0:
-                        exposure_value_span = math.log(exposure_value_span,10)
-                    else:
-                        exposure_value_span = 0
-
-                exposure_value_per_pixel = exposure_value_span/ slider_pixel_span
-                exposure_high_pixel_offset = int(exposure_high/exposure_value_per_pixel)
-                exposure_low_pixel_offset = int(exposure_low/exposure_value_per_pixel)
-                exposure_control_page.exposure_bracket_high.y = exposure_control_page.slider_min_y - exposure_high_pixel_offset
-                exposure_control_page.exposure_bracket_low.y = exposure_control_page.slider_min_y - exposure_low_pixel_offset
-                exposure_control_page.exposure_bracket_shading.y = exposure_control_page.exposure_bracket_high.y
-                exposure_control_page.exposure_bracket_shading.height = exposure_control_page.exposure_bracket_low.y - exposure_control_page.exposure_bracket_high.y
-                exposure_high_triangle_pixel_offset = int(exposure_target_fraction_high * exposure_max_value/exposure_value_per_pixel)
-                exposure_low_triangle_pixel_offset = int(exposure_target_fraction_low * exposure_max_value/exposure_value_per_pixel)
-                if scale_choice == 0:
-                    exposure_high_triangle_pixel_offset = math.log(exposure_target_fraction_high * exposure_max_value,10)/exposure_value_per_pixel
-                    exposure_high_triangle_pixel_offset = int(exposure_high_triangle_pixel_offset)
-                    exposure_low_triangle_pixel_offset = math.log(exposure_target_fraction_low * exposure_max_value,10)/exposure_value_per_pixel
-                    exposure_low_triangle_pixel_offset = int(exposure_low_triangle_pixel_offset)
-                exposure_control_page.exposure_target_triangle_high.y = exposure_control_page.slider_min_y - exposure_high_triangle_pixel_offset
-                exposure_control_page.exposure_target_triangle_low.y =exposure_control_page.slider_min_y - exposure_low_triangle_pixel_offset
 
 
             #as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
@@ -344,15 +308,6 @@ class Exposure_Control_Page( Page ):
         self.field_selected_color_index = 5
         self.field_not_selected_color_index = 9
         self.field_selected = []
-        '''
-        self.sensor_choice_field_selected = False
-        self.setting_field_selected = False
-        self.slider_scale_field_selected = False
-        self.gain_field_selected = False
-        self.integration_time_field_selected = False
-        self.lamp_choice_field_selected = False
-        self.lamp_current_field_selected = False
-        '''
 
         self.slider_max_y = 54
         self.slider_min_y = 174
@@ -361,6 +316,8 @@ class Exposure_Control_Page( Page ):
         self.number_of_setting_modes = len( self.setting_modes_list )
         self.default_setting_mode = 0
         self.auto_exposure_engaged = False
+        self.scale_choices = "linear scale", "log scale"
+        self.scale_choice = 1
         self.selection = 0
         self.spectral_sensors = self.instrument.spectral_sensors_present
         self.active_sensor_index = 0
@@ -368,6 +325,7 @@ class Exposure_Control_Page( Page ):
 
     def update_values( self ):
         number_of_sensors = len( self.spectral_sensors )
+        self.slider_scale_text_area.text = self.scale_choices[ self.scale_choice ]
 
 
         number_of_selections = len(self.selection_list)
@@ -416,15 +374,53 @@ class Exposure_Control_Page( Page ):
                 self.selection_list[ index ].hidden = True
 
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
+
+        ## get exposure and drive slider, value, label, brackets
         self.spectral_sensors[self.active_sensor_index].read_counts_all()
         exposure_high, exposure_low = self.spectral_sensors[self.active_sensor_index].get_max_min_counts()
+        exposure_value_span = self.exposure_max_value
 
         if exposure_high < self.exposure_max_value:
+            self.exposure_label_text_area.color = self.palette[0]
             self.exposure_label_text_area.text = "Exposure Max"
         else:
+            self.exposure_label_text_area.color = self.palette[2]
             self.exposure_label_text_area.text = "*SATURATED*"
             #print( "SATURATED" )
         self.exposure_maximum_text_area.text = str(exposure_high)
+
+        if self.scale_choice == 1:
+            if exposure_high > 0:
+                exposure_high = math.log(exposure_high,10)
+            else:
+                exposure_high = 0
+            if exposure_low > 0:
+                exposure_low = math.log(exposure_low,10)
+            else:
+                exposure_low = 0
+            if exposure_value_span > 0:
+                exposure_value_span = math.log(exposure_value_span,10)
+            else:
+                exposure_value_span = 0
+
+        exposure_value_per_pixel = exposure_value_span/ self.slider_pixel_span
+        exposure_high_pixel_offset = int(exposure_high/exposure_value_per_pixel)
+        exposure_low_pixel_offset = int(exposure_low/exposure_value_per_pixel)
+        self.exposure_bracket_high.y = self.slider_min_y - exposure_high_pixel_offset
+        self.exposure_bracket_low.y = self.slider_min_y - exposure_low_pixel_offset
+        self.exposure_bracket_shading.y = self.exposure_bracket_high.y
+        self.exposure_bracket_shading.height = self.exposure_bracket_low.y - self.exposure_bracket_high.y
+        exposure_high_triangle_pixel_offset = int(exposure_target_fraction_high * self.exposure_max_value/exposure_value_per_pixel)
+        exposure_low_triangle_pixel_offset = int(exposure_target_fraction_low * self.exposure_max_value/exposure_value_per_pixel)
+        if self.scale_choice == 1:
+            exposure_high_triangle_pixel_offset = math.log(exposure_target_fraction_high * self.exposure_max_value,10)/exposure_value_per_pixel
+            exposure_high_triangle_pixel_offset = int(exposure_high_triangle_pixel_offset)
+            exposure_low_triangle_pixel_offset = math.log(exposure_target_fraction_low * self.exposure_max_value,10)/exposure_value_per_pixel
+            exposure_low_triangle_pixel_offset = int(exposure_low_triangle_pixel_offset)
+        self.exposure_target_triangle_high.y = self.slider_min_y - exposure_high_triangle_pixel_offset
+        self.exposure_target_triangle_low.y = self.slider_min_y - exposure_low_triangle_pixel_offset
+
+
 
 
         '''
@@ -859,7 +855,7 @@ class Exposure_Control_Page( Page ):
         slider_scale_text_x = slider_scale_area_x+text_offset_x
         slider_scale_text_y = slider_scale_area_y+6
         slider_scale_text_group = displayio.Group(scale=1, x=slider_scale_text_x, y=slider_scale_text_y)
-        slider_scale_text = "linear scale"
+        slider_scale_text = " -- "
         self.slider_scale_text_area = label.Label(terminalio.FONT, text=slider_scale_text, color=self.palette[0])
         slider_scale_text_group.append(self.slider_scale_text_area)
         self.group.append(slider_scale_text_group)
