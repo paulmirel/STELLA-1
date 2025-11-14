@@ -93,34 +93,6 @@ def main():
     exposure_control_page.show()
 
 
-    #as7265x_spectrometer.swob.enable_bulb(as7265x_spectrometer.swob.kLedWhite) #success
-    #time.sleep(1)
-    #as7265x_spectrometer.swob.disable_bulb(as7265x_spectrometer.swob.kLedWhite)
-    #print(as7265x_spectrometer.swob.is_connected()) #fails to detect connection
-    #print(as7265x_spectrometer.swob.get_device_type()) #success
-    #print(as7265x_spectrometer.swob.get_hardware_version()) #success
-    print(as7265x_spectrometer.swob.get_temperature(0)) #success
-    print(as7265x_spectrometer.swob.get_temperature(1)) #success
-    print(as7265x_spectrometer.swob.get_temperature(2)) #success
-    #print(as7265x_spectrometer.swob.data_available())
-    #
-    #print(as7265x_spectrometer.wavelength_bands_nm[2], as7265x_spectrometer.swob.get_c(), as7265x_spectrometer.read_counts_by_index(2))
-    #print(as7265x_spectrometer.wavelength_bands_nm[3], as7265x_spectrometer.swob.get_d(), as7265x_spectrometer.read_counts_by_index(3))
-    #print(as7265x_spectrometer.wavelength_bands_nm[4], as7265x_spectrometer.swob.get_e(), as7265x_spectrometer.read_counts_by_index(4))
-    for n in range (0, 18):
-        as7265x_spectrometer.read_counts_all()
-        print(as7265x_spectrometer.report_counts_all())
-        time.sleep(1)
-
-
-    stall()
-
-
-
-    # can we turn the visible lamp on and off?
-    # do all the sensor basic stuff here, explicitly.
-
-
     # move most of the variables and functionality into the page class.
     # at the main level we only need to know about the instrument.spectral_sensors_present, instrument.input_flag, and instrument.encoder_increment
     # the sensors hold the settings, so we don't need to carry them around
@@ -227,12 +199,7 @@ def main():
                 #TBD implement both log and linear scales
                 instrument.spectral_sensors_present[sensor_choice].read_counts()
                 exposure_high = max(instrument.spectral_sensors_present[sensor_choice].data_counts)
-                if exposure_high < exposure_max_value:
-                    exposure_control_page.exposure_label_text_area.text = "Exposure Max"
-                else:
-                    exposure_control_page.exposure_label_text_area.text = "*SATURATED*"
-                    #print( "SATURATED" )
-                exposure_control_page.exposure_maximum_text_area.text = str(exposure_high)
+
                 exposure_low = min(instrument.spectral_sensors_present[sensor_choice].data_counts)
                 exposure_value_span = exposure_max_value
                 if scale_choice == 0:
@@ -397,6 +364,7 @@ class Exposure_Control_Page( Page ):
         self.selection = 0
         self.spectral_sensors = self.instrument.spectral_sensors_present
         self.active_sensor_index = 0
+        self.exposure_max_value = 65535
 
     def update_values( self ):
         number_of_sensors = len( self.spectral_sensors )
@@ -448,17 +416,15 @@ class Exposure_Control_Page( Page ):
                 self.selection_list[ index ].hidden = True
 
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
-        self.spectral_sensors[self.active_sensor_index].acquire_measurement()
-        channel_index = 8
-        self.spectral_sensors[self.active_sensor_index].read_counts_by_index(channel_index)
-        print(self.spectral_sensors[self.active_sensor_index].report_counts_by_index(channel_index))
-        #self.spectral_sensors[self.active_sensor_index].read_counts_all()
-        #self.spectral_sensors[self.active_sensor_index].report_counts_all()
-        #max_counts, min_counts = self.spectral_sensors[self.active_sensor_index].get_max_min_counts()
-        #print( max_counts, min_counts )
+        self.spectral_sensors[self.active_sensor_index].read_counts_all()
+        exposure_high, exposure_low = self.spectral_sensors[self.active_sensor_index].get_max_min_counts()
 
-        #self.spectral_sensors[self.active_sensor_index].read_counts_all_channels()
-        #print( self.spectral_sensors[self.active_sensor_index].dict_counts )
+        if exposure_high < self.exposure_max_value:
+            self.exposure_label_text_area.text = "Exposure Max"
+        else:
+            self.exposure_label_text_area.text = "*SATURATED*"
+            #print( "SATURATED" )
+        self.exposure_maximum_text_area.text = str(exposure_high)
 
 
         '''
