@@ -2,15 +2,6 @@ SOFTWARE_VERSION_NUMBER = "0.0.4"
 DEVICE_TYPE = "STELLA-1.2_Exposure_control"
 # Paul Mirel 2025
 
-# set the data_source period = reciprocal of the data_source cadence
-#               seconds + ( minutes ) + ( hours )   + ( days )
-preset_sample_interval_s = 10.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
-preset_burst_count = 1
-usb_serial_out_enabled = False
-record_on_startup = True #False #
-exposure_target_fraction_high = 0.9
-exposure_target_fraction_low = 0.5
-
 import gc
 import time
 import os
@@ -258,7 +249,6 @@ def main():
                     exposure_control_page.exposure_select_choice = (new_choice) % exposure_control_page.exposure_select_range
                 exposure_control_page.update_values()
                 '''
-                instrument.encoder_increment = 0
                 instrument.input_flag = False
     finally:
         displayio.release_displays()
@@ -322,22 +312,26 @@ class Exposure_Control_Page( Page ):
         self.spectral_sensors = self.instrument.spectral_sensors_present
         self.active_sensor_index = 0
         self.exposure_max_value = 65535
+        self.exposure_target_fraction_high = 0.9
+        self.exposure_target_fraction_low = 0.5
 
     def update_values( self ):
         number_of_sensors = len( self.spectral_sensors )
         self.slider_scale_text_area.text = self.scale_choices[ self.scale_choice ]
 
-
         number_of_selections = len(self.selection_list)
         if any( self.field_selected ):
             pass
+            print( self.field_selected )
         else:
-            self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
-            self.instrument.encoder_increment = 0
-            if self.selection == 3:
-                self.slider_scale_area.hidden = False
-            else:
-                self.slider_scale_area.hidden = True
+            if self.instrument.encoder_increment != 0:
+                self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
+                self.instrument.encoder_increment = 0
+
+        if self.selection == 3:
+            self.slider_scale_area.hidden = False
+        else:
+            self.slider_scale_area.hidden = True
 
 
         for index in range( 0, number_of_selections):
@@ -410,12 +404,12 @@ class Exposure_Control_Page( Page ):
         self.exposure_bracket_low.y = self.slider_min_y - exposure_low_pixel_offset
         self.exposure_bracket_shading.y = self.exposure_bracket_high.y
         self.exposure_bracket_shading.height = self.exposure_bracket_low.y - self.exposure_bracket_high.y
-        exposure_high_triangle_pixel_offset = int(exposure_target_fraction_high * self.exposure_max_value/exposure_value_per_pixel)
-        exposure_low_triangle_pixel_offset = int(exposure_target_fraction_low * self.exposure_max_value/exposure_value_per_pixel)
+        exposure_high_triangle_pixel_offset = int(self.exposure_target_fraction_high * self.exposure_max_value/exposure_value_per_pixel)
+        exposure_low_triangle_pixel_offset = int(self.exposure_target_fraction_low * self.exposure_max_value/exposure_value_per_pixel)
         if self.scale_choice == 1:
-            exposure_high_triangle_pixel_offset = math.log(exposure_target_fraction_high * self.exposure_max_value,10)/exposure_value_per_pixel
+            exposure_high_triangle_pixel_offset = math.log(self.exposure_target_fraction_high * self.exposure_max_value,10)/exposure_value_per_pixel
             exposure_high_triangle_pixel_offset = int(exposure_high_triangle_pixel_offset)
-            exposure_low_triangle_pixel_offset = math.log(exposure_target_fraction_low * self.exposure_max_value,10)/exposure_value_per_pixel
+            exposure_low_triangle_pixel_offset = math.log(self.exposure_target_fraction_low * self.exposure_max_value,10)/exposure_value_per_pixel
             exposure_low_triangle_pixel_offset = int(exposure_low_triangle_pixel_offset)
         self.exposure_target_triangle_high.y = self.slider_min_y - exposure_high_triangle_pixel_offset
         self.exposure_target_triangle_low.y = self.slider_min_y - exposure_low_triangle_pixel_offset
@@ -1093,10 +1087,10 @@ class Instrument:
         self.device_type = DEVICE_TYPE
         self.uid = UID
         self.buzzer = buzzer
-        self.usb_serial_out_enabled = usb_serial_out_enabled
-        self.sample_interval_s = preset_sample_interval_s
-        self.burst_count = preset_burst_count
-        self.usb_serial_out_enabled = usb_serial_out_enabled
+        #self.usb_serial_out_enabled = usb_serial_out_enabled
+        #self.sample_interval_s = preset_sample_interval_s
+        #self.burst_count = preset_burst_count
+        #self.usb_serial_out_enabled = usb_serial_out_enabled
         self.pages_list = []
         self.palette = make_palette()
         self.main_display_group = initialize_display( spi_bus )
@@ -1115,7 +1109,7 @@ class Instrument:
         self.sensors_present = []
         self.spectral_sensors_present = []
         self.spectrometry = spectral_sensors_detected
-        self.record = record_on_startup
+        #self.record = record_on_startup
         #self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
         self.measurement_counter = 0
         self.rotary_encoder = initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
