@@ -33,9 +33,8 @@ class as7265x_Spectrometer( Device ):
         self.wavelength_bands_nm = 410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 940
         self.number_of_channels = len( self.wavelength_bands_nm )
         self.band_designations_in_wavelength_order = "A","B","C","D","E","F","G","H","R","I","S","J","T","U","V","W","K","L"
-        self.default_counts = []
-        for index in range( 0, self.number_of_channels): self.default_counts.append(0)
-        self.data_dict_counts = {key:value for key, value in zip(self.wavelength_bands_nm, self.default_counts )}
+        self.data_counts = []
+        for index in range( 0, self.number_of_channels): self.data_counts.append(0)
         self.max_counts = 0
         self.min_counts = 0
         self.chip_number_in_wavelength_order = 3,3,3,3,3,3,2,2,1,2,1,2,2,2,2,1,1
@@ -122,9 +121,7 @@ class as7265x_Spectrometer( Device ):
             if index == 15: counts = self.swob.get_w()
             if index == 16: counts = self.swob.get_k()
             if index == 17: counts = self.swob.get_l()
-            wavelength_key = self.wavelength_bands_nm[ index ]
-            print( wavelength_key, counts )
-            self.data_dict_counts[wavelength_key] = counts
+            self.data_counts[index] = counts
             return counts
         except Exception as err:
             print( "read channel counts failed: ", err )
@@ -135,17 +132,16 @@ class as7265x_Spectrometer( Device ):
             self.read_counts_by_index( index )
     
     def report_counts_by_index( self, index ):
-        wavelength_key = self.wavelength_bands_nm[ index ]
-        counts = self.data_dict_counts[wavelength_key]
-        return wavelength_key, counts
+        wavelength = self.wavelength_bands_nm[ index ]
+        counts = self.data_counts[index]
+        return wavelength, counts
     
     def report_counts_all( self ):
-        for index in range( 0, self.number_of_channels):
-            self.report_counts_by_index( index )
+        return self.data_counts
     
     def get_max_min_counts( self ):
-        self.max_counts = max(self.data_dict_counts.values())
-        self.min_counts = min(self.data_dict_counts.values())
+        self.max_counts = max(self.data_counts)
+        self.min_counts = min(self.data_counts)
         return self.max_counts, self.min_counts
         
         

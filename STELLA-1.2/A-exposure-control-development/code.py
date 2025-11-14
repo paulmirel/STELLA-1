@@ -93,8 +93,32 @@ def main():
     exposure_control_page.show()
 
 
+    #as7265x_spectrometer.swob.enable_bulb(as7265x_spectrometer.swob.kLedWhite) #success
+    #time.sleep(1)
+    #as7265x_spectrometer.swob.disable_bulb(as7265x_spectrometer.swob.kLedWhite)
+    #print(as7265x_spectrometer.swob.is_connected()) #fails to detect connection
+    #print(as7265x_spectrometer.swob.get_device_type()) #success
+    #print(as7265x_spectrometer.swob.get_hardware_version()) #success
+    print(as7265x_spectrometer.swob.get_temperature(0)) #success
+    print(as7265x_spectrometer.swob.get_temperature(1)) #success
+    print(as7265x_spectrometer.swob.get_temperature(2)) #success
+    #print(as7265x_spectrometer.swob.data_available())
+    #
+    #print(as7265x_spectrometer.wavelength_bands_nm[2], as7265x_spectrometer.swob.get_c(), as7265x_spectrometer.read_counts_by_index(2))
+    #print(as7265x_spectrometer.wavelength_bands_nm[3], as7265x_spectrometer.swob.get_d(), as7265x_spectrometer.read_counts_by_index(3))
+    #print(as7265x_spectrometer.wavelength_bands_nm[4], as7265x_spectrometer.swob.get_e(), as7265x_spectrometer.read_counts_by_index(4))
+    for n in range (0, 18):
+        as7265x_spectrometer.read_counts_all()
+        print(as7265x_spectrometer.report_counts_all())
+        time.sleep(1)
 
 
+    stall()
+
+
+
+    # can we turn the visible lamp on and off?
+    # do all the sensor basic stuff here, explicitly.
 
 
     # move most of the variables and functionality into the page class.
