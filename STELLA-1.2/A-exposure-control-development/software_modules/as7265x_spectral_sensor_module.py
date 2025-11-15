@@ -73,11 +73,12 @@ class as7265x_Spectrometer( Device ):
             self.set_integration_time( self.integration_time_index )
         
             
-    def set_gain(self, index):
+    def set_gain(self, new_gain_index):
+        self.gain_index = new_gain_index
         gain_constant_list = [ self.swob.kGain1x, self.swob.kGain37x, self.swob.kGain16x, self.swob.kGain64x ]
         try:
-            self.swob.gain = gain_constant_list[ index ]
-            return self.gain_list[ index ]
+            self.swob.set_gain( gain_constant_list[ self.gain_index ])
+            return self.gain_index, self.gain_list[ self.gain_index ]
         except Exception as err:
             print( "failed to set gain: ", err )
             return False

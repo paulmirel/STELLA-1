@@ -299,14 +299,14 @@ class Exposure_Control_Page( Page ):
         self.exposure_max_value = 65535
         self.exposure_target_fraction_high = 0.9
         self.exposure_target_fraction_low = 0.5
-        self.gain_index = 0
+        self.number_of_sensors = len( self.spectral_sensors )
+        self.gain_index = []
+        sensor_index = 0 #for sensor_index in range (0, self.number_of_sensors):
+        self.gain_index.append( self.spectral_sensors[sensor_index].gain_index )
     #def get_default_settings( self ):
 
 
     def update_values( self ):
-        number_of_sensors = len( self.spectral_sensors )
-
-
         number_of_selections = len(self.selection_list)
         if any( self.field_selected ):
             pass
@@ -340,8 +340,8 @@ class Exposure_Control_Page( Page ):
                         elif index == 3:
                             pass #scale choice
                         elif index == 4:
-                            self.gain_index = ( self.gain_index + self.instrument.encoder_increment ) % len( self.spectral_sensors[self.active_sensor_index].gain_list )
-                            self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index )
+                            self.gain_index[self.active_sensor_index] = ( self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len( self.spectral_sensors[self.active_sensor_index].gain_list )
+                            self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
                         elif index == 5:
                             pass # active sensor integration time
                         elif index == 6:
@@ -406,7 +406,7 @@ class Exposure_Control_Page( Page ):
 
 
 
-        gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index ]
+        gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
         self.gain_text_area.text = str( gain )
 
         if False:
