@@ -64,7 +64,9 @@ class as7265x_Spectrometer( Device ):
             else:
                 integration_time_ms = int( integration_time_ms)
             self.integration_time_ms_list.append( integration_time_ms )
-        self.lamp_current_mA_list = [ 12.5, 25, 50, 100 ]
+        self.lamp_current_mA_list = [ 0, 12.5, 25, 50, 100 ]
+        self.lamp_current_mA_index = 0
+        self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
         if self.swob:
             self.swob.begin()
             self.swob.disable_indicator()
@@ -190,31 +192,38 @@ class as7265x_Spectrometer( Device ):
     def printlog(self,ch):
         print( self.log(ch) )
     '''
-    def lamps_on(self):
+    def all_lamps_on(self):
         #print( "turn on the lamps")
         self.swob.enable_bulb(0)   # white
         self.swob.enable_bulb(1)   # NIR
         self.swob.enable_bulb(2)   # UV
-    def lamps_off(self):
+    def all_lamps_off(self):
         #print( "turn off the lamps")
         self.swob.disable_bulb(0)   # white
         self.swob.disable_bulb(1)   # NIR
         self.swob.disable_bulb(2)   # UV
-    def lamp_set_current_mA( self, current_index, lamp_index ):
+    def lamp_on( self, lamp_index ):
+        self.swob.enable_bulb( self.lamp_device_constant_list[ lamp_index ])
+    def lamp_off( self, lamp_index ):
+        self.swob.disable_bulb( self.lamp_device_constant_list[ lamp_index ])
+    #TBD rebuild set each
+    def set_lamp_current_mA_each( self, current_index, lamp_index ):
         device_index_list = [ 2, 0, 1 ] #UV, White, NIR
         try:
-            self.swob.set_bulb_current( self, current_index, device_index_list[ lamp_index ] )
+            self.swob.set_bulb_current( self, current_index, self.device_index_list[ lamp_index ] )
             return self.lamp_current_mA_list[ current_index ]
         except Exception as err:
             print( "failed to set current:", err )
             return False
-    def lamp_set_current_mA_all( self, current_index ):
+    def set_lamp_current_mA( self, current_index ):
+        lamp_current_constant_list = [  self.swob.kLedCurrentLimit12_5mA, self.swob.kLedCurrentLimit25mA, self.swob.kLedCurrentLimit50mA, self.swob.kLedCurrentLimit100mA ]
+        current_index = current_index -1
         try:
-            for device_index in range (0,3):
-                self.swob.set_bulb_current( self, current_index, device_index )
+            device_index = 1 #for device_index in range (0,3):
+            self.swob.set_bulb_current( lamp_current_constant_list[ current_index ], self.lamp_device_constant_list[ device_index ] )
             return self.lamp_current_mA_list[ current_index ]
         except Exception as err:
-            print( "failed to set current:", err )
+            print( "failed to set all lamp currents:", err )
             return False
             
 
@@ -278,15 +287,16 @@ class Null_as7265x_Spectrometer( Device ):
         pass
     def lamp_set_current_mA_all( self, current_index ):
         pass
+        
 def initialize_as7265x_spectrometer( instrument ):
     as7265x_spectrometer = Null_as7265x_Spectrometer()
     try:
         as7265x_spectrometer = as7265x_Spectrometer( instrument.i2c_bus )
         instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
         instrument.spectral_sensors_present.append( as7265x_spectrometer )
-        as7265x_spectrometer.lamps_on()
+        as7265x_spectrometer.all_lamps_on()
         time.sleep(0.1)
-        as7265x_spectrometer.lamps_off()
+        as7265x_spectrometer.all_lamps_off()
     except Exception as err:
         print( "as7265x spectrometer failed: {}".format( err ))
     return as7265x_spectrometer

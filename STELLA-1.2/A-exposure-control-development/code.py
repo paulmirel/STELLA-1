@@ -305,6 +305,9 @@ class Exposure_Control_Page( Page ):
         self.integration_time_index = []
         sensor_index = 0 #for sensor_index in range (0, self.number_of_sensors):
         self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
+        self.lamp_current_mA_index = []
+        sensor_index = 0 #for sensor_index in range (0, self.number_of_sensors):
+        self.lamp_current_mA_index.append( self.spectral_sensors[sensor_index].lamp_current_mA_index )
     #def get_default_settings( self ):
 
 
@@ -352,7 +355,14 @@ class Exposure_Control_Page( Page ):
                                     self.spectral_sensors[self.active_sensor_index].integration_time_ms_list )
                             self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
                         elif index == 6:
-                            pass # active sensor led lamp current
+                            self.lamp_current_mA_index[self.active_sensor_index] = (
+                                    self.lamp_current_mA_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
+                                    self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list )
+                            if self.lamp_current_mA_index[self.active_sensor_index] == 0:
+                                self.spectral_sensors[self.active_sensor_index].lamp_off(1) #TBD need settable lamp index
+                            else:
+                                self.spectral_sensors[self.active_sensor_index].lamp_on(1)
+                                self.spectral_sensors[self.active_sensor_index].set_lamp_current_mA( self.lamp_current_mA_index[self.active_sensor_index] )
                         elif index == 7:
                             pass # active sensor led lamp choice
                         self.instrument.encoder_increment = 0
@@ -471,7 +481,33 @@ class Exposure_Control_Page( Page ):
         self.integration_time_shading.y = self.integration_time_slider.y
         self.integration_time_shading.height = self.slider_min_y + 6 - self.integration_time_shading.y
 
-
+        ## read and display lamp current
+        lamp_current_mA = self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_current_mA_index[self.active_sensor_index] ]
+        self.lamp_current_text_area.text = str( lamp_current_mA )
+        max_lamp_current_mA = max(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
+        min_lamp_current_mA = min(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
+        lamp_current_mA_value_span = max_lamp_current_mA - min_lamp_current_mA
+        if self.scale_choice == 1:
+            if lamp_current_mA > 0:
+                lamp_current_mA = math.log(lamp_current_mA,10)
+            else:
+                lamp_current_mA = 0
+            if max_lamp_current_mA > 0:
+                max_lamp_current_mA = math.log(max_lamp_current_mA,10)
+            else:
+                max_lamp_current_mA = 0
+            if min_lamp_current_mA > 0:
+                min_lamp_current_mA = math.log(min_lamp_current_mA,10)
+            else:
+                min_lamp_current_mA = 0
+            if lamp_current_mA_value_span > 0:
+                lamp_current_mA_value_span = math.log(lamp_current_mA_value_span,10)
+            else:
+                lamp_current_mA_value_span = 0
+        lamp_current_mA_per_pixel = lamp_current_mA_value_span/self.slider_pixel_span
+        self.lamp_current_slider.y = self.slider_min_y - int( lamp_current_mA / lamp_current_mA_per_pixel )
+        self.lamp_current_shading.y = self.lamp_current_slider.y
+        self.lamp_current_shading.height = self.slider_min_y + 6 - self.lamp_current_shading.y
 
 
 
@@ -716,9 +752,9 @@ class Exposure_Control_Page( Page ):
         self.lamp_current_shading = vectorio.Rectangle( pixel_shader=self.palette, color_index = 19, width=slider_shading_width,
                                             height=1, x=lamp_current_slider_x+slider_shading_offset_x, y=lamp_current_slider_y )
         self.group.append( self.lamp_current_shading )
-        lamp_current_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_slider_width,
+        self.lamp_current_slider = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=lamp_current_slider_width,
                                             height=lamp_current_slider_height, x=lamp_current_slider_x, y=lamp_current_slider_y )
-        self.group.append( lamp_current_slider )
+        self.group.append( self.lamp_current_slider )
 
         exposure_bracket_border_width = slider_border_width+12
         exposure_bracket_border_height = gain_slider_select_height - 2*select_width
