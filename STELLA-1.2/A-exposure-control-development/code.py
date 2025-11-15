@@ -165,8 +165,7 @@ def main():
                 local_integration_time_ms_per_pixel.append(math.log(local_integration_time_range_ms,10)/slider_pixel_span)
                 local_integration_time_ms_per_pixel.append(local_integration_time_range_ms/slider_pixel_span)
                 local_integration_time_pixel_offset = local_integration_time_ms[ scale_choice ] / local_integration_time_ms_per_pixel[ scale_choice ]
-                if local_integration_time_ms_value == min(local_sensor.integration_time_ms_list):
-                    local_integration_time_pixel_offset = 0
+
                 exposure_control_page.integration_time_slider.y = slider_min_y - int( local_integration_time_pixel_offset )
                 exposure_control_page.integration_time_shading.y = exposure_control_page.integration_time_slider.y
                 exposure_control_page.integration_time_shading.height = slider_min_y + 6 - exposure_control_page.integration_time_shading.y
@@ -303,6 +302,9 @@ class Exposure_Control_Page( Page ):
         self.gain_index = []
         sensor_index = 0 #for sensor_index in range (0, self.number_of_sensors):
         self.gain_index.append( self.spectral_sensors[sensor_index].gain_index )
+        self.integration_time_index = []
+        sensor_index = 0 #for sensor_index in range (0, self.number_of_sensors):
+        self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
     #def get_default_settings( self ):
 
 
@@ -340,10 +342,15 @@ class Exposure_Control_Page( Page ):
                         elif index == 3:
                             pass #scale choice
                         elif index == 4:
-                            self.gain_index[self.active_sensor_index] = ( self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len( self.spectral_sensors[self.active_sensor_index].gain_list )
+                            self.gain_index[self.active_sensor_index] = (
+                                    self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
+                                    self.spectral_sensors[self.active_sensor_index].gain_list )
                             self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
                         elif index == 5:
-                            pass # active sensor integration time
+                            self.integration_time_index[self.active_sensor_index] = (
+                                    self.integration_time_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
+                                    self.spectral_sensors[self.active_sensor_index].integration_time_ms_list )
+                            self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
                         elif index == 6:
                             pass # active sensor led lamp current
                         elif index == 7:
@@ -404,8 +411,7 @@ class Exposure_Control_Page( Page ):
         self.exposure_target_triangle_high.y = self.slider_min_y - exposure_high_triangle_pixel_offset
         self.exposure_target_triangle_low.y = self.slider_min_y - exposure_low_triangle_pixel_offset
 
-
-
+        ## read and display gain
         gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
         self.gain_text_area.text = str( gain )
         max_gain = max(self.spectral_sensors[self.active_sensor_index].gain_list)
@@ -432,6 +438,39 @@ class Exposure_Control_Page( Page ):
         self.gain_slider.y = self.slider_min_y - int( gain / gain_per_pixel )
         self.gain_shading.y = self.gain_slider.y
         self.gain_shading.height = self.slider_min_y + 6 - self.gain_shading.y
+
+        ## read and display integration_time
+        integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
+        self.integration_time_text_area.text = str( integration_time_ms )
+        max_integration_time_ms = max(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list)
+        min_integration_time_ms = min(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list)
+        integration_time_value_span = max_integration_time_ms - min_integration_time_ms
+        if self.scale_choice == 1:
+            if integration_time_ms > 0:
+                integration_time_ms = math.log(integration_time_ms,10)
+            else:
+                integration_time_ms = 0
+            if max_integration_time_ms > 0:
+                max_integration_time_ms = math.log(max_integration_time_ms,10)
+            else:
+                max_integration_time_ms = 0
+            if min_integration_time_ms > 0:
+                min_integration_time_ms = math.log(min_integration_time_ms,10)
+            else:
+                min_integration_time_ms = 0
+            if integration_time_value_span > 0:
+                integration_time_value_span = math.log(integration_time_value_span,10)
+            else:
+                integration_time_value_span = 0
+        integration_time_per_pixel = integration_time_value_span/self.slider_pixel_span
+        if integration_time_ms == min_integration_time_ms:
+            integration_time_pixel_offset = 0
+        else:
+            integration_time_pixel_offset = int( integration_time_ms / integration_time_per_pixel )
+        self.integration_time_slider.y = self.slider_min_y - integration_time_pixel_offset
+        self.integration_time_shading.y = self.integration_time_slider.y
+        self.integration_time_shading.height = self.slider_min_y + 6 - self.integration_time_shading.y
+
 
 
 
