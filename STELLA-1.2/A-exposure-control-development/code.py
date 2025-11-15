@@ -123,11 +123,6 @@ def main():
 
 
 
-    last_sensor_gain_choices = []
-    sensor_gain_choices = []
-    for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
-        last_sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].default_gain_index)
-        sensor_gain_choices.append(instrument.spectral_sensors_present[sensor_choice].default_gain_index)
 
     if False:
         last_sensor_integration_time_choices = []
@@ -157,17 +152,7 @@ def main():
                 exposure_control_page.sensor_choice_text_area.text = local_sensor.choice_label
 
 
-                local_gain = []
-                local_gain.append(math.log(local_sensor.gain_list[sensor_gain_choices[sensor_choice]],10))
-                local_gain.append(local_sensor.gain_list[sensor_gain_choices[sensor_choice]])
-                local_gain_range = max(local_sensor.gain_list) - min(local_sensor.gain_list)
-                local_gain_per_pixel = []
-                local_gain_per_pixel.append(math.log(local_gain_range,10)/slider_pixel_span)
-                local_gain_per_pixel.append(local_gain_range/slider_pixel_span)
-                exposure_control_page.gain_slider.y = slider_min_y - int( local_gain[ scale_choice ] / local_gain_per_pixel[ scale_choice ])
-                exposure_control_page.gain_shading.y = exposure_control_page.gain_slider.y
-                exposure_control_page.gain_shading.height = slider_min_y + 6 - exposure_control_page.gain_shading.y
-                exposure_control_page.gain_text_area.text = str(local_gain[1]) #display linear gain value
+
                 if False: #local_sensor == as7331_spectrometer:
                     print( local_integration_time_choice, local_sensor.integration_time_ms_list, local_sensor.integration_time_ms_list[local_integration_time_choice] )
 
@@ -314,15 +299,17 @@ class Exposure_Control_Page( Page ):
         self.exposure_max_value = 65535
         self.exposure_target_fraction_high = 0.9
         self.exposure_target_fraction_low = 0.5
+        self.gain_index = 0
+    #def get_default_settings( self ):
+
 
     def update_values( self ):
         number_of_sensors = len( self.spectral_sensors )
-        self.slider_scale_text_area.text = self.scale_choices[ self.scale_choice ]
+
 
         number_of_selections = len(self.selection_list)
         if any( self.field_selected ):
             pass
-            print( self.field_selected )
         else:
             if self.instrument.encoder_increment != 0:
                 self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
@@ -353,7 +340,8 @@ class Exposure_Control_Page( Page ):
                         elif index == 3:
                             pass #scale choice
                         elif index == 4:
-                            pass # active sensor gain
+                            self.gain_index = ( self.gain_index + self.instrument.encoder_increment ) % len( self.spectral_sensors[self.active_sensor_index].gain_list )
+                            self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index )
                         elif index == 5:
                             pass # active sensor integration time
                         elif index == 6:
@@ -367,7 +355,9 @@ class Exposure_Control_Page( Page ):
             else:
                 self.selection_list[ index ].hidden = True
 
+        ## update interface text
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
+        self.slider_scale_text_area.text = self.scale_choices[ self.scale_choice ]
 
         ## get exposure and drive slider, value, label, brackets
         self.spectral_sensors[self.active_sensor_index].read_counts_all()
@@ -413,6 +403,22 @@ class Exposure_Control_Page( Page ):
             exposure_low_triangle_pixel_offset = int(exposure_low_triangle_pixel_offset)
         self.exposure_target_triangle_high.y = self.slider_min_y - exposure_high_triangle_pixel_offset
         self.exposure_target_triangle_low.y = self.slider_min_y - exposure_low_triangle_pixel_offset
+
+
+
+        gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index ]
+        self.gain_text_area.text = str( gain )
+
+        if False:
+            local_gain.append(math.log(local_sensor.gain_list[sensor_gain_choices[self.active_sensor_index]],10))
+            local_gain.append(local_sensor.gain_list[sensor_gain_choices[self.active_sensor_index]])
+            local_gain_range = max(local_sensor.gain_list) - min(local_sensor.gain_list)
+            local_gain_per_pixel = []
+            local_gain_per_pixel.append(math.log(local_gain_range,10)/slider_pixel_span)
+            local_gain_per_pixel.append(local_gain_range/slider_pixel_span)
+            self.gain_slider.y = slider_min_y - int( local_gain[ scale_choice ] / local_gain_per_pixel[ scale_choice ])
+            self.gain_shading.y = self.gain_slider.y
+            self.gain_shading.height = slider_min_y + 6 - self.gain_shading.y
 
 
 

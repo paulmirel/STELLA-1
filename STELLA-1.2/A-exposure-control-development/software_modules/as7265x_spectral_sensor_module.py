@@ -48,14 +48,14 @@ class as7265x_Spectrometer( Device ):
         self.afov_deg = (20.5 * 2) #datasheet reports half angle.
         # settings
         self.gain_list = [ 1, 3.7, 16, 64 ]
-        self.default_gain_index = 2
+        self.gain_index = 2
         self.integration_time_ms_step = 2.78
         self.integration_time_index_maximum = 255
         self.integration_time_ms_maximum = self.integration_time_ms_step * self.integration_time_index_maximum
         self.integration_time_number_of_choices = 16
         self.integration_time_index_per_choice = self.integration_time_index_maximum/ self.integration_time_number_of_choices
         self.integration_time_ms_list = []
-        self.default_integration_time_index = 8
+        self.integration_time_index = 8
         self.integration_time_ms_list.append( self.integration_time_ms_step )
         for index in range( 1, self.integration_time_number_of_choices + 1 ):
             integration_time_ms = ((index) * self.integration_time_index_per_choice * self.integration_time_ms_step)
@@ -69,8 +69,8 @@ class as7265x_Spectrometer( Device ):
             self.swob.begin()
             self.swob.disable_indicator()
             self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
-            self.set_gain( self.default_gain_index )
-            self.set_integration_time( self.default_integration_time_index )
+            self.set_gain( self.gain_index )
+            self.set_integration_time( self.integration_time_index )
         
             
     def set_gain(self, index):
