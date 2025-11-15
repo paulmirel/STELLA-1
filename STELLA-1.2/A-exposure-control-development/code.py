@@ -408,17 +408,30 @@ class Exposure_Control_Page( Page ):
 
         gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
         self.gain_text_area.text = str( gain )
-
-        if False:
-            local_gain.append(math.log(local_sensor.gain_list[sensor_gain_choices[self.active_sensor_index]],10))
-            local_gain.append(local_sensor.gain_list[sensor_gain_choices[self.active_sensor_index]])
-            local_gain_range = max(local_sensor.gain_list) - min(local_sensor.gain_list)
-            local_gain_per_pixel = []
-            local_gain_per_pixel.append(math.log(local_gain_range,10)/slider_pixel_span)
-            local_gain_per_pixel.append(local_gain_range/slider_pixel_span)
-            self.gain_slider.y = slider_min_y - int( local_gain[ scale_choice ] / local_gain_per_pixel[ scale_choice ])
-            self.gain_shading.y = self.gain_slider.y
-            self.gain_shading.height = slider_min_y + 6 - self.gain_shading.y
+        max_gain = max(self.spectral_sensors[self.active_sensor_index].gain_list)
+        min_gain = min(self.spectral_sensors[self.active_sensor_index].gain_list)
+        gain_value_span = max_gain - min_gain
+        if self.scale_choice == 1:
+            if gain > 0:
+                gain = math.log(gain,10)
+            else:
+                gain = 0
+            if max_gain > 0:
+                max_gain = math.log(max_gain,10)
+            else:
+                max_gain = 0
+            if min_gain > 0:
+                min_gain = math.log(min_gain,10)
+            else:
+                min_gain = 0
+            if gain_value_span > 0:
+                gain_value_span = math.log(gain_value_span,10)
+            else:
+                gain_value_span = 0
+        gain_per_pixel = gain_value_span/self.slider_pixel_span
+        self.gain_slider.y = self.slider_min_y - int( gain / gain_per_pixel )
+        self.gain_shading.y = self.gain_slider.y
+        self.gain_shading.height = self.slider_min_y + 6 - self.gain_shading.y
 
 
 
