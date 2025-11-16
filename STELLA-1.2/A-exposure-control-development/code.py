@@ -83,57 +83,6 @@ def main():
     exposure_control_page = make_exposure_control_page( instrument )
     exposure_control_page.show()
 
-
-    # move most of the variables and functionality into the page class.
-    # at the main level we only need to know about the instrument.spectral_sensors_present, instrument.input_flag, and instrument.encoder_increment
-    # the sensors hold the settings, so we don't need to carry them around
-
-
-
-
-
-
-
-    '''
-
-    ### local local values
-    scale_choice = 0
-    scale_list = "log scale", "linear scale"
-    setting_choice = 0
-    slider_pixel_span = exposure_control_page.slider_pixel_span
-    slider_min_y = exposure_control_page.slider_min_y
-    local_gain_choice = 0
-    local_gain = 0
-    local_integration_time_choice = 0
-    local_integration_time_ms = 0
-    local_lamp_choice = 0
-    local_lamp_current_mA = 0
-    exposure_high = 0
-    decimal_16_bits = 65535
-    exposure_max_value = decimal_16_bits
-    exposure_value_span = []
-    exposure_value_span.append( math.log(decimal_16_bits, 10))
-    exposure_value_span.append( decimal_16_bits )
-    exposure_control_page.update_values()
-
-
-
-
-
-
-
-
-
-    if False:
-        last_sensor_integration_time_choices = []
-        sensor_integration_time_choices = []
-        for sensor_choice in range( 0, len(instrument.spectral_sensors_present)):
-            last_sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].default_integration_time_index)
-            sensor_integration_time_choices.append(instrument.spectral_sensors_present[sensor_choice].default_integration_time_index)
-    sensor_choice = 0
-    local_integration_time_choice = 0
-        # TBD lamp selection, lamp current
-    '''
     wait_time = 1
     exposure_control_page.update_values()
     try:
@@ -145,36 +94,6 @@ def main():
                 pass
             else:
                 pass
-            '''
-                exposure_control_page.slider_scale_text_area.text = scale_list[ scale_choice ]
-
-                local_sensor = instrument.spectral_sensors_present[sensor_choice]
-                exposure_control_page.sensor_choice_text_area.text = local_sensor.choice_label
-
-
-
-                if False: #local_sensor == as7331_spectrometer:
-                    print( local_integration_time_choice, local_sensor.integration_time_ms_list, local_sensor.integration_time_ms_list[local_integration_time_choice] )
-
-                local_integration_time_ms_value = local_sensor.integration_time_ms_list[local_integration_time_choice]
-                local_integration_time_ms = []
-                local_integration_time_ms.append(math.log(local_integration_time_ms_value,10))
-                local_integration_time_ms.append(local_integration_time_ms_value)
-                local_integration_time_range_ms = max(local_sensor.integration_time_ms_list) - min(local_sensor.integration_time_ms_list)
-                local_integration_time_ms_per_pixel = []
-                local_integration_time_ms_per_pixel.append(math.log(local_integration_time_range_ms,10)/slider_pixel_span)
-                local_integration_time_ms_per_pixel.append(local_integration_time_range_ms/slider_pixel_span)
-                local_integration_time_pixel_offset = local_integration_time_ms[ scale_choice ] / local_integration_time_ms_per_pixel[ scale_choice ]
-
-                exposure_control_page.integration_time_slider.y = slider_min_y - int( local_integration_time_pixel_offset )
-                exposure_control_page.integration_time_shading.y = exposure_control_page.integration_time_slider.y
-                exposure_control_page.integration_time_shading.height = slider_min_y + 6 - exposure_control_page.integration_time_shading.y
-                exposure_control_page.integration_time_text_area.text = str(local_integration_time_ms_value)
-
-
-
-            #as7265x_integration_time_ms = as7265x_spectrometer.swob.set_integration_cycles( integration_number )
-            '''
             wait_start = time.monotonic()
             while (time.monotonic() - wait_start < wait_time) and not instrument.input_flag:
                 #print( time.monotonic() - wait_start )
@@ -191,46 +110,16 @@ def main():
             else:
                 exposure_control_page.auto_engaged = False
 
-            if exposure_control_page.setting_mode != 0:
-                exposure_control_page.gain_area.color_index = 19
-                exposure_control_page.integration_time_area.color_index = 19
-            else:
-                if not exposure_control_page.gain_field_selected:
-                    exposure_control_page.gain_area.color_index = 9
-                if not exposure_control_page.integration_time_field_selected:
-                    exposure_control_page.integration_time_area.color_index = 9
+
             '''
             if instrument.input_flag:
                 '''
-                if exposure_control_page.sensor_choice_field_selected:
-                    sensor_choice = (sensor_choice + 1) % len(instrument.spectral_sensors_present)
-                elif exposure_control_page.setting_field_selected:
-                    exposure_control_page.setting_mode = ( exposure_control_page.setting_mode + instrument.encoder_increment ) % exposure_control_page.number_of_setting_modes
-                elif exposure_control_page.slider_scale_field_selected:
-                    scale_choice = (scale_choice + 1) % len(scale_list)
-                elif exposure_control_page.gain_field_selected:
-                    sensor_gain_choices[ sensor_choice ] = (sensor_gain_choices[ sensor_choice ] + instrument.encoder_increment) % len( instrument.spectral_sensors_present[sensor_choice].gain_list)
-                    if sensor_gain_choices[ sensor_choice ] != last_sensor_gain_choices[ sensor_choice ]:
-                        instrument.spectral_sensors_present[sensor_choice].set_gain(sensor_gain_choices[ sensor_choice ])
-                        last_sensor_gain_choices[ sensor_choice ] = sensor_gain_choices[ sensor_choice ]
-                elif exposure_control_page.integration_time_field_selected:
-                    local_integration_time_choice = (local_integration_time_choice + instrument.encoder_increment ) % (local_sensor.integration_time_choices_count+1)
-                    local_integration_time_ms = local_sensor.integration_time_ms_list[local_integration_time_choice]
-                    local_sensor.set_integration_time_ms( local_integration_time_ms )
+
                 elif exposure_control_page.lamp_choice_field_selected:
                     print( "TBD increment lamp choice" )
                 elif exposure_control_page.lamp_current_field_selected:
                     print( "TBD increment lamp current" )
-                else:
-                    new_choice = exposure_control_page.exposure_select_choice + instrument.encoder_increment
-                    if exposure_control_page.setting_mode == 0:
-                        pass
-                    else:
-                        if new_choice == 4 and exposure_control_page.exposure_select_choice == 3:
-                            new_choice = 6
-                        if new_choice == 5 and exposure_control_page.exposure_select_choice == 6:
-                            new_choice = 3
-                    exposure_control_page.exposure_select_choice = (new_choice) % exposure_control_page.exposure_select_range
+
                 exposure_control_page.update_values()
                 '''
                 instrument.input_flag = False
@@ -285,9 +174,8 @@ class Exposure_Control_Page( Page ):
         self.slider_max_y = 54
         self.slider_min_y = 174
         self.slider_pixel_span = self.slider_min_y - self.slider_max_y
-        self.setting_modes_list = [ "Manual", "Auto", "Sunny", "Cloudy", "Indoor", "Dark", "Save" ] #append to this list when configurations are saved
-        self.number_of_setting_modes = len( self.setting_modes_list )
-        self.default_setting_mode = 0
+        self.setting_modes = [ "Manual", "Auto" ]#, "Sunny", "Cloudy", "Indoor", "Dark", "Save" ] #append to this list when configurations are saved
+        self.setting_mode = 0
         self.auto_exposure_engaged = False
         self.scale_choices = "linear scale", "log scale"
         self.scale_choice = 1
@@ -316,7 +204,18 @@ class Exposure_Control_Page( Page ):
             pass
         else:
             if self.instrument.encoder_increment != 0:
-                self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
+                if self.setting_mode == 0:
+                    self.selection = ( self.selection + self.instrument.encoder_increment ) % number_of_selections
+                else:
+                    new_choice = self.selection + self.instrument.encoder_increment
+                    if self.setting_mode == 0:
+                        pass
+                    else:
+                        if new_choice == 4 and self.selection == 3:
+                            new_choice = 6
+                        if new_choice == 5 and self.selection == 6:
+                            new_choice = 3
+                    self.selection = (new_choice) % number_of_selections
                 self.instrument.encoder_increment = 0
 
         if self.selection == 3:
@@ -340,7 +239,7 @@ class Exposure_Control_Page( Page ):
                         if index == 1:
                             self.active_sensor_index = ( self.active_sensor_index + self.instrument.encoder_increment ) % number_of_sensors
                         elif index == 2:
-                            pass #setting_index
+                            self.setting_mode = ( self.setting_mode + self.instrument.encoder_increment) % len( self.setting_modes )
                         elif index == 3:
                             self.scale_choice = ( self.scale_choice + self.instrument.encoder_increment ) % len( self.scale_choices )
                         elif index == 4:
@@ -373,7 +272,17 @@ class Exposure_Control_Page( Page ):
 
         ## update interface text
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
+        self.setting_text_area.text = self.setting_modes[self.setting_mode]
         self.slider_scale_text_area.text = self.scale_choices[ self.scale_choice ]
+
+        if self.setting_mode != 0:
+            self.gain_area.color_index = 19
+            self.integration_time_area.color_index = 19
+        else:
+            if not self.field_selected[4]:
+                self.gain_area.color_index = 9
+            if not self.field_selected[5]:
+                self.integration_time_area.color_index = 9
 
         ## get exposure and drive slider, value, label, brackets
         self.spectral_sensors[self.active_sensor_index].read_counts_all()
