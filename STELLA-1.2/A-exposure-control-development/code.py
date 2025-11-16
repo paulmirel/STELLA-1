@@ -282,7 +282,6 @@ class Exposure_Control_Page( Page ):
         self.field_selected_color_index = 5
         self.field_not_selected_color_index = 9
         self.field_selected = []
-
         self.slider_max_y = 54
         self.slider_min_y = 174
         self.slider_pixel_span = self.slider_min_y - self.slider_max_y
@@ -343,7 +342,7 @@ class Exposure_Control_Page( Page ):
                         elif index == 2:
                             pass #setting_index
                         elif index == 3:
-                            pass #scale choice
+                            self.scale_choice = ( self.scale_choice + self.instrument.encoder_increment ) % len( self.scale_choices )
                         elif index == 4:
                             self.gain_index[self.active_sensor_index] = (
                                     self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
