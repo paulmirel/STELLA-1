@@ -99,29 +99,7 @@ def main():
                 #print( time.monotonic() - wait_start )
                 instrument.check_inputs()
                 time.sleep(0.1)
-            '''
-            if exposure_control_page.setting_modes_list[ exposure_control_page.setting_mode ] == "Auto":
-                exposure_control_page.auto_engaged = True
-                if exposure_high < exposure_target_fraction_low * exposure_max_value:
-                    if sensor_gain_choices[ sensor_choice ] < len( instrument.spectral_sensors_present[sensor_choice].gain_list) - 1:
-                        sensor_gain_choices[ sensor_choice ] = (sensor_gain_choices[ sensor_choice ] + 1)
-                    if False: #sensor_integration_time_choices[ sensor_choice ] < len( instrument.spectral_sensors_present[sensor_choice].integration_time_list) - 1:
-                        sensor_integration_time_choices[ sensor_choice ] = (sensor_integration_time_choices[ sensor_choice ] + 4)
-            else:
-                exposure_control_page.auto_engaged = False
-
-
-            '''
             if instrument.input_flag:
-                '''
-
-                elif exposure_control_page.lamp_choice_field_selected:
-                    print( "TBD increment lamp choice" )
-                elif exposure_control_page.lamp_current_field_selected:
-                    print( "TBD increment lamp current" )
-
-                exposure_control_page.update_values()
-                '''
                 instrument.input_flag = False
     finally:
         displayio.release_displays()
@@ -258,6 +236,10 @@ class Exposure_Control_Page( Page ):
                             self.lamp_current_mA_index[self.active_sensor_index] = (
                                     self.lamp_current_mA_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
                                     self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list )
+                            if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list ) - 1) :
+                                self.current_limit_text_area.hidden = False
+                            else:
+                                self.current_limit_text_area.hidden = True
                             if self.lamp_current_mA_index[self.active_sensor_index] == 0:
                                 self.spectral_sensors[self.active_sensor_index].lamp_off(1) #TBD need settable lamp index
                             else:
@@ -399,8 +381,10 @@ class Exposure_Control_Page( Page ):
 
         ## read and display lamp current
         lamp_current_mA = self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_current_mA_index[self.active_sensor_index] ]
+        if lamp_current_mA > 90:
+            self.current_limit_text_area.hidden = True
         self.lamp_current_text_area.text = str( lamp_current_mA )
-        max_lamp_current_mA = max(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
+        max_lamp_current_mA = 100 #max(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
         min_lamp_current_mA = min(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
         lamp_current_mA_value_span = max_lamp_current_mA - min_lamp_current_mA
         if self.scale_choice == 1:
@@ -956,6 +940,15 @@ class Exposure_Control_Page( Page ):
         lamp_choice_text_group.append(self.lamp_choice_text_area)
         self.group.append(lamp_choice_text_group)
 
+        current_limit_text_x = lamp_choice_text_x + 8
+        current_limit_text_y = 64
+        current_limit_text_group = displayio.Group(scale=1, x=current_limit_text_x, y=current_limit_text_y)
+        current_limit_text = "LIMIT"
+        self.current_limit_text_area = label.Label(terminalio.FONT, text=current_limit_text, color=self.palette[0])
+        current_limit_text_group.append(self.current_limit_text_area)
+        self.group.append(current_limit_text_group)
+        self.current_limit_text_area.hidden = True
+
         exposure_label_text_x = 240
         exposure_label_text_y = gain_area_y - 10
         exposure_label_text_group = displayio.Group(scale=1, x=exposure_label_text_x, y=value_label_text_y)
@@ -963,6 +956,7 @@ class Exposure_Control_Page( Page ):
         self.exposure_label_text_area = label.Label(terminalio.FONT, text=exposure_label_text, color=self.palette[0])
         exposure_label_text_group.append(self.exposure_label_text_area)
         self.group.append(exposure_label_text_group)
+        self.exposure_label_text_area.hidden = True
 
         return self.group
 
