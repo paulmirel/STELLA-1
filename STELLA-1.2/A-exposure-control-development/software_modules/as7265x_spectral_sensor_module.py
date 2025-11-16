@@ -67,7 +67,7 @@ class as7265x_Spectrometer( Device ):
         self.lamp_current_mA_list = [ 0, 12.5, 25, 50, 100 ]
         self.lamp_current_mA_index = 0
         self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
-        self.lamp_selection_list =[ "Lamps mA", "UV mA", "Vis mA", "NIR mA" ]
+        self.lamp_selection_list = [ "Lamps mA", "UV mA", "Vis mA", "NIR mA" ]
         if self.swob:
             self.swob.begin()
             self.swob.disable_indicator()

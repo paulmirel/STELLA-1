@@ -264,8 +264,9 @@ class Exposure_Control_Page( Page ):
                                 self.spectral_sensors[self.active_sensor_index].lamp_on(1)
                                 self.spectral_sensors[self.active_sensor_index].set_lamp_current_mA( self.lamp_current_mA_index[self.active_sensor_index] )
                         elif index == 7:
-                            self.lamp_selection_index = ( self.lamp_selection_index + self.instrument.encoder_increment ) % len(
-                                    self.spectral_sensors[self.active_sensor_index].lamp_selection_list )
+                            if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is not None:
+                                self.lamp_selection_index = ( self.lamp_selection_index + self.instrument.encoder_increment ) % len(
+                                        self.spectral_sensors[self.active_sensor_index].lamp_selection_list )
                         self.instrument.encoder_increment = 0
                 else:
                     self.field_list[index].color_index = self.field_not_selected_color_index
@@ -277,7 +278,10 @@ class Exposure_Control_Page( Page ):
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
         self.setting_text_area.text = self.setting_modes[self.setting_mode]
         self.slider_scale_text_area.text = self.scale_choices[ self.scale_choice ]
-        self.lamp_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].lamp_selection_list[ self.lamp_selection_index ]
+        if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is None:
+            self.lamp_choice_text_area.text = "No Lamp"
+        else:
+            self.lamp_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].lamp_selection_list[ self.lamp_selection_index ]
 
         if self.setting_mode != 0:
             self.gain_area.color_index = 19
