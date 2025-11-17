@@ -165,11 +165,11 @@ class Exposure_Control_Page( Page ):
         self.exposure_target_fraction_low = 0.5
         self.number_of_sensors = len( self.spectral_sensors )
         self.gain_index = []
-        sensor_index = 0 #for sensor_index in range (0, self.number_of_sensors):
-        self.gain_index.append( self.spectral_sensors[sensor_index].gain_index )
+        for sensor_index in range (0, self.number_of_sensors):
+            self.gain_index.append( self.spectral_sensors[sensor_index].gain_index )
         self.integration_time_index = []
-        sensor_index = 0 #for sensor_index in range (0, self.number_of_sensors):
-        self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
+        for sensor_index in range (0, self.number_of_sensors):
+            self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
         self.lamp_current_mA_index = []
         for sensor_index in range (0, self.number_of_sensors):
             self.lamp_current_mA_index.append( 0 )
@@ -217,7 +217,7 @@ class Exposure_Control_Page( Page ):
                     self.field_list[index].color_index = self.field_selected_color_index
                     if self.instrument.encoder_increment != 0:
                         if index == 1:
-                            self.active_sensor_index = ( self.active_sensor_index + self.instrument.encoder_increment ) % number_of_sensors
+                            self.active_sensor_index = ( self.active_sensor_index + self.instrument.encoder_increment ) % self.number_of_sensors
                         elif index == 2:
                             self.setting_mode = ( self.setting_mode + self.instrument.encoder_increment) % len( self.setting_modes )
                         elif index == 3:
@@ -345,7 +345,10 @@ class Exposure_Control_Page( Page ):
 
         ## read and display integration_time
         integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
-        self.integration_time_text_area.text = str( integration_time_ms )
+        if integration_time_ms < 1000:
+            self.integration_time_text_area.text = str( integration_time_ms )
+        else:
+            self.integration_time_text_area.text = "{}s".format( round( integration_time_ms/1000, 1))
         max_integration_time_ms = max(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list)
         min_integration_time_ms = min(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list)
         integration_time_value_span = max_integration_time_ms - min_integration_time_ms
@@ -376,34 +379,35 @@ class Exposure_Control_Page( Page ):
         self.integration_time_shading.height = self.slider_min_y + 6 - self.integration_time_shading.y
 
         ## read and display lamp current
-        lamp_current_mA = self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ][ self.lamp_current_mA_index[self.active_sensor_index] ]
-        if lamp_current_mA > 90:
-            self.current_limit_text_area.hidden = True
-        self.lamp_current_text_area.text = str( lamp_current_mA )
-        max_lamp_current_mA = 100 #max(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
-        min_lamp_current_mA = min(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
-        lamp_current_mA_value_span = max_lamp_current_mA - min_lamp_current_mA
-        if self.scale_choice == 1:
-            if lamp_current_mA > 0:
-                lamp_current_mA = math.log(lamp_current_mA,10)
-            else:
-                lamp_current_mA = 0
-            if max_lamp_current_mA > 0:
-                max_lamp_current_mA = math.log(max_lamp_current_mA,10)
-            else:
-                max_lamp_current_mA = 0
-            if min_lamp_current_mA > 0:
-                min_lamp_current_mA = math.log(min_lamp_current_mA,10)
-            else:
-                min_lamp_current_mA = 0
-            if lamp_current_mA_value_span > 0:
-                lamp_current_mA_value_span = math.log(lamp_current_mA_value_span,10)
-            else:
-                lamp_current_mA_value_span = 0
-        lamp_current_mA_per_pixel = lamp_current_mA_value_span/self.slider_pixel_span
-        self.lamp_current_slider.y = self.slider_min_y - int( lamp_current_mA / lamp_current_mA_per_pixel )
-        self.lamp_current_shading.y = self.lamp_current_slider.y
-        self.lamp_current_shading.height = self.slider_min_y + 6 - self.lamp_current_shading.y
+        if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is not None:
+            lamp_current_mA = self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ][ self.lamp_current_mA_index[self.active_sensor_index] ]
+            if lamp_current_mA > 90:
+                self.current_limit_text_area.hidden = True
+            self.lamp_current_text_area.text = str( lamp_current_mA )
+            max_lamp_current_mA = 100 #max(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
+            min_lamp_current_mA = min(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
+            lamp_current_mA_value_span = max_lamp_current_mA - min_lamp_current_mA
+            if self.scale_choice == 1:
+                if lamp_current_mA > 0:
+                    lamp_current_mA = math.log(lamp_current_mA,10)
+                else:
+                    lamp_current_mA = 0
+                if max_lamp_current_mA > 0:
+                    max_lamp_current_mA = math.log(max_lamp_current_mA,10)
+                else:
+                    max_lamp_current_mA = 0
+                if min_lamp_current_mA > 0:
+                    min_lamp_current_mA = math.log(min_lamp_current_mA,10)
+                else:
+                    min_lamp_current_mA = 0
+                if lamp_current_mA_value_span > 0:
+                    lamp_current_mA_value_span = math.log(lamp_current_mA_value_span,10)
+                else:
+                    lamp_current_mA_value_span = 0
+            lamp_current_mA_per_pixel = lamp_current_mA_value_span/self.slider_pixel_span
+            self.lamp_current_slider.y = self.slider_min_y - int( lamp_current_mA / lamp_current_mA_per_pixel )
+            self.lamp_current_shading.y = self.lamp_current_slider.y
+            self.lamp_current_shading.height = self.slider_min_y + 6 - self.lamp_current_shading.y
 
 
     def make_group( self ):

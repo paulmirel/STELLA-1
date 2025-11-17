@@ -43,13 +43,13 @@ class as7341_Spectrometer( Device ):
         self.dict_stenocal = {}
         self.swob.led_current = 50
         self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256 ]
-        self.default_gain_index = 5
+        self.gain_index = 5
         self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180]
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
-        self.default_integration_time_index = 8
+        self.integration_time_index = 8
         if self.swob:
-            self.set_gain( self.default_gain_index )
-            self.set_integration_time( self.default_integration_time_index )
+            self.set_gain( self.gain_index )
+            self.set_integration_time( self.integration_time_index )
 
 
 

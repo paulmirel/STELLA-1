@@ -28,21 +28,26 @@ class as7331_Spectrometer( Device ):
     def __init__( self, com_bus ):
         super().__init__(name = "as7331_spectrometer", pn = "as7331", address = 0x74, swob = as7331.AS7331( com_bus ))
         self.choice_label = "as7331 UV"
-        self.wavelength_bands_nm = 360, 300, 260
-        self.bandwidths_nm = 80, 40, 40
+        self.wavelength_bands_nm = 260, 300, 360
+        self.number_of_channels = len( self.wavelength_bands_nm )
+        self.bandwidths_nm = 40, 40, 80
         self.chip_number = 1, 1, 1
-        self.dict_chip_number= {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
-        self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
+        self.data_counts = []
+        for index in range( 0, self.number_of_channels): self.data_counts.append(0)
+        self.max_counts = 0
+        self.min_counts = 0
         #https://look.ams-osram.com/m/1856fd2c69c35605/original/AS7331-Spectral-UVA-B-C-Sensor.pdf
         self.afov_deg = (10 * 2)
-        self.default_gain_index = 5
+        self.gain_index = 5
         self.gain_list = [ 1,2,4,8,16,32,64,128,256,512,1024,2048 ]
         self.integration_time_ms_list = [ 1,2,4,8,16,32,64,128,256,512,1024,2048,4196,8192,16384 ]
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
-        self.default_integration_time_index = 8
+        self.integration_time_index = 8
+        self.lamp_selection_list = None
+        self.lamp_current_mA_list = None
         if self.swob:
-            self.set_gain( self.default_gain_index )
-            self.set_integration_time( self.default_integration_time_index )
+            self.set_gain( self.gain_index )
+            self.set_integration_time( self.integration_time_index )
    
     def set_gain(self, index ):
         gain_constant_list = [ as7331.GAIN_1X, as7331.GAIN_2X, as7331.GAIN_4X, as7331.GAIN_8X, as7331.GAIN_16X, as7331.GAIN_32X, as7331.GAIN_64X, as7331.GAIN_128X, as7331.GAIN_256X, as7331.GAIN_512X, as7331.GAIN_1024X, as7331.GAIN_2048X ]
@@ -61,6 +66,18 @@ class as7331_Spectrometer( Device ):
         except Exception as err:
             print( "as7331 set integration time failed: ", err )
             return False
+    
+    def read_counts_all( self ):
+        self.UVA_counts, self.UVB_counts, self.UVC_counts, self.chip_temp_c_counts = self.swob.raw_values
+        self.data_counts = [self.UVC_counts,self.UVB_counts,self.UVA_counts]
+    
+    def report_counts_all( self ):
+        return self.data_counts
+    
+    def get_max_min_counts( self ):
+        self.max_counts = max(self.data_counts)
+        self.min_counts = min(self.data_counts)
+        return self.max_counts, self.min_counts
     '''
     def read_chip_temperatures(self):
         pass
