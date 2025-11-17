@@ -233,14 +233,26 @@ class Exposure_Control_Page( Page ):
                                     self.spectral_sensors[self.active_sensor_index].integration_time_ms_list )
                             self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
                         elif index == 6:
-                            self.lamp_current_mA_index[self.active_sensor_index] = (
-                                    self.lamp_current_mA_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
-                                    self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
-                            self.spectral_sensors[self.active_sensor_index].set_lamp_current_mA( self.lamp_current_mA_index[self.active_sensor_index], self.lamp_selection_index )
-                            if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[self.lamp_selection_index] ) - 1) :
-                                self.current_limit_text_area.hidden = False
+                            if len( self.spectral_sensors[self.active_sensor_index].lamp_selection_list ) < 2:
+                                number_of_current_states = len(
+                                    self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
                             else:
+                                number_of_current_states = len(
+                                    self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
+                            self.lamp_current_mA_index[self.active_sensor_index] = (
+                                    self.lamp_current_mA_index[self.active_sensor_index] + self.instrument.encoder_increment ) % number_of_current_states
+                            self.spectral_sensors[self.active_sensor_index].set_lamp_current_mA( self.lamp_current_mA_index[self.active_sensor_index], self.lamp_selection_index )
+                            hide_limit = True
+                            if len( self.spectral_sensors[self.active_sensor_index].lamp_selection_list ) < 2:
+                                if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list) - 1) :
+                                    hide_limit = False
+                            else:
+                                if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[self.lamp_selection_index] ) - 1) :
+                                    hide_limit = False
+                            if hide_limit:
                                 self.current_limit_text_area.hidden = True
+                            else:
+                                self.current_limit_text_area.hidden = False
                         elif index == 7:
                             if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is not None:
                                 self.lamp_selection_index = ( self.lamp_selection_index + self.instrument.encoder_increment ) % len(
@@ -380,12 +392,15 @@ class Exposure_Control_Page( Page ):
 
         ## read and display lamp current
         if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is not None:
-            lamp_current_mA = self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ][ self.lamp_current_mA_index[self.active_sensor_index] ]
+            if len( self.spectral_sensors[self.active_sensor_index].lamp_selection_list ) < 2:
+                lamp_current_mA = self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_current_mA_index[self.active_sensor_index] ]
+            else:
+                lamp_current_mA = self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ][ self.lamp_current_mA_index[self.active_sensor_index] ]
             if lamp_current_mA > 90:
                 self.current_limit_text_area.hidden = True
             self.lamp_current_text_area.text = str( lamp_current_mA )
             max_lamp_current_mA = 100 #max(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
-            min_lamp_current_mA = min(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
+            min_lamp_current_mA = 0#min(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
             lamp_current_mA_value_span = max_lamp_current_mA - min_lamp_current_mA
             if self.scale_choice == 1:
                 if lamp_current_mA > 0:

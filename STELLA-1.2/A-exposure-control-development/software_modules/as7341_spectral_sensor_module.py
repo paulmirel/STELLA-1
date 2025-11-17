@@ -47,12 +47,24 @@ class as7341_Spectrometer( Device ):
         self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180]
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
         self.integration_time_index = 8
+        self.lamp_selection_list = ["Vis mA"]
+        self.current_index = 0
+        self.lamp_current_mA_list = [0,2,4,6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100 ]
         if self.swob:
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
-
-
-
+    
+    def read_counts_all(self):
+        self.raw = self.swob.all_channels
+        self.data_counts = []
+        for item in self.raw:
+            self.data_counts.append(item)
+    
+    def get_max_min_counts( self ):
+        self.max_counts = max(self.data_counts)
+        self.min_counts = min(self.data_counts)
+        return self.max_counts, self.min_counts
+        
     def set_gain(self, index):
         # library sets gain to 128
         gain_constant_list = [ AS7341_Gain.GAIN_0_5X, AS7341_Gain.GAIN_1X, AS7341_Gain.GAIN_2X, AS7341_Gain.GAIN_4X, AS7341_Gain.GAIN_8X, AS7341_Gain.GAIN_16X, AS7341_Gain.GAIN_32X, AS7341_Gain.GAIN_64X, AS7341_Gain.GAIN_128X, AS7341_Gain.GAIN_256X, AS7341_Gain.GAIN_512X ]
@@ -74,25 +86,36 @@ class as7341_Spectrometer( Device ):
         except Exception as err:
             print( "as7341 set integration time failed: ", err )
             return False
-    '''
-    def lamps_on(self):
+            
+    def lamp_on(self):
         self.swob.led = True
-    def lamps_off(self):
+    def lamp_off(self):
         self.swob.led = False
     def blink( self, duration ):
         self.swob.led_current = 50
         self.swob.led = True
         time.sleep( duration )
         self.swob.led = False
-    def read_counts(self):
-        self.raw = self.swob.all_channels
-        self.data_counts = []
-        for item in self.raw:
-            self.data_counts.append(item)
-        self.dict_counts = {key:value for key, value in zip(self.bands, self.raw )}
+    
+    def set_lamp_current_mA( self, current_index, lamp_index ):
+        try:
+            if current_index == 0:
+                self.lamp_off()
+                return 0
+            else:
+                self.lamp_on()
+                current_mA = self.lamp_current_mA_list[current_index]
+                self.swob.led_current = current_mA
+                return current_mA
+        except Exception as err:
+            print( "failed to set current:", err )
+            return False
+
+    '''
         for ch in range (0,8):
             self.irradiance[ch] = self.raw[ch]/self.steno_cal_counts_per_irradiance[ch]
         self.dict_stenocal = {key:value for key, value in zip(self.bands, self.irradiance )}
+    
     def list_channels():
         return self.center_wavelengths
     def header(self, ch):
