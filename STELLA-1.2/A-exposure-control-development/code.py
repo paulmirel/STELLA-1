@@ -285,8 +285,31 @@ class Exposure_Control_Page( Page ):
         ## get exposure and drive slider, value, label, brackets
         self.spectral_sensors[self.active_sensor_index].read_counts_all()
         exposure_high, exposure_low = self.spectral_sensors[self.active_sensor_index].get_max_min_counts()
-        exposure_value_span = self.exposure_max_value
+        gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
+        max_gain = max(self.spectral_sensors[self.active_sensor_index].gain_list)
+        min_gain = min(self.spectral_sensors[self.active_sensor_index].gain_list)
+        integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
+        max_integration_time_ms = max(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list)
+        min_integration_time_ms = min(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list)
 
+        ### autoexposure control
+        if self.setting_mode == 1:
+            if exposure_high > 0:
+                target_multiplier = (self.exposure_target_fraction_high * self.exposure_max_value)/exposure_high
+            else:
+                target_multiplier = 1
+            gain_integration_time_product = gain * integration_time_ms
+            max_gain_integration_time_product = max_gain * max_integration_time_ms
+            if target_multiplier * gain_integration_time_product > max_gain_integration_time_product:
+                # if target exposure is unreachable, set both to their maximum values
+                self.gain_index[self.active_sensor_index] = len( self.spectral_sensors[self.active_sensor_index].gain_list ) - 1
+                self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+                self.integration_time_index[self.active_sensor_index] = len( self.spectral_sensors[self.active_sensor_index].integration_time_ms_list ) - 1
+                self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
+
+
+
+        exposure_value_span = self.exposure_max_value
         if exposure_high < self.exposure_max_value:
             self.exposure_label_text_area.color = self.palette[0]
             self.exposure_label_text_area.text = "Exposure Max"
@@ -328,10 +351,7 @@ class Exposure_Control_Page( Page ):
         self.exposure_target_triangle_low.y = self.slider_min_y - exposure_low_triangle_pixel_offset
 
         ## read and display gain
-        gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
         self.gain_text_area.text = str( gain )
-        max_gain = max(self.spectral_sensors[self.active_sensor_index].gain_list)
-        min_gain = min(self.spectral_sensors[self.active_sensor_index].gain_list)
         gain_value_span = max_gain - min_gain
         if self.scale_choice == 1:
             if gain > 0:
@@ -356,13 +376,10 @@ class Exposure_Control_Page( Page ):
         self.gain_shading.height = self.slider_min_y + 6 - self.gain_shading.y
 
         ## read and display integration_time
-        integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
         if integration_time_ms < 1000:
             self.integration_time_text_area.text = str( integration_time_ms )
         else:
             self.integration_time_text_area.text = "{}s".format( round( integration_time_ms/1000, 1))
-        max_integration_time_ms = max(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list)
-        min_integration_time_ms = min(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list)
         integration_time_value_span = max_integration_time_ms - min_integration_time_ms
         if self.scale_choice == 1:
             if integration_time_ms > 0:
@@ -950,7 +967,7 @@ class Exposure_Control_Page( Page ):
         lamp_choice_text_x = 166+6
         lamp_choice_text_y = gain_area_y - 10
         lamp_choice_text_group = displayio.Group(scale=1, x=lamp_choice_text_x, y=lamp_choice_text_y)
-        lamp_choice_text = " -- "
+        lamp_choice_text = "Lamp mA"
         self.lamp_choice_text_area = label.Label(terminalio.FONT, text=lamp_choice_text, color=self.palette[0])
         lamp_choice_text_group.append(self.lamp_choice_text_area)
         self.group.append(lamp_choice_text_group)
