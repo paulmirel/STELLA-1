@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.0.4"
+SOFTWARE_VERSION_NUMBER = "1.0.0"
 DEVICE_TYPE = "STELLA-1.2_Exposure_control"
 # Paul Mirel 2025
 
@@ -306,7 +306,29 @@ class Exposure_Control_Page( Page ):
                 self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
                 self.integration_time_index[self.active_sensor_index] = len( self.spectral_sensors[self.active_sensor_index].integration_time_ms_list ) - 1
                 self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
-
+            elif exposure_high > (self.exposure_max_value - 1):
+                #drop the gain by 1, drop the integration time by 4
+                self.gain_index[self.active_sensor_index] = self.gain_index[self.active_sensor_index] - 1
+                if self.gain_index[self.active_sensor_index] < 0: self.gain_index[self.active_sensor_index] = 0
+                self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+                self.integration_time_index[self.active_sensor_index] = self.integration_time_index[self.active_sensor_index] - 4
+                if self.integration_time_index[self.active_sensor_index] < 0: self.integration_time_index[self.active_sensor_index] = 0
+                self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
+            elif exposure_high > (self.exposure_target_fraction_high * self.exposure_max_value):
+                #drop the integration time by 1
+                self.integration_time_index[self.active_sensor_index] = self.integration_time_index[self.active_sensor_index] - 1
+                if self.integration_time_index[self.active_sensor_index] < 0: self.integration_time_index[self.active_sensor_index] = 0
+                self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
+            elif exposure_high < (self.exposure_target_fraction_low * self.exposure_max_value):
+                #raise the gain by 1 and the integration time by 4
+                self.gain_index[self.active_sensor_index] = self.gain_index[self.active_sensor_index] + 1
+                if self.gain_index[self.active_sensor_index] > len( self.spectral_sensors[self.active_sensor_index].gain_list ) - 1:
+                    self.gain_index[self.active_sensor_index] = len( self.spectral_sensors[self.active_sensor_index].gain_list ) -1
+                self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+                self.integration_time_index[self.active_sensor_index] = self.integration_time_index[self.active_sensor_index] + 4
+                if self.integration_time_index[self.active_sensor_index] > len( self.spectral_sensors[self.active_sensor_index].integration_time_ms_list ) -1:
+                    self.integration_time_index[self.active_sensor_index] = len( self.spectral_sensors[self.active_sensor_index].integration_time_ms_list ) -1
+                self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
 
 
         exposure_value_span = self.exposure_max_value
