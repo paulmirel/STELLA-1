@@ -171,10 +171,10 @@ class Exposure_Control_Page( Page ):
         sensor_index = 0 #for sensor_index in range (0, self.number_of_sensors):
         self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
         self.lamp_current_mA_index = []
-        sensor_index = 0 #for sensor_index in range (0, self.number_of_sensors):
-        self.lamp_current_mA_index.append( self.spectral_sensors[sensor_index].lamp_current_mA_index )
+        for sensor_index in range (0, self.number_of_sensors):
+            self.lamp_current_mA_index.append( 0 )
         self.lamp_selection_index = 0
-    #def get_default_settings( self ):
+
 
 
     def update_values( self ):
@@ -235,16 +235,12 @@ class Exposure_Control_Page( Page ):
                         elif index == 6:
                             self.lamp_current_mA_index[self.active_sensor_index] = (
                                     self.lamp_current_mA_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
-                                    self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list )
-                            if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list ) - 1) :
+                                    self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
+                            self.spectral_sensors[self.active_sensor_index].set_lamp_current_mA( self.lamp_current_mA_index[self.active_sensor_index], self.lamp_selection_index )
+                            if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[self.lamp_selection_index] ) - 1) :
                                 self.current_limit_text_area.hidden = False
                             else:
                                 self.current_limit_text_area.hidden = True
-                            if self.lamp_current_mA_index[self.active_sensor_index] == 0:
-                                self.spectral_sensors[self.active_sensor_index].lamp_off(1) #TBD need settable lamp index
-                            else:
-                                self.spectral_sensors[self.active_sensor_index].lamp_on(1)
-                                self.spectral_sensors[self.active_sensor_index].set_lamp_current_mA( self.lamp_current_mA_index[self.active_sensor_index] )
                         elif index == 7:
                             if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is not None:
                                 self.lamp_selection_index = ( self.lamp_selection_index + self.instrument.encoder_increment ) % len(
@@ -380,12 +376,12 @@ class Exposure_Control_Page( Page ):
         self.integration_time_shading.height = self.slider_min_y + 6 - self.integration_time_shading.y
 
         ## read and display lamp current
-        lamp_current_mA = self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_current_mA_index[self.active_sensor_index] ]
+        lamp_current_mA = self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ][ self.lamp_current_mA_index[self.active_sensor_index] ]
         if lamp_current_mA > 90:
             self.current_limit_text_area.hidden = True
         self.lamp_current_text_area.text = str( lamp_current_mA )
         max_lamp_current_mA = 100 #max(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
-        min_lamp_current_mA = min(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
+        min_lamp_current_mA = min(self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
         lamp_current_mA_value_span = max_lamp_current_mA - min_lamp_current_mA
         if self.scale_choice == 1:
             if lamp_current_mA > 0:

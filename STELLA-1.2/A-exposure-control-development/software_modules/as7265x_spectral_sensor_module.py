@@ -64,10 +64,15 @@ class as7265x_Spectrometer( Device ):
             else:
                 integration_time_ms = int( integration_time_ms)
             self.integration_time_ms_list.append( integration_time_ms )
-        self.lamp_current_mA_list = [ 0, 12.5, 25, 50, 100 ]
-        self.lamp_current_mA_index = 0
+        
+        #self.lamp_current_mA_index = 0
         self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
-        self.lamp_selection_list = [ "Lamps mA", "UV mA", "Vis mA", "NIR mA" ]
+        self.lamp_selection_list = [ "UV mA", "Vis mA", "NIR mA" ]
+        self.lamp_current_mA_list = []
+        self.lamp_current_mA_list.append([ 0, 12.5 ])
+        self.lamp_current_mA_list.append([ 0, 12.5, 25, 50, 100 ])
+        self.lamp_current_mA_list.append([ 0, 12.5, 25, 50 ])
+        self.lamp_current_constant_list = [  self.swob.kLedCurrentLimit12_5mA, self.swob.kLedCurrentLimit25mA, self.swob.kLedCurrentLimit50mA, self.swob.kLedCurrentLimit100mA ]
         if self.swob:
             self.swob.begin()
             self.swob.disable_indicator()
@@ -207,24 +212,23 @@ class as7265x_Spectrometer( Device ):
         self.swob.enable_bulb( self.lamp_device_constant_list[ lamp_index ])
     def lamp_off( self, lamp_index ):
         self.swob.disable_bulb( self.lamp_device_constant_list[ lamp_index ])
-    #TBD rebuild set each
-    def set_lamp_current_mA_each( self, current_index, lamp_index ):
-        device_index_list = [ 2, 0, 1 ] #UV, White, NIR
+    def set_lamp_current_mA( self, current_index, lamp_index ):
+        if lamp_index == 0: #limit UV lamp to 12.5mA
+            if current_index > 1:
+                current_index = 1
+        if lamp_index == 2: #limit NIR lamp to 50mA
+            if current_index > 3:
+                current_index = 3
         try:
-            self.swob.set_bulb_current( self, current_index, self.device_index_list[ lamp_index ] )
-            return self.lamp_current_mA_list[ current_index ]
+            if current_index == 0:
+                self.lamp_off( lamp_index )
+                return 0
+            else:
+                self.lamp_on( lamp_index )
+                self.swob.set_bulb_current( self.lamp_current_constant_list[ current_index-1 ], self.lamp_device_constant_list[ lamp_index ] )
+                return self.lamp_current_mA_list[lamp_index][ current_index ]
         except Exception as err:
             print( "failed to set current:", err )
-            return False
-    def set_lamp_current_mA( self, current_index ):
-        lamp_current_constant_list = [  self.swob.kLedCurrentLimit12_5mA, self.swob.kLedCurrentLimit25mA, self.swob.kLedCurrentLimit50mA, self.swob.kLedCurrentLimit100mA ]
-        current_index = current_index -1
-        try:
-            device_index = 1 #for device_index in range (0,3):
-            self.swob.set_bulb_current( lamp_current_constant_list[ current_index ], self.lamp_device_constant_list[ device_index ] )
-            return self.lamp_current_mA_list[ current_index ]
-        except Exception as err:
-            print( "failed to set all lamp currents:", err )
             return False
             
 
