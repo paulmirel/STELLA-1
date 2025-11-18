@@ -34,10 +34,10 @@ import math
 
 # main unit device imports
 
-import adafruit_focaltouch
-import adafruit_max1704x
+#import adafruit_focaltouch
+#import adafruit_max1704x
 #from adafruit_pcf8523 import pcf8523
-import adafruit_gps
+#import adafruit_gps
 
 # scan the i2c_bus for devices present
 i2c_bus = board.I2C()

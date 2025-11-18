@@ -3,7 +3,7 @@ import board
 import digitalio
 
 try:
-    indicator_LED = digitalio.DigitalInOut( board.A0 )
+    indicator_LED = digitalio.DigitalInOut( board.LED )
     indicator_LED.direction = digitalio.Direction.OUTPUT
     indicator_LED.value = True #active low, True is off
     print( "initialized indicator" )
