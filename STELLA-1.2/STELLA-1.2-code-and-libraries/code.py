@@ -139,17 +139,17 @@ if spectral_sensors_detected:
     #from software_modules import remote_sensing_page
 
 mem_free_after_imports = gc.mem_free()
-#print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), int(100*(gc.mem_free()/1000)/start_mem_free_kB )) )
+print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), int(100*(gc.mem_free()/1000)/start_mem_free_kB )) )
 
 
 from software_modules import functionm_file, functionm_palette, functionm_spectral_graph
 from software_modules import devicem_pcf8523_rtc, devicem_neopixel, devicem_qwiic_buzzer
 from software_modules import devicem_ili9341_display, devicem_max1704x, devicem_gps
-from software_modules import pagem_welcome, pagem_controls, pagem_main_menu
+from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
+from software_modules import pagem_settings, pagem_sensor_list, pagem_generic_sensor
+from software_modules import pagem_remote_sensing, pagem_air_analyzer, pagem_time_place
 
 def main():
-
-
     gc.collect()
     displayio.release_displays()
     UID = get_uid()
@@ -217,30 +217,30 @@ def main():
     enable_5V.direction = digitalio.Direction.OUTPUT
     enable_5V.value = True
     # plus_5v_supply.enable(), .read(), .log(), .disable()
-
+    '''
     gc.collect()
     mem_free_after_devices = gc.mem_free()
     print( "memory free after device object creations = {} kB, {} %".format(int(gc.mem_free()/1000),
                                                     int(100*(gc.mem_free()/1000)/start_mem_free_kB )))
     print( "memory usage by device objects = {} kB = {} %".format(( mem_free_after_imports - mem_free_after_devices)/1000,
                                 round(100 * ( mem_free_after_imports - mem_free_after_devices)/1000/start_mem_free_kB, 1)))
-    '''
+
     controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor ) #1
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument ) #2
-    status_page = make_status_page( instrument ) #3
-    settings_page = make_settings_page( instrument ) #4
-    sensor_list_page = make_sensor_list_page( instrument ) #5
-    generic_sensor_page = make_generic_sensor_page( instrument ) #6
-    time_place_page = make_time_place_page( instrument ) #7
-    air_analyzer_page = make_air_analyzer_page( instrument ) #8
-    if spectral_sensors_detected:
-        remote_sensing_page = make_remote_sensing_page( instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ) #9
+    status_page = pagem_status.make_status_page( instrument ) #3
+    settings_page = pagem_settings.make_settings_page( instrument ) #4
+    sensor_list_page = pagem_sensor_list.make_sensor_list_page( instrument ) #5
+    generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument ) #6
+    time_place_page = pagem_time_place.make_time_place_page( instrument ) #7
+    air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument ) #8
+    if False: #spectral_sensors_detected:
+        remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ) #9
         instrument.active_page_number = 9
-        spectral_graph_page = make_spectral_graph_page( instrument, spectral_register ) #10 takes a lot of time
+        spectral_graph_page = functionm_spectral_graph.make_spectral_graph_page( instrument, spectral_register ) #10 takes a lot of time
         instrument.add_spectral_graph_page( spectral_graph_page )
         remote_sensing_page.add_spectral_graph_page( spectral_graph_page )
     else:
-        remote_sensing_missing_page = make_remote_sensing_missing_page( instrument ) #9 alt
+        remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument ) #9 alt
 
 
 
@@ -439,7 +439,7 @@ class Instrument:
     def make_band_list( self ):
         self.wavelength_bands_list = []
         for sensor in self.spectral_sensors_present:
-            for band in sensor.bands:
+            for band in sensor.wavelength_bands_nm:
                 self.wavelength_bands_list.append(band)
         self.wavelength_bands_list_sorted = sorted( self.wavelength_bands_list )
         #print( "line 411 -- wavelength_bands_list_sorted: ")
