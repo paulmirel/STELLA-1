@@ -4,24 +4,19 @@ DEVICE_TYPE = "STELLA-1.2"
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
-from configuration_files import user_settings
-sample_interval_s = user_settings.sample_interval_s
-print (sample_interval_s)
-
-
-
-
-
-
-## imports
+# gather startup statistics
+import time
+startup_start_time = time.monotonic()
 import gc
 gc.collect()
 start_mem_free_kB = gc.mem_free()/1000
 print("start memory free {0:.2f} kB".format( start_mem_free_kB ))
-'''
-# core functionality libraries
-import time
-startup_start_time = time.monotonic()
+
+# configuration imports
+from configuration_files import user_settings
+sample_interval_s = user_settings.sample_interval_s
+
+# operational imports
 import os
 import microcontroller
 import board
@@ -38,86 +33,118 @@ import vectorio
 import rtc
 import neopixel
 from analogio import AnalogIn
-# function support libraries
+
+# functional imports
 import math
-# main unit devices libraries
+
+# main unit device imports
 import adafruit_ili9341
 import adafruit_focaltouch
 import adafruit_max1704x
 from adafruit_pcf8523 import pcf8523
 import adafruit_gps
 
-## check i2c devices present
+# scan the i2c_bus for devices present
 i2c_bus = board.I2C()
 i2c_bus.try_lock()
 devices_present = i2c_bus.scan()
 devices_present_hex = []
 for device_address in devices_present:
     devices_present_hex.append(hex(device_address))
+i2c_bus.unlock()
 #print( devices_present_hex )
 
+# conditional imports
 spectral_sensors_detected = False
-## conditional imports
 if ('0x12') in devices_present_hex:
     from adafruit_pm25.i2c import PM25_I2C
+    #from software_modules import device_module
 if ('0x18') in devices_present_hex:
     from adafruit_ds248x import Adafruit_DS248x
+    #from software_modules import device_module
 if ('0x19') in devices_present_hex:
     import adafruit_lsm303_accel
+    #from software_modules import device_module
 if ('0x1c') in devices_present_hex:
     from adafruit_lsm6ds.lsm6ds3 import LSM6DS3 as LSM6DS
+    #from software_modules import device_module
 if ('0x1e') in devices_present_hex:
     import adafruit_lis2mdl
+    #from software_modules import device_module
 if ('0x1f') in devices_present_hex:
     import adafruit_mcp9808 ### close a0, a1, a2 address jumpers on board
+    #from software_modules import device_module
 if ('0x28') in devices_present_hex:
     print( "TBD need library for SparkFun conductive soil moisture sensor" )
+    #from software_modules import device_module
 if ('0x29') in devices_present_hex:
     import adafruit_vl53l1x
+    #from software_modules import device_module
 if ('0x33') in devices_present_hex:
     import adafruit_mlx90640
+    #from software_modules import device_module
 if ('0x34') in devices_present_hex:
     import qwiic_buzzer
-# ('0x36') reserved for on board battery monitor (MAX17048)
+    #from software_modules import device_module
+# reserved address: ('0x36') reserved for on board battery monitor (MAX17048)
 if ('0x37') in devices_present_hex:
     from adafruit_seesaw.seesaw import Seesaw
-# ('0x38') reserved for capacitive touch screen (FocalTouch)
+    #from software_modules import device_module
+# reserved address: ('0x38') reserved for capacitive touch screen (FocalTouch)
 if ('0x39') in devices_present_hex:
     from adafruit_as7341 import AS7341
     from adafruit_as7341 import Gain as AS7341_Gain
     spectral_sensors_detected = True
+    #from software_modules import device_module
 if ('0x44') in devices_present_hex:
     import adafruit_hdc302x
+    #from software_modules import device_module
 if ('0x48') in devices_present_hex:
     import adafruit_ads1x15.ads1015 as ADS1015
     from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
+    #from software_modules import device_module
 if ('0x49') in devices_present_hex:
-    import AS7265X_sparkfun
-    from AS7265X_sparkfun import AS7265X
+    import qwiic_i2c
+    import qwiic_as7265x
     spectral_sensors_detected = True
+    #from software_modules import device_module
 if ('0x4a') in devices_present_hex:
     import adafruit_ads1x15.ads1115 as ADS1115 ### connect ADDR to SDA to set address
     from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
+    #from software_modules import device_module
 if ('0x4f') in devices_present_hex:
     import adafruit_pcf8591.pcf8591 as PCF8591  ### close a0, a1, a2 address jumpers on board
     from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
     from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
+    #from software_modules import device_module
 if ('0x53') in devices_present_hex:
     import adafruit_ltr390
+    #from software_modules import device_module
 if True: #('0x5a') in devices_present_hex:
     import adafruit_mlx90614 # This device doesn't answer the scan. Import the library unconditionally.
+    #from software_modules import device_module
 if ('0x61') in devices_present_hex:
     import adafruit_scd30
+    #from software_modules import device_module
 if ('0x62') in devices_present_hex:
     import adafruit_scd4x
+    #from software_modules import device_module
 if ('0x6a') in devices_present_hex:
     from adafruit_lis3mdl import LIS3MDL
+    #from software_modules import device_module
 if ('0x74') in devices_present_hex:
     import iorodeo_as7331 as as7331
     spectral_sensors_detected = True
+    #from software_modules import device_module
 if ('0x77') in devices_present_hex:
     from adafruit_bme280 import basic as adafruit_bme280
-i2c_bus.unlock()
+    #from software_modules import device_module
+if spectral_sensors_detected:
+    pass
+    #from software_modules import exposure_control
+    #from software_modules import spectral_graph
+    #from software_modules import remote_sensing_page
+
 mem_free_after_imports = gc.mem_free()
 #print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), int(100*(gc.mem_free()/1000)/start_mem_free_kB )) )
 
@@ -127,7 +154,7 @@ def main():
     YELLOW = ( 127, 255, 0 )
     RED = ( 0, 255, 0 )
     OFF = ( 0, 0, 0 )
-
+    '''
     gc.collect()
     displayio.release_displays()
     UID = get_uid()
@@ -227,8 +254,10 @@ def main():
     instrument.make_band_list()
     instrument.make_header()
 
-
+    '''
     try:
+        pass
+        '''
         if vfs:
             onboard_neopixel.fill(GREEN)
         for sensor in instrument.sensors_present:
@@ -336,13 +365,13 @@ def main():
 
 
         #TBD announce exit message and clean up
-
+        '''
     finally:
         displayio.release_displays()
         print( "displayio displays released" )
         i2c_bus.deinit()
         print( "i2c_bus deinitialized" )
-'''
+
 
 ##############
 # begin register class definitions
