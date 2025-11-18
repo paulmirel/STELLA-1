@@ -1,21 +1,24 @@
-SOFTWARE_VERSION_NUMBER = "0.6.0.1"
+SOFTWARE_VERSION_NUMBER = "0.7.0"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
-# NASA open source software license
-# Paul Mirel 2025
+# Copyright NASA 2025 under MIT open source license
+# Author Paul Mirel
 
-# set the data_source period = reciprocal of the data_source cadence
-#               seconds + ( minutes ) + ( hours )   + ( days )
-preset_sample_interval_s = 10.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
-preset_burst_count = 1
-usb_serial_out_enabled = False
-record_on_startup = True #False #
+from configuration_files import user_settings
+sample_interval_s = user_settings.sample_interval_s
+print (sample_interval_s)
+
+
+
+
+
 
 ## imports
 import gc
 gc.collect()
 start_mem_free_kB = gc.mem_free()/1000
 print("start memory free {0:.2f} kB".format( start_mem_free_kB ))
+'''
 # core functionality libraries
 import time
 startup_start_time = time.monotonic()
@@ -339,7 +342,7 @@ def main():
         print( "displayio displays released" )
         i2c_bus.deinit()
         print( "i2c_bus deinitialized" )
-
+'''
 
 ##############
 # begin register class definitions
