@@ -1,0 +1,100 @@
+# air analyzer page
+# Copyright NASA 2025 under MIT open source license
+# Author Paul Mirel
+
+class Page:
+    def __init__( self ):
+        pass
+    def show(self):
+        self.group.hidden = False
+    def hide(self):
+        self.group.hidden = True
+    def update_values(self):
+        pass
+
+
+
+class Air_Analyzer_Page( Page ):
+    def __init__( self, instrument ):
+        super().__init__()
+        self.palette = instrument.palette
+    def make_group( self ):
+        self.group = displayio.Group()
+        status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
+        self.group.append( status_background )
+        text_spacing_y = 28
+        status_title_group = displayio.Group(scale=2, x=10, y=18)
+        status_title_text = "Air Analyzer: TBD"
+        status_title_text_area = label.Label(terminalio.FONT, text=status_title_text, color=self.palette[0])
+        status_title_group.append(status_title_text_area)
+        self.group.append(status_title_group)
+
+        text_group = displayio.Group(scale=2, x=10, y=18+text_spacing_y)
+        text = "co2, ch4"
+        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        text_group = displayio.Group(scale=2, x=10, y=18+2*text_spacing_y)
+        text = "pressure, temp, humid"
+        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        text_group = displayio.Group(scale=2, x=10, y=18+3*text_spacing_y)
+        text = "particulates"
+        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+        if False:
+            text_group = displayio.Group(scale=2, x=10, y=18+4*text_spacing_y)
+            text = " "
+            text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
+
+            text_group = displayio.Group(scale=2, x=10, y=18+5*text_spacing_y)
+            text = " "
+            text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
+
+
+        # RETURN
+        select_width = 4
+        return_height = 28
+        return_select_y = 240 - 4 - 2 - return_height - select_width
+        return_select_height = return_height + 2*select_width
+        return_y = return_select_y + select_width
+        return_text_y = return_y + 12
+        return_select_width = 100
+        return_select_x = 320 - 4 - return_select_width
+        return_x = return_select_x + select_width
+        self.return_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=return_select_width, height=return_select_height, x=return_select_x, y=return_select_y)
+        self.group.append( self.return_select )
+        #self.return_select.hidden = True
+        return_control_width = return_select_width - 2 * select_width
+        self.return_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=return_control_width, height=return_height, x=return_x, y=return_y)
+        self.group.append( self.return_color )
+        return_text_x = return_x + 10
+        return_group = displayio.Group(scale=2, x=return_text_x, y=return_text_y)
+        return_text = "RETURN"
+        self.return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
+        return_group.append(self.return_text_area)
+        self.group.append(return_group)
+
+        return self.group
+    def update_values( self, instrument ):
+        if instrument.button_pressed:
+            instrument.active_page_number = 2
+            instrument.button_pressed = False
+
+
+def make_air_analyzer_page( instrument ):
+    instrument.welcome_page.announce( "make_air_analyzer_page" )
+    page = Air_Analyzer_Page( instrument )
+    group = page.make_group()
+    page.hide()
+    instrument.main_display_group.append( group )
+    instrument.pages_list.append( page )
+    return page
