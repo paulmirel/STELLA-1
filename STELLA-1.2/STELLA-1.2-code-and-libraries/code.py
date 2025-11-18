@@ -145,6 +145,7 @@ print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), in
 from software_modules import functionm_file, functionm_palette, functionm_spectral_graph
 from software_modules import devicem_pcf8523_rtc, devicem_neopixel, devicem_qwiic_buzzer
 from software_modules import devicem_ili9341_display, devicem_max1704x, devicem_gps
+from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
 from software_modules import pagem_settings, pagem_sensor_list, pagem_generic_sensor
 from software_modules import pagem_remote_sensing, pagem_air_analyzer, pagem_time_place
@@ -253,14 +254,13 @@ def main():
 
 
     instrument.make_band_list()
-    instrument.make_header()
+    #instrument.make_header()
 
     try:
-        pass
-
-        '''
         if vfs:
-            onboard_neopixel.fill(GREEN)
+            onboard_neopixel.fill(devicem_neopixel.GREEN)
+        stall()
+        '''
         for sensor in instrument.sensors_present:
             sensor.read()
         gps.read()
@@ -395,8 +395,8 @@ class Instrument:
         self.datestamp = self.hardware_clock.get_datestamp_now()
         self.last_datestamp = self.datestamp
         self.iso_time = self.hardware_clock.get_iso_time_now()
-        #self.batch_number = update_batch(self.datestamp)
-        #print( "batch number = {}".format( self.batch_number ))
+        self.batch_number = functionm_file.update_batch(self.datestamp)
+        print( "batch number = {}".format( self.batch_number ))
         self.filename = None
         self.sensors_present = []
         self.spectral_sensors_present = []
@@ -404,10 +404,10 @@ class Instrument:
         self.record = user_settings.record_on_startup
         self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
         self.measurement_counter = 0
-        #self.rotary_encoder = initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
+        self.rotary_encoder = devicem_rotary_encoder.initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
         self.encoder_increment = 0
         self.button_pressed = False
-        #self.touch_screen = initialize_touch_screen( self.i2c_bus )
+        self.touch_screen = devicem_focaltouch.initialize_touch_screen( self.i2c_bus )
         self.input_flag = False
         self.input_interval_start = 0
         self.input_interval = 1

@@ -1,6 +1,11 @@
 # rotary encoder module
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
+
+import rotaryio
+import digitalio
+import time
+
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
         self.name = name
