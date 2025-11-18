@@ -142,16 +142,10 @@ mem_free_after_imports = gc.mem_free()
 #print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), int(100*(gc.mem_free()/1000)/start_mem_free_kB )) )
 
 
-from software_modules import functionm_file
-from software_modules import devicem_pcf8523_rtc
-from software_modules import devicem_neopixel
-from software_modules import devicem_qwiic_buzzer
-from software_modules import functionm_palette
-from software_modules import devicem_ili9341_display
-from software_modules import pagem_welcome
-from software_modules import functionm_spectral_graph
-from software_modules import devicem_max1704x
-from software_modules import devicem_gps
+from software_modules import functionm_file, functionm_palette, functionm_spectral_graph
+from software_modules import devicem_pcf8523_rtc, devicem_neopixel, devicem_qwiic_buzzer
+from software_modules import devicem_ili9341_display, devicem_max1704x, devicem_gps
+from software_modules import pagem_welcome, pagem_controls, pagem_main_menu
 
 def main():
 
@@ -231,8 +225,8 @@ def main():
     print( "memory usage by device objects = {} kB = {} %".format(( mem_free_after_imports - mem_free_after_devices)/1000,
                                 round(100 * ( mem_free_after_imports - mem_free_after_devices)/1000/start_mem_free_kB, 1)))
     '''
-    controls_page = make_controls_page( instrument, gps, battery_monitor ) #1
-    main_menu_page = make_main_menu_page( instrument ) #2
+    controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor ) #1
+    main_menu_page = pagem_main_menu.make_main_menu_page( instrument ) #2
     status_page = make_status_page( instrument ) #3
     settings_page = make_settings_page( instrument ) #4
     sensor_list_page = make_sensor_list_page( instrument ) #5

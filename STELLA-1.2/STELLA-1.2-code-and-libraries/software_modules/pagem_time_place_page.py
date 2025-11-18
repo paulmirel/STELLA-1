@@ -1,6 +1,10 @@
 # time place page
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
+import displayio
+from adafruit_display_text import label
+import vectorio
+import terminalio
 
 class Page:
     def __init__( self ):
