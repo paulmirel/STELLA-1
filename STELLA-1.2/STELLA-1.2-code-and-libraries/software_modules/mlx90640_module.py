@@ -1,7 +1,24 @@
 # mlx90640 module
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
-
+class Device: #parent class
+    def __init__(self, name = None, pn = None, address = None, swob = None ):
+        self.name = name
+        self.swob = swob
+        self.pn = pn
+        self.address = address
+    def report(self):
+        found = False
+        if self.swob is not None:
+            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
+            found = True
+        return found
+    def found(self):
+        if self.swob is not None:
+            return True
+        else:
+            return False
+            
 def initialize_mlx90640_thermal_camera( instrument ):
     mlx90640_thermal_camera = Null_mlx90640_Thermal_Camera()
     try:

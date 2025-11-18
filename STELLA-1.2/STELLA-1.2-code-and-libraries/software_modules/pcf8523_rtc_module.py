@@ -2,6 +2,23 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+class Device: #parent class
+    def __init__(self, name = None, pn = None, address = None, swob = None ):
+        self.name = name
+        self.swob = swob
+        self.pn = pn
+        self.address = address
+    def report(self):
+        found = False
+        if self.swob is not None:
+            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
+            found = True
+        return found
+    def found(self):
+        if self.swob is not None:
+            return True
+        else:
+            return False
 
 def initialize_hardware_clock( i2c_bus ):
     hardware_clock = Null_Hardware_Clock()
@@ -227,3 +244,5 @@ class Null_Hardware_Clock():
         pass
     def set_time(self):
         pass
+
+

@@ -2,7 +2,23 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
-
+class Device: #parent class
+    def __init__(self, name = None, pn = None, address = None, swob = None ):
+        self.name = name
+        self.swob = swob
+        self.pn = pn
+        self.address = address
+    def report(self):
+        found = False
+        if self.swob is not None:
+            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
+            found = True
+        return found
+    def found(self):
+        if self.swob is not None:
+            return True
+        else:
+            return False
 
 def initialize_lv_ez_mb1013_rangefinder( instrument, analog_in_0, sense_5V ):
     lv_ez_mb1013_rangefinder = Null_Lv_ez_mb1013_Rangefinder()
