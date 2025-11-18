@@ -2,6 +2,16 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+class Page:
+    def __init__( self ):
+        pass
+    def show(self):
+        self.group.hidden = False
+    def hide(self):
+        self.group.hidden = True
+    def update_values(self):
+        pass
+
 class Spectral_Register:
     def __init__( self, instrument ):
         self.instrument = instrument

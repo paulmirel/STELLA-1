@@ -2,6 +2,11 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+import displayio
+import board
+from fourwire import FourWire
+import adafruit_ili9341
+
 def initialize_display( spi_bus ):
     try:
         # displayio/dafruit_ili9341 library owns the pins until display release

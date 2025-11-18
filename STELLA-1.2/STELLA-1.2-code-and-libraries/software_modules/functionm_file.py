@@ -2,6 +2,9 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+import storage
+import sdcardio
+
 def initialize_sd_card( spi_bus, sd_cs_pin ):
     try:
         sdcard = sdcardio.SDCard( spi_bus, sd_cs_pin )

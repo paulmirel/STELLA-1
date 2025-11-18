@@ -1,6 +1,8 @@
 # palette function
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
+import displayio
+
 def make_palette():
     # TBD make a color name dictionary
     palette = displayio.Palette(40)

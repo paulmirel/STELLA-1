@@ -2,6 +2,11 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+import displayio
+from adafruit_display_text import label
+import vectorio
+import terminalio
+
 class Page:
     def __init__( self ):
         pass
@@ -12,12 +17,10 @@ class Page:
     def update_values(self):
         pass
         
-
-
 class Welcome_Page( Page ):
     def __init__( self ):
         super().__init__()
-    def make_group( self ):
+    def make_group( self, svn ):
         self.group = displayio.Group()
         try:
             bitmap = displayio.OnDiskBitmap("/lib/stella_logo.bmp")
@@ -27,7 +30,7 @@ class Welcome_Page( Page ):
             self.group.append(tile_grid)
 
             version_group = displayio.Group( scale=2, x=40, y=185 )
-            text = "STELLA-1.2 ver {}".format( SOFTWARE_VERSION_NUMBER )
+            text = "STELLA-1.2 ver {}".format( svn )
             version_area = label.Label( terminalio.FONT, text=text, color=0x000000 )
             version_group.append( version_area )
             self.group.append( version_group )
@@ -84,9 +87,9 @@ class Welcome_Page( Page ):
     def update_values( self ):
         pass
 
-def make_welcome_page( instrument ):
+def make_welcome_page( instrument, SOFTWARE_VERSION_NUMBER ):
     welcome_page = Welcome_Page()
-    group = welcome_page.make_group()
+    group = welcome_page.make_group(SOFTWARE_VERSION_NUMBER)
     welcome_page.hide()
     instrument.main_display_group.append( group )
     instrument.pages_list.append( welcome_page )
