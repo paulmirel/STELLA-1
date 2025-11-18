@@ -14,7 +14,6 @@ print("start memory free {0:.2f} kB".format( start_mem_free_kB ))
 
 # configuration imports
 from configuration_files import user_settings
-sample_interval_s = user_settings.sample_interval_s
 
 # operational imports
 import os
@@ -95,7 +94,7 @@ if ('0x39') in devices_present_hex:
     from adafruit_as7341 import AS7341
     from adafruit_as7341 import Gain as AS7341_Gain
     spectral_sensors_detected = True
-    #from software_modules import device_module
+    from software_modules import as7341_spectral_sensor_module
 if ('0x44') in devices_present_hex:
     import adafruit_hdc302x
     #from software_modules import device_module
@@ -107,7 +106,7 @@ if ('0x49') in devices_present_hex:
     import qwiic_i2c
     import qwiic_as7265x
     spectral_sensors_detected = True
-    #from software_modules import device_module
+    from software_modules import as7265x_spectral_sensor_module
 if ('0x4a') in devices_present_hex:
     import adafruit_ads1x15.ads1115 as ADS1115 ### connect ADDR to SDA to set address
     from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
@@ -135,13 +134,12 @@ if ('0x6a') in devices_present_hex:
 if ('0x74') in devices_present_hex:
     import iorodeo_as7331 as as7331
     spectral_sensors_detected = True
-    #from software_modules import device_module
+    from software_modules import as7331_spectral_sensor_module
 if ('0x77') in devices_present_hex:
     from adafruit_bme280 import basic as adafruit_bme280
     #from software_modules import device_module
 if spectral_sensors_detected:
-    pass
-    #from software_modules import exposure_control
+    from software_modules import exposure_control_function_module
     #from software_modules import spectral_graph
     #from software_modules import remote_sensing_page
 
@@ -154,7 +152,6 @@ def main():
     YELLOW = ( 127, 255, 0 )
     RED = ( 0, 255, 0 )
     OFF = ( 0, 0, 0 )
-    '''
     gc.collect()
     displayio.release_displays()
     UID = get_uid()
@@ -175,6 +172,7 @@ def main():
 
     instrument = create_instrument( i2c_bus, spi_bus, gps_uart_bus, UID, buzzer )
     instrument.welcome_page.show()
+    '''
     spectral_register = create_spectral_register( instrument )
 
     # supported sensors
@@ -385,10 +383,9 @@ class Instrument:
         self.device_type = DEVICE_TYPE
         self.uid = UID
         self.buzzer = buzzer
-        self.usb_serial_out_enabled = usb_serial_out_enabled
-        self.sample_interval_s = preset_sample_interval_s
-        self.burst_count = preset_burst_count
-        self.usb_serial_out_enabled = usb_serial_out_enabled
+        #self.usb_serial_out_enabled = usb_serial_out_enabled
+        self.sample_interval_s = user_settings.sample_interval_s
+        self.burst_count = user_settings.burst_count
         self.pages_list = []
         self.palette = make_palette()
         self.main_display_group = initialize_display( spi_bus )
@@ -407,7 +404,7 @@ class Instrument:
         self.sensors_present = []
         self.spectral_sensors_present = []
         self.spectrometry = spectral_sensors_detected
-        self.record = record_on_startup
+        self.record = user_settings.record_on_startup
         self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
         self.measurement_counter = 0
         self.rotary_encoder = initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
