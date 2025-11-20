@@ -2,6 +2,8 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+from adafruit_pm25.i2c import PM25_I2C
+    
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
         self.name = name

@@ -52,8 +52,10 @@ i2c_bus.unlock()
 # conditional imports
 spectral_sensors_detected = False
 if ('0x12') in devices_present_hex:
-    from adafruit_pm25.i2c import PM25_I2C
-    #from software_modules import device_module
+    from software_modules import devicem_pmsa0031
+
+
+
 if ('0x18') in devices_present_hex:
     from adafruit_ds248x import Adafruit_DS248x
     #from software_modules import device_module
@@ -79,15 +81,15 @@ if ('0x29') in devices_present_hex:
 if ('0x33') in devices_present_hex:
     import adafruit_mlx90640
     #from software_modules import device_module
-# reserved address: ('0x34') reserved for the qwiic buzzer
-# reserved address: ('0x36') reserved for on board battery monitor (MAX17048)
+if ('0x34') in devices_present_hex:
+    from software_modules import devicem_qwiic_buzzer
+if ('0x36') in devices_present_hex:
+    from software_modules import devicem_max1704x
 if ('0x37') in devices_present_hex:
     from adafruit_seesaw.seesaw import Seesaw
     #from software_modules import device_module
 # reserved address: ('0x38') reserved for capacitive touch screen (FocalTouch)
 if ('0x39') in devices_present_hex:
-    from adafruit_as7341 import AS7341
-    from adafruit_as7341 import Gain as AS7341_Gain
     spectral_sensors_detected = True
     from software_modules import spectralm_as7341
 if ('0x44') in devices_present_hex:
@@ -98,8 +100,6 @@ if ('0x48') in devices_present_hex:
     from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
     #from software_modules import device_module
 if ('0x49') in devices_present_hex:
-    import qwiic_i2c
-    import qwiic_as7265x
     spectral_sensors_detected = True
     from software_modules import spectralm_as7265x
 if ('0x4a') in devices_present_hex:
@@ -127,7 +127,6 @@ if ('0x6a') in devices_present_hex:
     from adafruit_lis3mdl import LIS3MDL
     #from software_modules import device_module
 if ('0x74') in devices_present_hex:
-    import iorodeo_as7331 as as7331
     spectral_sensors_detected = True
     from software_modules import spectralm_as7331
 if ('0x77') in devices_present_hex:
@@ -143,8 +142,8 @@ print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), in
 
 
 from software_modules import functionm_file, functionm_palette, functionm_spectral_graph
-from software_modules import devicem_pcf8523_rtc, devicem_neopixel, devicem_qwiic_buzzer
-from software_modules import devicem_ili9341_display, devicem_max1704x, devicem_gps
+from software_modules import devicem_pcf8523_rtc, devicem_neopixel
+from software_modules import devicem_ili9341_display, devicem_gps
 from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
 from software_modules import pagem_settings, pagem_sensor_list, pagem_generic_sensor
@@ -173,14 +172,17 @@ def main():
     instrument.welcome_page.show()
     spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
+    # initialize spectral sensors
+    as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
+    as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
+    as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
+
     # initialize sensors
     '''
     ads1015_12_bit_adc = initialize_ads1015_12_bit_adc( instrument )
     ads1115_16_bit_adc = initialize_ads1115_16_bit_adc( instrument )
     '''
-    as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
-    as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
-    as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
+
     '''
     bme280_air_sensor = initialize_bme280_air_sensor( instrument )
     capacitive_soil_moisture_sensor = initialize_capacitive_soil_moisture_sensor( instrument )
@@ -210,7 +212,7 @@ def main():
         lv_ez_mb1013_rangefinder = False
     '''
     battery_monitor = devicem_max1704x.initialize_battery_monitor( instrument )
-    gps = devicem_gps.initialize_gps( instrument )
+    #gps = devicem_gps.initialize_gps( instrument )
 
     '''
     #plus_5v_supply = False #TBD make a device object with digital out and analog in, check it for rising and falling
