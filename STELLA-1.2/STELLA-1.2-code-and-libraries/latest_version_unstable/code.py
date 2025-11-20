@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.7.0"
+SOFTWARE_VERSION_NUMBER = "0.7.1"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -49,93 +49,32 @@ for device_address in devices_present:
 i2c_bus.unlock()
 #print( devices_present_hex )
 
-# conditional imports
-spectral_sensors_detected = False
-if ('0x12') in devices_present_hex:
-    from software_modules import devicem_pmsa0031
-
-
-
-if ('0x18') in devices_present_hex:
-    from adafruit_ds248x import Adafruit_DS248x
-    #from software_modules import device_module
-if ('0x19') in devices_present_hex:
-    import adafruit_lsm303_accel
-    #from software_modules import device_module
-if ('0x1c') in devices_present_hex:
-    from adafruit_lsm6ds.lsm6ds3 import LSM6DS3 as LSM6DS
-    #from software_modules import device_module
-if ('0x1e') in devices_present_hex:
-    import adafruit_lis2mdl
-    #from software_modules import device_module
-if ('0x1f') in devices_present_hex:
-    import adafruit_mcp9808 ### close a0, a1, a2 address jumpers on board
-    #from software_modules import device_module
-if ('0x28') in devices_present_hex:
-    pass
-    #print( "TBD need library for SparkFun conductive soil moisture sensor" )
-    #from software_modules import device_module
-if ('0x29') in devices_present_hex:
-    import adafruit_vl53l1x
-    #from software_modules import device_module
-if ('0x33') in devices_present_hex:
-    import adafruit_mlx90640
-    #from software_modules import device_module
-if ('0x34') in devices_present_hex:
-    from software_modules import devicem_qwiic_buzzer
-if ('0x36') in devices_present_hex:
-    from software_modules import devicem_max1704x
-if ('0x37') in devices_present_hex:
-    from adafruit_seesaw.seesaw import Seesaw
-    #from software_modules import device_module
-# reserved address: ('0x38') reserved for capacitive touch screen (FocalTouch)
-if ('0x39') in devices_present_hex:
-    spectral_sensors_detected = True
-    from software_modules import spectralm_as7341
-if ('0x44') in devices_present_hex:
-    import adafruit_hdc302x
-    #from software_modules import device_module
-if ('0x48') in devices_present_hex:
-    import adafruit_ads1x15.ads1015 as ADS1015
-    from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
-    #from software_modules import device_module
-if ('0x49') in devices_present_hex:
-    spectral_sensors_detected = True
-    from software_modules import spectralm_as7265x
-if ('0x4a') in devices_present_hex:
-    import adafruit_ads1x15.ads1115 as ADS1115 ### connect ADDR to SDA to set address
-    from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
-    #from software_modules import device_module
-if ('0x4f') in devices_present_hex:
-    import adafruit_pcf8591.pcf8591 as PCF8591  ### close a0, a1, a2 address jumpers on board
-    from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
-    from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
-    #from software_modules import device_module
-if ('0x53') in devices_present_hex:
-    import adafruit_ltr390
-    #from software_modules import device_module
-if True: #('0x5a') in devices_present_hex:
-    import adafruit_mlx90614 # This device doesn't answer the scan. Import the library unconditionally.
-    #from software_modules import device_module
-if ('0x61') in devices_present_hex:
-    import adafruit_scd30
-    #from software_modules import device_module
-if ('0x62') in devices_present_hex:
-    import adafruit_scd4x
-    #from software_modules import device_module
-if ('0x6a') in devices_present_hex:
-    from adafruit_lis3mdl import LIS3MDL
-    #from software_modules import device_module
-if ('0x74') in devices_present_hex:
-    spectral_sensors_detected = True
-    from software_modules import spectralm_as7331
-if ('0x77') in devices_present_hex:
-    from adafruit_bme280 import basic as adafruit_bme280
-    #from software_modules import device_module
-if spectral_sensors_detected:
-    from software_modules import functionm_exposure_control
-    #from software_modules import spectral_graph
-    #from software_modules import remote_sensing_page
+# supported devices by i2c_address:
+# 0x12 pmsa0031 particulates sensor
+# 0x18 DS248x   1 wire thermometer reader
+# 0x19 lsm303   accelerometer
+# 0x1c lsm6ds   TBD
+# 0x1e lis2mdl  TBD
+# 0x1f mcp9808  Thermometer ### close a0, a1, a2 address jumpers on board to set address
+# 0x28 soil_con Soil conductance sensor
+# 0x29 vl53l1x  Lidar range finder
+# 0x33 mlx90640 Thermal camera
+# 0x34 buzzer   Qwiic buzzer
+# 0x36 max1704x Battery monitor
+# 0x37 seesaw   TBD
+# 0x38 focaltouch   Capacitive touch screen sensor
+# 0x39 as7341   Visible spectral sensor
+# 0x44 hdc302x  Precision temperature and humidity sensor
+# 0x49 as7265x  Visible and Near Infrared spectral sensor
+# 0x4a ads1115  Analog to digital converter, 16 bits, 4 channels ### connect ADDR to SDA to set address
+# 0x4f pcf8591  Analog to digital converter, 8 bits, 4 channels, and digital to analog converter, 1 channel ### close a0, a1, a2 address jumpers on board to set address
+# 0x53 ltr390   UV and total illumination sensor
+# 0x5a mlx90614 Thermal infrared remote surface thermometer
+# 0x61 scd30    CO2 sensor, NDIR: neutral density infrared absorption, with temperature and humidity sensors
+# 0x62 scd4x    CO2 sensor, thermo-acoustic: pulsed infrared resonant heating and microphone, with temperature and humidity sensors
+# 0x6a lis3mdl  Magnetic field sensor
+# 0x74 as7331   Ultraviolet spectral sensor
+# 0x77 bme280   Barometric pressure sensor, with temperature and humidity sensors
 
 mem_free_after_imports = gc.mem_free()
 print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), int(100*(gc.mem_free()/1000)/start_mem_free_kB )) )
@@ -162,47 +101,127 @@ def main():
         onboard_neopixel.fill(devicem_neopixel.YELLOW)
     else:
         onboard_neopixel.fill(devicem_neopixel.RED)
-    buzzer = devicem_qwiic_buzzer.initialize_qwiic_buzzer( i2c_bus )
-    buzzer.mute = False
-    buzzer.set(932, 130) # frequency in Hz, time in ms. 932 Hz is B flat in octave 5. Fairly pleasant through this piezo driver, though maybe a bit medical in tone.
-    buzzer.beep()
+    if ('0x34') in devices_present_hex:
+        from software_modules import devicem_qwiic_buzzer
+        buzzer = devicem_qwiic_buzzer.initialize_qwiic_buzzer( i2c_bus )
+        buzzer.mute = False
+        buzzer.set(932, 130) # frequency in Hz, time in ms. 932 Hz is B flat in octave 5. Fairly pleasant through this piezo driver, though maybe a bit medical in tone.
+        buzzer.beep()
     battery_indicator = initialize_led( board.LED )
 
     instrument = create_instrument( i2c_bus, spi_bus, gps_uart_bus, UID, buzzer )
     instrument.welcome_page.show()
     spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
-    # initialize spectral sensors
-    as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
-    as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
-    as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
+    spectral_sensors_detected = False
+    if ('0x49') in devices_present_hex:
+        spectral_sensors_detected = True
+        from software_modules import spectralm_as7265x
+        as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
+    if ('0x74') in devices_present_hex:
+        spectral_sensors_detected = True
+        from software_modules import spectralm_as7331
+        as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
+    if ('0x39') in devices_present_hex:
+        spectral_sensors_detected = True
+        from software_modules import spectralm_as7341
+        as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
+    if spectral_sensors_detected:
+        from software_modules import functionm_exposure_control
+        #from software_modules import spectral_graph
+        #from software_modules import remote_sensing_page
 
     # initialize sensors
-    '''
-    ads1015_12_bit_adc = initialize_ads1015_12_bit_adc( instrument )
-    ads1115_16_bit_adc = initialize_ads1115_16_bit_adc( instrument )
-    '''
 
-    '''
-    bme280_air_sensor = initialize_bme280_air_sensor( instrument )
-    capacitive_soil_moisture_sensor = initialize_capacitive_soil_moisture_sensor( instrument )
-    ds2484_1_wire_thermometer = initialize_ds2484_1_wire_thermometer( instrument )
-    hdc3022_air_sensor = initialize_hdc3022_air_sensor( instrument )
-    lis2mdl_magnetic_field_sensor = initialize_lis2mdl_magnetic_field_sensor( instrument )
-    lis3mdl_magnetic_field_sensor = initialize_lis3mdl_magnetic_field_sensor( instrument )
-    lsm303_acceleration_sensor = initialize_lsm303_acceleration_sensor( instrument )
-    lsm6ds_accel_gyro_sensor = initialize_lsm6ds_accel_gyro_sensor( instrument )
-    ltr390_uva_sensor = initialize_ltr390_uva_sensor( instrument )
-    mcp9808_air_thermometer = initialize_mcp9808_air_thermometer( instrument )
-    mlx90614_surface_thermometer = initialize_mlx90614_surface_thermometer( instrument )
-    mlx90640_thermal_camera = initialize_mlx90640_thermal_camera( instrument )
-    pcf8591_8_bit_adc_dac = initialize_pcf8591_8_bit_adc_dac( instrument )
-    pmsa0031_particulates_sensor = initialize_pmsa0031_particulates_sensor( instrument )
-    scd30_CO2_sensor = initialize_scd30_CO2_sensor( instrument )
-    scd4x_co2_sensor = initialize_scd4x_co2_sensor( instrument )
-    vl53l1x_4m_range_sensor = initialize_vl53l1x_4m_range_sensor( instrument )
-    '''
+    if ('0x48') in devices_present_hex:
+        from software_modules import devicem_ads1015
+        ads1015_12_bit_adc = devicem_ads1015.initialize_ads1015_12_bit_adc( instrument )
+    if ('0x4a') in devices_present_hex:
+        from software_modules import devicem_ads1115
+        #import adafruit_ads1x15.ads1115 as ADS1115 ### connect ADDR to SDA to set address
+        #from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
+        ads1115_16_bit_adc = initialize_ads1115_16_bit_adc( instrument )
+    if ('0x36') in devices_present_hex:
+        from software_modules import devicem_max1704x
+        battery_monitor = devicem_max1704x.initialize_battery_monitor( instrument )
+    if ('0x77') in devices_present_hex:
+        #from adafruit_bme280 import basic as adafruit_bme280
+        from software_modules import devicem_bme280
+        bme280_air_sensor = initialize_bme280_air_sensor( instrument )
+    if ('0x18') in devices_present_hex:
+        #from adafruit_ds248x import Adafruit_DS248x
+        from software_modules import devicem_ds2484
+        ds2484_1_wire_thermometer = initialize_ds2484_1_wire_thermometer( instrument )
+    if ('0x44') in devices_present_hex:
+        #import adafruit_hdc302x
+        from software_modules import devicem_hdc3022
+        hdc3022_air_sensor = initialize_hdc3022_air_sensor( instrument )
+    if ('0x1e') in devices_present_hex:
+        #import adafruit_lis2mdl
+        from software_modules import devicem_lis2mdl
+        lis2mdl_magnetic_field_sensor = initialize_lis2mdl_magnetic_field_sensor( instrument )
+    if ('0x6a') in devices_present_hex:
+        #from adafruit_lis3mdl import LIS3MDL
+        from software_modules import devicem_lis3mdl
+        lis3mdl_magnetic_field_sensor = initialize_lis3mdl_magnetic_field_sensor( instrument )
+    if ('0x19') in devices_present_hex:
+        #import adafruit_lsm303_accel
+        from software_modules import devicem_lsm303
+        lsm303_acceleration_sensor = initialize_lsm303_acceleration_sensor( instrument )
+    if ('0x1c') in devices_present_hex:
+        #from adafruit_lsm6ds.lsm6ds3 import LSM6DS3 as LSM6DS
+        from software_modules import devicem_lsm6ds
+        lsm6ds_accel_gyro_sensor = initialize_lsm6ds_accel_gyro_sensor( instrument )
+    if ('0x53') in devices_present_hex:
+        #import adafruit_ltr390
+        from software_modules import devicem_ltr390
+        ltr390_uva_sensor = initialize_ltr390_uva_sensor( instrument )
+    if ('0x1f') in devices_present_hex:
+        #import adafruit_mcp9808 ### close a0, a1, a2 address jumpers on board
+        from software_modules import devicem_mcp9808
+        mcp9808_air_thermometer = initialize_mcp9808_air_thermometer( instrument )
+    if True: # This device doesn't answer the scan.
+        #import adafruit_mlx90614
+        from software_modules import devicem_mlx90614
+        mlx90614_surface_thermometer = initialize_mlx90614_surface_thermometer( instrument )
+    if ('0x33') in devices_present_hex:
+        #import adafruit_mlx90640
+        from software_modules import devicem_mlx90640
+        mlx90640_thermal_camera = initialize_mlx90640_thermal_camera( instrument )
+    if ('0x4f') in devices_present_hex:
+        #import adafruit_pcf8591.pcf8591 as PCF8591  ### close a0, a1, a2 address jumpers on board
+        #from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
+        #from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
+        from software_modules import devicem_pcf8591
+        pcf8591_8_bit_adc_dac = initialize_pcf8591_8_bit_adc_dac( instrument )
+    if ('0x12') in devices_present_hex:
+        from software_modules import devicem_pmsa0031
+        pmsa0031_particulates_sensor = initialize_pmsa0031_particulates_sensor( instrument )
+    if ('0x61') in devices_present_hex:
+        #import adafruit_scd30
+        from software_modules import devicem_scd30
+        scd30_CO2_sensor = initialize_scd30_CO2_sensor( instrument )
+    if ('0x62') in devices_present_hex:
+        #import adafruit_scd4x
+        from software_modules import devicem_scd4x
+        scd4x_co2_sensor = initialize_scd4x_co2_sensor( instrument )
+    if ('0x37') in devices_present_hex:
+        pass
+        #from adafruit_seesaw.seesaw import Seesaw
+        #from software_modules import devicem_soil_cap
+        soil_capacitance_sensor_sensor = initialize_soil_capacitance_sensor( instrument )
+    if ('0x28') in devices_present_hex:
+        pass #need library
+        #from software_modules import devicem_soil_con
+        #soil_conductance_sensor = initialize_soil_conductance_sensor( instrument )
+    if ('0x29') in devices_present_hex:
+        #import adafruit_vl53l1x
+        from software_modules import devicem_vl53l1x
+        vl53l1x_4m_range_sensor = initialize_vl53l1x_4m_range_sensor( instrument )
+
     instrument.welcome_page.announce( "Found {} external sensors".format( len(instrument.sensors_present) + len(instrument.spectral_sensors_present)))
+
+
     '''
     sense_5V = AnalogIn(board.A1)
     analog_in_0 = AnalogIn(board.A0)
@@ -211,7 +230,7 @@ def main():
     else:
         lv_ez_mb1013_rangefinder = False
     '''
-    battery_monitor = devicem_max1704x.initialize_battery_monitor( instrument )
+
     #gps = devicem_gps.initialize_gps( instrument )
 
     '''

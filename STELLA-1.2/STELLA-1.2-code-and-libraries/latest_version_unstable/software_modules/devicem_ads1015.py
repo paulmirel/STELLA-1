@@ -2,6 +2,8 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+import adafruit_ads1x15.ads1015 as ADS1015
+from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
 
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
@@ -29,7 +31,7 @@ def initialize_ads1015_12_bit_adc( instrument ):
         instrument.welcome_page.announce( "initialize_ads1015_12_bit_adc" )
         instrument.sensors_present.append( ads1015_12_bit_adc )
     except Exception as err:
-        #print( err )
+        print( "failed to initialize_ads1015_12_bit_adc: ", err )
         pass
     return ads1015_12_bit_adc
 
