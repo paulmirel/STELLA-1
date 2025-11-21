@@ -2,6 +2,8 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+from adafruit_lsm6ds.lsm6ds3 import LSM6DS3 as LSM6DS
+
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
         self.name = name

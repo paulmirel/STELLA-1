@@ -53,8 +53,8 @@ i2c_bus.unlock()
 # 0x12 pmsa0031 particulates sensor
 # 0x18 DS248x   1 wire thermometer reader
 # 0x19 lsm303   accelerometer
-# 0x1c lsm6ds   TBD
-# 0x1e lis2mdl  TBD
+# 0x1c lsm6ds   Accelerometer and gyroscope
+# 0x1e lis2mdl  Magnetic field sensor
 # 0x1f mcp9808  Thermometer ### close a0, a1, a2 address jumpers on board to set address
 # 0x28 soil_con Soil conductance sensor
 # 0x29 vl53l1x  Lidar range finder
@@ -156,18 +156,15 @@ def main():
         from software_modules import devicem_lis2mdl
         lis2mdl_magnetic_field_sensor = devicem_lis2mdl.initialize_lis2mdl_magnetic_field_sensor( instrument )
     if ('0x6a') in devices_present_hex:
-        #from adafruit_lis3mdl import LIS3MDL
         from software_modules import devicem_lis3mdl
         lis3mdl_magnetic_field_sensor = devicem_lis3mdl.initialize_lis3mdl_magnetic_field_sensor( instrument )
     if ('0x19') in devices_present_hex:
         from software_modules import devicem_lsm303
         lsm303_acceleration_sensor = devicem_lsm303.initialize_lsm303_acceleration_sensor( instrument )
     if ('0x1c') in devices_present_hex:
-        #from adafruit_lsm6ds.lsm6ds3 import LSM6DS3 as LSM6DS
         from software_modules import devicem_lsm6ds
         lsm6ds_accel_gyro_sensor = devicem_lsm6ds.initialize_lsm6ds_accel_gyro_sensor( instrument )
     if ('0x53') in devices_present_hex:
-        #import adafruit_ltr390
         from software_modules import devicem_ltr390
         ltr390_uva_sensor = devicem_ltr390.initialize_ltr390_uva_sensor( instrument )
     if ('0x1f') in devices_present_hex:
