@@ -148,58 +148,58 @@ def main():
     if ('0x18') in devices_present_hex:
         from software_modules import devicem_ds2484
         ds2484_1_wire_thermometer = devicem_ds2484.initialize_ds2484_1_wire_thermometer( instrument )
+    # '0x38' focaltouch initializes within the instrument init function
     if ('0x44') in devices_present_hex:
-        #import adafruit_hdc302x
         from software_modules import devicem_hdc3022
-        hdc3022_air_sensor = initialize_hdc3022_air_sensor( instrument )
+        hdc3022_air_sensor = devicem_hdc3022.initialize_hdc3022_air_sensor( instrument )
     if ('0x1e') in devices_present_hex:
         #import adafruit_lis2mdl
         from software_modules import devicem_lis2mdl
-        lis2mdl_magnetic_field_sensor = initialize_lis2mdl_magnetic_field_sensor( instrument )
+        lis2mdl_magnetic_field_sensor = devicem_lis2mdl.initialize_lis2mdl_magnetic_field_sensor( instrument )
     if ('0x6a') in devices_present_hex:
         #from adafruit_lis3mdl import LIS3MDL
         from software_modules import devicem_lis3mdl
-        lis3mdl_magnetic_field_sensor = initialize_lis3mdl_magnetic_field_sensor( instrument )
+        lis3mdl_magnetic_field_sensor = devicem_lis3mdl.initialize_lis3mdl_magnetic_field_sensor( instrument )
     if ('0x19') in devices_present_hex:
         #import adafruit_lsm303_accel
         from software_modules import devicem_lsm303
-        lsm303_acceleration_sensor = initialize_lsm303_acceleration_sensor( instrument )
+        lsm303_acceleration_sensor = devicem_lsm303.initialize_lsm303_acceleration_sensor( instrument )
     if ('0x1c') in devices_present_hex:
         #from adafruit_lsm6ds.lsm6ds3 import LSM6DS3 as LSM6DS
         from software_modules import devicem_lsm6ds
-        lsm6ds_accel_gyro_sensor = initialize_lsm6ds_accel_gyro_sensor( instrument )
+        lsm6ds_accel_gyro_sensor = devicem_lsm6ds.initialize_lsm6ds_accel_gyro_sensor( instrument )
     if ('0x53') in devices_present_hex:
         #import adafruit_ltr390
         from software_modules import devicem_ltr390
-        ltr390_uva_sensor = initialize_ltr390_uva_sensor( instrument )
+        ltr390_uva_sensor = devicem_ltr390.initialize_ltr390_uva_sensor( instrument )
     if ('0x1f') in devices_present_hex:
         #import adafruit_mcp9808 ### close a0, a1, a2 address jumpers on board
         from software_modules import devicem_mcp9808
-        mcp9808_air_thermometer = initialize_mcp9808_air_thermometer( instrument )
+        mcp9808_air_thermometer = devicem_mcp9808.initialize_mcp9808_air_thermometer( instrument )
     if True: # This device doesn't answer the scan.
         from software_modules import devicem_mlx90614
         mlx90614_surface_thermometer = devicem_mlx90614.initialize_mlx90614_surface_thermometer( instrument )
     if ('0x33') in devices_present_hex:
         #import adafruit_mlx90640
         from software_modules import devicem_mlx90640
-        mlx90640_thermal_camera = initialize_mlx90640_thermal_camera( instrument )
+        mlx90640_thermal_camera = devicem_mlx90640.initialize_mlx90640_thermal_camera( instrument )
     if ('0x4f') in devices_present_hex:
         #import adafruit_pcf8591.pcf8591 as PCF8591  ### close a0, a1, a2 address jumpers on board
         #from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
         #from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
         from software_modules import devicem_pcf8591
-        pcf8591_8_bit_adc_dac = initialize_pcf8591_8_bit_adc_dac( instrument )
+        pcf8591_8_bit_adc_dac = devicem_pcf8591.initialize_pcf8591_8_bit_adc_dac( instrument )
     if ('0x12') in devices_present_hex:
         from software_modules import devicem_pmsa0031
-        pmsa0031_particulates_sensor = initialize_pmsa0031_particulates_sensor( instrument )
+        pmsa0031_particulates_sensor = devicem_pmsa0031.initialize_pmsa0031_particulates_sensor( instrument )
     if ('0x61') in devices_present_hex:
         #import adafruit_scd30
         from software_modules import devicem_scd30
-        scd30_CO2_sensor = initialize_scd30_CO2_sensor( instrument )
+        scd30_CO2_sensor = devicem_scd30.initialize_scd30_CO2_sensor( instrument )
     if ('0x62') in devices_present_hex:
         #import adafruit_scd4x
         from software_modules import devicem_scd4x
-        scd4x_co2_sensor = initialize_scd4x_co2_sensor( instrument )
+        scd4x_co2_sensor = devicem_scd4x.initialize_scd4x_co2_sensor( instrument )
     if ('0x37') in devices_present_hex:
         pass
         #from adafruit_seesaw.seesaw import Seesaw
@@ -212,7 +212,7 @@ def main():
     if ('0x29') in devices_present_hex:
         #import adafruit_vl53l1x
         from software_modules import devicem_vl53l1x
-        vl53l1x_4m_range_sensor = initialize_vl53l1x_4m_range_sensor( instrument )
+        vl53l1x_4m_range_sensor = devicem_vl53l1x.initialize_vl53l1x_4m_range_sensor( instrument )
 
     instrument.welcome_page.announce( "Found {} external sensors".format( len(instrument.sensors_present) + len(instrument.spectral_sensors_present)))
 
