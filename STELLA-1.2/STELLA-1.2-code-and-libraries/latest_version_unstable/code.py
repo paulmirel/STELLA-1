@@ -153,7 +153,6 @@ def main():
         from software_modules import devicem_hdc3022
         hdc3022_air_sensor = devicem_hdc3022.initialize_hdc3022_air_sensor( instrument )
     if ('0x1e') in devices_present_hex:
-        #import adafruit_lis2mdl
         from software_modules import devicem_lis2mdl
         lis2mdl_magnetic_field_sensor = devicem_lis2mdl.initialize_lis2mdl_magnetic_field_sensor( instrument )
     if ('0x6a') in devices_present_hex:
@@ -161,7 +160,6 @@ def main():
         from software_modules import devicem_lis3mdl
         lis3mdl_magnetic_field_sensor = devicem_lis3mdl.initialize_lis3mdl_magnetic_field_sensor( instrument )
     if ('0x19') in devices_present_hex:
-        #import adafruit_lsm303_accel
         from software_modules import devicem_lsm303
         lsm303_acceleration_sensor = devicem_lsm303.initialize_lsm303_acceleration_sensor( instrument )
     if ('0x1c') in devices_present_hex:

@@ -2,6 +2,8 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+import adafruit_lis2mdl
+
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
         self.name = name
