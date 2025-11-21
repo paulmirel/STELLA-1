@@ -2,6 +2,8 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+import adafruit_vl53l1x
+
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
         self.name = name
@@ -43,8 +45,10 @@ class vl53l1x_4m_Range_Sensor( Device ):
         self.swob.timing_budget = 100
         self.range_m = None
     def read(self):
-        if self.swob.data_ready:
+        if self.swob.data_ready and self.swob.distance is not None:
             self.range_m = self.swob.distance/100 #reports in cm for whatever reason
+        else:
+            self.range_m = 0 
     def header(self):
         return "vl53l1x_distance-!-m"
     def log(self):

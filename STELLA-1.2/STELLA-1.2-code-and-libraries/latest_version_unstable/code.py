@@ -198,7 +198,6 @@ def main():
         #from software_modules import devicem_soil_con
         #soil_conductance_sensor = initialize_soil_conductance_sensor( instrument )
     if ('0x29') in devices_present_hex:
-        #import adafruit_vl53l1x
         from software_modules import devicem_vl53l1x
         vl53l1x_4m_range_sensor = devicem_vl53l1x.initialize_vl53l1x_4m_range_sensor( instrument )
 
