@@ -1,6 +1,11 @@
 # ads1115 module
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
+ 
+### connect ADDR to SDA to set address
+import adafruit_ads1x15.ads1115 as ADS1115
+from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
+
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
         self.name = name

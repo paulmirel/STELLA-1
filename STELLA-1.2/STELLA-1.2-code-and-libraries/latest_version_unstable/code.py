@@ -70,7 +70,7 @@ i2c_bus.unlock()
 # 0x4f pcf8591  Analog to digital converter, 8 bits, 4 channels, and digital to analog converter, 1 channel ### close a0, a1, a2 address jumpers on board to set address
 # 0x53 ltr390   UV and total illumination sensor
 # 0x5a mlx90614 Thermal infrared remote surface thermometer
-# 0x61 scd30    CO2 sensor, NDIR: neutral density infrared absorption, with temperature and humidity sensors
+# 0x61 scd30    CO2 sensor, NDIR: nondispersive infrared absorption, with temperature and humidity sensors
 # 0x62 scd4x    CO2 sensor, thermo-acoustic: pulsed infrared resonant heating and microphone, with temperature and humidity sensors
 # 0x6a lis3mdl  Magnetic field sensor
 # 0x74 as7331   Ultraviolet spectral sensor
@@ -113,6 +113,7 @@ def main():
     instrument.welcome_page.show()
     spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
+    # initialize spectral sensors
     spectral_sensors_detected = False
     if ('0x49') in devices_present_hex:
         spectral_sensors_detected = True
@@ -132,15 +133,12 @@ def main():
         #from software_modules import remote_sensing_page
 
     # initialize sensors
-
     if ('0x48') in devices_present_hex:
         from software_modules import devicem_ads1015
         ads1015_12_bit_adc = devicem_ads1015.initialize_ads1015_12_bit_adc( instrument )
     if ('0x4a') in devices_present_hex:
         from software_modules import devicem_ads1115
-        #import adafruit_ads1x15.ads1115 as ADS1115 ### connect ADDR to SDA to set address
-        #from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
-        ads1115_16_bit_adc = initialize_ads1115_16_bit_adc( instrument )
+        ads1115_16_bit_adc = devicem_ads1115.initialize_ads1115_16_bit_adc( instrument ) ### connect ADDR to SDA to set address
     if ('0x36') in devices_present_hex:
         from software_modules import devicem_max1704x
         battery_monitor = devicem_max1704x.initialize_battery_monitor( instrument )
@@ -181,9 +179,8 @@ def main():
         from software_modules import devicem_mcp9808
         mcp9808_air_thermometer = initialize_mcp9808_air_thermometer( instrument )
     if True: # This device doesn't answer the scan.
-        #import adafruit_mlx90614
         from software_modules import devicem_mlx90614
-        mlx90614_surface_thermometer = initialize_mlx90614_surface_thermometer( instrument )
+        mlx90614_surface_thermometer = devicem_mlx90614.initialize_mlx90614_surface_thermometer( instrument )
     if ('0x33') in devices_present_hex:
         #import adafruit_mlx90640
         from software_modules import devicem_mlx90640
@@ -293,6 +290,7 @@ def main():
             for sensor in instrument.sensors_present:
                 print( sensor.pn, end= ": ")
                 sensor.printlog()
+            print()
             while time.monotonic() < last_sample_time + instrument.sample_interval_s:#) and instrument.record) or instrument.take_burst:
                 pass
             last_sample_time = time.monotonic()
@@ -437,7 +435,6 @@ class Instrument:
         self.filename = None
         self.sensors_present = []
         self.spectral_sensors_present = []
-        self.spectrometry = spectral_sensors_detected
         self.record = user_settings.record_on_startup
         self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
         self.measurement_counter = 0
