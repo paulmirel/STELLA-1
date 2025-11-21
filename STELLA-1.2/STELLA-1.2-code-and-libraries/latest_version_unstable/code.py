@@ -143,9 +143,8 @@ def main():
         from software_modules import devicem_max1704x
         battery_monitor = devicem_max1704x.initialize_battery_monitor( instrument )
     if ('0x77') in devices_present_hex:
-        #from adafruit_bme280 import basic as adafruit_bme280
         from software_modules import devicem_bme280
-        bme280_air_sensor = initialize_bme280_air_sensor( instrument )
+        bme280_air_sensor = devicem_bme280.initialize_bme280_air_sensor( instrument )
     if ('0x18') in devices_present_hex:
         #from adafruit_ds248x import Adafruit_DS248x
         from software_modules import devicem_ds2484
