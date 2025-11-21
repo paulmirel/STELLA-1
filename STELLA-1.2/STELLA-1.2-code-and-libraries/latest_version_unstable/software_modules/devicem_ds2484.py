@@ -2,6 +2,7 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+from adafruit_ds248x import Adafruit_DS248x
 
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):

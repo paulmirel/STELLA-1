@@ -146,9 +146,8 @@ def main():
         from software_modules import devicem_bme280
         bme280_air_sensor = devicem_bme280.initialize_bme280_air_sensor( instrument )
     if ('0x18') in devices_present_hex:
-        #from adafruit_ds248x import Adafruit_DS248x
         from software_modules import devicem_ds2484
-        ds2484_1_wire_thermometer = initialize_ds2484_1_wire_thermometer( instrument )
+        ds2484_1_wire_thermometer = devicem_ds2484.initialize_ds2484_1_wire_thermometer( instrument )
     if ('0x44') in devices_present_hex:
         #import adafruit_hdc302x
         from software_modules import devicem_hdc3022
