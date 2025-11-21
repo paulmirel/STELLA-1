@@ -28,6 +28,8 @@ import rotaryio
 #import vectorio
 import rtc
 from analogio import AnalogIn
+import sys
+
 
 # functional imports
 import math
@@ -79,7 +81,7 @@ i2c_bus.unlock()
 mem_free_after_imports = gc.mem_free()
 print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), int(100*(gc.mem_free()/1000)/start_mem_free_kB )) )
 
-
+from software_modules import classm_device
 from software_modules import functionm_file, functionm_palette, functionm_spectral_graph
 from software_modules import devicem_pcf8523_rtc, devicem_neopixel
 from software_modules import devicem_ili9341_display, devicem_gps
@@ -87,8 +89,10 @@ from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
 from software_modules import pagem_settings, pagem_sensor_list, pagem_generic_sensor
 from software_modules import pagem_remote_sensing, pagem_air_analyzer, pagem_time_place
+print( sys.path )
 
 def main():
+
     gc.collect()
     displayio.release_displays()
     UID = get_uid()

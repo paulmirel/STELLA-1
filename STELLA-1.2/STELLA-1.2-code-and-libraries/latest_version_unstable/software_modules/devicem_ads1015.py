@@ -4,24 +4,7 @@
 
 import adafruit_ads1x15.ads1015 as ADS1015
 from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
-
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
+from /classm_device import Device
             
             
 def initialize_ads1015_12_bit_adc( instrument ):
