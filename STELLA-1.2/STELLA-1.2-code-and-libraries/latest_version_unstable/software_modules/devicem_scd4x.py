@@ -1,6 +1,10 @@
 # scd40 module
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
+
+import adafruit_scd4x
+        
+        
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
         self.name = name
@@ -39,9 +43,16 @@ class scd4x_CO2_Sensor( Device ):
         self.co2_ppm = None
     def read(self):
         self.co2_ppm = self.swob.CO2
-        self.co2_uncty_ppm = 50 + self.co2_ppm * 0.05
-        self.temperature_C = self.swob.temperature
-        self.humidity = self.swob.relative_humidity
+        if self.co2_ppm is not None:
+            self.co2_uncty_ppm = 50 + self.co2_ppm * 0.05
+            self.temperature_C = self.swob.temperature
+            self.humidity = self.swob.relative_humidity
+        else:
+            self.co2_ppm = 0.0
+            self.co2_uncty_ppm = 50.0
+            self.temperature_C = 0.0
+            self.humidity = 0.0
+        
     def header(self):
         return "scd4x_co2_ambient-!-ppm, scd30_co2_uncertainty-!-ppm, scd4x_temperature_ambient-!-C, scd4x_humidity_relative-!-percent"
     def log(self):

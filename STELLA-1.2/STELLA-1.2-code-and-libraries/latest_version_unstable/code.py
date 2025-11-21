@@ -183,11 +183,9 @@ def main():
         from software_modules import devicem_pmsa0031
         pmsa0031_particulates_sensor = devicem_pmsa0031.initialize_pmsa0031_particulates_sensor( instrument )
     if ('0x61') in devices_present_hex:
-        #import adafruit_scd30
         from software_modules import devicem_scd30
         scd30_CO2_sensor = devicem_scd30.initialize_scd30_CO2_sensor( instrument )
     if ('0x62') in devices_present_hex:
-        #import adafruit_scd4x
         from software_modules import devicem_scd4x
         scd4x_co2_sensor = devicem_scd4x.initialize_scd4x_co2_sensor( instrument )
     if ('0x37') in devices_present_hex:
