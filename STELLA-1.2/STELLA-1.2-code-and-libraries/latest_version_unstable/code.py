@@ -168,10 +168,9 @@ def main():
         from software_modules import devicem_ltr390
         ltr390_uva_sensor = devicem_ltr390.initialize_ltr390_uva_sensor( instrument )
     if ('0x1f') in devices_present_hex:
-        #import adafruit_mcp9808 ### close a0, a1, a2 address jumpers on board
-        from software_modules import devicem_mcp9808
+        from software_modules import devicem_mcp9808  ### close a0, a1, a2 address jumpers on board
         mcp9808_air_thermometer = devicem_mcp9808.initialize_mcp9808_air_thermometer( instrument )
-    if True: # This device doesn't answer the scan.
+    if True: # This device doesn't answer the i2c_bus scan.
         from software_modules import devicem_mlx90614
         mlx90614_surface_thermometer = devicem_mlx90614.initialize_mlx90614_surface_thermometer( instrument )
     if ('0x33') in devices_present_hex:
