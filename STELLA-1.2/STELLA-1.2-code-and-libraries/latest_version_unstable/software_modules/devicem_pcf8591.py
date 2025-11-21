@@ -2,6 +2,10 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
+import adafruit_pcf8591.pcf8591 as PCF8591
+from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
+from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
+
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
         self.name = name

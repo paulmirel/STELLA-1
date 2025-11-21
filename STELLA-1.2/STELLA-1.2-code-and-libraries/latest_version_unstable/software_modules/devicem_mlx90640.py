@@ -1,6 +1,9 @@
 # mlx90640 module
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
+
+import adafruit_mlx90640
+
 class Device: #parent class
     def __init__(self, name = None, pn = None, address = None, swob = None ):
         self.name = name

@@ -174,14 +174,10 @@ def main():
         from software_modules import devicem_mlx90614
         mlx90614_surface_thermometer = devicem_mlx90614.initialize_mlx90614_surface_thermometer( instrument )
     if ('0x33') in devices_present_hex:
-        #import adafruit_mlx90640
-        from software_modules import devicem_mlx90640
+        from software_modules import devicem_mlx90640 # data from this thermal camera is not yet supported
         mlx90640_thermal_camera = devicem_mlx90640.initialize_mlx90640_thermal_camera( instrument )
     if ('0x4f') in devices_present_hex:
-        #import adafruit_pcf8591.pcf8591 as PCF8591  ### close a0, a1, a2 address jumpers on board
-        #from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
-        #from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
-        from software_modules import devicem_pcf8591
+        from software_modules import devicem_pcf8591 ### close a0, a1, a2 address jumpers on board
         pcf8591_8_bit_adc_dac = devicem_pcf8591.initialize_pcf8591_8_bit_adc_dac( instrument )
     if ('0x12') in devices_present_hex:
         from software_modules import devicem_pmsa0031
