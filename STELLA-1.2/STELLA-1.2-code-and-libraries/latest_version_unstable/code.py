@@ -217,7 +217,7 @@ def main():
         lv_ez_mb1013_rangefinder = False
     '''
 
-    #gps = devicem_gps.initialize_gps( instrument )
+    gps = devicem_gps.initialize_gps( instrument )
 
     '''
     #plus_5v_supply = False #TBD make a device object with digital out and analog in, check it for rising and falling
@@ -233,23 +233,23 @@ def main():
     print( "memory usage by device objects = {} kB = {} %".format(( mem_free_after_imports - mem_free_after_devices)/1000,
                                 round(100 * ( mem_free_after_imports - mem_free_after_devices)/1000/start_mem_free_kB, 1)))
 
-    if False:
-        controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor ) #1
-        main_menu_page = pagem_main_menu.make_main_menu_page( instrument ) #2
-        status_page = pagem_status.make_status_page( instrument ) #3
-        settings_page = pagem_settings.make_settings_page( instrument ) #4
-        sensor_list_page = pagem_sensor_list.make_sensor_list_page( instrument ) #5
-        generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument ) #6
-        time_place_page = pagem_time_place.make_time_place_page( instrument ) #7
-        air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument ) #8
-        if False: #spectral_sensors_detected:
-            remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ) #9
-            instrument.active_page_number = 9
-            spectral_graph_page = functionm_spectral_graph.make_spectral_graph_page( instrument, spectral_register ) #10 takes a lot of time
-            instrument.add_spectral_graph_page( spectral_graph_page )
-            remote_sensing_page.add_spectral_graph_page( spectral_graph_page )
-        else:
-            remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument ) #9 alt
+
+    controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor ) #1
+    main_menu_page = pagem_main_menu.make_main_menu_page( instrument ) #2
+    status_page = pagem_status.make_status_page( instrument ) #3
+    settings_page = pagem_settings.make_settings_page( instrument ) #4
+    sensor_list_page = pagem_sensor_list.make_sensor_list_page( instrument ) #5
+    generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument ) #6
+    time_place_page = pagem_time_place.make_time_place_page( instrument ) #7
+    air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument ) #8
+    if False: #spectral_sensors_detected:
+        remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ) #9
+        instrument.active_page_number = 9
+        spectral_graph_page = functionm_spectral_graph.make_spectral_graph_page( instrument, spectral_register ) #10 takes a lot of time
+        instrument.add_spectral_graph_page( spectral_graph_page )
+        remote_sensing_page.add_spectral_graph_page( spectral_graph_page )
+    else:
+        remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument ) #9 alt
 
 
 
@@ -274,6 +274,8 @@ def main():
             onboard_neopixel.fill(devicem_neopixel.GREEN)
         while operational:
             loop_start = time.monotonic()
+            instrument.show_active_page()
+            instrument.update_active_page()
             for sensor in instrument.sensors_present:
                 sensor.read()
             for sensor in instrument.sensors_present:
@@ -284,19 +286,18 @@ def main():
                 pass
             last_sample_time = time.monotonic()
             #print( "sample interval satified at {} s".format(time.monotonic()-first_sample_time ))
-        '''
-        for sensor in instrument.sensors_present:
-            sensor.read()
-        gps.read()
-        controls_page.update_values( instrument )
+            '''
+            for sensor in instrument.sensors_present:
+                sensor.read()
+            gps.read()
+            controls_page.update_values( instrument )
 
-        loop_times = []
-
-
+            loop_times = []
 
 
-            instrument.show_active_page()
-            instrument.update_active_page()
+
+
+
             controls_page.update_values( instrument )
             instrument.check_inputs()
             if False:
@@ -541,8 +542,11 @@ class Instrument:
     def show_active_page( self ):
         if self.active_page_number != self.last_active_page_number:
             self.last_active_page_number = self.active_page_number
-            hide_all_pages( self.pages_list )
-            self.pages_list[ self.active_page_number ].show()
+            for index in range (0, len( self.pages_list)):
+                if index == self.active_page_number:
+                    self.pages_list[ index ].show()
+                else:
+                    self.pages_list[ index ].hide()
             if self.active_page_number == 2 or self.active_page_number == 9: # main menu, remote sensing
                 self.pages_list[ 1 ].show()  # controls
             if self.active_page_number == 9:
