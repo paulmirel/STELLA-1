@@ -3,24 +3,8 @@
 # Author Paul Mirel
 
 import adafruit_mcp9808
+from /classm_device import Device
 
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
             
 def initialize_mcp9808_air_thermometer( instrument ):
     mcp9808_air_thermometer = Null_mcp9808_Air_Thermometer()

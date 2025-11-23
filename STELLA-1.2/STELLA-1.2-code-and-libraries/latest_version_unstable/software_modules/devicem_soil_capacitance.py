@@ -1,23 +1,9 @@
 # soil capacitance module
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
+
+from /classm_device import Device
+
             
 def initialize_capacitive_soil_moisture_sensor( instrument ):
     capacitive_soil_moisture_sensor = Null_Capacitive_Soil_Moisture_Sensor()

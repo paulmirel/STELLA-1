@@ -3,24 +3,8 @@
 # Author Paul Mirel
 
 from adafruit_lsm6ds.lsm6ds3 import LSM6DS3 as LSM6DS
+from /classm_device import Device
 
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
             
 def initialize_lsm6ds_accel_gyro_sensor( instrument ):
     lsm6ds_accel_gyro_sensor = Null_lsm6ds_Accel_Gyro_Sensor()

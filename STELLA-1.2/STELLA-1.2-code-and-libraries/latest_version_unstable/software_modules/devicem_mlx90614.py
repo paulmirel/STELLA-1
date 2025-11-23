@@ -3,26 +3,8 @@
 # Author Paul Mirel
 
 import adafruit_mlx90614
+from /classm_device import Device
 
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
-            
-            
             
 def initialize_mlx90614_surface_thermometer( instrument ):
     mlx90614_surface_thermometer = Null_mlx90614_Surface_Thermometer()

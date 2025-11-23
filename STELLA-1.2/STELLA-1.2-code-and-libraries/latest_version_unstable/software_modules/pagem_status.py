@@ -5,17 +5,7 @@ import displayio
 from adafruit_display_text import label
 import vectorio
 import terminalio
-
-class Page:
-    def __init__( self ):
-        pass
-    def show(self):
-        self.group.hidden = False
-    def hide(self):
-        self.group.hidden = True
-    def update_values(self):
-        pass
-
+from /classm_page import Page
 
 class Status_Page( Page ):
     def __init__( self, instrument ):

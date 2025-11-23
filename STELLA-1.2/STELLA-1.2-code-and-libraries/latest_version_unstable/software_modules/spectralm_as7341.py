@@ -5,24 +5,7 @@ DEVICE_TYPE = "as7341_spectral_sensor"
 
 from adafruit_as7341 import AS7341
 from adafruit_as7341 import Gain as AS7341_Gain
-
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
+from /classm_device import Device
 
 class as7341_Spectrometer( Device ):
     def __init__( self, com_bus ):

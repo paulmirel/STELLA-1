@@ -5,24 +5,7 @@
 import adafruit_pcf8591.pcf8591 as PCF8591
 from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
 from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
-
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
+from /classm_device import Device
             
 def initialize_pcf8591_8_bit_adc_dac( instrument ):
     pcf8591_8_bit_adc_dac = Null_pcf8591_8_Bit_ADC_DAC()
