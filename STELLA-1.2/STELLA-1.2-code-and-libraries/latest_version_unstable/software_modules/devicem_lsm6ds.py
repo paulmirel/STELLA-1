@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 from adafruit_lsm6ds.lsm6ds3 import LSM6DS3 as LSM6DS
-from /classm_device import Device
+from .classm_device import Device
 
             
 def initialize_lsm6ds_accel_gyro_sensor( instrument ):

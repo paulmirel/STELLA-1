@@ -6,7 +6,7 @@ import displayio
 from adafruit_display_text import label
 import vectorio
 import terminalio
-from /classm_page import Page
+from .classm_page import Page
 
 class Settings_Page( Page ):
     def __init__( self, instrument ):

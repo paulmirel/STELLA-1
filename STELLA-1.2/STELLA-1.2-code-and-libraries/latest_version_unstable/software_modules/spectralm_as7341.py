@@ -5,7 +5,7 @@ DEVICE_TYPE = "as7341_spectral_sensor"
 
 from adafruit_as7341 import AS7341
 from adafruit_as7341 import Gain as AS7341_Gain
-from /classm_device import Device
+from .classm_device import Device
 
 class as7341_Spectrometer( Device ):
     def __init__( self, com_bus ):

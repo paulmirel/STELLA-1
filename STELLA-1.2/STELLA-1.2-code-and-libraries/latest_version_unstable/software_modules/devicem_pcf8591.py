@@ -5,7 +5,7 @@
 import adafruit_pcf8591.pcf8591 as PCF8591
 from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
 from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
-from /classm_device import Device
+from .classm_device import Device
             
 def initialize_pcf8591_8_bit_adc_dac( instrument ):
     pcf8591_8_bit_adc_dac = Null_pcf8591_8_Bit_ADC_DAC()

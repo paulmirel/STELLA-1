@@ -5,7 +5,7 @@ DEVICE_TYPE = "as7331_spectral_sensor"
 
 import time
 import iorodeo_as7331 as as7331
-from /classm_device import Device
+from .classm_device import Device
 
 class as7331_Spectrometer( Device ):
     def __init__( self, com_bus ):

@@ -5,7 +5,7 @@ import displayio
 from adafruit_display_text import label
 import vectorio
 import terminalio
-from /classm_page import Page
+from .classm_page import Page
 
 class Time_Place_Page( Page ):
     def __init__( self, instrument ):

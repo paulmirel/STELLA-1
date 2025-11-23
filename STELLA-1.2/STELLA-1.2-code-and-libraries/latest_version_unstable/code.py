@@ -89,7 +89,7 @@ from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
 from software_modules import pagem_settings, pagem_sensor_list, pagem_generic_sensor
 from software_modules import pagem_remote_sensing, pagem_air_analyzer, pagem_time_place
-print( sys.path )
+
 
 def main():
 

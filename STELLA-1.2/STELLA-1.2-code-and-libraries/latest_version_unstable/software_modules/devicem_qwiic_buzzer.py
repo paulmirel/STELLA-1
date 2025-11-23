@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import qwiic_buzzer
-from /classm_device import Device
+from .classm_device import Device
 
 def initialize_qwiic_buzzer( i2c_bus ):
     buzzer = Null_Qwiic_Buzzer()

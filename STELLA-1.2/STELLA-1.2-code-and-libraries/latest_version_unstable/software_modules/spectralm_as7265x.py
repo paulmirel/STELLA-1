@@ -5,7 +5,7 @@ DEVICE_TYPE = "as7265x_spectral_sensor"
 
 import time
 import qwiic_as7265x
-from /classm_device import Device
+from .classm_device import Device
 
 class as7265x_Spectrometer( Device ):
     def __init__( self, com_bus ):

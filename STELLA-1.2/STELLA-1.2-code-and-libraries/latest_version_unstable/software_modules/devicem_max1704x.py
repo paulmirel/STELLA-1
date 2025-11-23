@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_max1704x
-from /classm_device import Device
+from .classm_device import Device
 
             
 def initialize_battery_monitor( instrument ):

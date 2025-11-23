@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_scd30
-from /classm_device import Device
+from .classm_device import Device
 
 def initialize_scd30_CO2_sensor( instrument ):
     scd30_CO2_sensor = Null_scd30_CO2_Sensor()

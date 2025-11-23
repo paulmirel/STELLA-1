@@ -2,7 +2,7 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
-from /classm_device import Device
+from .classm_device import Device
 
             
 def initialize_capacitive_soil_moisture_sensor( instrument ):

@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_ltr390
-from /classm_device import Device
+from .classm_device import Device
 
             
 def initialize_ltr390_uva_sensor( instrument ):

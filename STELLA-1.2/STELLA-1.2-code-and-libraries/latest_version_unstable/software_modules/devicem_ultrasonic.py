@@ -2,7 +2,7 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
-from /classm_device import Device
+from .classm_device import Device
 
 def initialize_lv_ez_mb1013_rangefinder( instrument, analog_in_0, sense_5V ):
     lv_ez_mb1013_rangefinder = Null_Lv_ez_mb1013_Rangefinder()

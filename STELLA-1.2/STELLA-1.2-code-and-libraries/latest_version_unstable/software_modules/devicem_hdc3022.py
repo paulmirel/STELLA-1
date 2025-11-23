@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_hdc302x
-from /classm_device import Device
+from .classm_device import Device
 
 def initialize_hdc3022_air_sensor( instrument ):
     hdc3022_air_sensor = Null_hdc3022_Air_Sensor()

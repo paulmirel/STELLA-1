@@ -6,7 +6,7 @@ import displayio
 from adafruit_display_text import label
 import vectorio
 import terminalio
-from /classm_page import Page
+from .classm_page import Page
 
 class Remote_Sensing_Page( Page ):
     def __init__( self, instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ):

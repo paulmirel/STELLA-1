@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_lsm303_accel
-from /classm_device import Device
+from .classm_device import Device
 
 def initialize_lsm303_acceleration_sensor( instrument ):
     lsm303_acceleration_sensor = Null_lsm303_Acceleration_Sensor()

@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_mlx90614
-from /classm_device import Device
+from .classm_device import Device
 
             
 def initialize_mlx90614_surface_thermometer( instrument ):

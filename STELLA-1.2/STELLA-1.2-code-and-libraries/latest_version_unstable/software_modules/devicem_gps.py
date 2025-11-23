@@ -5,7 +5,7 @@
 
 import time
 import adafruit_gps
-from /classm_device import Device
+from .classm_device import Device
 
             
 def initialize_gps( instrument ):

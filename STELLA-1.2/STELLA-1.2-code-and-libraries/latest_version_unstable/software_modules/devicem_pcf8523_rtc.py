@@ -5,7 +5,7 @@
 import time
 import rtc
 from adafruit_pcf8523 import pcf8523
-from /classm_device import Device
+from .classm_device import Device
 
 
 def initialize_hardware_clock( i2c_bus ):

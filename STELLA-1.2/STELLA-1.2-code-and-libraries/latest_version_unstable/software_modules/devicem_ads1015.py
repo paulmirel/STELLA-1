@@ -4,7 +4,7 @@
 
 import adafruit_ads1x15.ads1015 as ADS1015
 from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
-from /classm_device import Device
+from .classm_device import Device
             
             
 def initialize_ads1015_12_bit_adc( instrument ):

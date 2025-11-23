@@ -2,7 +2,7 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 import adafruit_focaltouch
-from /classm_device import Device
+from .classm_device import Device
 
             
 def initialize_touch_screen( bus ):

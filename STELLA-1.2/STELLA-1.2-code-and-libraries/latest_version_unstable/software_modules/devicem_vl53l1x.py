@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_vl53l1x
-from /classm_device import Device
+from .classm_device import Device
 
 
 def initialize_vl53l1x_4m_range_sensor( instrument ):

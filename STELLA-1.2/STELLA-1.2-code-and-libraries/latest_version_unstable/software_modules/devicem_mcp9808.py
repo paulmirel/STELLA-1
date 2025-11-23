@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_mcp9808
-from /classm_device import Device
+from .classm_device import Device
 
             
 def initialize_mcp9808_air_thermometer( instrument ):

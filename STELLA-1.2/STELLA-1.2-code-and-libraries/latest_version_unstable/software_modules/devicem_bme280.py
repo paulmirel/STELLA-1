@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 from adafruit_bme280 import basic as adafruit_bme280
-from /classm_device import Device
+from .classm_device import Device
 
 def initialize_bme280_air_sensor( instrument ):
     bme280_air_sensor = Null_bme280_Air_Sensor()

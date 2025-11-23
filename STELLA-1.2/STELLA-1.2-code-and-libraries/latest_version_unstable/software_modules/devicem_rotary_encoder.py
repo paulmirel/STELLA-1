@@ -5,7 +5,7 @@
 import rotaryio
 import digitalio
 import time
-from /classm_device import Device
+from .classm_device import Device
             
 def increment_select( page ):
     select_value = (page.select_value + encoder_move) % page.number_of_select_positions

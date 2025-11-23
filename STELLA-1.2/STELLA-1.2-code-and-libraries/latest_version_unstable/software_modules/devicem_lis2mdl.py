@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_lis2mdl
-from /classm_device import Device
+from .classm_device import Device
 
             
 def initialize_lis2mdl_magnetic_field_sensor( instrument ):

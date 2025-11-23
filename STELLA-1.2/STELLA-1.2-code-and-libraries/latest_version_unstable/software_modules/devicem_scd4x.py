@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 import adafruit_scd4x
-from /classm_device import Device
+from .classm_device import Device
 
 def initialize_scd4x_co2_sensor( instrument ):
     scd4x_co2_sensor = Null_scd4x_CO2_Sensor()

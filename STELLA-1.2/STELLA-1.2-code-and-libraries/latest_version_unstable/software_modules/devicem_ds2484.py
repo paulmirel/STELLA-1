@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 from adafruit_ds248x import Adafruit_DS248x
-from /classm_device import Device
+from .classm_device import Device
 
 def initialize_ds2484_1_wire_thermometer( instrument ):
     ds2484_1_wire_thermometer = Null_ds2484_1_Wire_Thermometer_Reader()

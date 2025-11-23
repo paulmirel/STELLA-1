@@ -3,7 +3,7 @@
 # Author Paul Mirel
 
 from adafruit_pm25.i2c import PM25_I2C
-from /classm_device import Device
+from .classm_device import Device
             
 
 def initialize_pmsa0031_particulates_sensor( instrument ):

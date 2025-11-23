@@ -6,7 +6,7 @@ import displayio
 from adafruit_display_text import label
 import vectorio
 import terminalio
-from /classm_page import Page
+from .classm_page import Page
 
 class Main_Menu_Page( Page ):
     def __init__( self, palette):
