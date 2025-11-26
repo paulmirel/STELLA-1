@@ -12,6 +12,7 @@ from .classm_page import Page
 class Controls_Page( Page ):
     def __init__( self, palette, gps, battery_monitor ):
         super().__init__()
+        self.page_name = "Controls"
         self.palette = palette
         self.gps = gps
         self.battery_monitor = battery_monitor

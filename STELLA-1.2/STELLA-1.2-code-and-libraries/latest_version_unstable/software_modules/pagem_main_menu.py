@@ -11,6 +11,7 @@ from .classm_page import Page
 class Main_Menu_Page( Page ):
     def __init__( self, palette):
         super().__init__()
+        self.page_name = "Main"
         self.palette = palette
     def make_group( self ):
         menu_list = "Remote Sense", "Air Analyzer", "Sensors", "Time / Place", "*future use", "*future use", "*future use", "*future use"#, "* Air Analyz", "* Heat", "* Plants"

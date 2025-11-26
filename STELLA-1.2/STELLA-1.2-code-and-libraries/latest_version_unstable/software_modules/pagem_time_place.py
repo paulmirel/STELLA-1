@@ -10,6 +10,7 @@ from .classm_page import Page
 class Time_Place_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
+        self.page_name = "Time"
         self.palette = instrument.palette
     def make_group( self ):
         self.group = displayio.Group()

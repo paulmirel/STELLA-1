@@ -10,13 +10,15 @@ from .classm_page import Page
 
 class Remote_Sensing_Page( Page ):
     def __init__( self, instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ):
+        super().__init__()
+        self.page_name = "Remote"
         self.instrument = instrument
         self.palette = instrument.palette
         self.spectral_register = spectral_register
         self.hdc3022_air_sensor = hdc3022_air_sensor
         self.mlx90614_surface_thermometer = mlx90614_surface_thermometer
         self.lv_ez_mb1013_rangefinder = lv_ez_mb1013_rangefinder
-        super().__init__()
+
     def make_group( self ):
         extra_space = 8
         self.group = displayio.Group()

@@ -9,9 +9,10 @@ import terminalio
 from .classm_page import Page
 
 
-class Sensor_List_Page( Page ):
+class Sensors_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
+        self.page_name = "Sensors"
         self.palette = instrument.palette
     def make_group( self ):
         self.group = displayio.Group()
@@ -73,9 +74,9 @@ class Sensor_List_Page( Page ):
             instrument.button_pressed = False
 
 
-def make_sensor_list_page( instrument ):
-    instrument.welcome_page.announce( "make_sensor_list_page" )
-    page = Sensor_List_Page( instrument )
+def make_sensors_page( instrument ):
+    instrument.welcome_page.announce( "make_sensors_page" )
+    page = Sensors_Page( instrument )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )

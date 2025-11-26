@@ -12,6 +12,7 @@ from .classm_page import Page
 class Generic_Sensor_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
+        self.page_name = "Generic"
         self.palette = instrument.palette
     def make_group( self ):
         self.group = displayio.Group()

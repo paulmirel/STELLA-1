@@ -87,7 +87,7 @@ from software_modules import devicem_pcf8523_rtc, devicem_neopixel
 from software_modules import devicem_ili9341_display, devicem_gps
 from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
-from software_modules import pagem_settings, pagem_sensor_list, pagem_generic_sensor
+from software_modules import pagem_settings, pagem_sensors, pagem_generic_sensor
 from software_modules import pagem_remote_sensing, pagem_air_analyzer, pagem_time_place
 
 
@@ -238,7 +238,7 @@ def main():
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument ) #2
     status_page = pagem_status.make_status_page( instrument ) #3
     settings_page = pagem_settings.make_settings_page( instrument ) #4
-    sensor_list_page = pagem_sensor_list.make_sensor_list_page( instrument ) #5
+    sensors_page = pagem_sensors.make_sensors_page( instrument ) #5
     generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument ) #6
     time_place_page = pagem_time_place.make_time_place_page( instrument ) #7
     air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument ) #8

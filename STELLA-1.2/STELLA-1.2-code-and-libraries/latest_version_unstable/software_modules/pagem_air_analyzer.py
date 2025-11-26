@@ -7,22 +7,12 @@ import vectorio
 import terminalio
 from .classm_page import Page
 
-class Page:
-    def __init__( self ):
-        pass
-    def show(self):
-        self.group.hidden = False
-    def hide(self):
-        self.group.hidden = True
-    def update_values(self):
-        pass
-
-
 
 class Air_Analyzer_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
         self.palette = instrument.palette
+        self.page_name = "Air"
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )

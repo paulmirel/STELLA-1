@@ -11,6 +11,7 @@ from .classm_page import Page
 class Welcome_Page( Page ):
     def __init__( self ):
         super().__init__()
+        self.page_name = "Welcome"
     def make_group( self, svn ):
         self.group = displayio.Group()
         try:
