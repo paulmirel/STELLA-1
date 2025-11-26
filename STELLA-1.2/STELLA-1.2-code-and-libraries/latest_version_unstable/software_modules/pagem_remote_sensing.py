@@ -18,6 +18,8 @@ class Remote_Sensing_Page( Page ):
         self.hdc3022_air_sensor = hdc3022_air_sensor
         self.mlx90614_surface_thermometer = mlx90614_surface_thermometer
         self.lv_ez_mb1013_rangefinder = lv_ez_mb1013_rangefinder
+        self.selection = 0
+        self.selection_count = 0
 
     def make_group( self ):
         extra_space = 8
@@ -50,6 +52,7 @@ class Remote_Sensing_Page( Page ):
         self.scale_text_area = label.Label(terminalio.FONT, text=scale_text, color=self.palette[0])
         scale_group.append(self.scale_text_area)
         self.group.append(scale_group)
+        self.selection_count += 1
         # units
         units_y_select_x = offset + scale_select_width - select_width
         units_y_color_x = units_y_select_x + select_width
@@ -66,6 +69,7 @@ class Remote_Sensing_Page( Page ):
         self.units_y_text_area = label.Label(terminalio.FONT, text=units_y_text, color=self.palette[0])
         units_y_group.append(self.units_y_text_area)
         self.group.append(units_y_group)
+        self.selection_count += 1
         # spectrum
         spectrum_select_x = offset + scale_select_width + units_y_select_width - 2* select_width
         spectrum_color_x = spectrum_select_x + select_width
@@ -86,6 +90,7 @@ class Remote_Sensing_Page( Page ):
         self.spectrum_text_area = label.Label(terminalio.FONT, text=spectrum_text, color=self.palette[0])
         spectrum_group.append(self.spectrum_text_area)
         self.group.append(spectrum_group)
+        self.selection_count += 1
 
 
         # exposure
@@ -104,6 +109,7 @@ class Remote_Sensing_Page( Page ):
         self.exposure_text_area = label.Label(terminalio.FONT, text=exposure_text, color=self.palette[0])
         exposure_group.append(self.exposure_text_area)
         self.group.append(exposure_group)
+        self.selection_count += 1
 
         # lamps
         lamps_select_x = offset + scale_select_width + units_y_select_width + spectrum_select_width + exposure_select_width - 4* select_width
@@ -121,6 +127,7 @@ class Remote_Sensing_Page( Page ):
         self.lamps_text_area = label.Label(terminalio.FONT, text=lamps_text, color=self.palette[0])
         lamps_group.append(self.lamps_text_area)
         self.group.append(lamps_group)
+        self.selection_count += 1
         # lower controls
         lower_control_height = 14
         lower_select_y = 240 - offset - separator_bar_height - lower_control_height - select_width
@@ -143,6 +150,8 @@ class Remote_Sensing_Page( Page ):
         self.data_source_text_area = label.Label(terminalio.FONT, text=data_source_text, color=self.palette[0])
         data_source_group.append(self.data_source_text_area)
         self.group.append(data_source_group)
+        self.selection_count += 1
+        
 
         #graph_settings
         graph_settings_select_x = offset + data_source_select_width
@@ -160,6 +169,7 @@ class Remote_Sensing_Page( Page ):
         self.graph_settings_text_area = label.Label(terminalio.FONT, text=graph_settings_text, color=self.palette[0])
         graph_settings_group.append(self.graph_settings_text_area)
         self.group.append(graph_settings_group)
+        self.selection_count += 1
         # units_x
         units_x_select_x = offset + data_source_control_width +graph_settings_select_width+ extra_space - 4
         units_x_color_x = units_x_select_x + select_width
@@ -176,6 +186,7 @@ class Remote_Sensing_Page( Page ):
         self.units_x_text_area = label.Label(terminalio.FONT, text=units_x_text, color=self.palette[0])
         units_x_group.append(self.units_x_text_area)
         self.group.append(units_x_group)
+        self.selection_count += 1
 
         # table / graph
         table_graph_select_width = 46
@@ -193,6 +204,7 @@ class Remote_Sensing_Page( Page ):
         self.table_graph_text_area = label.Label(terminalio.FONT, text=table_graph_text, color=self.palette[0])
         table_graph_group.append(self.table_graph_text_area)
         self.group.append(table_graph_group)
+        self.selection_count += 1
 
         # live
         live_select_width = 36
@@ -210,6 +222,7 @@ class Remote_Sensing_Page( Page ):
         self.live_text_area = label.Label(terminalio.FONT, text=live_text, color=self.palette[0])
         live_group.append(self.live_text_area)
         self.group.append(live_group)
+        self.selection_count += 1
 
         # RETURN
 
@@ -228,6 +241,8 @@ class Remote_Sensing_Page( Page ):
         self.return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
         return_group.append(self.return_text_area)
         self.group.append(return_group)
+        self.selection_count += 1
+        
         right_sidebar_width = 50
         right_sidebar_x = 320 - right_sidebar_width#tbd remove
         range_text_y = upper_control_y + 25

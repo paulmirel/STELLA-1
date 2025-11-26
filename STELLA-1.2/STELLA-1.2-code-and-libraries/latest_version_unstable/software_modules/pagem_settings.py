@@ -13,6 +13,9 @@ class Settings_Page( Page ):
         super().__init__()
         self.page_name = "Settings"
         self.palette = instrument.palette
+        self.selection = 0
+        self.selection_count = 0
+        
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )

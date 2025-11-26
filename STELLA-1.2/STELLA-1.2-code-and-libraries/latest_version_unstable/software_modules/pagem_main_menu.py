@@ -13,6 +13,8 @@ class Main_Menu_Page( Page ):
         super().__init__()
         self.page_name = "Main"
         self.palette = palette
+        self.selection = 0
+        self.selection_count = 0
     def make_group( self ):
         menu_list = "Remote Sense", "Air Analyzer", "Sensors", "Time / Place", "*future use", "*future use", "*future use", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
         menu_color_list = 20, 12, 21, 14, 19, 19, 19, 19
@@ -66,27 +68,42 @@ class Main_Menu_Page( Page ):
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[0],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border))
         self.group.append( choice_rectangles[0] )
+        self.selection_count += 1
+        
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[1],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border))
         self.group.append( choice_rectangles[1] )
+        self.selection_count += 1
+        
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[2],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border+selection_offset_y))
         self.group.append( choice_rectangles[2] )
+        self.selection_count += 1
+        
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[3],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border+selection_offset_y))
         self.group.append( choice_rectangles[3] )
+        self.selection_count += 1
+        
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[4],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border+selection_offset_y*2))
         self.group.append( choice_rectangles[4] )
+        self.selection_count += 1
+        
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[5],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border+selection_offset_y*2))
         self.group.append( choice_rectangles[5] )
+        self.selection_count += 1
+        
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[6],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border+selection_offset_y*3))
         self.group.append( choice_rectangles[6] )
+        self.selection_count += 1
+        
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[7],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border+selection_offset_y*3))
         self.group.append( choice_rectangles[7] )
+        self.selection_count += 1
 
 
 
@@ -133,6 +150,8 @@ class Main_Menu_Page( Page ):
         status_text_area = label.Label(terminalio.FONT, text=status_text, color=self.palette[0])
         status_group.append(status_text_area)
         self.group.append(status_group)
+        self.selection_count += 1
+        
         more_text =   "*More.."
         more_group = displayio.Group(scale=2, x=footer_text_start_x+footer_offset_x, y=footer_text_y)
         more_text_area = label.Label(terminalio.FONT, text=more_text, color=self.palette[0])
@@ -143,6 +162,8 @@ class Main_Menu_Page( Page ):
         return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
         return_group.append(return_text_area)
         self.group.append(return_group)
+        self.selection_count += 1
+        
         return self.group
 
     def update_values( self, instrument ):

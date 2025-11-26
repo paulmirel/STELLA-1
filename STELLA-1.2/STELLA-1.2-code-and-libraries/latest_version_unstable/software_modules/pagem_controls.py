@@ -16,8 +16,8 @@ class Controls_Page( Page ):
         self.palette = palette
         self.gps = gps
         self.battery_monitor = battery_monitor
-        self.select_value = 2
-        self.number_of_select_values = 7
+        self.selection = 3
+        self.selection_count = 0
     def make_group( self ):
         self.group = displayio.Group()
         control_bar_height = 54
@@ -52,6 +52,7 @@ class Controls_Page( Page ):
         self.gps_value_text_area = label.Label(terminalio.FONT, text=gps_value_text, color=self.palette[9])
         gps_value_group.append(self.gps_value_text_area)
         self.group.append(gps_value_group)
+        self.selection_count += 1
         # batch
         batch_select_x = 2*offset+gps_select_width-3
         batch_color_x = batch_select_x + select_width
@@ -73,6 +74,7 @@ class Controls_Page( Page ):
         self.batch_value_text_area = label.Label(terminalio.FONT, text=batch_value_text, color=self.palette[9])
         self.batch_value_group.append(self.batch_value_text_area)
         self.group.append(self.batch_value_group)
+        self.selection_count += 1
         # pause and record
         pause_record_select_x = 2*offset+gps_select_width+batch_select_width+2
         pause_record_x = pause_record_select_x + select_width
@@ -92,6 +94,7 @@ class Controls_Page( Page ):
         self.group.append( self.record_circle )
         #self.record_circle.hidden = True
         self.pause_record_select.hidden = True
+        self.selection_count += 1
         # burst
         burst_select_x = pause_record_select_width + pause_record_x # - offset
         burst_color_x = burst_select_x + select_width
@@ -113,29 +116,31 @@ class Controls_Page( Page ):
         self.burst_value_text_area = label.Label(terminalio.FONT, text=burst_value_text, color=self.palette[9])
         burst_value_group.append(self.burst_value_text_area)
         self.group.append(burst_value_group)
-        # interval
-        interval_select_x = burst_select_width + burst_color_x - 2
-        interval_color_x = interval_select_x + select_width
-        interval_select_width = 58
-        self.interval_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=interval_select_width, height=select_height, x=interval_select_x, y=select_y)
-        self.group.append( self.interval_select )
-        self.interval_select.hidden = True
-        interval_control_width = interval_select_width - 2 * select_width
-        interval_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=7, width=interval_control_width, height=control_height, x=interval_color_x, y=control_y)
-        self.group.append( interval_color )
-        interval_text_x = interval_color_x + 5
-        interval_group = displayio.Group(scale=1, x=interval_text_x-3, y=text_y1)
-        interval_text = "settings"
-        interval_text_area = label.Label(terminalio.FONT, text=interval_text, color=self.palette[9])
-        interval_group.append(interval_text_area)
-        self.group.append(interval_group)
-        interval_value_group = displayio.Group(scale=2, x=interval_text_x+3, y=text_y2)
-        interval_value_text = " >>"
-        self.interval_value_text_area = label.Label(terminalio.FONT, text=interval_value_text, color=self.palette[9])
-        interval_value_group.append(self.interval_value_text_area)
-        self.group.append(interval_value_group)
+        self.selection_count += 1
+        # settings
+        settings_select_x = burst_select_width + burst_color_x - 2
+        settings_color_x = settings_select_x + select_width
+        settings_select_width = 58
+        self.settings_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=settings_select_width, height=select_height, x=settings_select_x, y=select_y)
+        self.group.append( self.settings_select )
+        self.settings_select.hidden = True
+        settings_control_width = settings_select_width - 2 * select_width
+        settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=7, width=settings_control_width, height=control_height, x=settings_color_x, y=control_y)
+        self.group.append( settings_color )
+        settings_text_x = settings_color_x + 5
+        settings_group = displayio.Group(scale=1, x=settings_text_x-3, y=text_y1)
+        settings_text = "settings"
+        settings_text_area = label.Label(terminalio.FONT, text=settings_text, color=self.palette[9])
+        settings_group.append(settings_text_area)
+        self.group.append(settings_group)
+        settings_value_group = displayio.Group(scale=2, x=settings_text_x+3, y=text_y2)
+        settings_value_text = " >>"
+        self.settings_value_text_area = label.Label(terminalio.FONT, text=settings_value_text, color=self.palette[9])
+        settings_value_group.append(self.settings_value_text_area)
+        self.group.append(settings_value_group)
+        self.selection_count += 1
         # battery
-        battery_select_x = interval_select_width + interval_color_x - 2
+        battery_select_x = settings_select_width + settings_color_x - 2
         battery_color_x = battery_select_x + select_width
         battery_select_width = 56
         self.battery_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=battery_select_width, height=select_height, x=battery_select_x, y=select_y)
@@ -155,6 +160,7 @@ class Controls_Page( Page ):
         self.battery_value_text_area = label.Label(terminalio.FONT, text=battery_value_text, color=self.palette[9])
         battery_value_group.append(self.battery_value_text_area)
         self.group.append(battery_value_group)
+        self.selection_count += 1
         return self.group
     def update_burst_countdown( self, value ):
         if value < 10:
@@ -220,12 +226,12 @@ class Controls_Page( Page ):
             else:
                 self.burst_select.hidden = True
             if instrument.main_menu_select == 4:
-                self.interval_select.hidden = False
+                self.settings_select.hidden = False
                 if instrument.button_pressed:
                     instrument.active_page_number = 4
                     instrument.button_pressed = False
             else:
-                self.interval_select.hidden = True
+                self.settings_select.hidden = True
             if instrument.main_menu_select == 5:
                 self.battery_select.hidden = False
                 if instrument.button_pressed:
@@ -266,12 +272,12 @@ class Controls_Page( Page ):
             else:
                 self.burst_select.hidden = True
             if instrument.remote_sensing_select == 4:
-                self.interval_select.hidden = False
+                self.settings_select.hidden = False
                 if instrument.button_pressed:
                     instrument.active_page_number = 4
                     instrument.button_pressed = False
             else:
-                self.interval_select.hidden = True
+                self.settings_select.hidden = True
             if instrument.remote_sensing_select == 5:
                 self.battery_select.hidden = False
                 if instrument.button_pressed:

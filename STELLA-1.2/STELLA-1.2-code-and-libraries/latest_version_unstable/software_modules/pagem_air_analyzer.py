@@ -13,6 +13,7 @@ class Air_Analyzer_Page( Page ):
         super().__init__()
         self.palette = instrument.palette
         self.page_name = "Air"
+        self.selection = 0
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
