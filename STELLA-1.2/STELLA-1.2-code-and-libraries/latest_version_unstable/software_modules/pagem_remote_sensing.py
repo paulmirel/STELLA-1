@@ -505,6 +505,7 @@ def make_remote_sensing_page( instrument, spectral_register, hdc3022_air_sensor,
 class Remote_Sensing_Missing_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
+        self.page_name = "Remote"
         self.palette = instrument.palette
     def make_group( self ):
         self.group = displayio.Group()

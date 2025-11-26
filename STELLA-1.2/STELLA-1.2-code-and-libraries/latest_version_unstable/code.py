@@ -250,6 +250,7 @@ def main():
         remote_sensing_page.add_spectral_graph_page( spectral_graph_page )
     else:
         remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument ) #9 alt
+    instrument.make_pages_dictionary()
 
 
 
@@ -460,6 +461,11 @@ class Instrument:
             self.update_filename()
             self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
             self.measurement_counter = 0
+    def make_pages_dictionary( self ):
+        self.pages_dict = {}
+        for index in range (0, len(self.pages_list) ):
+            self.pages_dict[ self.pages_list[index].page_name ] = index
+            print(self.pages_list[index].page_name, index)
     def make_band_list( self ):
         self.wavelength_bands_list = []
         for sensor in self.spectral_sensors_present:
@@ -567,35 +573,6 @@ class Instrument:
 def create_instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer ):
     instrument = Instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer )
     return instrument
-
-
-class Page:
-    def __init__( self ):
-        pass
-    def show(self):
-        self.group.hidden = False
-    def hide(self):
-        self.group.hidden = True
-    def update_values(self):
-        pass
-
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
 
 def initialize_uart( txpin, rxpin ):
     try:
