@@ -31,6 +31,7 @@ from analogio import AnalogIn
 import sys
 
 
+
 # functional imports
 import math
 
@@ -270,36 +271,30 @@ def main():
     last_sample_time = time.monotonic() - instrument.sample_interval_s
     instrument.take_burst = False
     instrument.sample_interval_s = 2
+    accumulator_cycles = 5
+    loop_times = []
     try:
         if vfs:
             onboard_neopixel.fill(devicem_neopixel.GREEN)
+        instrument.check_inputs()
         while operational:
             loop_start = time.monotonic()
-            instrument.show_active_page()
-            instrument.update_active_page()
-            for sensor in instrument.sensors_present:
+            #instrument.show_active_page()               # working time 0ms
+            #instrument.update_active_page()             # working time 80ms
+            instrument.handle_inputs()
+            controls_page.update_values( instrument )   # working time 21ms
+            for sensor in instrument.sensors_present:   # minimum sensors, battery monitor, GPS: working time ~300ms
                 sensor.read()
-            for sensor in instrument.sensors_present:
-                print( sensor.pn, end= ": ")
-                sensor.printlog()
+                instrument.handle_inputs()
+            if False:
+                for sensor in instrument.sensors_present:
+                    print( sensor.pn, end= ": ")
+                    sensor.printlog()
+                    instrument.handle_inputs()
             print()
-            while time.monotonic() < last_sample_time + instrument.sample_interval_s:#) and instrument.record) or instrument.take_burst:
-                pass
-            last_sample_time = time.monotonic()
+
             #print( "sample interval satified at {} s".format(time.monotonic()-first_sample_time ))
             '''
-            for sensor in instrument.sensors_present:
-                sensor.read()
-            gps.read()
-            controls_page.update_values( instrument )
-
-            loop_times = []
-
-
-
-
-
-            controls_page.update_values( instrument )
             instrument.check_inputs()
             if False:
                 for index in range (0,len(main_menu_page.selection_rectangles)):
@@ -308,7 +303,6 @@ def main():
                         main_menu_page.selection_rectangles[index-1].hidden = True
                     time.sleep(2)
                 main_menu_page.selection_rectangles[-1].hidden = True
-
 
             if not instrument.input_flag:
                 if ((time.monotonic() > last_sample_time + instrument.sample_interval_s) and instrument.record) or instrument.take_burst:
@@ -367,10 +361,7 @@ def main():
                         instrument.measurement_counter += 1
                     instrument.take_burst = False
                     controls_page.burst_color.color_index = 16
-            if instrument.input_flag:
-                #print( "process inputs, change control values")
-                if time.monotonic() > instrument.input_interval_start + instrument.input_interval:
-                    instrument.input_flag = False
+
 
             if not vfs:
                 onboard_neopixel.fill(RED)
@@ -381,18 +372,29 @@ def main():
             #TBD command source lamps
             #TBD command DAC output
             instrument.check_calendar_day()
+            '''
 
             loop_stop = time.monotonic()
             loop_time = loop_stop - loop_start
             #print("loop time {} s".format( loop_time ))
             loop_times.append(loop_time)
-            if len(loop_times) > 40:
+            if len(loop_times) > accumulator_cycles:
                 loop_times.pop(0)
-            #print( "max loop time = {}, min loop time = {}".format( max(loop_times), min(loop_times)))
-
-
+            #print( "loop working time: min = {}, max = {},".format( min(loop_times), max(loop_times)))
+            print( "loop working time average = {}".format( round(sum(loop_times)/len(loop_times),3)))
+            while (time.monotonic() < last_sample_time + instrument.sample_interval_s):
+                time.sleep(0.01)
+                instrument.handle_inputs()
+            last_sample_time = time.monotonic()
+            '''
+            if instrument.input_flag:
+                print( "process inputs, change control values")
+                controls_page.update_values( instrument )
+                if time.monotonic() > instrument.input_interval_start + instrument.input_interval:
+                    instrument.input_flag = False
+            '''
         #TBD announce exit message and clean up
-        '''
+
     finally:
         displayio.release_displays()
         print( "displayio displays released" )
@@ -443,6 +445,66 @@ class Instrument:
         self.main_menu_select_count = 17
         self.remote_sensing_select = 2  # default to record/pause
         self.remote_sensing_select_count = 17
+
+
+
+    def handle_inputs( self ):
+        self.check_inputs()
+        if self.input_flag:
+            print("do action, however long it takes to handle that input")
+            #on the active page show only the selection, and hide only the previous selection
+            self.input_flag = False
+    def check_inputs( self ):
+        self.rotary_encoder.read_encoder()
+        if self.rotary_encoder.encoder_flag:
+            self.encoder_increment = self.rotary_encoder.last_value
+            self.rotary_encoder.encoder_flag = False
+            self.input_flag = True
+            self.input_interval_start = time.monotonic()
+        if False:
+            self.rotary_encoder.read_button()
+            if self.rotary_encoder.button_flag:
+                self.buzzer.beep()
+                self.button_pressed = True
+                self.rotary_encoder.button_flag = False
+                self.input_flag = True
+                self.input_interval_start = time.monotonic()
+        if False:
+            self.touch_screen.read()
+            if not self.touch_screen.flag and self.touch_screen.is_touched:
+                self.touch_tx = self.touch_screen.tx
+                self.touch_ty = self.touch_screen.ty
+                self.input_flag = True
+                self.input_interval_start = time.monotonic()
+
+    def obsolete_update_active_page( self ):
+        self.pages_list[ self.active_page_number ].update_values( self )
+        if self.active_page_number == 9:
+            if spectral_sensors_detected:
+                self.spectral_graph_page.update_plot_data()
+        if self.encoder_increment != 0:
+            if self.active_page_number == 2:
+                self.main_menu_select = (self.main_menu_select + self.encoder_increment) % self.main_menu_select_count
+            if self.active_page_number == 9:
+                self.remote_sensing_select = (self.remote_sensing_select + self.encoder_increment) % self.remote_sensing_select_count
+            self.encoder_increment = 0
+
+    def obsolete_show_active_page( self ):
+        if self.active_page_number != self.last_active_page_number:
+            self.last_active_page_number = self.active_page_number
+            for index in range (0, len( self.pages_list)):
+                if index == self.active_page_number:
+                    self.pages_list[ index ].show()
+                else:
+                    self.pages_list[ index ].hide()
+            if self.active_page_number == 2 or self.active_page_number == 9: # main menu, remote sensing
+                self.pages_list[ 1 ].show()  # controls
+            if self.active_page_number == 9:
+                if spectral_sensors_detected:
+                    self.pages_list[ 10 ].show() # spectral graph
+
+
+
     def update_batch(self):
         self.batch_number = update_batch(self.datestamp)
     def update_time(self):
@@ -465,18 +527,14 @@ class Instrument:
         self.pages_dict = {}
         for index in range (0, len(self.pages_list) ):
             self.pages_dict[ self.pages_list[index].page_name ] = index
-            print(self.pages_list[index].page_name, index)
+            #print(self.pages_list[index].page_name, index)
     def make_band_list( self ):
         self.wavelength_bands_list = []
         for sensor in self.spectral_sensors_present:
             for band in sensor.wavelength_bands_nm:
                 self.wavelength_bands_list.append(band)
         self.wavelength_bands_list_sorted = sorted( self.wavelength_bands_list )
-        #print( "line 411 -- wavelength_bands_list_sorted: ")
-        #print( self.wavelength_bands_list_sorted  )
         self.number_of_plot_points = len( self.wavelength_bands_list_sorted )
-        #print( "number of bands: ", end = "")
-        #print( self.number_of_plot_points )
     def make_header( self ):
         self.header = "unique_identifier"
         self.header += ", unique_measurement_number"
@@ -523,52 +581,12 @@ class Instrument:
         system_log += ", {}".format( self.burst_counter )
         system_log += ", {}".format( self.decimal_time )
         return system_log
-    def check_inputs( self ):
-        self.touch_screen.read()
-        if not self.touch_screen.flag and self.touch_screen.is_touched:
-            self.touch_tx = self.touch_screen.tx
-            self.touch_ty = self.touch_screen.ty
-            self.input_flag = True
-            self.input_interval_start = time.monotonic()
-        self.rotary_encoder.read_button()
-        if self.rotary_encoder.button_flag:
-            self.buzzer.beep()
-            self.button_pressed = True
-            self.rotary_encoder.button_flag = False
-            self.input_flag = True
-            self.input_interval_start = time.monotonic()
-        self.rotary_encoder.read_encoder()
-        if self.rotary_encoder.encoder_flag:
-            self.encoder_increment = self.rotary_encoder.last_value
-            self.rotary_encoder.encoder_flag = False
-            self.input_flag = True
-            self.input_interval_start = time.monotonic()
+
+
     def add_spectral_graph_page( self, spectral_graph_page ):
         self.spectral_graph_page = spectral_graph_page
-    def show_active_page( self ):
-        if self.active_page_number != self.last_active_page_number:
-            self.last_active_page_number = self.active_page_number
-            for index in range (0, len( self.pages_list)):
-                if index == self.active_page_number:
-                    self.pages_list[ index ].show()
-                else:
-                    self.pages_list[ index ].hide()
-            if self.active_page_number == 2 or self.active_page_number == 9: # main menu, remote sensing
-                self.pages_list[ 1 ].show()  # controls
-            if self.active_page_number == 9:
-                if spectral_sensors_detected:
-                    self.pages_list[ 10 ].show() # spectral graph
-    def update_active_page( self ):
-        self.pages_list[ self.active_page_number ].update_values( self )
-        if self.active_page_number == 9:
-            if spectral_sensors_detected:
-                self.spectral_graph_page.update_plot_data()
-        if self.encoder_increment != 0:
-            if self.active_page_number == 2:
-                self.main_menu_select = (self.main_menu_select + self.encoder_increment) % self.main_menu_select_count
-            if self.active_page_number == 9:
-                self.remote_sensing_select = (self.remote_sensing_select + self.encoder_increment) % self.remote_sensing_select_count
-            self.encoder_increment = 0
+
+
 
 def create_instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer ):
     instrument = Instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer )
