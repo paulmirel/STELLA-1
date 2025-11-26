@@ -174,7 +174,13 @@ class Controls_Page( Page ):
         else:
             self.gps_value_text_area.text = "nofix"
             self.gps_color.color_index = 8
-        self.battery_value_text_area.text = "{}%".format( int(self.battery_monitor.percentage))
+        battery_level = int(self.battery_monitor.percentage)
+        if battery_level < 100:
+            battery_text = "{}%".format(battery_level)
+        else:
+            battery_text = "{}".format(battery_level)
+        self.battery_value_text_area.text =  battery_text
+        
         if instrument.burst_count < 10:
             self.burst_value_text_area.text = " {}".format(instrument.burst_count)
         else:
