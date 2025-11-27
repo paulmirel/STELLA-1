@@ -420,13 +420,17 @@ class Instrument:
     def show_active_page( self ):
         if self.active_page_number != self.last_active_page_number:
             self.pages_list[ self.last_active_page_number ].hide()
-            self.pages_list[ self.active_page_number ].show()
-            self.last_active_page_number = self.active_page_number
             if self.pages_list[self.active_page_number].page_name == "Main" or self.pages_list[self.active_page_number].page_name == "Remote":
                 self.pages_list[ self.pages_dict["Controls"] ].show()
+                self.pages_list[ self.active_page_number ].show()
                 self.combined_page_selection = 0
-                self.pages_list[ self.last_active_page_number ].hide_all_selections()
+                self.pages_list[ self.active_page_number ].hide_all_selections()
                 self.pages_list[ self.pages_dict["Controls"] ].update_selection()
+            else:
+                self.pages_list[ self.pages_dict["Controls"] ].hide()
+                self.pages_list[ self.active_page_number ].show()
+            self.last_active_page_number = self.active_page_number
+
             if self.pages_list[self.active_page_number].page_name == "Remote":
                 if spectral_sensors_detected:
                     self.pages_list[ self.pages_dict["Spectral_Graph"] ].show()
@@ -472,7 +476,8 @@ class Instrument:
                         active_page.action( self )
                     #print( self.combined_page_selection )
                 else:
-                    print( active_page.selection  )
+                    active_page.action( self )
+                    #print( active_page.selection  )
                 #print( "button pressed, do something with that")
                 self.button_pressed = False
             self.input_flag = False

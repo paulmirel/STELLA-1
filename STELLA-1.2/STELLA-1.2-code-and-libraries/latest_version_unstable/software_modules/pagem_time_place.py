@@ -69,6 +69,7 @@ class Time_Place_Page( Page ):
         return_x = return_select_x + select_width
         self.return_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=return_select_width, height=return_select_height, x=return_select_x, y=return_select_y)
         self.group.append( self.return_select )
+        self.selection_count += 1
         #self.return_select.hidden = True
         return_control_width = return_select_width - 2 * select_width
         self.return_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=return_control_width, height=return_height, x=return_x, y=return_y)
@@ -81,10 +82,12 @@ class Time_Place_Page( Page ):
         self.group.append(return_group)
 
         return self.group
-    def update_values( self, instrument ):
-        if instrument.button_pressed:
-            instrument.active_page_number = 2
-            instrument.button_pressed = False
+   
+    def action( self, instrument ):
+        instrument.active_page_number = instrument.pages_dict["Main"]
+    def update_selection():
+        pass
+
 
 
 def make_time_place_page( instrument ):
