@@ -15,7 +15,7 @@ class Main_Menu_Page( Page ):
         self.palette = palette
         self.selection = 0
         self.last_selection = 0
-        self.selection_count = 0
+        self.selection_count = 1
     def make_group( self ):
         menu_list = "Remote Sense", "Air Analyzer", "Sensors", "Time / Place", "*future use", "*future use", "*future use", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
         menu_color_list = 20, 12, 21, 14, 19, 19, 19, 19
@@ -35,8 +35,8 @@ class Main_Menu_Page( Page ):
         selection_start_y = 78
         selection_offset_x = 158
         selection_offset_y = 31
+        
         self.selection_rectangles = []
-        #TBD be more clever about this section
         self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x, y=selection_start_y))
         self.group.append( self.selection_rectangles[0] )
         self.selection_rectangles[0].hidden = True
@@ -171,12 +171,12 @@ class Main_Menu_Page( Page ):
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
 
-
     def update_values( self, instrument ):
         if instrument.main_menu_select in range( 10, 13 ): ### skip future use choices
             instrument.main_menu_select = 14
         if instrument.main_menu_select == 15:  ### skip future use *more option
             instrument.main_menu_select = 16
+        
         if instrument.main_menu_select == 6:
             self.selection_rectangles[0].hidden = False
             if instrument.button_pressed:

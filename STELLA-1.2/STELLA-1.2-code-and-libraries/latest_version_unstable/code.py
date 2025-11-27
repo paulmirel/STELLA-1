@@ -443,10 +443,10 @@ class Instrument:
         self.check_inputs()
         if self.input_flag:
             active_page = self.pages_list[ self.last_active_page_number ]
-            print("do action on page_name {}, however long it takes to handle that input".format(active_page.page_name))
             active_page.last_selection = active_page.selection
             active_page.selection = ( active_page.selection + self.encoder_increment ) % active_page.selection_count
             active_page.update_selection()
+            print("on page_name {}, selection = {}".format(active_page.page_name, active_page.selection))
             self.input_flag = False
 
     def check_inputs( self ):
