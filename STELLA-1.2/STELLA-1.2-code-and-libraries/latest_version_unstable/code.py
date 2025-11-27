@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.7.1"
+SOFTWARE_VERSION_NUMBER = "0.7.2"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -446,7 +446,7 @@ class Instrument:
             active_page = self.pages_list[ self.last_active_page_number ]
             controls_page = self.pages_list[ self.pages_dict["Controls"] ]
             if active_page.page_name == "Main" or active_page.page_name == "Remote":
-                print( "track the selection and hand off between both controls and the active page" )
+                #print( "track the selection and hand off between both controls and the active page" )
                 self.combined_page_last_selection = self.combined_page_selection
                 combined_selection_count = active_page.selection_count + controls_page.selection_count
                 self.combined_page_selection = (self.combined_page_selection + self.encoder_increment) % combined_selection_count
@@ -465,7 +465,9 @@ class Instrument:
                 active_page.last_selection = active_page.selection
                 active_page.selection = ( active_page.selection + self.encoder_increment ) % active_page.selection_count
                 active_page.update_selection()
+            self.encoder_increment = 0
             self.input_flag = False
+
 
     def check_inputs( self ):
         self.rotary_encoder.read_encoder()
@@ -473,22 +475,18 @@ class Instrument:
             self.encoder_increment = self.rotary_encoder.last_value
             self.rotary_encoder.encoder_flag = False
             self.input_flag = True
-            self.input_interval_start = time.monotonic()
-        if False:
-            self.rotary_encoder.read_button()
-            if self.rotary_encoder.button_flag:
-                self.buzzer.beep()
-                self.button_pressed = True
-                self.rotary_encoder.button_flag = False
-                self.input_flag = True
-                self.input_interval_start = time.monotonic()
+        self.rotary_encoder.read_button()
+        if self.rotary_encoder.button_flag:
+            self.buzzer.beep()
+            self.button_pressed = True
+            self.rotary_encoder.button_flag = False
+            self.input_flag = True
         if False:
             self.touch_screen.read()
             if not self.touch_screen.flag and self.touch_screen.is_touched:
                 self.touch_tx = self.touch_screen.tx
                 self.touch_ty = self.touch_screen.ty
                 self.input_flag = True
-                self.input_interval_start = time.monotonic()
 
 
 
