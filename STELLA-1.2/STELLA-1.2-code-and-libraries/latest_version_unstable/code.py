@@ -276,6 +276,8 @@ def main():
     try:
         if vfs:
             onboard_neopixel.fill(devicem_neopixel.GREEN)
+        else:
+            onboard_neopixel.fill(devicem_neopixel.RED)
         instrument.check_inputs()
         while operational:
             loop_start = time.monotonic()
@@ -293,17 +295,7 @@ def main():
                     instrument.handle_inputs()
             print()
 
-            #print( "sample interval satified at {} s".format(time.monotonic()-first_sample_time ))
             '''
-            instrument.check_inputs()
-            if False:
-                for index in range (0,len(main_menu_page.selection_rectangles)):
-                    main_menu_page.selection_rectangles[index].hidden = False
-                    if index > 0:
-                        main_menu_page.selection_rectangles[index-1].hidden = True
-                    time.sleep(2)
-                main_menu_page.selection_rectangles[-1].hidden = True
-
             if not instrument.input_flag:
                 if ((time.monotonic() > last_sample_time + instrument.sample_interval_s) and instrument.record) or instrument.take_burst:
                     last_sample_time = time.monotonic()
@@ -362,9 +354,6 @@ def main():
                     instrument.take_burst = False
                     controls_page.burst_color.color_index = 16
 
-
-            if not vfs:
-                onboard_neopixel.fill(RED)
             if False: #battery percentage < 20:
                 flash_indicator( battery_indicator )
             #TBD command 5V supply
@@ -373,7 +362,8 @@ def main():
             #TBD command DAC output
             instrument.check_calendar_day()
             '''
-
+            if not vfs:
+                onboard_neopixel.fill(devicem_neopixel.RED)
             loop_stop = time.monotonic()
             loop_time = loop_stop - loop_start
             #print("loop time {} s".format( loop_time ))
@@ -386,14 +376,6 @@ def main():
                 time.sleep(0.01)
                 instrument.handle_inputs()
             last_sample_time = time.monotonic()
-            '''
-            if instrument.input_flag:
-                print( "process inputs, change control values")
-                controls_page.update_values( instrument )
-                if time.monotonic() > instrument.input_interval_start + instrument.input_interval:
-                    instrument.input_flag = False
-            '''
-        #TBD announce exit message and clean up
 
     finally:
         displayio.release_displays()
@@ -457,13 +439,16 @@ class Instrument:
                 if spectral_sensors_detected:
                     self.pages_list[ self.pages_dict["Spectral_Graph"] ].show()
 
-
     def handle_inputs( self ):
         self.check_inputs()
         if self.input_flag:
-            print("do action, however long it takes to handle that input")
-            #on the active page show only the selection, and hide only the previous selection
+            active_page = self.pages_list[ self.last_active_page_number ]
+            print("do action on page_name {}, however long it takes to handle that input".format(active_page.page_name))
+            active_page.last_selection = active_page.selection
+            active_page.selection = ( active_page.selection + self.encoder_increment ) % active_page.selection_count
+            active_page.update_selection()
             self.input_flag = False
+
     def check_inputs( self ):
         self.rotary_encoder.read_encoder()
         if self.rotary_encoder.encoder_flag:

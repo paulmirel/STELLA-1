@@ -14,6 +14,7 @@ class Main_Menu_Page( Page ):
         self.page_name = "Main"
         self.palette = palette
         self.selection = 0
+        self.last_selection = 0
         self.selection_count = 0
     def make_group( self ):
         menu_list = "Remote Sense", "Air Analyzer", "Sensors", "Time / Place", "*future use", "*future use", "*future use", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
@@ -165,6 +166,11 @@ class Main_Menu_Page( Page ):
         self.selection_count += 1
         
         return self.group
+    
+    def update_selection( self ):
+        self.selection_rectangles[self.last_selection].hidden = True
+        self.selection_rectangles[self.selection].hidden = False
+
 
     def update_values( self, instrument ):
         if instrument.main_menu_select in range( 10, 13 ): ### skip future use choices
