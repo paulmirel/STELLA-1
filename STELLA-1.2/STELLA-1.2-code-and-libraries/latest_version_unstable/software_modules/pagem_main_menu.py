@@ -14,7 +14,7 @@ class Main_Menu_Page( Page ):
         self.page_name = "Main"
         self.palette = palette
         self.selection = 0
-        self.last_selection = -1 
+        self.last_selection = -1
         self.selection_count = 1
     def make_group( self ):
         menu_list = "Remote Sense", "Air Analyzer", "Sensors", "Time / Place", "*future use", "*future use", "*future use", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
@@ -153,7 +153,7 @@ class Main_Menu_Page( Page ):
         self.group.append(status_group)
         self.selection_count += 1
         
-        more_text =   "*More.."
+        more_text =   "*more.."
         more_group = displayio.Group(scale=2, x=footer_text_start_x+footer_offset_x, y=footer_text_y)
         more_text_area = label.Label(terminalio.FONT, text=more_text, color=self.palette[0])
         more_group.append(more_text_area)

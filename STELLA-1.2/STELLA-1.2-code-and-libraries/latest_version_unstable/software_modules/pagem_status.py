@@ -12,6 +12,7 @@ class Status_Page( Page ):
         super().__init__()
         self.page_name = "Status"
         self.palette = instrument.palette
+        self.instrument = instrument
         self.selection = 0
         self.selection_count = 0
         
@@ -21,7 +22,7 @@ class Status_Page( Page ):
         self.group.append( status_background )
         text_spacing_y = 28
         status_title_group = displayio.Group(scale=2, x=10, y=18)
-        status_title_text = "Instrument Status: TBD"
+        status_title_text = "Status: UID {}".format(self.instrument.uid)
         status_title_text_area = label.Label(terminalio.FONT, text=status_title_text, color=self.palette[0])
         status_title_group.append(status_title_text_area)
         self.group.append(status_title_group)
@@ -68,6 +69,11 @@ class Status_Page( Page ):
         self.group.append(return_group)
 
         return self.group
+        
+    def action( self, instrument ):
+        instrument.active_page_number = instrument.pages_dict["Main"]
+    def update_selection():
+        pass
     def update_values( self, instrument ):
         #if instrument.active_page_number == 3:
         if instrument.button_pressed:

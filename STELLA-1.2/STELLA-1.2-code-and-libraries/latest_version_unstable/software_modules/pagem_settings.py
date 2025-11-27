@@ -192,6 +192,12 @@ class Settings_Page( Page ):
         self.group.append(return_group)
 
         return self.group
+        
+    def action( self, instrument ):
+        instrument.active_page_number = instrument.pages_dict["Main"]
+    def update_selection():
+        pass
+        
     def update_values( self, instrument ):
         if instrument.button_pressed:
             instrument.active_page_number = 2

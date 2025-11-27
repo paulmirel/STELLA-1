@@ -275,7 +275,7 @@ def main():
             instrument.show_active_page()               # working time 0ms
             #instrument.update_active_page()             # working time 80ms
             instrument.handle_inputs()
-            #controls_page.update_values( instrument )   # working time 21ms
+            controls_page.update_values( instrument )   # working time 21ms
             for sensor in instrument.sensors_present:   # minimum sensors, battery monitor, GPS: working time ~300ms
                 sensor.read()
                 instrument.handle_inputs()
@@ -423,7 +423,6 @@ class Instrument:
             if self.pages_list[self.active_page_number].page_name == "Main" or self.pages_list[self.active_page_number].page_name == "Remote":
                 self.pages_list[ self.pages_dict["Controls"] ].show()
                 self.pages_list[ self.active_page_number ].show()
-                self.combined_page_selection = 0
                 self.pages_list[ self.active_page_number ].hide_all_selections()
                 self.pages_list[ self.pages_dict["Controls"] ].update_selection()
             else:
@@ -480,6 +479,7 @@ class Instrument:
                     #print( active_page.selection  )
                 #print( "button pressed, do something with that")
                 self.button_pressed = False
+            controls_page.update_values( self )
             self.input_flag = False
 
 
@@ -515,7 +515,7 @@ class Instrument:
             self.encoder_increment = 0
 
     def update_batch(self):
-        self.batch_number = update_batch(self.datestamp)
+        self.batch_number = functionm_file.update_batch(self.datestamp)
     def update_time(self):
         self.datestamp = self.hardware_clock.get_datestamp_now()
         self.iso_time = self.hardware_clock.get_iso_time_now()

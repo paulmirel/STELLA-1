@@ -186,7 +186,7 @@ class Controls_Page( Page ):
         else:
             self.burst_value_text_area.text = "{}".format(value)
     
-    def obsolete_update_values( self, instrument ):
+    def update_values( self, instrument ):
         if self.gps.fix():
             self.gps_value_text_area.text = " FIX"
             self.gps_color.color_index = 18
@@ -221,44 +221,20 @@ class Controls_Page( Page ):
         if self.selection == 0:
             print( "go to time_place page" )
             instrument.active_page_number = instrument.pages_dict["Time"]
-        if False:
-            if instrument.main_menu_select == 1:
-                self.batch_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.update_batch()
-                    instrument.button_pressed = False
-            else:
-                self.batch_select.hidden = True
-            if instrument.main_menu_select == 2:
-                self.pause_record_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.record = not instrument.record
-                    instrument.button_pressed = False
-            else:
-                self.pause_record_select.hidden = True
-            if instrument.main_menu_select == 3:
-                self.burst_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.take_burst = True
-                    instrument.record = False
-                    self.burst_color.color_index = 6
-                    instrument.button_pressed = False
-            else:
-                self.burst_select.hidden = True
-            if instrument.main_menu_select == 4:
-                self.settings_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.active_page_number = 4
-                    instrument.button_pressed = False
-            else:
-                self.settings_select.hidden = True
-            if instrument.main_menu_select == 5:
-                self.battery_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.active_page_number = 3
-                    instrument.button_pressed = False
-            else:
-                self.battery_select.hidden = True
+        if self.selection == 1:
+            instrument.update_batch()
+        if self.selection == 2:
+            instrument.record = not instrument.record
+        if self.selection == 3:
+            instrument.take_burst = True
+            instrument.record = False
+            self.burst_color.color_index = 6
+        if self.selection == 4:
+            instrument.active_page_number = instrument.pages_dict["Settings"]
+        if self.selection == 5:
+            instrument.active_page_number = instrument.pages_dict["Status"]
+    
+    
     def obsolete_actions(self):
         if instrument.active_page_number == 9: # remote sensing
             if instrument.remote_sensing_select == 0:
