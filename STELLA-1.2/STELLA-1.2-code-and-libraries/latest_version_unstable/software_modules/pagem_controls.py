@@ -217,16 +217,11 @@ class Controls_Page( Page ):
             self.batch_value_group.x = self.batch_text_x-3
 
         ## processing inputs
-
-
-        if instrument.active_page_number == 2: # main menu
-            if instrument.main_menu_select == 0:
-                self.gps_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.active_page_number = 7
-                    instrument.button_pressed = False
-            else:
-                self.gps_select.hidden = True
+    def action( self, instrument ):
+        if self.selection == 0:
+            print( "go to time_place page" )
+            instrument.active_page_number = instrument.pages_dict["Time"]
+        if False:
             if instrument.main_menu_select == 1:
                 self.batch_select.hidden = False
                 if instrument.button_pressed:
@@ -264,7 +259,7 @@ class Controls_Page( Page ):
                     instrument.button_pressed = False
             else:
                 self.battery_select.hidden = True
-
+    def obsolete_actions(self):
         if instrument.active_page_number == 9: # remote sensing
             if instrument.remote_sensing_select == 0:
                 self.gps_select.hidden = False
