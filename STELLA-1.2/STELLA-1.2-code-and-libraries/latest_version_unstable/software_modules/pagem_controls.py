@@ -16,8 +16,10 @@ class Controls_Page( Page ):
         self.palette = palette
         self.gps = gps
         self.battery_monitor = battery_monitor
-        self.selection = 3
+        self.selection = 0
+        self.last_selection = 0
         self.selection_count = 0
+        self.selection_rectangles = []
     def make_group( self ):
         self.group = displayio.Group()
         control_bar_height = 54
@@ -37,6 +39,7 @@ class Controls_Page( Page ):
         gps_select_width = 44
         self.gps_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=gps_select_width, height=select_height, x=gps_select_x, y=select_y)
         self.group.append( self.gps_select )
+        self.selection_rectangles.append( self.gps_select )
         self.gps_select.hidden = True
         gps_control_width = gps_select_width - 2 * select_width
         self.gps_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=8, width=gps_control_width, height=control_height, x=gps_color_x, y=control_y)
@@ -59,6 +62,7 @@ class Controls_Page( Page ):
         batch_select_width = 52
         self.batch_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=batch_select_width, height=select_height, x=batch_select_x, y=select_y)
         self.group.append( self.batch_select )
+        self.selection_rectangles.append( self.batch_select )
         self.batch_select.hidden = True
         batch_control_width = batch_select_width - 2 * select_width
         batch_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=6, width=batch_control_width, height=control_height, x=batch_color_x, y=control_y)
@@ -81,6 +85,7 @@ class Controls_Page( Page ):
         pause_record_select_width = select_height
         self.pause_record_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=pause_record_select_width, height=select_height, x=pause_record_select_x, y=select_y)
         self.group.append( self.pause_record_select )
+        self.selection_rectangles.append( self.pause_record_select )
         pause_record_control_width = pause_record_select_width - 2 * select_width
         pause_record_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=pause_record_control_width, height=control_height, x=pause_record_x, y=control_y)
         self.group.append( pause_record_color )
@@ -101,6 +106,7 @@ class Controls_Page( Page ):
         burst_select_width = 44
         self.burst_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=burst_select_width, height=select_height, x=burst_select_x, y=select_y)
         self.group.append( self.burst_select )
+        self.selection_rectangles.append( self.burst_select )
         self.burst_select.hidden = True
         burst_control_width = burst_select_width - 2 * select_width
         self.burst_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=16, width=burst_control_width, height=control_height, x=burst_color_x, y=control_y)
@@ -123,6 +129,7 @@ class Controls_Page( Page ):
         settings_select_width = 58
         self.settings_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=settings_select_width, height=select_height, x=settings_select_x, y=select_y)
         self.group.append( self.settings_select )
+        self.selection_rectangles.append( self.settings_select )
         self.settings_select.hidden = True
         settings_control_width = settings_select_width - 2 * select_width
         settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=7, width=settings_control_width, height=control_height, x=settings_color_x, y=control_y)
@@ -145,6 +152,7 @@ class Controls_Page( Page ):
         battery_select_width = 56
         self.battery_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=battery_select_width, height=select_height, x=battery_select_x, y=select_y)
         self.group.append( self.battery_select )
+        self.selection_rectangles.append( self.battery_select )
         self.battery_select.hidden = True
         battery_control_width = battery_select_width - 2 * select_width
         battery_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=15, width=battery_control_width, height=control_height, x=battery_color_x, y=control_y)
@@ -162,12 +170,23 @@ class Controls_Page( Page ):
         self.group.append(battery_value_group)
         self.selection_count += 1
         return self.group
+        
+    def update_selection( self ):
+        self.selection_rectangles[self.last_selection].hidden = True
+        self.selection_rectangles[self.selection].hidden = False
+    def hide_all_selections( self ):
+        for item in self.selection_rectangles:
+            if item.hidden == False:
+                item.hidden = True
+    
+    
     def update_burst_countdown( self, value ):
         if value < 10:
             self.burst_value_text_area.text = " {}".format(value)
         else:
             self.burst_value_text_area.text = "{}".format(value)
-    def update_values( self, instrument ):
+    
+    def obsolete_update_values( self, instrument ):
         if self.gps.fix():
             self.gps_value_text_area.text = " FIX"
             self.gps_color.color_index = 18

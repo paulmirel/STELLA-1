@@ -284,7 +284,7 @@ def main():
             instrument.show_active_page()               # working time 0ms
             #instrument.update_active_page()             # working time 80ms
             instrument.handle_inputs()
-            controls_page.update_values( instrument )   # working time 21ms
+            #controls_page.update_values( instrument )   # working time 21ms
             for sensor in instrument.sensors_present:   # minimum sensors, battery monitor, GPS: working time ~300ms
                 sensor.read()
                 instrument.handle_inputs()
@@ -423,10 +423,8 @@ class Instrument:
         self.active_page_number = 2
         self.last_active_page_number = 0
         self.take_burst = False
-        self.main_menu_select = 6  # default to first main menu item selected
-        self.main_menu_select_count = 17
-        self.remote_sensing_select = 2  # default to record/pause
-        self.remote_sensing_select_count = 17
+        self.combined_page_selection = 0
+        self.combined_page_last_selection = 0
 
     def show_active_page( self ):
         if self.active_page_number != self.last_active_page_number:
@@ -435,6 +433,9 @@ class Instrument:
             self.last_active_page_number = self.active_page_number
             if self.pages_list[self.active_page_number].page_name == "Main" or self.pages_list[self.active_page_number].page_name == "Remote":
                 self.pages_list[ self.pages_dict["Controls"] ].show()
+                self.combined_page_selection = 0
+                self.pages_list[ self.last_active_page_number ].hide_all_selections()
+                self.pages_list[ self.pages_dict["Controls"] ].update_selection()
             if self.pages_list[self.active_page_number].page_name == "Remote":
                 if spectral_sensors_detected:
                     self.pages_list[ self.pages_dict["Spectral_Graph"] ].show()
@@ -443,10 +444,27 @@ class Instrument:
         self.check_inputs()
         if self.input_flag:
             active_page = self.pages_list[ self.last_active_page_number ]
-            active_page.last_selection = active_page.selection
-            active_page.selection = ( active_page.selection + self.encoder_increment ) % active_page.selection_count
-            active_page.update_selection()
-            print("on page_name {}, selection = {}".format(active_page.page_name, active_page.selection))
+            controls_page = self.pages_list[ self.pages_dict["Controls"] ]
+            if active_page.page_name == "Main" or active_page.page_name == "Remote":
+                print( "track the selection and hand off between both controls and the active page" )
+                self.combined_page_last_selection = self.combined_page_selection
+                combined_selection_count = active_page.selection_count + controls_page.selection_count
+                self.combined_page_selection = (self.combined_page_selection + self.encoder_increment) % combined_selection_count
+                if self.combined_page_selection < controls_page.selection_count:
+                    controls_page.last_selection = controls_page.selection
+                    controls_page.selection = self.combined_page_selection
+                    active_page.hide_all_selections()
+                    controls_page.update_selection()
+                else:
+                    controls_page.hide_all_selections()
+                    active_page.last_selection = active_page.selection
+                    active_page.selection = self.combined_page_selection - controls_page.selection_count
+                    active_page.update_selection()
+                print( self.combined_page_selection )
+            else:
+                active_page.last_selection = active_page.selection
+                active_page.selection = ( active_page.selection + self.encoder_increment ) % active_page.selection_count
+                active_page.update_selection()
             self.input_flag = False
 
     def check_inputs( self ):
