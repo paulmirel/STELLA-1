@@ -279,7 +279,7 @@ def main():
         instrument.check_inputs()
         while operational:
             loop_start = time.monotonic()
-            #instrument.show_active_page()               # working time 0ms
+            instrument.show_active_page()               # working time 0ms
             #instrument.update_active_page()             # working time 80ms
             instrument.handle_inputs()
             controls_page.update_values( instrument )   # working time 21ms
@@ -446,6 +446,16 @@ class Instrument:
         self.remote_sensing_select = 2  # default to record/pause
         self.remote_sensing_select_count = 17
 
+    def show_active_page( self ):
+        if self.active_page_number != self.last_active_page_number:
+            self.pages_list[ self.last_active_page_number ].hide()
+            self.pages_list[ self.active_page_number ].show()
+            self.last_active_page_number = self.active_page_number
+            if self.pages_list[self.active_page_number].page_name == "Main" or self.pages_list[self.active_page_number].page_name == "Remote":
+                self.pages_list[ self.pages_dict["Controls"] ].show()
+            if self.pages_list[self.active_page_number].page_name == "Remote":
+                if spectral_sensors_detected:
+                    self.pages_list[ self.pages_dict["Spectral_Graph"] ].show()
 
 
     def handle_inputs( self ):
@@ -477,6 +487,8 @@ class Instrument:
                 self.input_flag = True
                 self.input_interval_start = time.monotonic()
 
+
+
     def obsolete_update_active_page( self ):
         self.pages_list[ self.active_page_number ].update_values( self )
         if self.active_page_number == 9:
@@ -488,22 +500,6 @@ class Instrument:
             if self.active_page_number == 9:
                 self.remote_sensing_select = (self.remote_sensing_select + self.encoder_increment) % self.remote_sensing_select_count
             self.encoder_increment = 0
-
-    def obsolete_show_active_page( self ):
-        if self.active_page_number != self.last_active_page_number:
-            self.last_active_page_number = self.active_page_number
-            for index in range (0, len( self.pages_list)):
-                if index == self.active_page_number:
-                    self.pages_list[ index ].show()
-                else:
-                    self.pages_list[ index ].hide()
-            if self.active_page_number == 2 or self.active_page_number == 9: # main menu, remote sensing
-                self.pages_list[ 1 ].show()  # controls
-            if self.active_page_number == 9:
-                if spectral_sensors_detected:
-                    self.pages_list[ 10 ].show() # spectral graph
-
-
 
     def update_batch(self):
         self.batch_number = update_batch(self.datestamp)
