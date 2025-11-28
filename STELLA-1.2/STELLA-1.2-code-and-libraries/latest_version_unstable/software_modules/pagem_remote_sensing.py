@@ -322,10 +322,16 @@ class Remote_Sensing_Page( Page ):
         self.group.append(right_value_group)
 
         return self.group
+        
     def add_spectral_graph_page(self, spectral_graph_page):
         self.spectral_graph_page = spectral_graph_page
+        
+    def action( self ):
+        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+    def update_selection():
+        pass
 
-    def update_values( self, instrument ):
+    def obsolete_update_values( self ):
         banner_duration = 3
         self.left_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][0])
         self.left_mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][1])
@@ -383,101 +389,80 @@ class Remote_Sensing_Page( Page ):
         else:
             self.table_graph_text_area.text = "table"
 
-        if instrument.remote_sensing_select == 6:
+        if self.instrument.remote_sensing_select == 6:
             self.scale_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_register.scale_linear = not self.spectral_register.scale_linear
-                instrument.button_pressed = False
+            self.spectral_register.scale_linear = not self.spectral_register.scale_linear
+
         else:
             self.scale_select.hidden = True
-        if instrument.remote_sensing_select == 7:
+        if self.instrument.remote_sensing_select == 7:
             self.units_y_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_register.y_axis_irradiance = not self.spectral_register.y_axis_irradiance
-                instrument.button_pressed = False
+            self.spectral_register.y_axis_irradiance = not self.spectral_register.y_axis_irradiance
         else:
             self.units_y_select.hidden = True
         if instrument.remote_sensing_select == 8:
             self.spectrum_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_register.scope = (self.spectral_register.scope + 1) % self.spectral_register.number_of_scope_choices
-                instrument.button_pressed = False
+            self.spectral_register.scope = (self.spectral_register.scope + 1) % self.spectral_register.number_of_scope_choices
         else:
             self.spectrum_select.hidden = True
         if instrument.remote_sensing_select == 9:
             self.exposure_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_graph_page.banner_group.hidden = False
-                self.spectral_graph_page.banner_message_area.text = "autoexposure"
-                #self.spectral_register.autoexposure = not self.spectral_register.autoexposure
-                instrument.button_pressed = False
-                time.sleep(banner_duration)
+            self.spectral_graph_page.banner_group.hidden = False
+            self.spectral_graph_page.banner_message_area.text = "autoexposure"
+            #self.spectral_register.autoexposure = not self.spectral_register.autoexposure
+            time.sleep(banner_duration)
         else:
             self.spectral_graph_page.banner_group.hidden = True
             self.exposure_select.hidden = True
         if instrument.remote_sensing_select == 10:
             self.lamps_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_register.lamps_on = not self.spectral_register.lamps_on
-                for spectral_sensor in self.instrument.spectral_sensors_present:
-                    if self.spectral_register.lamps_on:
-                        spectral_sensor.lamps_on()
-                    else:
-                        spectral_sensor.lamps_off()
-                instrument.button_pressed = False
+            self.spectral_register.lamps_on = not self.spectral_register.lamps_on
+            for spectral_sensor in self.instrument.spectral_sensors_present:
+                if self.spectral_register.lamps_on:
+                    spectral_sensor.lamps_on()
+                else:
+                    spectral_sensor.lamps_off()
         else:
             self.lamps_select.hidden = True
         if instrument.remote_sensing_select == 11:
             self.data_source_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_graph_page.banner_message_area.text = "sample, ref, s/ref"
-                self.spectral_graph_page.banner_group.hidden = False
-                #self.spectral_register.data_source = (self.spectral_register.data_source + 1) % self.spectral_register.number_of_data_source_choices
-                instrument.button_pressed = False
-                time.sleep(banner_duration)
+            self.spectral_graph_page.banner_message_area.text = "sample, ref, s/ref"
+            self.spectral_graph_page.banner_group.hidden = False
+            #self.spectral_register.data_source = (self.spectral_register.data_source + 1) % self.spectral_register.number_of_data_source_choices
+            time.sleep(banner_duration)
         else:
             self.spectral_graph_page.banner_group.hidden = True
             self.data_source_select.hidden = True
         if instrument.remote_sensing_select == 12:
             self.graph_settings_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_graph_page.banner_message_area.text = "sensor + ref set"
-                self.spectral_graph_page.banner_group.hidden = False
-                instrument.button_pressed = False
-                time.sleep(banner_duration)
+            self.spectral_graph_page.banner_message_area.text = "sensor + ref set"
+            self.spectral_graph_page.banner_group.hidden = False
+            time.sleep(banner_duration)
         else:
             self.graph_settings_select.hidden = True
             self.spectral_graph_page.banner_group.hidden = True
         if instrument.remote_sensing_select == 13:
             self.units_x_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_register.x_axis_units = (self.spectral_register.x_axis_units + 1) % self.spectral_register.number_of_x_axis_units_choices
-                instrument.button_pressed = False
+            self.spectral_register.x_axis_units = (self.spectral_register.x_axis_units + 1) % self.spectral_register.number_of_x_axis_units_choices
         else:
             self.units_x_select.hidden = True
         if instrument.remote_sensing_select == 14:
             self.table_graph_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_graph_page.banner_message_area.text = "table or graph"
-                self.spectral_graph_page.banner_group.hidden = False
-                #self.spectral_register.show_table = not self.spectral_register.show_table
-                instrument.button_pressed = False
-                time.sleep(banner_duration)
+            self.spectral_graph_page.banner_message_area.text = "table or graph"
+            self.spectral_graph_page.banner_group.hidden = False
+            #self.spectral_register.show_table = not self.spectral_register.show_table
+            time.sleep(banner_duration)
         else:
             self.table_graph_select.hidden = True
             self.spectral_graph_page.banner_group.hidden = True
         if instrument.remote_sensing_select == 15:
             self.live_select.hidden = False
-            if instrument.button_pressed:
-                self.spectral_register.live = not self.spectral_register.live
-                instrument.button_pressed = False
+            self.spectral_register.live = not self.spectral_register.live
         else:
             self.live_select.hidden = True
         if instrument.remote_sensing_select == 16:
             self.return_select.hidden = False
-            if instrument.button_pressed:
-                instrument.active_page_number = 2
-                instrument.button_pressed = False
+            instrument.active_page_number = 2
         else:
             self.return_select.hidden = True
 

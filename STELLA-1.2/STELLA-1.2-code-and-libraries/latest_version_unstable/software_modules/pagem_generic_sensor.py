@@ -13,6 +13,7 @@ class Generic_Sensor_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
         self.page_name = "Generic"
+        self.instrument = instrument
         self.palette = instrument.palette
         self.selection = 0
         self.selection_count = 0
@@ -70,10 +71,11 @@ class Generic_Sensor_Page( Page ):
         self.group.append(return_group)
 
         return self.group
-    def update_values( self, instrument ):
-        if instrument.button_pressed:
-            instrument.active_page_number = 2
-            instrument.button_pressed = False
+        
+    def action( self ):
+        self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
+    def update_selection():
+        pass
 
 
 def make_generic_sensor_page( instrument ):

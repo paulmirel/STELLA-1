@@ -12,6 +12,7 @@ class Settings_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
         self.page_name = "Settings"
+        self.instrument = instrument
         self.palette = instrument.palette
         self.selection = 0
         self.selection_count = 0
@@ -193,16 +194,14 @@ class Settings_Page( Page ):
 
         return self.group
         
-    def action( self, instrument ):
-        instrument.active_page_number = instrument.pages_dict["Main"]
+    def action( self ):
+        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
     def update_selection():
         pass
         
-    def update_values( self, instrument ):
-        if instrument.button_pressed:
-            instrument.active_page_number = 2
-            instrument.button_pressed = False
-        intervals = instrument.sample_interval_s
+    def update_values( self ):
+        self.instrument.active_page_number = 2
+        intervals = self.instrument.sample_interval_s
         #print( intervals )
         intervalm = intervals / 60
         intervalh = intervalm / 60
@@ -225,10 +224,10 @@ class Settings_Page( Page ):
         else:
             interval_text = "{}d".format(int(intervald))
         self.interval_value_text_area.text = interval_text
-        if instrument.burst_count < 10:
-            burst_text = " {}".format(instrument.burst_count)
+        if self.instrument.burst_count < 10:
+            burst_text = " {}".format(self.instrument.burst_count)
         else:
-            burst_text = "{}".format(instrument.burst_count)
+            burst_text = "{}".format(self.instrument.burst_count)
         #if instrument.usb_serial_out:
         #    self.serial_out_value_text_area.text = "Y"
         #else:

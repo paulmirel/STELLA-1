@@ -11,6 +11,7 @@ class Time_Place_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
         self.page_name = "Time"
+        self.instrument = instrument
         self.palette = instrument.palette
         self.selection = 0
         self.selection_count = 0
@@ -83,8 +84,8 @@ class Time_Place_Page( Page ):
 
         return self.group
    
-    def action( self, instrument ):
-        instrument.active_page_number = instrument.pages_dict["Main"]
+    def action( self ):
+        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
     def update_selection():
         pass
 

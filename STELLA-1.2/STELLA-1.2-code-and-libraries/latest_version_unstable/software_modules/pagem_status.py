@@ -70,15 +70,11 @@ class Status_Page( Page ):
 
         return self.group
         
-    def action( self, instrument ):
-        instrument.active_page_number = instrument.pages_dict["Main"]
+
     def update_selection():
         pass
-    def update_values( self, instrument ):
-        #if instrument.active_page_number == 3:
-        if instrument.button_pressed:
-            instrument.active_page_number = 2
-            instrument.button_pressed = False
+    def action( self ):
+        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
 
 
 def make_status_page( instrument ):

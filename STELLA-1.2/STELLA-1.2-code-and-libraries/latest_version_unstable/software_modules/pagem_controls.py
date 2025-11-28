@@ -10,10 +10,11 @@ from .classm_page import Page
 
 
 class Controls_Page( Page ):
-    def __init__( self, palette, gps, battery_monitor ):
+    def __init__( self, instrument, gps, battery_monitor ):
         super().__init__()
         self.page_name = "Controls"
-        self.palette = palette
+        self.instrument = instrument
+        self.palette = instrument.palette
         self.gps = gps
         self.battery_monitor = battery_monitor
         self.selection = 0
@@ -186,7 +187,7 @@ class Controls_Page( Page ):
         else:
             self.burst_value_text_area.text = "{}".format(value)
     
-    def update_values( self, instrument ):
+    def update_values( self ):
         if self.gps.fix():
             self.gps_value_text_area.text = " FIX"
             self.gps_color.color_index = 18
@@ -200,39 +201,39 @@ class Controls_Page( Page ):
             battery_text = "{}".format(battery_level)
         self.battery_value_text_area.text =  battery_text
         
-        if instrument.burst_count < 10:
-            self.burst_value_text_area.text = " {}".format(instrument.burst_count)
+        if self.instrument.burst_count < 10:
+            self.burst_value_text_area.text = " {}".format(self.instrument.burst_count)
         else:
-            self.burst_value_text_area.text = "{}".format(instrument.burst_count)
-        if instrument.record:
+            self.burst_value_text_area.text = "{}".format(self.instrument.burst_count)
+        if self.instrument.record:
             self.record_circle.hidden = False
         else:
             self.record_circle.hidden = True
-        self.batch_value_text_area.text = "{}".format(instrument.batch_number)
-        if instrument.batch_number < 10:
+        self.batch_value_text_area.text = "{}".format(self.instrument.batch_number)
+        if self.instrument.batch_number < 10:
             self.batch_value_group.x = self.batch_text_x+7
-        elif instrument.batch_number < 100:
+        elif self.instrument.batch_number < 100:
             self.batch_value_group.x = self.batch_text_x+5
         else:
             self.batch_value_group.x = self.batch_text_x-3
 
         ## processing inputs
-    def action( self, instrument ):
+    def action( self ):
         if self.selection == 0:
             print( "go to time_place page" )
-            instrument.active_page_number = instrument.pages_dict["Time"]
+            self.instrument.active_page_number = self.instrument.pages_dict["Time"]
         if self.selection == 1:
-            instrument.update_batch()
+            self.instrument.update_batch()
         if self.selection == 2:
-            instrument.record = not instrument.record
+            self.instrument.record = not self.instrument.record
         if self.selection == 3:
-            instrument.take_burst = True
-            instrument.record = False
+            self.instrument.take_burst = True
+            self.instrument.record = False
             self.burst_color.color_index = 6
         if self.selection == 4:
-            instrument.active_page_number = instrument.pages_dict["Settings"]
+            self.instrument.active_page_number = self.instrument.pages_dict["Settings"]
         if self.selection == 5:
-            instrument.active_page_number = instrument.pages_dict["Status"]
+            self.instrument.active_page_number = self.instrument.pages_dict["Status"]
     
     
     def obsolete_actions(self):
@@ -285,7 +286,7 @@ class Controls_Page( Page ):
 
 def make_controls_page( instrument, gps, battery_monitor ):
     instrument.welcome_page.announce( "make_controls_page" )
-    page = Controls_Page( instrument.palette, gps, battery_monitor )
+    page = Controls_Page( instrument, gps, battery_monitor )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )

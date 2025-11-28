@@ -275,7 +275,7 @@ def main():
             instrument.show_active_page()               # working time 0ms
             #instrument.update_active_page()             # working time 80ms
             instrument.handle_inputs()
-            controls_page.update_values( instrument )   # working time 21ms
+            controls_page.update_values( )   # working time 21ms
             for sensor in instrument.sensors_present:   # minimum sensors, battery monitor, GPS: working time ~300ms
                 sensor.read()
                 instrument.handle_inputs()
@@ -469,17 +469,17 @@ class Instrument:
                 if combined:
                     if self.combined_page_selection < controls_page.selection_count:
                         print( "act on controls page on selection {}".format( controls_page.selection ) )
-                        controls_page.action( self )
+                        controls_page.action()
                     else:
                         print( "act on active page of combination on selection {}".format(active_page.selection ))
-                        active_page.action( self )
+                        active_page.action()
                     #print( self.combined_page_selection )
                 else:
-                    active_page.action( self )
+                    active_page.action()
                     #print( active_page.selection  )
                 #print( "button pressed, do something with that")
                 self.button_pressed = False
-            controls_page.update_values( self )
+            controls_page.update_values()
             self.input_flag = False
 
 
@@ -503,7 +503,7 @@ class Instrument:
                 self.input_flag = True
 
     def obsolete_update_active_page( self ):
-        self.pages_list[ self.active_page_number ].update_values( self )
+        self.pages_list[ self.active_page_number ].update_values()
         if self.active_page_number == 9:
             if spectral_sensors_detected:
                 self.spectral_graph_page.update_plot_data()

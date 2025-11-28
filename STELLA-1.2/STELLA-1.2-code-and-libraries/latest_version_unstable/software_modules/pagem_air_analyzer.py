@@ -11,6 +11,7 @@ from .classm_page import Page
 class Air_Analyzer_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
+        self.instrument = instrument
         self.palette = instrument.palette
         self.page_name = "Air"
         self.selection = 0
@@ -80,10 +81,12 @@ class Air_Analyzer_Page( Page ):
         self.group.append(return_group)
 
         return self.group
-    def update_values( self, instrument ):
-        if instrument.button_pressed:
-            instrument.active_page_number = 2
-            instrument.button_pressed = False
+        
+    def action( self ):
+        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+    def update_selection():
+        pass
+
 
 
 def make_air_analyzer_page( instrument ):
