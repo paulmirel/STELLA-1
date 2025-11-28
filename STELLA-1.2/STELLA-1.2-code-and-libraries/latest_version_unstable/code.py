@@ -110,20 +110,20 @@ def main():
     spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
     # initialize spectral sensors
-    spectral_sensors_detected = False
+    instrument.spectral_sensors_detected = False
     if ('0x49') in devices_present_hex:
-        spectral_sensors_detected = True
+        instrument.spectral_sensors_detected = True
         from software_modules import spectralm_as7265x
         as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
     if ('0x74') in devices_present_hex:
-        spectral_sensors_detected = True
+        instrument.spectral_sensors_detected = True
         from software_modules import spectralm_as7331
         as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
     if ('0x39') in devices_present_hex:
-        spectral_sensors_detected = True
+        instrument.spectral_sensors_detected = True
         from software_modules import spectralm_as7341
         as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
-    if spectral_sensors_detected:
+    if instrument.spectral_sensors_detected:
         from software_modules import functionm_exposure_control
         #from software_modules import spectral_graph
         #from software_modules import remote_sensing_page
@@ -401,6 +401,7 @@ class Instrument:
         self.filename = None
         self.sensors_present = []
         self.spectral_sensors_present = []
+        self.spectral_sensors_detected = False
         self.record = user_settings.record_on_startup
         self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
         self.measurement_counter = 0
@@ -431,7 +432,7 @@ class Instrument:
             self.last_active_page_number = self.active_page_number
 
             if self.pages_list[self.active_page_number].page_name == "Remote":
-                if spectral_sensors_detected:
+                if self.spectral_sensors_detected:
                     self.pages_list[ self.pages_dict["Spectral_Graph"] ].show()
 
     def handle_inputs( self ):

@@ -178,7 +178,19 @@ class Main_Menu_Page( Page ):
                 item.hidden = True
 
     def action( self ):
-        pass
+        if self.selection == 0:
+            self.instrument.active_page_number = self.instrument.pages_dict["Remote"]
+        if self.selection == 1:
+            self.instrument.active_page_number = self.instrument.pages_dict["Air"]
+        if self.selection == 2:
+            self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
+        if self.selection == 3:
+            self.instrument.active_page_number = self.instrument.pages_dict["Time"]
+        if self.selection == 8:
+            self.instrument.active_page_number = self.instrument.pages_dict["Status"]
+        if self.selection == 10:
+            self.instrument.active_page_number = self.instrument.last_active_page_number
+
     
     
     

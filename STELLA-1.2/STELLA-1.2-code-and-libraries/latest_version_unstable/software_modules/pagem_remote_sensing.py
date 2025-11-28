@@ -328,7 +328,7 @@ class Remote_Sensing_Page( Page ):
         
     def action( self ):
         self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-    def update_selection():
+    def update_selection( self ):
         pass
 
     def obsolete_update_values( self ):
@@ -506,7 +506,10 @@ class Remote_Sensing_Missing_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
         self.page_name = "Remote"
+        self.instrument = instrument
         self.palette = instrument.palette
+        self.selection = 0
+        self.selection_count = 0
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -565,12 +568,11 @@ class Remote_Sensing_Missing_Page( Page ):
         self.return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
         return_group.append(self.return_text_area)
         self.group.append(return_group)
-
         return self.group
-    def update_values( self, instrument ):
-        if instrument.button_pressed:
-            instrument.active_page_number = 2
-            instrument.button_pressed = False
+    def hide_all_selections( self ):
+        pass
+    def action( self ):
+        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
 
 def make_remote_sensing_missing_page( instrument ):
     instrument.welcome_page.announce( "make_remote_sensing_missing_page" )
