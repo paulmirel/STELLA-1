@@ -231,6 +231,7 @@ def main():
     status_page = pagem_status.make_status_page( instrument )
     settings_page = pagem_settings.make_settings_page( instrument )
     sensors_page = pagem_sensors.make_sensors_page( instrument )
+    sensors_page.update_values()
     generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument )
     time_place_page = pagem_time_place.make_time_place_page( instrument )
     air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument )
@@ -265,6 +266,7 @@ def main():
     instrument.sample_interval_s = 2
     accumulator_cycles = 5
     loop_times = []
+    instrument.active_page_number = instrument.pages_dict["Sensors"]
     try:
         if vfs:
             onboard_neopixel.fill(devicem_neopixel.GREEN)
@@ -273,7 +275,7 @@ def main():
         instrument.check_inputs()
         while operational:
             loop_start = time.monotonic()
-            instrument.active_page_number = instrument.pages_dict["Sensors"]
+
             instrument.show_active_page()               # working time 0ms
             #instrument.update_active_page()             # working time 80ms
             instrument.handle_inputs()

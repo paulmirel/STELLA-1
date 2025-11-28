@@ -20,7 +20,7 @@ def initialize_battery_monitor( instrument ):
 class max1704x_Battery_Monitor( Device ):
     def __init__( self, instrument ):
         self.instrument = instrument
-        super().__init__(name = "battery_monitor", pn = "max1704x", address = 0x36, swob = adafruit_max1704x.MAX17048( instrument.i2c_bus ))
+        super().__init__(name = "battery", pn = "max1704x", address = 0x36, swob = adafruit_max1704x.MAX17048( instrument.i2c_bus ))
         self.voltage = self.swob.cell_voltage
         self.percentage = round(self.swob.cell_percent, 1)
         self.instrument.welcome_page.announce( "initialize_battery_monitor" )

@@ -34,10 +34,10 @@ class Sensors_Page( Page ):
         selection_x = 10
         selection_start_y = 8 + text_spacing_y
         selection_width = 260
-        selection_height = 28
+        selection_height = 32
         self.selection_rectangles = []
-        text_areas = []
-        for index in range (0,7):
+        self.text_areas = []
+        for index in range (0,len(self.instrument.sensors_present)):
             self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=selection_width, height=selection_height, x=selection_x, y=selection_start_y+text_spacing_y*index)
             self.selection_rectangle.hidden = True
             self.selection_rectangles.append( self.selection_rectangle )
@@ -46,13 +46,13 @@ class Sensors_Page( Page ):
             area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=selection_width-2*select_width, height=selection_height-2*select_width, x=selection_x+select_width, y=select_width+selection_start_y+text_spacing_y*index)
             self.group.append( area_rectangle )
 
-            text_group = displayio.Group(scale=2, x=selection_x+2*select_width, y=8+select_width+selection_start_y+text_spacing_y*index)
+            text_group = displayio.Group(scale=2, x=selection_x+2*select_width, y=10+select_width+selection_start_y+text_spacing_y*index)
             text = " "#"name : part number"
             self.text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
             text_group.append( self.text_area )
-            text_areas.append( text_group )
+            self.text_areas.append( self.text_area )
             self.group.append( text_group )
-
+        self.selection_rectangles[0].hidden = False
 
         # RETURN
 
@@ -88,7 +88,10 @@ class Sensors_Page( Page ):
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
     def update_values( self ):
-        pass
+        for index in range (0, len(self.instrument.sensors_present)):
+            self.text_areas[index].text = "{} : {}".format(self.instrument.sensors_present[index].name, self.instrument.sensors_present[index].pn)
+
+
 
 
 def make_sensors_page( instrument ):
