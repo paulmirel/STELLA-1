@@ -26,6 +26,8 @@ class pa1616d_GPS( Device ):
     def __init__( self, com_bus ):
         super().__init__(name = "gps", pn = "pa1616d", address = 0x00, swob = adafruit_gps.GPS( com_bus, debug=False))
         self.last_read = 0
+        self.parameters = [ "fix", "latitude_degrees", "longitude_degrees", "altitude_m", "timestamp_iso8601utc", "satellites_count"]
+        self.values = []
     def send_start_commands(self):
         self.swob.send_command(b"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0") #set data output configuration
         self.swob.send_command(b"PMTK220,1000") #set update interval to 1000 ms
@@ -53,15 +55,14 @@ class pa1616d_GPS( Device ):
         return self.swob.has_fix
     def read(self):
         self.swob.update()
+        self.has_fix = self.swob.has_fix
         self.latitude = self.swob.latitude
         self.longitude = self.swob.longitude
         self.altitude = self.swob.altitude_m
         self.timestruct = self.swob.timestamp_utc
-    def header(self):
-        return( "gps_fix-!-boolean, gps_latitude-!-degrees, gps_longitude-!-degrees, gps_altitude-!-m, gps_timestamp-!-iso8601utc" )
-    def log(self):
+        self.satellites = self.swob.satellites
         if self.timestruct is not None:
-            self.gps_timestamp = "{}{:02}{:02}T{:02}{:02}{:02}Z".format(
+            self.timestamp = "{}{:02}{:02}T{:02}{:02}{:02}Z".format(
                         self.timestruct.tm_year,# Note you might not get all data like year month day
                         self.timestruct.tm_mon,
                         self.timestruct.tm_mday,
@@ -69,8 +70,15 @@ class pa1616d_GPS( Device ):
                         self.timestruct.tm_min,
                         self.timestruct.tm_sec
                         )
-        else: self.gps_timestamp = None #"20000101T000000Z"
-        return "{}, {}, {}, {}, {}".format( self.swob.has_fix, self.latitude, self.longitude, self.altitude, self.gps_timestamp )
+        else: self.timestamp = None #"20000101T000000Z"
+        self.values = [ self.has_fix, self.latitude, self.longitude, self.altitude, self.timestamp, self.satellites ]
+
+    def log(self):
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+        
     def printlog(self):
         print( self.log())
 

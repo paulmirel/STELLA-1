@@ -25,14 +25,18 @@ class max1704x_Battery_Monitor( Device ):
         self.percentage = round(self.swob.cell_percent, 1)
         self.instrument.welcome_page.announce( "initialize_battery_monitor" )
         #self.instrument.sensors_present.append( battery_monitor )
+        self.parameters = ["voltage_volts", "energy_percent"]
+        self.values = []
     def read(self):
         self.voltage = self.swob.cell_voltage
         self.percentage = round(self.swob.cell_percent, 1)
+        self.values = [self.voltage, self.percentage]
         #print( self.percentage )
-    def header(self):
-        return "max1704x_battery_voltage-!-V, max1704x_battery_energy-!-percent"
     def log(self):
-        return "{}, {}".format( self.voltage, self.percentage )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
     def printlog(self):
         print( self.log())
 

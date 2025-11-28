@@ -2,8 +2,11 @@
 # set the data_source period = reciprocal of the data_source cadence
 #               seconds + ( minutes ) + ( hours )   + ( days )
 sample_interval_s = 10.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
+
 burst_count = 1
+
 record_on_startup = True #False
 
-#usb_serial_out_enabled = False
+serial_out = True
+
 

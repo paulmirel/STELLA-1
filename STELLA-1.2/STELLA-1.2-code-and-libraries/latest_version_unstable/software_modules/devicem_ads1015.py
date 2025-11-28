@@ -21,11 +21,13 @@ def initialize_ads1015_12_bit_adc( instrument ):
 class ads1015_12_Bit_ADC( Device ):
     #https://learn.adafruit.com/adafruit-4-channel-adc-breakouts/python-circuitpython
     def __init__( self, com_bus ):
-        super().__init__(name = "ads1015_12_bit_adc", pn = "ads1015", address = 0x48, swob = ADS1015.ADS1015( com_bus ))
+        super().__init__(name = "adc_12_bit", pn = "ads1015", address = 0x48, swob = ADS1015.ADS1015( com_bus ))
         self.channel_0 = ADS1x15_AnalogIn(self.swob, ADS1015.P0)
         self.channel_1 = ADS1x15_AnalogIn(self.swob, ADS1015.P1)
         self.channel_2 = ADS1x15_AnalogIn(self.swob, ADS1015.P2)
         self.channel_3 = ADS1x15_AnalogIn(self.swob, ADS1015.P3)
+        self.parameters = [ "gain", "ch0_counts", "ch0_volts", "ch1_counts", "ch1_volts","ch2_counts", "ch2_volts","ch3_counts", "ch3_volts",]
+        self.values = []
         # set up a differential channel like this self.channel_0-1 = ADS1x15_AnalogIn(swob, ADS1015.P0, ADS1015.P1)
         # self.swob.instrument_mode = self.Mode.SINGLE # this is the default instrument_mode. I don't know where to find Mode. Waits for completed conversion to read the value TBD implement this.
         # Mode.CONTINUOUS # read the latest value that's been converted. TBD look into this and explain
@@ -46,16 +48,16 @@ class ads1015_12_Bit_ADC( Device ):
         #print( self.raw )
         self.voltage = (self.channel_0.voltage, self.channel_1.voltage, self.channel_2.voltage, self.channel_3.voltage)
         #print( self.voltage )
-    def header(self):
-        headers = "ads1015_channel_0_voltage-!-V, ads1015_channel_1_voltage-!-V, ads1015_channel_2_voltage-!-V, ads1015_channel_3_voltage-!-V"
-        headers += ", ads1015_channel_0_digital_number-!-counts, ads1015_channel_1_digital_number-!-counts, ads1015_channel_2_digital_number-!-counts, ads1015_channel_3_digital_number-!-counts"
-        headers += ", ads1015_gain-!-"
-        return headers
+        self.values.append( self.swob.gain )
+        for index in range (0, len(self.parameters)-1):
+            self.values.append( self.raw[index] )
+            self.values.append( self.voltage[index] )
+
     def log(self):
-        log_values = "{}, {}, {}, {}".format( *self.voltage )
-        log_values += ", {}, {}, {}, {}".format( *self.raw)
-        log_values += ", {}".format(self.swob.gain)
-        return log_values
+        log = ""
+        for index in range (0, len(self.parameters)):
+            log = log + "{}, {}".format( self.parameters[index], self.values[index])
+        return log
 
     def printlog(self):
         print( self.log())
@@ -63,6 +65,8 @@ class ads1015_12_Bit_ADC( Device ):
 class Null_ads1015_12_Bit_ADC(Device):
     def __init__( self ):
         super().__init__(name = None, swob = None)
+    def found( self ):
+        pass
     def read(self):
         pass
     def log(self):

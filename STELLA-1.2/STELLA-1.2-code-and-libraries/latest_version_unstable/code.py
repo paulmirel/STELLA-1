@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.7.2"
+SOFTWARE_VERSION_NUMBER = "0.7.3"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -256,7 +256,7 @@ def main():
 
     instrument.make_band_list()
     #instrument.make_header()
-
+    serial_out = user_settings.serial_out
     operational = True
     first_sample_time = time.monotonic()
     last_sample_time = time.monotonic() - instrument.sample_interval_s
@@ -279,9 +279,8 @@ def main():
             for sensor in instrument.sensors_present:   # minimum sensors, battery monitor, GPS: working time ~300ms
                 sensor.read()
                 instrument.handle_inputs()
-            if False:
+            if serial_out:
                 for sensor in instrument.sensors_present:
-                    print( sensor.pn, end= ": ")
                     sensor.printlog()
                     instrument.handle_inputs()
             print()
