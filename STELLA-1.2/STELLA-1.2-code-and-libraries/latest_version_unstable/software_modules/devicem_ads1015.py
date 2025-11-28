@@ -5,8 +5,8 @@
 import adafruit_ads1x15.ads1015 as ADS1015
 from adafruit_ads1x15.analog_in import AnalogIn as ADS1x15_AnalogIn
 from .classm_device import Device
-            
-            
+
+
 def initialize_ads1015_12_bit_adc( instrument ):
     ads1015_12_bit_adc = Null_ads1015_12_Bit_ADC()
     try:
@@ -49,14 +49,16 @@ class ads1015_12_Bit_ADC( Device ):
         self.voltage = (self.channel_0.voltage, self.channel_1.voltage, self.channel_2.voltage, self.channel_3.voltage)
         #print( self.voltage )
         self.values.append( self.swob.gain )
-        for index in range (0, len(self.parameters)-1):
-            self.values.append( self.raw[index] )
-            self.values.append( self.voltage[index] )
+        if False:
+            for index in range (0, len(self.parameters)-1):
+                self.values.append( self.raw[index] )
+                self.values.append( self.voltage[index] )
 
     def log(self):
-        log = "{}, {}".format( self.name, self.pn )
-        for index in range (0, len(self.parameters)):
-            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        log = ""
+        if False:
+            for index in range (0, len(self.parameters)):
+                log = log + "{}, {}".format( self.parameters[index], self.values[index])
         return log
 
     def printlog(self):
