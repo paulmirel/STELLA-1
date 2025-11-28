@@ -16,6 +16,7 @@ class Sensors_Page( Page ):
         self.instrument = instrument
         self.palette = instrument.palette
         self.selection = 0
+        self.last_selection = 0
         self.selection_count = 0
 
     def make_group( self ):
@@ -83,9 +84,10 @@ class Sensors_Page( Page ):
 
     def action( self ):
         self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-    def update_selection():
-        pass
-    def update_values():
+    def update_selection( self ):
+        self.selection_rectangles[self.last_selection].hidden = True
+        self.selection_rectangles[self.selection].hidden = False
+    def update_values( self ):
         pass
 
 
