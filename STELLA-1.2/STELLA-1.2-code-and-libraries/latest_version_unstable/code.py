@@ -414,20 +414,26 @@ class Instrument:
         self.input_interval = 1
         self.active_page_number = 2
         self.last_active_page_number = 0
+        self.previous_page_number = 1
         self.take_burst = False
         self.combined_page_selection = 0
         self.combined_page_last_selection = 0
 
     def show_active_page( self ):
         if self.active_page_number != self.last_active_page_number:
+            if self.last_active_page_number == 0:
+                self.previous_page_number = self.pages_dict["Main"]
+            else:
+                self.previous_page_number = self.last_active_page_number
             self.pages_list[ self.last_active_page_number ].hide()
+            self.pages_list[ self.pages_dict["Controls"] ].hide()
             if self.pages_list[self.active_page_number].page_name == "Main" or self.pages_list[self.active_page_number].page_name == "Remote":
                 self.pages_list[ self.pages_dict["Controls"] ].show()
                 self.pages_list[ self.active_page_number ].show()
-                self.pages_list[ self.active_page_number ].hide_all_selections()
-                self.pages_list[ self.pages_dict["Controls"] ].update_selection()
+                if self.combined_page_selection < self.pages_list[ self.pages_dict["Controls"] ].selection_count:
+                    self.pages_list[ self.active_page_number ].hide_all_selections()
+                    self.pages_list[ self.pages_dict["Controls"] ].update_selection()
             else:
-                self.pages_list[ self.pages_dict["Controls"] ].hide()
                 self.pages_list[ self.active_page_number ].show()
             self.last_active_page_number = self.active_page_number
 

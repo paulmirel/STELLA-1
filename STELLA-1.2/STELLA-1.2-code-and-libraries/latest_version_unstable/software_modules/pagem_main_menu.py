@@ -189,7 +189,7 @@ class Main_Menu_Page( Page ):
         if self.selection == 8:
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]
         if self.selection == 10:
-            self.instrument.active_page_number = self.instrument.last_active_page_number
+            self.instrument.active_page_number = self.instrument.previous_page_number
 
     
     
