@@ -17,4 +17,4 @@ class Device: #parent class
             return True
         else:
             return False
-     
+

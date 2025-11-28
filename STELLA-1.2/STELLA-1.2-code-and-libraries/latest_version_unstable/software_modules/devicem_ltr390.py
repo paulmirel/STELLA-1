@@ -25,10 +25,17 @@ class ltr390_UVA_Sensor( Device ):
         self.light_raw = self.swob.light
         self.lux = self.swob.lux
         #print( self.lux )
+        self.parameters = []
+        self.values = []
     def header(self):
         return "ltr390_illumination-!-counts, ltr390_illumination-!-lux, ltr390_uva-!-counts, ltr390_uv_index-!-"
+    
     def log(self):
-        return "{}, {}, {}, {}".format( self.light_raw, self.lux, self.UVA, self.uv_index )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+    
     def printlog(self):
         print( self.log())
 

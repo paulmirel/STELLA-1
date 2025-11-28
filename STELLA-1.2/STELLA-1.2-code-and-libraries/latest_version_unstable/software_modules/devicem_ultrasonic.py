@@ -20,12 +20,19 @@ class Lv_ez_mb1013_Rangefinder( Device ):
         self.range_m = None
         self.analog_in_0 = analog_in_0
         self.sense_5V = sense_5V
+        self.parameters = []
+        self.values = []
     def read(self):
         supply_v = 2 * (self.sense_5V.value * 3.3) / 65536
         range_m =self.analog_in_0.value * 8.312 / 100000 - 0.05 # offset
         self.range_m = round(range_m, 3)
+    
     def log(self):
-        return "{}, {}".format( self.analog_in_0.value, self.range_m )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+    
     def header(self):
         return "analog_input_0_digital_number-!-counts, hrlv-ez-mb1013_range-!-m"
 

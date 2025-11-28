@@ -39,6 +39,8 @@ class ads1115_16_Bit_ADC( Device ):
         # 4, +/- 1.024V
         # 8, +/- 0.512V
         # 16, +/- 0.256V
+        self.parameters = []
+        self.values = []
     def found(self):
         print("found", self.pn, self.swob)
     def read(self):
@@ -46,16 +48,12 @@ class ads1115_16_Bit_ADC( Device ):
         #print( self.raw )
         self.voltage = (self.channel_0.voltage, self.channel_1.voltage, self.channel_2.voltage, self.channel_3.voltage)
         #print( self.voltage )
-    def header(self):
-        headers = "ads1115_channel_0_voltage-!-V, ads1115_channel_1_voltage-!-V, ads1115_channel_2_voltage-!-V, ads1115_channel_3_voltage-!-V"
-        headers += ", ads1115_channel_0_digital_number-!-counts, ads1115_channel_1_digital_number-!-counts, ads1115_channel_2_digital_number-!-counts, ads1115_channel_3_digital_number-!-counts"
-        headers += ", ads1115_gain-!-"
-        return headers
+    
     def log(self):
-        log_values = "{}, {}, {}, {}".format( *self.voltage)
-        log_values += ", {}, {}, {}, {}".format( *self.raw)
-        log_values += ", {}".format(self.swob.gain)
-        return log_values
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
     def printlog(self):
         print( self.log())
 

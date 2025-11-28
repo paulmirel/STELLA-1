@@ -28,6 +28,8 @@ class pcf8591_8_Bit_ADC_DAC( Device ):
         self.voltage_1 = None
         self.voltage_2 = None
         self.voltage_3 = None
+        self.parameters = []
+        self.values = []
     def read(self):
         self.raw_0 = PCF8591_AnalogIn(self.swob, PCF8591.A0).value
         self.raw_1 = PCF8591_AnalogIn(self.swob, PCF8591.A1).value
@@ -43,8 +45,13 @@ class pcf8591_8_Bit_ADC_DAC( Device ):
         headers = "pcf8591_channel_0_digital_number-!-counts, pcf8591_channel_1_digital_number-!-counts, pcf8591_channel_2_digital_number-!-counts, pcf8591_channel_3_digital_number-!-counts"
         headers += ", pcf8591_channel_0_voltage-!-V, pcf8591_channel_1_voltage-!-V, pcf8591_channel_2_voltage-!-V, pcf8591_channel_3_voltage-!-V"
         return headers
+    
     def log(self):
-        return "{}, {}, {}, {}, {}, {}, {}, {}".format( self.raw_0, self.raw_1, self.raw_2, self.raw_3, self.voltage_0, self.voltage_1, self.voltage_2, self.voltage_3 )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+        
     def printlog(self):
         print( self.log())
 

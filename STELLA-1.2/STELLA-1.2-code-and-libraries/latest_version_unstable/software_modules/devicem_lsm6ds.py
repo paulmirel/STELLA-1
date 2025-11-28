@@ -29,21 +29,23 @@ class lsm6ds_Accel_Gyro_Sensor( Device ):
         self.wy_deg_per_s = 0
         self.wz_deg_per_s = 0
         self.A_uncertainty_m_per_s2= 0.4
+        self.parameters = []
+        self.values = []
+        
     def read(self):
         self.Ax_m_per_s2, self.Ay_m_per_s2, self.Az_m_per_s2 = self.swob.acceleration
         self.wx_deg_per_s, self.wy_deg_per_s, self.wz_deg_per_s = self.swob.gyro
         #print( self.wx_rad_per_s, self.wy_rad_per_s, self.wz_rad_per_s  )
+    
     def log(self):
-        return "{}, {}, {}, {}, {}, {}".format(
-            round(self.Ax_m_per_s2, 3),
-            round(self.Ay_m_per_s2, 3),
-            round(self.Az_m_per_s2, 3),
-            round(self.wx_deg_per_s, 3),
-            round(self.wy_deg_per_s, 3),
-            round(self.wz_deg_per_s, 3)
-            )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+        
     def printlog(self):
         print( self.log())
+    
     def header(self):
         headers = "lsm6ds_acceleration_x-!-m_per_s_sq, lsm6ds_acceleration_y-!-m_per_s_sq, lsm6ds_acceleration_z-!-m_per_s_sq"
         headers += "lsm6ds_rotation_x-!-degrees_per_s, lsm6ds_rotation_x-!-degrees_per_s, lsm6ds_rotation_x-!-degrees_per_s"

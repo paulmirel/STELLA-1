@@ -54,9 +54,9 @@ class ads1015_12_Bit_ADC( Device ):
             self.values.append( self.voltage[index] )
 
     def log(self):
-        log = ""
+        log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
-            log = log + "{}, {}".format( self.parameters[index], self.values[index])
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
 
     def printlog(self):

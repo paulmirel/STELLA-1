@@ -21,13 +21,20 @@ class mlx90614_Surface_Thermometer( Device ):
         super().__init__(name = "mlx90614_surface_thermometer", pn = "mlx90614", address = 0x5A, swob = adafruit_mlx90614.MLX90614( com_bus ))
         self.surface_temperature_C = 0
         self.ambient_temperature_C = 0
+        self.parameters = []
+        self.values = []
     def read(self):
         self.surface_temperature_C = self.swob.object_temperature
         self.ambient_temperature_C = self.swob.ambient_temperature
     def header(self):
         return "mlx90614_temperature_surface-!-C, mlx90614_temperature_local-!-C"
+    
     def log(self):
-        return "{}, {}".format( round(self.surface_temperature_C,1), round(self.ambient_temperature_C,1) )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+        
     def printlog(self):
         print( self.log())
 

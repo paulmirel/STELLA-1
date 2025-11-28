@@ -28,6 +28,8 @@ class vl53l1x_4m_Range_Sensor( Device ):
         self.swob.distance_instrument_mode = 2 # long distance instrument_mode
         self.swob.timing_budget = 100
         self.range_m = None
+        self.parameters = []
+        self.values = []
     def read(self):
         if self.swob.data_ready and self.swob.distance is not None:
             self.range_m = self.swob.distance/100 #reports in cm for whatever reason
@@ -35,8 +37,13 @@ class vl53l1x_4m_Range_Sensor( Device ):
             self.range_m = 0 
     def header(self):
         return "vl53l1x_distance-!-m"
+
     def log(self):
-        return "{}".format( self.range_m )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+        
     def printlog(self):
         print( self.log())
 

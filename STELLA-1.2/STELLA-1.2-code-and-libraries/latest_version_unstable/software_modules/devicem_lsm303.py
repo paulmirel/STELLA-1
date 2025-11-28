@@ -26,14 +26,18 @@ class lsm303_Acceleration_Sensor( Device ):
         self.Ay_m_per_s2 = None
         self.Az_m_per_s2 = None
         self.A_uncertainty_m_per_s2= 0.4
+        self.parameters = []
+        self.values = []
     def read(self):
         self.Ax_m_per_s2, self.Ay_m_per_s2, self.Az_m_per_s2 = self.swob.acceleration
         #print( self.Ax_m_per_s2, self.Ay_m_per_s2, self.Az_m_per_s2 )
+
     def log(self):
-        return "{}, {}, {}".format(
-            round(self.Ax_m_per_s2, 3),
-            round(self.Ay_m_per_s2, 3),
-            round(self.Az_m_per_s2, 3))
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+        
     def printlog(self):
         print( self.log())
     def header(self):

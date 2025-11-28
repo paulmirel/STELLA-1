@@ -23,7 +23,7 @@ class Generic_Sensor_Page( Page ):
         self.group.append( status_background )
         text_spacing_y = 28
         status_title_group = displayio.Group(scale=2, x=10, y=18)
-        status_title_text = "Sensor Data: TBD"
+        status_title_text = "Sensor:"
         status_title_text_area = label.Label(terminalio.FONT, text=status_title_text, color=self.palette[0])
         status_title_group.append(status_title_text_area)
         self.group.append(status_title_group)

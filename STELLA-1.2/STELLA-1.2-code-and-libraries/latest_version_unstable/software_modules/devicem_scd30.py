@@ -22,6 +22,8 @@ class scd30_CO2_Sensor( Device ):
         self.humidity = None
         self.co2_ppm = None
         self.co2_ppm_uncertainty = None
+        self.parameters = []
+        self.values = []
     def read(self):
         if self.swob.data_available:
             self.temperature_C = self.swob.temperature
@@ -30,8 +32,13 @@ class scd30_CO2_Sensor( Device ):
             self.co2_ppm_uncertainty = 30 + self.co2_ppm * 0.03
     def header(self):
         return "scd30_co2_ambient-!-ppm, scd30_co2_uncertainty-!-ppm, scd30_temperature_ambient-!-C, scd30_humidity_relative-!-percent"
+
     def log(self):
-        return "{}, {}, {}, {}".format( round (self.co2_ppm, 1), round(self.co2_ppm_uncertainty, 1), round(self.temperature_C, 1) , int(round(self.humidity, 0)))
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+        
     def printlog(self):
         print( self.log())
 

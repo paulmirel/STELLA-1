@@ -226,23 +226,24 @@ def main():
                                 round(100 * ( mem_free_after_imports - mem_free_after_devices)/1000/start_mem_free_kB, 1)))
 
 
-    controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor ) #1
-    main_menu_page = pagem_main_menu.make_main_menu_page( instrument ) #2
-    status_page = pagem_status.make_status_page( instrument ) #3
-    settings_page = pagem_settings.make_settings_page( instrument ) #4
-    sensors_page = pagem_sensors.make_sensors_page( instrument ) #5
-    generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument ) #6
-    time_place_page = pagem_time_place.make_time_place_page( instrument ) #7
-    air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument ) #8
+    controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
+    main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
+    status_page = pagem_status.make_status_page( instrument )
+    settings_page = pagem_settings.make_settings_page( instrument )
+    sensors_page = pagem_sensors.make_sensors_page( instrument )
+    generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument )
+    time_place_page = pagem_time_place.make_time_place_page( instrument )
+    air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument )
     if False: #spectral_sensors_detected:
-        remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ) #9
+        remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder )
         instrument.active_page_number = 9
-        spectral_graph_page = functionm_spectral_graph.make_spectral_graph_page( instrument, spectral_register ) #10 takes a lot of time
+        spectral_graph_page = functionm_spectral_graph.make_spectral_graph_page( instrument, spectral_register )
         instrument.add_spectral_graph_page( spectral_graph_page )
         remote_sensing_page.add_spectral_graph_page( spectral_graph_page )
     else:
-        remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument ) #9 alt
+        remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument )
     instrument.make_pages_dictionary()
+
 
 
 
@@ -272,6 +273,7 @@ def main():
         instrument.check_inputs()
         while operational:
             loop_start = time.monotonic()
+            instrument.active_page_number = instrument.pages_dict["Sensors"]
             instrument.show_active_page()               # working time 0ms
             #instrument.update_active_page()             # working time 80ms
             instrument.handle_inputs()

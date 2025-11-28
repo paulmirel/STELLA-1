@@ -23,6 +23,8 @@ class pmsa0031_Particulates_Sensor( Device ):
         self.pm100 = None
         self.pm25 = None
         self.ratio = None
+        self.parameters = []
+        self.values = []
     def read(self):
         try:
             self.data = self.swob.read()
@@ -39,7 +41,7 @@ class pmsa0031_Particulates_Sensor( Device ):
         headers += ", pmsa0031_particle_count_0.5m-!-count_per_100mL, pmsa0031_particle_count_1m-!-count_per_100mL, pmsa0031_particle_count_2.5m-!-count_per_100mL"
         headers += ", pmsa0031_particle_count_5m-!-count_per_100mL, pmsa0031_particle_count_10m-!-count_per_100mL"
         return headers
-    def log(self):
+    def obsolete_log(self):
         if self.data["pm100 standard"] > 0:
             self.ratio = round(self.data["pm25 standard"]/self.data["pm100 standard"], 2)
         else:
@@ -56,6 +58,13 @@ class pmsa0031_Particulates_Sensor( Device ):
                 self.data["particles 50um"],
                 self.data["particles 100um"])
         return self.datastring
+    
+    def log(self):
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+    
     def printlog(self):
         print( self.log())
 

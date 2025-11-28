@@ -23,13 +23,18 @@ class ds2484_1_Wire_Thermometer_Reader( Device ):
         if not self.swob.onewire_search(self.rom):
             pass
             #print( "no 1-wire thermometers found" )
+        self.parameters = []
+        self.values = []
     def read(self):
         self.temperature_C = self.swob.ds18b20_temperature(self.rom)
         #print( self.temperature_C )
     def header(self):
         return "ds2484_temperature_material-!-C"
     def log(self):
-        return "{}".format( round(self.temperature_C,1))
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
     def printlog(self):
         print( self.log())
 

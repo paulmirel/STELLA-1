@@ -72,7 +72,7 @@ class pa1616d_GPS( Device ):
                         )
         else: self.timestamp = None #"20000101T000000Z"
         self.values = [ self.has_fix, self.latitude, self.longitude, self.altitude, self.timestamp, self.satellites ]
-
+        
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):

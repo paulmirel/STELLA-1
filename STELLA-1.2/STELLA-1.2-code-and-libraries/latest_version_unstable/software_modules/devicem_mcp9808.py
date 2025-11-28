@@ -21,13 +21,20 @@ class mcp9808_Air_Thermometer( Device ):
     def __init__( self, com_bus ):
         super().__init__(name = "mcp9808_air_thermometer", pn = "mcp9808", address = 0x1f, swob = adafruit_mcp9808.MCP9808( com_bus, address = 0x1f ))
         self.temperature_C = None
+        self.parameters = []
+        self.values = []
     def read(self):
         self.temperature_C = self.swob.temperature
         #print( self.temperature_C )
     def header(self):
         return "mcp9808_temperature_ambient-!-C"
+    
     def log(self):
-        return "{}".format( round(self.temperature_C, 1 ))
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+        
     def printlog(self):
         print( self.log())
 

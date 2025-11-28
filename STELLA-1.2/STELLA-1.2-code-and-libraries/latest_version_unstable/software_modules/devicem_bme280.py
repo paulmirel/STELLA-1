@@ -23,6 +23,8 @@ class bme280_Air_Sensor( Device ):
         self.pressure = None
         self.altitude = None
         self.humidity = None
+        self.parameters = []
+        self.values = []
     def read(self):
         self.temperature_C = self.swob.temperature
         self.pressure = self.swob.pressure
@@ -35,8 +37,10 @@ class bme280_Air_Sensor( Device ):
         #self.dewpoint = 0 #self.temperature -((100-self.humidity)/5) #update this to the formula above.
         #self.dp_uncty = 3.2
     def log(self):
-        # name, units, value, +/-, uncertainty ## per datasheet
-        return "{}, {}, {}, {}".format( self.pressure, round(self.altitude, 3), round(self.humidity, 1), round(self.temperature_C, 3) )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
     def printlog(self):
         print( self.log())
     def header(self):

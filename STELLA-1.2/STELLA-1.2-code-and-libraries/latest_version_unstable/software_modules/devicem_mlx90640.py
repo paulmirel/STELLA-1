@@ -21,14 +21,20 @@ class mlx90640_Thermal_Camera( Device ):
         super().__init__(name = "mlx90640_thermal_camera", pn = "mlx90640", address = 0x33, swob = adafruit_mlx90640.MLX90640( com_bus ))
         # TBD self.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_2_HZ
         # TBD self.refresh_rate = self.swob.RefreshRate.REFRESH_4_HZ
+        self.parameters = []
+        self.values = []
     def read(self):
         pass
         #self.t_surface_C = self.swob.object_temperature
     def header(self):
         return ""
+    
     def log(self):
-        pass
-        #return "{}".format( self.t_surface_C )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+        
     def printlog(self):
         print( self.log())
 

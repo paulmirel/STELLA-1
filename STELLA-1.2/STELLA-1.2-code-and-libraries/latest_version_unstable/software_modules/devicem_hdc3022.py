@@ -21,15 +21,22 @@ class hdc3022_Air_Sensor( Device ):
         super().__init__(name = "hdc3022_air_sensor", pn = "hdc3022", address = 0x44, swob = adafruit_hdc302x.HDC302x( com_bus ))
         self.temperature_C = 0
         self.humidity_percent = 0
+        self.parameters = []
+        self.values = []
     def read(self):
         self.temperature_C = self.swob.temperature
         self.humidity_percent = self.swob.relative_humidity
         #print( self.temperature_C )
+    
     def log(self):
-        # name, units, value, +/-, uncertainty ## per datasheet
-        return "{}, {}".format( round(self.temperature_C, 2), round(self.humidity_percent, 1) )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+    
     def printlog(self):
         print( self.log())
+    
     def header(self):
         return( "hdc3022_temperature_ambient-!-C, hdc3022_humidity_relative-!-percent" )
 
