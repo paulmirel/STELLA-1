@@ -266,7 +266,8 @@ def main():
     instrument.sample_interval_s = 2
     accumulator_cycles = 5
     loop_times = []
-    instrument.active_page_number = instrument.pages_dict["Sensors"]
+    if False: #go to startup page
+        instrument.active_page_number = instrument.pages_dict["Sensors"]
     try:
         if vfs:
             onboard_neopixel.fill(devicem_neopixel.GREEN)

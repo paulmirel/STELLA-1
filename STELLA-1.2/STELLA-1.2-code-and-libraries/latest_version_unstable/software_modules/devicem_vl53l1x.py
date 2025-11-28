@@ -18,7 +18,7 @@ def initialize_vl53l1x_4m_range_sensor( instrument ):
 
 class vl53l1x_4m_Range_Sensor( Device ):
     def __init__( self, com_bus ):
-        super().__init__(name = "vl53l1x_4m_range_sensor", pn = "vl53l1x", address = 0x29, swob = adafruit_vl53l1x.VL53L1X( com_bus ))
+        super().__init__(name = "NIR_lidar", pn = "vl53l1x", address = 0x29, swob = adafruit_vl53l1x.VL53L1X( com_bus ))
         #self.model_id, self.module_type, self.mask_rev = self.swob.instrument_model_info
         #print("Model ID: 0x{:0X}".format(self.instrument_model_id))
         #print("Module Type: 0x{:0X}".format(self.module_type))
@@ -28,22 +28,15 @@ class vl53l1x_4m_Range_Sensor( Device ):
         self.swob.distance_instrument_mode = 2 # long distance instrument_mode
         self.swob.timing_budget = 100
         self.range_m = None
-        self.parameters = []
-        self.values = []
     def read(self):
         if self.swob.data_ready and self.swob.distance is not None:
             self.range_m = self.swob.distance/100 #reports in cm for whatever reason
         else:
-            self.range_m = 0 
+            self.range_m = 0
     def header(self):
         return "vl53l1x_distance-!-m"
-
     def log(self):
-        log = "{}, {}".format( self.name, self.pn )
-        for index in range (0, len(self.parameters)):
-            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
-        return log
-        
+        return "{}".format( self.range_m )
     def printlog(self):
         print( self.log())
 
