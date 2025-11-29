@@ -31,15 +31,15 @@ class Generic_Sensor_Page( Page ):
         title_group.append(self.title_text_area)
         self.group.append(title_group)
 
-        rows = 7
+        self.rows = 7
         select_width = 4
         selection_x = 8
         selection_start_y = 8 + text_spacing_y
         selection_width = 180
         selection_height = 32
         self.selection_rectangles = []
-        self.text_areas = []
-        for index in range (0,rows):
+        self.parameter_areas = []
+        for index in range (0,self.rows):
             self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=selection_width, height=selection_height, x=selection_x, y=selection_start_y+text_spacing_y*index)
             self.selection_rectangle.hidden = True
             self.selection_rectangles.append( self.selection_rectangle )
@@ -50,14 +50,15 @@ class Generic_Sensor_Page( Page ):
 
             text_group = displayio.Group(scale=2, x=selection_x+2*select_width, y=10+select_width+selection_start_y+text_spacing_y*index)
             text = ""#"parameter_units "
-            self.text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-            text_group.append( self.text_area )
-            self.text_areas.append( self.text_area )
+            self.parameter_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
+            text_group.append( self.parameter_area )
+            self.parameter_areas.append( self.parameter_area )
             self.group.append( text_group )
         #self.selection_rectangles[0].hidden = False
         value_selection_width = 60
         value_x = 200
-        for index in range (0,rows):
+        self.value_areas = []
+        for index in range (0,self.rows):
             self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=value_selection_width, height=selection_height, x=value_x, y=selection_start_y+text_spacing_y*index)
             self.selection_rectangle.hidden = True
             self.selection_rectangles.append( self.selection_rectangle )
@@ -68,9 +69,9 @@ class Generic_Sensor_Page( Page ):
 
             text_group = displayio.Group(scale=2, x=value_x+2*select_width, y=10+select_width+selection_start_y+text_spacing_y*index)
             text = ""#"value "
-            self.text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-            text_group.append( self.text_area )
-            self.text_areas.append( self.text_area )
+            self.value_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
+            text_group.append( self.value_area )
+            self.value_areas.append( self.value_area )
             self.group.append( text_group )
 
         # RETURN
@@ -110,6 +111,12 @@ class Generic_Sensor_Page( Page ):
     def update_values( self ):
         if self.sensor:
             self.title_text_area.text = "{} : {}".format( self.sensor.name, self.sensor.pn )
+            index_max = len(self.sensor.parameters)
+            if index_max > self.rows: index_max = self.rows
+            print( "index_max = ", index_max )
+            for index in range (0, index_max):
+                self.parameter_areas[index].text = self.sensor.parameters[index]
+                self.value_areas[index].text = "{}".format(self.sensor.values[index])
 
 
 def make_generic_sensor_page( instrument ):

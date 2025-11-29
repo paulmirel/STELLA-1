@@ -5,7 +5,7 @@
 import adafruit_max1704x
 from .classm_device import Device
 
-            
+
 def initialize_battery_monitor( instrument ):
     battery_monitor = Null_Battery_Monitor()
     try:
@@ -26,9 +26,9 @@ class max1704x_Battery_Monitor( Device ):
         self.instrument.welcome_page.announce( "initialize_battery_monitor" )
         #self.instrument.sensors_present.append( battery_monitor )
         self.parameters = ["voltage_volts", "energy_percent"]
-        self.values = []
+        self.values = [0,0]
     def read(self):
-        self.voltage = self.swob.cell_voltage
+        self.voltage = round(self.swob.cell_voltage, 2)
         self.percentage = round(self.swob.cell_percent, 1)
         self.values = [self.voltage, self.percentage]
         #print( self.percentage )
