@@ -50,12 +50,12 @@ i2c_bus.unlock()
 # 0x1c lsm6ds   Accelerometer and gyroscope
 # 0x1e lis2mdl  Magnetic field sensor
 # 0x1f mcp9808  Thermometer ### close a0, a1, a2 address jumpers on board to set address
-# 0x28 soil_con Soil conductance sensor
+# TBD 0x28 soil_con Soil conductance sensor
 # 0x29 vl53l1x  Lidar range finder
-# 0x33 mlx90640 Thermal camera
+# TBD 0x33 mlx90640 Thermal camera
 # 0x34 buzzer   Qwiic buzzer
 # 0x36 max1704x Battery monitor
-# 0x37 seesaw   TBD
+# TBD 0x37 seesaw soil_cap Soil capacitance sensor
 # 0x38 focaltouch   Capacitive touch screen sensor
 # 0x39 as7341   Visible spectral sensor
 # 0x44 hdc302x  Precision temperature and humidity sensor
@@ -270,7 +270,7 @@ def main():
         instrument.active_page_number = instrument.pages_dict["Sensors"]
     if True: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Generic"]
-        generic_sensor_page.choose_sensor( instrument.sensors_present[2] )
+        generic_sensor_page.choose_sensor( instrument.sensors_present[1] )
 
     try:
         if buzzer: buzzer.beep()
@@ -281,7 +281,6 @@ def main():
         instrument.check_inputs()
         while operational:
             loop_start = time.monotonic()
-
             instrument.show_active_page()
             instrument.update_active_page()
             instrument.handle_inputs()
@@ -519,10 +518,13 @@ class Instrument:
                 self.input_flag = True
 
     def update_active_page( self ):
-        self.pages_list[ self.active_page_number ].update_values()
-        if self.active_page_number == self.pages_dict["Remote"]:
-            if spectral_sensors_detected:
-                self.spectral_graph_page.update_plot_data()
+        try:
+            self.pages_list[ self.active_page_number ].update_values()
+            if self.active_page_number == self.pages_dict["Remote"]:
+                if spectral_sensors_detected:
+                    self.spectral_graph_page.update_plot_data()
+        except Exception as err:
+            print("sensor read failed: ", err)
 
 
     def update_batch(self):
@@ -556,34 +558,22 @@ class Instrument:
         self.wavelength_bands_list_sorted = sorted( self.wavelength_bands_list )
         self.number_of_plot_points = len( self.wavelength_bands_list_sorted )
     def make_header( self ):
-        self.header = "unique_identifier"
-        self.header += ", unique_measurement_number"
-        self.header += ", timestamp-!-iso8601utc"
+        self.header = "line"
+        self.header += ", instrument_id"
+        self.header += ", measurement_number"
+        self.header += ", timestamp"
+        self.header += ", decimal_hour"
         self.header += ", batch_number"
         self.header += ", burst_counter"
-        self.header += ", decimal_time-!-hour"
-        self.system_header = self.header
-        spectral_header_list = []
-        spectral_header_list.append( "spectral_sensor_part_number" )
-        spectral_header_list.append( "spectral_wavelength-!-nm" )
-        spectral_header_list.append( "spectral_bandwidth-!-nm" )
-        spectral_header_list.append( "spectral_photodetector_digital_number-!-counts" )
-        spectral_header_list.append( "spectral_irradiance-!-uW_per_cm_sq" )
-        spectral_header_list.append( "spectral_uncertainty_in_irradiance-!-uW_per_cm_sq" )
-        spectral_header_list.append( "spectral_gain-!-" )
-        spectral_header_list.append( "spectral_integration_time-!-ms" )
-        spectral_header_list.append( "spectral_detector_chip_number" )
-        spectral_header_list.append( "spectral_detector_chip_temperature-!-C" )
-        self.spectral_header_count = len( spectral_header_list )
-        if self.spectrometry:
-            for item in spectral_header_list:
-                self.header += ", {}".format( item )
-        for sensor in self.sensors_present:
-            self.header += ", "
-            self.header += sensor.header()
+        self.header += ", sensor_name"
+        self.header += ", part_number"
+        self.header += ", parameter_units"
+        self.header += ", value"
+        self.header += ", parameter_units"
+        self.header += ", value"
+        self.header += ", parameter_units"
+        self.header += ", value"
         self.header += ("\n")
-        #print( self.header )
-        #print( "spectral_header_count: ", self.spectral_header_count )
         self.update_filename()
     def hide_all_pages( self ):
         for item in self.pages_list:

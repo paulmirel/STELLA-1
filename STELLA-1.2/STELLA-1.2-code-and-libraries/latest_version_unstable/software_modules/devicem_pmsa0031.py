@@ -4,7 +4,7 @@
 
 from adafruit_pm25.i2c import PM25_I2C
 from .classm_device import Device
-            
+
 
 def initialize_pmsa0031_particulates_sensor( instrument ):
     pmsa0031_particulates_sensor = Null_pmsa0031_Particulates_Sensor()
@@ -19,12 +19,15 @@ def initialize_pmsa0031_particulates_sensor( instrument ):
 
 class pmsa0031_Particulates_Sensor( Device ):
     def __init__( self, com_bus ):
-        super().__init__(name = "pmsa0031_particulates_sensor", pn = "pmsa0031", address = 0x12, swob = PM25_I2C( com_bus, reset_pin = None ))
+        super().__init__(name = "particulates", pn = "pmsa0031", address = 0x12, swob = PM25_I2C( com_bus, reset_pin = None ))
         self.pm100 = None
         self.pm25 = None
         self.ratio = None
-        self.parameters = []
-        self.values = []
+        self.parameters = ["pm2.5_per_pm10", "pm1_ug_per_m3", "pm2.5_ug_per_m3",
+                            "pm10_ug_per_m3", "0.3um_ct_per_0.1L", "0.5um_ct_per_0.1L",
+                            "1.0um_ct_per_0.1L","2.5um_ct_per_0.1L","5.0um_ct_per_0.1L",
+                            "10.0um_ct_per_0.1L"]
+        self.values = [0,0,0,0,0,0,0,0,0,0]
     def read(self):
         try:
             self.data = self.swob.read()
@@ -35,19 +38,11 @@ class pmsa0031_Particulates_Sensor( Device ):
         #self.aqip = calculate_aqi_p( self.data["pm25 standard"], self.data["pm100 standard"] )
         self.pm25 = self.data["pm25 standard"]
         self.pm100 = self.data["pm100 standard"]
-    def header(self):
-        headers = "pmsa0031_pm2.5_over_pm10_ratio-!-, pmsa0031_pm1-!-ug_per_m_cubed"
-        headers += ", pmsa0031_pm2.5-!-ug_per_m_cubed, pmsa0031_pm10-!-ug_per_m_cubed, pmsa0031_particle_count_0.3m-!-count_per_100mL"
-        headers += ", pmsa0031_particle_count_0.5m-!-count_per_100mL, pmsa0031_particle_count_1m-!-count_per_100mL, pmsa0031_particle_count_2.5m-!-count_per_100mL"
-        headers += ", pmsa0031_particle_count_5m-!-count_per_100mL, pmsa0031_particle_count_10m-!-count_per_100mL"
-        return headers
-    def obsolete_log(self):
         if self.data["pm100 standard"] > 0:
             self.ratio = round(self.data["pm25 standard"]/self.data["pm100 standard"], 2)
         else:
             self.ratio = 1
-        self.datastring = "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}".format(
-                self.ratio,
+        self.values = [self.ratio,
                 self.data["pm10 standard"],
                 self.data["pm25 standard"],
                 self.data["pm100 standard"],
@@ -56,15 +51,13 @@ class pmsa0031_Particulates_Sensor( Device ):
                 self.data["particles 10um"],
                 self.data["particles 25um"],
                 self.data["particles 50um"],
-                self.data["particles 100um"])
-        return self.datastring
-    
+                self.data["particles 100um"]]
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
-    
+
     def printlog(self):
         print( self.log())
 
