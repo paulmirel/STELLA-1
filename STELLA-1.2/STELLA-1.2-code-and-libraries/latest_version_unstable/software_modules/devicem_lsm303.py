@@ -21,23 +21,24 @@ def initialize_lsm303_acceleration_sensor( instrument ):
 class lsm303_Acceleration_Sensor( Device ):
     #https://www.st.com/resource/en/datasheet/lsm303agr.pdf
     def __init__( self, com_bus ):
-        super().__init__(name = "lsm303_acceleration_sensor", pn = "lms303", address = 0x19, swob = adafruit_lsm303_accel.LSM303_Accel( com_bus ))
+        super().__init__(name = "acceleration", pn = "lms303", address = 0x19, swob = adafruit_lsm303_accel.LSM303_Accel( com_bus ))
         self.Ax_m_per_s2 = None
         self.Ay_m_per_s2 = None
         self.Az_m_per_s2 = None
         self.A_uncertainty_m_per_s2= 0.4
-        self.parameters = []
-        self.values = []
+        self.parameters = ["ax_m_per_s2","ay_m_per_s2","az_m_per_s2"]
+        self.values = [0,0,0]
     def read(self):
         self.Ax_m_per_s2, self.Ay_m_per_s2, self.Az_m_per_s2 = self.swob.acceleration
         #print( self.Ax_m_per_s2, self.Ay_m_per_s2, self.Az_m_per_s2 )
+        self.values = [round(self.Ax_m_per_s2,3), round(self.Ay_m_per_s2,3), round(self.Az_m_per_s2,3)]
 
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
-        
+
     def printlog(self):
         print( self.log())
     def header(self):
