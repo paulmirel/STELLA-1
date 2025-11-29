@@ -268,6 +268,10 @@ def main():
     loop_times = []
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
+    if True: #go to startup page
+        instrument.active_page_number = instrument.pages_dict["Generic"]
+        generic_sensor_page.choose_sensor( instrument.sensors_present[0] )
+
     try:
         if vfs:
             onboard_neopixel.fill(devicem_neopixel.GREEN)
@@ -277,10 +281,10 @@ def main():
         while operational:
             loop_start = time.monotonic()
 
-            instrument.show_active_page()               # working time 0ms
-            #instrument.update_active_page()             # working time 80ms
+            instrument.show_active_page()
+            instrument.update_active_page()
             instrument.handle_inputs()
-            controls_page.update_values( )   # working time 21ms
+            controls_page.update_values( )
             for sensor in instrument.sensors_present:   # minimum sensors, battery monitor, GPS: working time ~300ms
                 sensor.read()
                 instrument.handle_inputs()
@@ -513,17 +517,12 @@ class Instrument:
                 self.touch_ty = self.touch_screen.ty
                 self.input_flag = True
 
-    def obsolete_update_active_page( self ):
+    def update_active_page( self ):
         self.pages_list[ self.active_page_number ].update_values()
-        if self.active_page_number == 9:
+        if self.active_page_number == self.pages_dict["Remote"]:
             if spectral_sensors_detected:
                 self.spectral_graph_page.update_plot_data()
-        if self.encoder_increment != 0:
-            if self.active_page_number == 2:
-                self.main_menu_select = (self.main_menu_select + self.encoder_increment) % self.main_menu_select_count
-            if self.active_page_number == 9:
-                self.remote_sensing_select = (self.remote_sensing_select + self.encoder_increment) % self.remote_sensing_select_count
-            self.encoder_increment = 0
+
 
     def update_batch(self):
         self.batch_number = functionm_file.update_batch(self.datestamp)

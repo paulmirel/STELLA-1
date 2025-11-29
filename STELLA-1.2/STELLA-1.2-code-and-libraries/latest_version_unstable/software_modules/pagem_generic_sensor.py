@@ -15,67 +15,101 @@ class Generic_Sensor_Page( Page ):
         self.page_name = "Generic"
         self.instrument = instrument
         self.palette = instrument.palette
-        self.selection = 0
+        self.selection = 14
+        self.last_selection = 0
         self.selection_count = 0
+        self.sensor = False
+
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
         self.group.append( status_background )
         text_spacing_y = 28
-        status_title_group = displayio.Group(scale=2, x=10, y=18)
-        status_title_text = "Sensor:"
-        status_title_text_area = label.Label(terminalio.FONT, text=status_title_text, color=self.palette[0])
-        status_title_group.append(status_title_text_area)
-        self.group.append(status_title_group)
+        title_group = displayio.Group(scale=2, x=16, y=18)
+        title_text = "Name : Part Number "
+        self.title_text_area = label.Label(terminalio.FONT, text=title_text, color=self.palette[0])
+        title_group.append(self.title_text_area)
+        self.group.append(title_group)
 
-        text_group = displayio.Group(scale=2, x=10, y=18+text_spacing_y)
-        text = "sensor mfr, name, pn"
-        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
+        rows = 7
+        select_width = 4
+        selection_x = 8
+        selection_start_y = 8 + text_spacing_y
+        selection_width = 180
+        selection_height = 32
+        self.selection_rectangles = []
+        self.text_areas = []
+        for index in range (0,rows):
+            self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=selection_width, height=selection_height, x=selection_x, y=selection_start_y+text_spacing_y*index)
+            self.selection_rectangle.hidden = True
+            self.selection_rectangles.append( self.selection_rectangle )
+            self.group.append( self.selection_rectangle )
+            self.selection_count += 1
+            area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=selection_width-2*select_width, height=selection_height-2*select_width, x=selection_x+select_width, y=select_width+selection_start_y+text_spacing_y*index)
+            self.group.append( area_rectangle )
 
-        text_group = displayio.Group(scale=2, x=10, y=18+2*text_spacing_y)
-        text = "live sensor data"
-        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
+            text_group = displayio.Group(scale=2, x=selection_x+2*select_width, y=10+select_width+selection_start_y+text_spacing_y*index)
+            text = ""#"parameter_units "
+            self.text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
+            text_group.append( self.text_area )
+            self.text_areas.append( self.text_area )
+            self.group.append( text_group )
+        #self.selection_rectangles[0].hidden = False
+        value_selection_width = 60
+        value_x = 200
+        for index in range (0,rows):
+            self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=value_selection_width, height=selection_height, x=value_x, y=selection_start_y+text_spacing_y*index)
+            self.selection_rectangle.hidden = True
+            self.selection_rectangles.append( self.selection_rectangle )
+            self.group.append( self.selection_rectangle )
+            self.selection_count += 1
+            area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=value_selection_width-2*select_width, height=selection_height-2*select_width, x=value_x+select_width, y=select_width+selection_start_y+text_spacing_y*index)
+            self.group.append( area_rectangle )
 
-        if False:
-            text_group = displayio.Group(scale=2, x=10, y=18+3*text_spacing_y)
-            text = "sd card storage remaining"
-            text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-            text_group.append(text_area)
-            self.group.append(text_group)
+            text_group = displayio.Group(scale=2, x=value_x+2*select_width, y=10+select_width+selection_start_y+text_spacing_y*index)
+            text = ""#"value "
+            self.text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
+            text_group.append( self.text_area )
+            self.text_areas.append( self.text_area )
+            self.group.append( text_group )
 
         # RETURN
-        select_width = 4
-        return_height = 28
+
+        return_height = 14
         return_select_y = 240 - 4 - 2 - return_height - select_width
         return_select_height = return_height + 2*select_width
         return_y = return_select_y + select_width
-        return_text_y = return_y + 12
-        return_select_width = 100
+        return_text_y = return_y + 7
+        return_select_width = 50
         return_select_x = 320 - 4 - return_select_width
         return_x = return_select_x + select_width
         self.return_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=return_select_width, height=return_select_height, x=return_select_x, y=return_select_y)
         self.group.append( self.return_select )
-        #self.return_select.hidden = True
+        self.selection_count += 1
+        self.selection_rectangles.append( self.return_select )
+        self.return_select.hidden = True
+
         return_control_width = return_select_width - 2 * select_width
         self.return_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=return_control_width, height=return_height, x=return_x, y=return_y)
         self.group.append( self.return_color )
-        return_text_x = return_x + 10
-        return_group = displayio.Group(scale=2, x=return_text_x, y=return_text_y)
+        return_text_x = return_x + 3
+        return_group = displayio.Group(scale=1, x=return_text_x, y=return_text_y)
         return_text = "RETURN"
         self.return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
         return_group.append(self.return_text_area)
         self.group.append(return_group)
 
         return self.group
-        
+
     def action( self ):
         self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
-    def update_selection():
-        pass
+    def update_selection( self ):
+        self.selection = 14 #only return for now
+    def choose_sensor( self, sensor ):
+        self.sensor = sensor
+    def update_values( self ):
+        if self.sensor:
+            self.title_text_area.text = "{} : {}".format( self.sensor.name, self.sensor.pn )
 
 
 def make_generic_sensor_page( instrument ):
