@@ -18,27 +18,26 @@ def initialize_hdc3022_air_sensor( instrument ):
 
 class hdc3022_Air_Sensor( Device ):
     def __init__( self, com_bus ):
-        super().__init__(name = "hdc3022_air_sensor", pn = "hdc3022", address = 0x44, swob = adafruit_hdc302x.HDC302x( com_bus ))
+        super().__init__(name = "air", pn = "hdc3022", address = 0x44, swob = adafruit_hdc302x.HDC302x( com_bus ))
         self.temperature_C = 0
         self.humidity_percent = 0
-        self.parameters = []
-        self.values = []
+        self.parameters = [ "temperature_C", "humidity_pct" ]
+        self.values = [0,0]
     def read(self):
-        self.temperature_C = self.swob.temperature
-        self.humidity_percent = self.swob.relative_humidity
+        self.temperature_C = round( self.swob.temperature, 1 )
+        self.humidity_percent = round( self.swob.relative_humidity, 1 )
+        self.values = [self.temperature_C,self.humidity_percent]
         #print( self.temperature_C )
-    
+
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
-    
+
     def printlog(self):
         print( self.log())
-    
-    def header(self):
-        return( "hdc3022_temperature_ambient-!-C, hdc3022_humidity_relative-!-percent" )
+
 
 class Null_hdc3022_Air_Sensor(Device):
     def __init__( self ):

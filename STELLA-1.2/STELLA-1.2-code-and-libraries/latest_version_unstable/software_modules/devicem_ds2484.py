@@ -18,23 +18,24 @@ def initialize_ds2484_1_wire_thermometer( instrument ):
 class ds2484_1_Wire_Thermometer_Reader( Device ):
     #https://learn.adafruit.com/adafruit-ds2484-i2c-to-1-wire-bus-adapter-breakout/circuitpython-and-python
     def __init__( self, com_bus ):
-        super().__init__(name = "ds2484_1_wire_thermometer", pn = "ds2484", address = 0x18, swob = Adafruit_DS248x( com_bus ))
+        super().__init__(name = "thermometer", pn = "ds2484", address = 0x18, swob = Adafruit_DS248x( com_bus ))
         self.rom = bytearray(8)
         if not self.swob.onewire_search(self.rom):
             pass
             #print( "no 1-wire thermometers found" )
-        self.parameters = []
-        self.values = []
+        self.parameters = ["temperature_C"]
+        self.values = [0]
     def read(self):
-        self.temperature_C = self.swob.ds18b20_temperature(self.rom)
+        self.temperature_C = round(self.swob.ds18b20_temperature(self.rom),1)
+        self.values = [ self.temperature_C ]
         #print( self.temperature_C )
-    def header(self):
-        return "ds2484_temperature_material-!-C"
+
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
+
     def printlog(self):
         print( self.log())
 
