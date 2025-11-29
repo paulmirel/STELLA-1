@@ -26,12 +26,14 @@ class ads1015_12_Bit_ADC( Device ):
         self.channel_1 = ADS1x15_AnalogIn(self.swob, ADS1015.P1)
         self.channel_2 = ADS1x15_AnalogIn(self.swob, ADS1015.P2)
         self.channel_3 = ADS1x15_AnalogIn(self.swob, ADS1015.P3)
-        self.parameters = [ "gain", "ch0_counts", "ch0_volts", "ch1_counts", "ch1_volts","ch2_counts", "ch2_volts","ch3_counts", "ch3_volts",]
-        self.values = []
+        self.parameters = [ "gain", "ch0_counts", "ch0_volts", "ch1_counts", "ch1_volts","ch2_counts", "ch2_volts","ch3_counts", "ch3_volts"]
+        self.values = [0,0,0,0,0,0,0,0,0]
         # set up a differential channel like this self.channel_0-1 = ADS1x15_AnalogIn(swob, ADS1015.P0, ADS1015.P1)
         # self.swob.instrument_mode = self.Mode.SINGLE # this is the default instrument_mode. I don't know where to find Mode. Waits for completed conversion to read the value TBD implement this.
         # Mode.CONTINUOUS # read the latest value that's been converted. TBD look into this and explain
-        self.swob.gain = 1
+        self.gain_number = 5
+        self.gain_list = [0.666667, 1, 2, 4, 8, 16]
+        self.swob.gain = self.gain_list[self.gain_number]
         # gain:
         # setting, full scale voltage
         # 2/3 (how do we enter a fraction?), +/- 6.144V
@@ -44,21 +46,19 @@ class ads1015_12_Bit_ADC( Device ):
         print("found", self.pn, self.swob)
     def read(self):
         # reports 16 bit values even though the conversion is only 12 bits. Least significant four bits (LSBs) should all be 0
-        self.raw = (self.channel_0.value, self.channel_1.value, self.channel_2.value, self.channel_3.value)
+        self.raw = [self.channel_0.value, self.channel_1.value, self.channel_2.value, self.channel_3.value]
         #print( self.raw )
-        self.voltage = (self.channel_0.voltage, self.channel_1.voltage, self.channel_2.voltage, self.channel_3.voltage)
-        #print( self.voltage )
-        self.values.append( self.swob.gain )
-        if False:
-            for index in range (0, len(self.parameters)-1):
-                self.values.append( self.raw[index] )
-                self.values.append( self.voltage[index] )
+        self.voltage = [self.channel_0.voltage, self.channel_1.voltage, self.channel_2.voltage, self.channel_3.voltage]
+        self.values = []
+        self.values.append( self.swob.gain ) #lookup gain
+        for index in range (0, len(self.raw)):
+            self.values.append( self.raw[index] )
+            self.values.append( round(self.voltage[index],3) )
 
     def log(self):
-        log = ""
-        if False:
-            for index in range (0, len(self.parameters)):
-                log = log + "{}, {}".format( self.parameters[index], self.values[index])
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
 
     def printlog(self):

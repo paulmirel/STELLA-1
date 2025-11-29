@@ -270,7 +270,7 @@ def main():
         instrument.active_page_number = instrument.pages_dict["Sensors"]
     if True: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Generic"]
-        generic_sensor_page.choose_sensor( instrument.sensors_present[1] )
+        generic_sensor_page.choose_sensor( instrument.sensors_present[0] )
 
     try:
         if buzzer: buzzer.beep()

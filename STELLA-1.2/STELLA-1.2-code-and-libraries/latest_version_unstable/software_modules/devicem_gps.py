@@ -7,7 +7,7 @@ import time
 import adafruit_gps
 from .classm_device import Device
 
-            
+
 def initialize_gps( instrument ):
     gps = Null_GPS()
     try:
@@ -26,8 +26,8 @@ class pa1616d_GPS( Device ):
     def __init__( self, com_bus ):
         super().__init__(name = "gps", pn = "pa1616d", address = 0x00, swob = adafruit_gps.GPS( com_bus, debug=False))
         self.last_read = 0
-        self.parameters = [ "fix", "latitude_degrees", "longitude_degrees", "altitude_m", "timestamp_iso8601utc", "satellites_count"]
-        self.values = []
+        self.parameters = [ "fix", "latitude_deg", "longitude_deg", "altitude_m", "timestamp", "satellites"]
+        self.values = [0,0,0,0,0,0]
     def send_start_commands(self):
         self.swob.send_command(b"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0") #set data output configuration
         self.swob.send_command(b"PMTK220,1000") #set update interval to 1000 ms
@@ -72,13 +72,13 @@ class pa1616d_GPS( Device ):
                         )
         else: self.timestamp = None #"20000101T000000Z"
         self.values = [ self.has_fix, self.latitude, self.longitude, self.altitude, self.timestamp, self.satellites ]
-        
+
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
-        
+
     def printlog(self):
         print( self.log())
 

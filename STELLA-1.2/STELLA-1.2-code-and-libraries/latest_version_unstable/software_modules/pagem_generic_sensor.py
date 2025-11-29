@@ -56,7 +56,7 @@ class Generic_Sensor_Page( Page ):
             self.group.append( text_group )
         #self.selection_rectangles[0].hidden = False
         value_selection_width = 60
-        value_x = 200
+        value_x = 190
         self.value_areas = []
         for index in range (0,self.rows):
             self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=value_selection_width, height=selection_height, x=value_x, y=selection_start_y+text_spacing_y*index)
@@ -113,7 +113,6 @@ class Generic_Sensor_Page( Page ):
             self.title_text_area.text = "{} : {}".format( self.sensor.name, self.sensor.pn )
             index_max = len(self.sensor.parameters)
             if index_max > self.rows: index_max = self.rows
-            print( "index_max = ", index_max )
             for index in range (0, index_max):
                 self.parameter_areas[index].text = self.sensor.parameters[index]
                 self.value_areas[index].text = "{}".format(self.sensor.values[index])
