@@ -5,7 +5,7 @@
 from adafruit_lis3mdl import LIS3MDL
 from .classm_device import Device
 
-            
+
 def initialize_lis3mdl_magnetic_field_sensor( instrument ):
     lis3mdl_magnetic_field_sensor = Null_lis3mdl_Magnetic_Field_Sensor()
     try:
@@ -22,27 +22,26 @@ def initialize_lis3mdl_magnetic_field_sensor( instrument ):
 
 class lis3mdl_Magnetic_Field_Sensor( Device ):
     def __init__( self, com_bus ):
-        super().__init__(name = "lis3mdl_magnetic_field_sensor", pn = "lis3mdl", address = 0x6a, swob = LIS3MDL(com_bus ))
+        super().__init__(name = "magnetic", pn = "lis3mdl", address = 0x6a, swob = LIS3MDL(com_bus ))
         self.Bx_uT = None
         self.By_uT = None
         self.Bz_uT = None
         self.B_uncertainty_uT = 0.3 #TBD how close is this uncertainty to actual performance
-        self.parameters = []
-        self.values = []
+        self.parameters = [ "Bx_uT", "By_uT", "Bz_uT" ]
+        self.values = [0,0,0]
     def read(self):
         self.Bx_uT, self.By_uT, self.Bz_uT = self.swob.magnetic
         #print( self.Bx_uT, self.By_uT, self.Bz_uT )
-    
+        self.values = [ round(self.Bx_uT,3), round(self.By_uT,3), round(self.Bz_uT,3) ]
+
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
-    
+
     def printlog(self):
         print( self.log())
-    
-    def header(self):
 
 
 class Null_lis3mdl_Magnetic_Field_Sensor(Device):
