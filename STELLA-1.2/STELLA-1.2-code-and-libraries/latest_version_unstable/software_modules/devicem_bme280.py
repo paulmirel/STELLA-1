@@ -18,33 +18,34 @@ def initialize_bme280_air_sensor( instrument ):
 
 class bme280_Air_Sensor( Device ):
     def __init__( self, com_bus ):
-        super().__init__(name = "bme280_air_sensor", pn = "bme280", address = 0x77, swob = adafruit_bme280.Adafruit_BME280_I2C( com_bus ))
+        super().__init__(name = "air", pn = "bme280", address = 0x77, swob = adafruit_bme280.Adafruit_BME280_I2C( com_bus ))
         self.temperature_C = None
         self.pressure = None
         self.altitude = None
         self.humidity = None
-        self.parameters = []
-        self.values = []
+        self.parameters = [ "pressure_hPa", "altitude_m", "temperature_C", "humidity_pct" ]
+        self.values = [0,0,0,0]
     def read(self):
-        self.temperature_C = self.swob.temperature
-        self.pressure = self.swob.pressure
-        self.humidity = self.swob.relative_humidity
-        self.altitude = self.swob.altitude
+        self.temperature_C = round(self.swob.temperature,1)
+        self.pressure = round(self.swob.pressure,1)
+        self.humidity = round(self.swob.relative_humidity,1)
+        self.altitude = round(self.swob.altitude,2)
         #print( self.altitude )
         # TBD calculate dewpoint, but do that in an auxilliary function, because I'll have many sources of T and RH
         # TD: =243.04*(LN(RH/100)+((17.625*T)/(243.04+T)))/(17.625-LN(RH/100)-((17.625*T)/(243.04+T)))
         # from https://bmcnoldy.earth.miami.edu/Humidity.html
         #self.dewpoint = 0 #self.temperature -((100-self.humidity)/5) #update this to the formula above.
         #self.dp_uncty = 3.2
+        self.values = [ self.pressure, self.altitude, self.temperature_C, self.humidity ]
+
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
+
     def printlog(self):
         print( self.log())
-    def header(self):
-        return( "bme280_barometric_pressure-!-hPa, bme280_altitude_relative-!-m, bme280_humidity_relative-!-percent, bme280_temperature_ambient-!-C" )
 
 class Null_bme280_Air_Sensor(Device):
     def __init__( self ):
