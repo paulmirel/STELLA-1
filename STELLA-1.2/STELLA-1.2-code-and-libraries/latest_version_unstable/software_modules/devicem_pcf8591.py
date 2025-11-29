@@ -6,7 +6,7 @@ import adafruit_pcf8591.pcf8591 as PCF8591
 from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
 from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
 from .classm_device import Device
-            
+
 def initialize_pcf8591_8_bit_adc_dac( instrument ):
     pcf8591_8_bit_adc_dac = Null_pcf8591_8_Bit_ADC_DAC()
     try:
@@ -19,7 +19,7 @@ def initialize_pcf8591_8_bit_adc_dac( instrument ):
 
 class pcf8591_8_Bit_ADC_DAC( Device ):
     def __init__( self, com_bus ):
-        super().__init__(name = "pcf8591_8_bit_adc_dac", pn = "pcf8591", address = 0x4f, swob = PCF8591.PCF8591( com_bus, address = 0x4f ))
+        super().__init__(name = "adc_dac_8_bits", pn = "pcf8591", address = 0x4f, swob = PCF8591.PCF8591( com_bus, address = 0x4f ))
         self.raw_0 = None
         self.raw_1 = None
         self.raw_2 = None
@@ -28,30 +28,27 @@ class pcf8591_8_Bit_ADC_DAC( Device ):
         self.voltage_1 = None
         self.voltage_2 = None
         self.voltage_3 = None
-        self.parameters = []
-        self.values = []
+        self.output_value = 0
+        self.parameters = [ "output_counts", "ch0_counts", "ch0_volts", "ch1_counts", "ch1_volts","ch2_counts", "ch2_volts","ch3_counts", "ch3_volts"]
+        self.values = [0,0,0,0,0,0,0,0,0]
     def read(self):
-        self.raw_0 = PCF8591_AnalogIn(self.swob, PCF8591.A0).value
-        self.raw_1 = PCF8591_AnalogIn(self.swob, PCF8591.A1).value
-        self.raw_2 = PCF8591_AnalogIn(self.swob, PCF8591.A2).value
-        self.raw_3 = PCF8591_AnalogIn(self.swob, PCF8591.A3).value
-        self.voltage_0 = (self.raw_0/ 65535) * 3.3
-        self.voltage_1 = (self.raw_1/ 65535) * 3.3
-        self.voltage_2 = (self.raw_2/ 65535) * 3.3
-        self.voltage_3 = (self.raw_3/ 65535) * 3.3
-    def set(self, value):
-        PCF8591_AnalogOut(self.swob, PCF8591.OUT).value = value #32767 max
-    def header(self):
-        headers = "pcf8591_channel_0_digital_number-!-counts, pcf8591_channel_1_digital_number-!-counts, pcf8591_channel_2_digital_number-!-counts, pcf8591_channel_3_digital_number-!-counts"
-        headers += ", pcf8591_channel_0_voltage-!-V, pcf8591_channel_1_voltage-!-V, pcf8591_channel_2_voltage-!-V, pcf8591_channel_3_voltage-!-V"
-        return headers
-    
+        self.raw_0 = PCF8591_AnalogIn(self.swob, PCF8591.A0).value >> 8
+        self.raw_1 = PCF8591_AnalogIn(self.swob, PCF8591.A1).value >> 8
+        self.raw_2 = PCF8591_AnalogIn(self.swob, PCF8591.A2).value >> 8
+        self.raw_3 = PCF8591_AnalogIn(self.swob, PCF8591.A3).value >> 8
+        self.voltage_0 = round((self.raw_0/ 256) * 3.3,2)
+        self.voltage_1 = round((self.raw_1/ 256) * 3.3,2)
+        self.voltage_2 = round((self.raw_2/ 256) * 3.3,2)
+        self.voltage_3 = round((self.raw_3/ 256) * 3.3,2)
+        self.values = [ self.output_value, self.raw_0, self.voltage_0, self.raw_1, self.voltage_1, self.raw_2, self.voltage_2, self.raw_3, self.voltage_3 ]
+    def set(self, output_value):
+        self.output_value = output_value
+        PCF8591_AnalogOut(self.swob, PCF8591.OUT).value = self.output_value #32767 max
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
-        
     def printlog(self):
         print( self.log())
 

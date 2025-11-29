@@ -5,7 +5,7 @@
 import adafruit_ltr390
 from .classm_device import Device
 
-            
+
 def initialize_ltr390_uva_sensor( instrument ):
     ltr390_uva_sensor = Null_ltr390_UVA_Sensor()
     try:
@@ -18,24 +18,23 @@ def initialize_ltr390_uva_sensor( instrument ):
 
 class ltr390_UVA_Sensor( Device ):
     def __init__( self, com_bus ):
-        super().__init__(name = "ltr390_uva_sensor", pn = "ltr390", address = 0x53, swob = adafruit_ltr390.LTR390( com_bus ))
+        super().__init__(name = "light+uva", pn = "ltr390", address = 0x53, swob = adafruit_ltr390.LTR390( com_bus ))
+        self.parameters = [ "illumin_counts", "illumin_lux", "uva_counts", "uv_index" ]
+        self.values = [0,0,0,0]
     def read(self):
         self.UVA = self.swob.uvs
         self.uv_index = self.swob.uvi
         self.light_raw = self.swob.light
         self.lux = self.swob.lux
         #print( self.lux )
-        self.parameters = []
-        self.values = []
-    def header(self):
-        return "ltr390_illumination-!-counts, ltr390_illumination-!-lux, ltr390_uva-!-counts, ltr390_uv_index-!-"
-    
+        self.values = [ self.light_raw, self.lux, self.UVA, self.uv_index ]
+
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
-    
+
     def printlog(self):
         print( self.log())
 

@@ -5,7 +5,7 @@
 import adafruit_mlx90614
 from .classm_device import Device
 
-            
+
 def initialize_mlx90614_surface_thermometer( instrument ):
     mlx90614_surface_thermometer = Null_mlx90614_Surface_Thermometer()
     try:
@@ -18,23 +18,21 @@ def initialize_mlx90614_surface_thermometer( instrument ):
 
 class mlx90614_Surface_Thermometer( Device ):
     def __init__( self, com_bus ):
-        super().__init__(name = "mlx90614_surface_thermometer", pn = "mlx90614", address = 0x5A, swob = adafruit_mlx90614.MLX90614( com_bus ))
+        super().__init__(name = "surface_therm", pn = "mlx90614", address = 0x5A, swob = adafruit_mlx90614.MLX90614( com_bus ))
         self.surface_temperature_C = 0
         self.ambient_temperature_C = 0
-        self.parameters = []
-        self.values = []
+        self.parameters = [ "T_surface_C","T_ambient_C" ]
+        self.values = [0,0]
     def read(self):
         self.surface_temperature_C = self.swob.object_temperature
         self.ambient_temperature_C = self.swob.ambient_temperature
-    def header(self):
-        return "mlx90614_temperature_surface-!-C, mlx90614_temperature_local-!-C"
-    
+        self.values = [round(self.surface_temperature_C,1),round(self.ambient_temperature_C,1)]
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
             log = log + ", {}, {}".format( self.parameters[index], self.values[index])
         return log
-        
+
     def printlog(self):
         print( self.log())
 
