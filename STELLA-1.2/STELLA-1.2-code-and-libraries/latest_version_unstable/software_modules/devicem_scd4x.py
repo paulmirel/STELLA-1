@@ -23,22 +23,27 @@ class scd4x_CO2_Sensor( Device ):
         self.temperature_C = None
         self.humidity = None
         self.co2_ppm = None
+        self.parameters = [ "CO2_ppm", "+_-_ppm", "temperature_C", "humidity_pct" ]
+        self.values = [0,0,0,0]
     def read(self):
-        self.co2_ppm = self.swob.CO2
+        self.co2_ppm = int(round(self.swob.CO2,0))
         if self.co2_ppm is not None:
-            self.co2_uncty_ppm = 50 + self.co2_ppm * 0.05
-            self.temperature_C = self.swob.temperature
-            self.humidity = self.swob.relative_humidity
+            self.co2_uncty_ppm = int(round(50 + self.co2_ppm * 0.05, 0))
+            self.temperature_C = int(round(self.swob.temperature, 0))
+            self.humidity = int(round(self.swob.relative_humidity,0))
         else:
-            self.co2_ppm = 0.0
-            self.co2_uncty_ppm = 50.0
-            self.temperature_C = 0.0
-            self.humidity = 0.0
+            self.co2_ppm = 0
+            self.co2_uncty_ppm = 50
+            self.temperature_C = 0
+            self.humidity = 0
+        self.values = [self.co2_ppm, self.co2_uncty_ppm, self.temperature_C, self.humidity]
 
-    def header(self):
-        return "scd4x_co2_ambient-!-ppm, scd30_co2_uncertainty-!-ppm, scd4x_temperature_ambient-!-C, scd4x_humidity_relative-!-percent"
     def log(self):
-        return "{}, {}, {}, {}".format( round(self.co2_ppm,1), round(self.co2_uncty_ppm,1), round(self.temperature_C,1), int(round(self.humidity,0)) )
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+
     def printlog(self):
         print( self.log())
 
