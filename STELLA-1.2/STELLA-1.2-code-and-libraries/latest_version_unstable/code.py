@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.7.3"
+SOFTWARE_VERSION_NUMBER = "0.7.4"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -79,7 +79,7 @@ from software_modules import devicem_pcf8523_rtc, devicem_neopixel
 from software_modules import devicem_ili9341_display, devicem_gps
 from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
-from software_modules import pagem_settings, pagem_sensors, pagem_generic_sensor
+from software_modules import pagem_settings, pagem_generic_sensor
 from software_modules import pagem_remote_sensing, pagem_air_analyzer, pagem_time_place
 
 
@@ -230,8 +230,6 @@ def main():
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
     status_page = pagem_status.make_status_page( instrument )
     settings_page = pagem_settings.make_settings_page( instrument )
-    sensors_page = pagem_sensors.make_sensors_page( instrument )
-    sensors_page.update_values()
     generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument )
     time_place_page = pagem_time_place.make_time_place_page( instrument )
     air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument )

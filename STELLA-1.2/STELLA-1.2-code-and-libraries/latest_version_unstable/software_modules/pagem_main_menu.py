@@ -36,7 +36,7 @@ class Main_Menu_Page( Page ):
         selection_start_y = 78
         selection_offset_x = 158
         selection_offset_y = 31
-        
+
         self.selection_rectangles = []
         self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x, y=selection_start_y))
         self.group.append( self.selection_rectangles[0] )
@@ -71,37 +71,37 @@ class Main_Menu_Page( Page ):
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border))
         self.group.append( choice_rectangles[0] )
         self.selection_count += 1
-        
+
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[1],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border))
         self.group.append( choice_rectangles[1] )
         self.selection_count += 1
-        
+
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[2],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border+selection_offset_y))
         self.group.append( choice_rectangles[2] )
         self.selection_count += 1
-        
+
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[3],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border+selection_offset_y))
         self.group.append( choice_rectangles[3] )
         self.selection_count += 1
-        
+
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[4],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border+selection_offset_y*2))
         self.group.append( choice_rectangles[4] )
         self.selection_count += 1
-        
+
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[5],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border+selection_offset_y*2))
         self.group.append( choice_rectangles[5] )
         self.selection_count += 1
-        
+
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[6],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border+selection_offset_y*3))
         self.group.append( choice_rectangles[6] )
         self.selection_count += 1
-        
+
         choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[7],
             width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border+selection_offset_y*3))
         self.group.append( choice_rectangles[7] )
@@ -153,7 +153,7 @@ class Main_Menu_Page( Page ):
         status_group.append(status_text_area)
         self.group.append(status_group)
         self.selection_count += 1
-        
+
         more_text =   "*more.."
         more_group = displayio.Group(scale=2, x=footer_text_start_x+footer_offset_x, y=footer_text_y)
         more_text_area = label.Label(terminalio.FONT, text=more_text, color=self.palette[0])
@@ -165,13 +165,13 @@ class Main_Menu_Page( Page ):
         return_group.append(return_text_area)
         self.group.append(return_group)
         self.selection_count += 1
-        
+
         return self.group
-    
+
     def update_selection( self ):
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
-    
+
     def hide_all_selections( self ):
         for item in self.selection_rectangles:
             if item.hidden == False:
@@ -183,7 +183,7 @@ class Main_Menu_Page( Page ):
         if self.selection == 1:
             self.instrument.active_page_number = self.instrument.pages_dict["Air"]
         if self.selection == 2:
-            self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
+            self.instrument.active_page_number = self.instrument.pages_dict["Generic"]
         if self.selection == 3:
             self.instrument.active_page_number = self.instrument.pages_dict["Time"]
         if self.selection == 8:
@@ -192,15 +192,15 @@ class Main_Menu_Page( Page ):
             print( "return whence")
             self.instrument.active_page_number = self.instrument.previous_page_number
 
-    
-    
-    
+
+
+
     def obsolete_update_values( self ):
         if self.instrument.main_menu_select in range( 10, 13 ): ### skip future use choices
             instrument.main_menu_select = 14
         if self.instrument.main_menu_select == 15:  ### skip future use *more option
             self.instrument.main_menu_select = 16
-        
+
         if self.instrument.main_menu_select == 6:
             self.selection_rectangles[0].hidden = False
             self.instrument.active_page_number = 9

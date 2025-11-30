@@ -103,7 +103,7 @@ class Generic_Sensor_Page( Page ):
         return self.group
 
     def action( self ):
-        self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
+        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
     def update_selection( self ):
         self.selection = 14 #only return for now
     def choose_sensor( self, sensor ):
