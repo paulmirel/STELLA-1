@@ -18,19 +18,13 @@ class Generic_Sensor_Page( Page ):
         self.selection = 14
         self.last_selection = 0
         self.selection_count = 0
-        self.sensor = False
+        self.sensor = self.instrument.sensors_present[0]
 
     def make_group( self ):
         self.group = displayio.Group()
-        status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
-        self.group.append( status_background )
+        generic_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
+        self.group.append( generic_background )
         text_spacing_y = 28
-        title_group = displayio.Group(scale=2, x=16, y=18)
-        title_text = "Name : Part Number "
-        self.title_text_area = label.Label(terminalio.FONT, text=title_text, color=self.palette[0])
-        title_group.append(self.title_text_area)
-        self.group.append(title_group)
-
         self.rows = 7
         select_width = 4
         selection_x = 8
@@ -39,14 +33,34 @@ class Generic_Sensor_Page( Page ):
         selection_height = 32
         self.selection_rectangles = []
         self.parameter_areas = []
+        title_selection_width = 320-4
+        self.title_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0,
+                                                width=title_selection_width, height=selection_height+2,
+                                                x=2, y=2)
+        #self.title_select.hidden = True
+        self.selection_rectangles.append( self.title_select )
+        self.group.append( self.title_select )
+        self.selection_count += 1
+        self.title_area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9,
+                                    width=title_selection_width-2*select_width, height=2+selection_height-2*select_width,
+                                    x=select_width+2, y=select_width+2)
+        self.group.append( self.title_area_rectangle )
+        title_group = displayio.Group(scale=2, x=16, y=18)
+        title_text = "Name : Part Number "
+        self.title_text_area = label.Label(terminalio.FONT, text=title_text, color=self.palette[0])
+        title_group.append(self.title_text_area)
+        self.group.append(title_group)
+
+
         for index in range (0,self.rows):
-            self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=selection_width, height=selection_height, x=selection_x, y=selection_start_y+text_spacing_y*index)
-            self.selection_rectangle.hidden = True
-            self.selection_rectangles.append( self.selection_rectangle )
-            self.group.append( self.selection_rectangle )
-            self.selection_count += 1
-            area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=selection_width-2*select_width, height=selection_height-2*select_width, x=selection_x+select_width, y=select_width+selection_start_y+text_spacing_y*index)
-            self.group.append( area_rectangle )
+            if False:
+                self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=selection_width, height=selection_height, x=selection_x, y=selection_start_y+text_spacing_y*index)
+                self.selection_rectangle.hidden = True
+                self.selection_rectangles.append( self.selection_rectangle )
+                self.group.append( self.selection_rectangle )
+                self.selection_count += 1
+                area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=selection_width-2*select_width, height=selection_height-2*select_width, x=selection_x+select_width, y=select_width+selection_start_y+text_spacing_y*index)
+                self.group.append( area_rectangle )
 
             text_group = displayio.Group(scale=2, x=selection_x+2*select_width, y=10+select_width+selection_start_y+text_spacing_y*index)
             text = ""#"parameter_units "
@@ -59,13 +73,14 @@ class Generic_Sensor_Page( Page ):
         value_x = 190
         self.value_areas = []
         for index in range (0,self.rows):
-            self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=value_selection_width, height=selection_height, x=value_x, y=selection_start_y+text_spacing_y*index)
-            self.selection_rectangle.hidden = True
-            self.selection_rectangles.append( self.selection_rectangle )
-            self.group.append( self.selection_rectangle )
-            self.selection_count += 1
-            area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=value_selection_width-2*select_width, height=selection_height-2*select_width, x=value_x+select_width, y=select_width+selection_start_y+text_spacing_y*index)
-            self.group.append( area_rectangle )
+            if False:
+                self.selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=value_selection_width, height=selection_height, x=value_x, y=selection_start_y+text_spacing_y*index)
+                self.selection_rectangle.hidden = True
+                self.selection_rectangles.append( self.selection_rectangle )
+                self.group.append( self.selection_rectangle )
+                self.selection_count += 1
+                area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=value_selection_width-2*select_width, height=selection_height-2*select_width, x=value_x+select_width, y=select_width+selection_start_y+text_spacing_y*index)
+                self.group.append( area_rectangle )
 
             text_group = displayio.Group(scale=2, x=value_x+2*select_width, y=10+select_width+selection_start_y+text_spacing_y*index)
             text = ""#"value "
