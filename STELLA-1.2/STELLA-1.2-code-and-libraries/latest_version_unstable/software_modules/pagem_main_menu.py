@@ -17,6 +17,7 @@ class Main_Menu_Page( Page ):
         self.selection = 0
         self.last_selection = -1
         self.selection_count = 1
+        self.field_selected = False
     def make_group( self ):
         menu_list = "Remote Sense", "Air Analyzer", "Sensors", "Time / Place", "*future use", "*future use", "*future use", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
         menu_color_list = 20, 12, 21, 14, 19, 19, 19, 19

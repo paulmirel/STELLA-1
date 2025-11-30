@@ -18,7 +18,8 @@ class Generic_Sensor_Page( Page ):
         self.selection = 0
         self.last_selection = 1
         self.selection_count = 0
-        self.sensor = self.instrument.sensors_present[0]
+        self.sensor_choice = 0
+        self.field_selected = False
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -46,7 +47,7 @@ class Generic_Sensor_Page( Page ):
                                     x=select_width+2, y=select_width+2)
         self.group.append( self.title_area_rectangle )
         title_group = displayio.Group(scale=2, x=16, y=18)
-        title_text = "Name : Part Number "
+        title_text = ""
         self.title_text_area = label.Label(terminalio.FONT, text=title_text, color=self.palette[0])
         title_group.append(self.title_text_area)
         self.group.append(title_group)
@@ -118,9 +119,6 @@ class Generic_Sensor_Page( Page ):
         return self.group
 
     def update_selection( self ):
-        print( "selection count = ", self.selection_count )
-        print( "last_selection = ", self.last_selection )
-        print( "selection = ", self.selection )
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
 
@@ -131,14 +129,24 @@ class Generic_Sensor_Page( Page ):
 
     def action( self ):
         if self.selection == 0:
-            print("choose next sensor")
+            if self.instrument.encoder_increment != 0:
+                self.sensor_choice = (self.sensor_choice + self.instrument.encoder_increment) % len(self.instrument.sensors_present)
+                self.update_values()
+                self.instrument.encoder_increment = 0
+            if self.instrument.button_pressed:
+                self.field_selected = not self.field_selected
+                if self.field_selected:
+                    self.title_area_rectangle.color_index = 5
+                else:
+                    self.title_area_rectangle.color_index = 9
+                self.instrument.button_pressed = False
         if self.selection == 1:
+            self.selection = 0
             self.instrument.active_page_number = self.instrument.pages_dict["Main"]
 
-    def choose_sensor( self, sensor ):
-        self.sensor = sensor
 
     def update_values( self ):
+        self.sensor = self.instrument.sensors_present[ self.sensor_choice ]
         if self.sensor:
             self.title_text_area.text = "{} : {}".format( self.sensor.name, self.sensor.pn )
             index_max = len(self.sensor.parameters)
@@ -146,6 +154,9 @@ class Generic_Sensor_Page( Page ):
             for index in range (0, index_max):
                 self.parameter_areas[index].text = self.sensor.parameters[index]
                 self.value_areas[index].text = "{}".format(self.sensor.values[index])
+            for index in range ( index_max, self.rows ):
+                self.parameter_areas[index].text = ""
+                self.value_areas[index].text = ""
 
 
 def make_generic_sensor_page( instrument ):

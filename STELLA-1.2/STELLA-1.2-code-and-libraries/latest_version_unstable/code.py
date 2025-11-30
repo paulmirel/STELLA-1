@@ -266,7 +266,7 @@ def main():
     loop_times = []
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
-    if True: #go to startup page
+    if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Generic"]
         generic_sensor_page.choose_sensor( instrument.sensors_present[1] )
 
@@ -452,46 +452,50 @@ class Instrument:
         if self.input_flag:
             active_page = self.pages_list[ self.last_active_page_number ]
             controls_page = self.pages_list[ self.pages_dict["Controls"] ]
-            if active_page.page_name == "Main" or active_page.page_name == "Remote":
-                combined = True
-            else:
-                combined = False
-            if self.encoder_increment != 0:
-                #print( "track the selection and hand off between both controls and the active page" )
-                self.combined_page_last_selection = self.combined_page_selection
-                if combined:
-                    combined_selection_count = active_page.selection_count + controls_page.selection_count
-                    self.combined_page_selection = (self.combined_page_selection + self.encoder_increment) % combined_selection_count
-                    if self.combined_page_selection < controls_page.selection_count:
-                        controls_page.last_selection = controls_page.selection
-                        controls_page.selection = self.combined_page_selection
-                        active_page.hide_all_selections()
-                        controls_page.update_selection()
-                    else:
-                        controls_page.hide_all_selections()
-                        active_page.last_selection = active_page.selection
-                        active_page.selection = self.combined_page_selection - controls_page.selection_count
-                        active_page.update_selection()
+            if active_page.field_selected:
+                active_page.action()
 
+            else:
+                if active_page.page_name == "Main" or active_page.page_name == "Remote":
+                    combined = True
                 else:
-                    active_page.last_selection = active_page.selection
-                    active_page.selection = ( active_page.selection + self.encoder_increment ) % active_page.selection_count
-                    active_page.update_selection()
-                self.encoder_increment = 0
-            if self.button_pressed:
-                if combined:
-                    if self.combined_page_selection < controls_page.selection_count:
-                        print( "act on controls page on selection {}".format( controls_page.selection ) )
-                        controls_page.action()
+                    combined = False
+                if self.encoder_increment != 0:
+                    #print( "track the selection and hand off between both controls and the active page" )
+                    self.combined_page_last_selection = self.combined_page_selection
+                    if combined:
+                        combined_selection_count = active_page.selection_count + controls_page.selection_count
+                        self.combined_page_selection = (self.combined_page_selection + self.encoder_increment) % combined_selection_count
+                        if self.combined_page_selection < controls_page.selection_count:
+                            controls_page.last_selection = controls_page.selection
+                            controls_page.selection = self.combined_page_selection
+                            active_page.hide_all_selections()
+                            controls_page.update_selection()
+                        else:
+                            controls_page.hide_all_selections()
+                            active_page.last_selection = active_page.selection
+                            active_page.selection = self.combined_page_selection - controls_page.selection_count
+                            active_page.update_selection()
+
                     else:
-                        print( "act on active page of combination on selection {}".format(active_page.selection ))
+                        active_page.last_selection = active_page.selection
+                        active_page.selection = ( active_page.selection + self.encoder_increment ) % active_page.selection_count
+                        active_page.update_selection()
+                    self.encoder_increment = 0
+                if self.button_pressed:
+                    if combined:
+                        if self.combined_page_selection < controls_page.selection_count:
+                            #print( "act on controls page on selection {}".format( controls_page.selection ) )
+                            controls_page.action()
+                        else:
+                            #print( "act on active page of combination on selection {}".format(active_page.selection ))
+                            active_page.action()
+                        #print( self.combined_page_selection )
+                    else:
                         active_page.action()
-                    #print( self.combined_page_selection )
-                else:
-                    active_page.action()
-                    #print( active_page.selection  )
-                #print( "button pressed, do something with that")
-                self.button_pressed = False
+                        #print( active_page.selection  )
+                    #print( "button pressed, do something with that")
+                    self.button_pressed = False
             controls_page.update_values()
             self.input_flag = False
 
