@@ -39,7 +39,7 @@ class Spectral_Channel( Device ):
 
     def read(self):
         pass
-        self.values = [  ]
+        #self.values = [  ]
 
     def log(self):
         pass

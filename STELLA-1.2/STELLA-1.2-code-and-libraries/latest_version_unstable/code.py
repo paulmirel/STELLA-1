@@ -126,6 +126,7 @@ def main():
         #from software_modules import remote_sensing_page
 
     # initialize sensors
+    gps = devicem_gps.initialize_gps( instrument )
     if ('0x48') in devices_present_hex:
         from software_modules import devicem_ads1015
         ads1015_12_bit_adc = devicem_ads1015.initialize_ads1015_12_bit_adc( instrument )
@@ -208,7 +209,7 @@ def main():
         lv_ez_mb1013_rangefinder = False
     '''
 
-    gps = devicem_gps.initialize_gps( instrument )
+
 
     '''
     #plus_5v_supply = False #TBD make a device object with digital out and analog in, check it for rising and falling
