@@ -15,8 +15,8 @@ class Generic_Sensor_Page( Page ):
         self.page_name = "Generic"
         self.instrument = instrument
         self.palette = instrument.palette
-        self.selection = 14
-        self.last_selection = 0
+        self.selection = 0
+        self.last_selection = 1
         self.selection_count = 0
         self.sensor = self.instrument.sensors_present[0]
 
@@ -117,12 +117,27 @@ class Generic_Sensor_Page( Page ):
 
         return self.group
 
-    def action( self ):
-        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
     def update_selection( self ):
-        self.selection = 14 #only return for now
+        print( "selection count = ", self.selection_count )
+        print( "last_selection = ", self.last_selection )
+        print( "selection = ", self.selection )
+        self.selection_rectangles[self.last_selection].hidden = True
+        self.selection_rectangles[self.selection].hidden = False
+
+    def hide_all_selections( self ):
+        for item in self.selection_rectangles:
+            if item.hidden == False:
+                item.hidden = True
+
+    def action( self ):
+        if self.selection == 0:
+            print("choose next sensor")
+        if self.selection == 1:
+            self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+
     def choose_sensor( self, sensor ):
         self.sensor = sensor
+
     def update_values( self ):
         if self.sensor:
             self.title_text_area.text = "{} : {}".format( self.sensor.name, self.sensor.pn )
