@@ -110,20 +110,17 @@ def main():
     spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
     # initialize spectral sensors
-    instrument.spectral_sensors_detected = False
     if ('0x49') in devices_present_hex:
-        instrument.spectral_sensors_detected = True
         from software_modules import spectralm_as7265x
         as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
+
     if ('0x74') in devices_present_hex:
-        instrument.spectral_sensors_detected = True
         from software_modules import spectralm_as7331
         as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
     if ('0x39') in devices_present_hex:
-        instrument.spectral_sensors_detected = True
         from software_modules import spectralm_as7341
         as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
-    if instrument.spectral_sensors_detected:
+    if instrument.spectral_sensors_present is not None:
         from software_modules import functionm_exposure_control
         #from software_modules import spectral_graph
         #from software_modules import remote_sensing_page
@@ -199,6 +196,8 @@ def main():
 
     instrument.welcome_page.announce( "Found {} external sensors".format( len(instrument.sensors_present) + len(instrument.spectral_sensors_present)))
 
+    for sensor in instrument.spectral_sensors_present:
+        sensor.make_spectral_channels()
 
     '''
     sense_5V = AnalogIn(board.A1)
@@ -254,8 +253,8 @@ def main():
                                             int( 100 * ( mem_free_after_devices - mem_free_after_pages)/1000/start_mem_free_kB)))
 
 
-    instrument.make_band_list()
-    #instrument.make_header()
+    instrument.make_wavelength_bands_list()
+    #print( instrument.wavelength_bands_list )
     serial_out = user_settings.serial_out
     operational = True
     first_sample_time = time.monotonic()
@@ -407,7 +406,6 @@ class Instrument:
         self.filename = None
         self.sensors_present = []
         self.spectral_sensors_present = []
-        self.spectral_sensors_detected = False
         self.record = user_settings.record_on_startup
         self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
         self.measurement_counter = 0
@@ -552,7 +550,7 @@ class Instrument:
         for index in range (0, len(self.pages_list) ):
             self.pages_dict[ self.pages_list[index].page_name ] = index
             #print(self.pages_list[index].page_name, index)
-    def make_band_list( self ):
+    def make_wavelength_bands_list( self ):
         self.wavelength_bands_list = []
         for sensor in self.spectral_sensors_present:
             for band in sensor.wavelength_bands_nm:

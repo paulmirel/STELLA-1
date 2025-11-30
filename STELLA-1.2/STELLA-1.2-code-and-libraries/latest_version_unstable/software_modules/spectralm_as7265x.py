@@ -7,10 +7,57 @@ import time
 import qwiic_as7265x
 from .classm_device import Device
 
+def initialize_as7265x_spectrometer( instrument ):
+    as7265x_spectrometer = Null_as7265x_Spectrometer()
+    try:
+        as7265x_spectrometer = as7265x_Spectrometer( instrument )#.i2c_bus )
+        instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
+        instrument.spectral_sensors_present.append( as7265x_spectrometer )
+        as7265x_spectrometer.all_lamps_on()
+        time.sleep(0.1)
+        as7265x_spectrometer.all_lamps_off()
+    except Exception as err:
+        print( "as7265x spectrometer failed: {}".format( err ))
+    return as7265x_spectrometer
+
+
+def initialize_spectral_channel( name, sensor_unit ):
+    #try:
+    spectral_channel = Spectral_Channel( name, sensor_unit )
+    sensor_unit.instrument.welcome_page.announce( "initialize_spectral_channel {}".format( name ) )
+    sensor_unit.instrument.sensors_present.append( spectral_channel )
+    return spectral_channel
+
+
+class Spectral_Channel( Device ):
+    def __init__( self, name, sensor_unit ):
+        #super().__init__(name=name, sensor_group=sensor_group )
+        super().__init__(name = name, pn = "as7256x", address = 0x49, swob = sensor_unit )
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "exposed_cts_per_ms", "irrad_uW_per_cm2", "bandwidth_nm",
+                            "chip_number", "temperature_C"]
+        self.values = [0,0,0,0,0,0,0]
+
+    def read(self):
+        pass
+        self.values = [  ]
+
+    def log(self):
+        pass
+        if False:
+            log = "{}, {}".format( self.name, self.pn )
+            for index in range (0, len(self.parameters)):
+                log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+            return log
+
+    def printlog(self):
+        print( self.log())
+
+
 class as7265x_Spectrometer( Device ):
-    def __init__( self, com_bus ):
-        super().__init__(name = "as7265x_spectrometer", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  ))
+    def __init__( self, instrument ): #com_bus ):
+        super().__init__(name = "spectral", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  ))
         self.choice_label = "as7256x V+NIR"
+        self.instrument = instrument
         #self.wavelength_bands_nm = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
         self.wavelength_bands_nm = 410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 940
         self.number_of_channels = len( self.wavelength_bands_nm )
@@ -22,7 +69,7 @@ class as7265x_Spectrometer( Device ):
         self.chip_number_in_wavelength_order = 3,3,3,3,3,3,2,2,1,2,1,2,2,2,2,1,1
         #self.band_designations_in_read_all_order = ("R", "S", "T", "U", "V", "W", "G", "H", "I", "J", "K", "L", "A", "B", "C", "D", "E", "F" )
         self.bandwidths_nm = 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
-        
+
         #self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
         #self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
         #self.bands_sorted = sorted( self.wavelength_bands_nm )
@@ -46,7 +93,7 @@ class as7265x_Spectrometer( Device ):
             else:
                 integration_time_ms = int( integration_time_ms)
             self.integration_time_ms_list.append( integration_time_ms )
-        
+
         #self.lamp_current_mA_index = 0
         self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
         self.lamp_selection_list = [ "UV mA", "Vis mA", "NIR mA" ]
@@ -61,8 +108,13 @@ class as7265x_Spectrometer( Device ):
             self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
-        
-            
+
+
+    def make_spectral_channels( self ):
+        for item in self.wavelength_bands_nm:
+            name = "{}nm_channel".format(item)
+            spectral_channel = initialize_spectral_channel( name, self )
+
     def set_gain(self, new_gain_index):
         self.gain_index = new_gain_index
         gain_constant_list = [ self.swob.kGain1x, self.swob.kGain37x, self.swob.kGain16x, self.swob.kGain64x ]
@@ -72,7 +124,7 @@ class as7265x_Spectrometer( Device ):
         except Exception as err:
             print( "failed to set gain: ", err )
             return False
-        
+
     def set_integration_time( self, index ):
         # must wait for at least 5 seconds before sending integration time again. If not, signal goes to 0.
         integration_time_ms = self.integration_time_ms_list[ index ]
@@ -83,15 +135,15 @@ class as7265x_Spectrometer( Device ):
             return integration_time_ms
         except Exception as err:
             print( "as7265x set integration time failed: ", err )
-    
+
     def acquire_measurement( self ):
         self.swob.take_measurements()
-            
+
     def read_counts_by_wavelength( self, wavelength ):
         index = self.wavelength_bands_nm.index(wavelength)
         return self.read_counts_by_index( index )
 
-    
+
     def read_counts_by_index( self, index ):
         try:
             if index == 0: counts = self.swob.get_a()
@@ -117,30 +169,30 @@ class as7265x_Spectrometer( Device ):
         except Exception as err:
             print( "read channel counts failed: ", err )
             return False
-            
+
     def read_counts_all( self ):
         for index in range( 0, self.number_of_channels):
             self.read_counts_by_index( index )
-    
+
     def report_counts_by_index( self, index ):
         wavelength = self.wavelength_bands_nm[ index ]
         counts = self.data_counts[index]
         return wavelength, counts
-    
+
     def report_counts_all( self ):
         return self.data_counts
-    
+
     def get_max_min_counts( self ):
         self.max_counts = max(self.data_counts)
         self.min_counts = min(self.data_counts)
         return self.max_counts, self.min_counts
-        
-        
+
+
     def read_chip_temperatures( self ):
         self.chip_temperatures_c_dict = { 1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3) }
-        
 
-    
+
+
     def read_irradiances_all_channels( self ):
         self.data_fcal_irradiances = self.swob.get_value(1) # 1 index returns factory calibrated irradiance values, bands in unsorted order
         self.dict_fcal_irradiances = {key:value for key, value in zip(self.wavelength_bands_nm, self.data_fcal_irradiances)}
@@ -212,7 +264,7 @@ class as7265x_Spectrometer( Device ):
         except Exception as err:
             print( "failed to set current:", err )
             return False
-            
+
 
 class Null_as7265x_Spectrometer( Device ):
     def __init__( self ):
@@ -274,16 +326,5 @@ class Null_as7265x_Spectrometer( Device ):
         pass
     def lamp_set_current_mA_all( self, current_index ):
         pass
-        
-def initialize_as7265x_spectrometer( instrument ):
-    as7265x_spectrometer = Null_as7265x_Spectrometer()
-    try:
-        as7265x_spectrometer = as7265x_Spectrometer( instrument.i2c_bus )
-        instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
-        instrument.spectral_sensors_present.append( as7265x_spectrometer )
-        as7265x_spectrometer.all_lamps_on()
-        time.sleep(0.1)
-        as7265x_spectrometer.all_lamps_off()
-    except Exception as err:
-        print( "as7265x spectrometer failed: {}".format( err ))
-    return as7265x_spectrometer
+
+
