@@ -33,23 +33,39 @@ class Spectral_Channel( Device ):
     def __init__( self, name, sensor_unit, index ):
         #super().__init__(name=name, sensor_group=sensor_group )
         super().__init__(name = name, pn = "as7256x", address = 0x49, swob = sensor_unit )
+        self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "exp_ct_per_ms", "irrad_uW_per_cm2", "bandwidth_nm",
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s", "irrad_W_per_m2", "bandwidth_nm",
                             "chip_number", "temperature_C"]
-        self.values = [sensor_unit.wavelength_bands_nm[self.index],
+        self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
+        self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
+        self.chip_number = sensor_unit.chip_number_in_wavelength_order[self.index]
+        self.values = [ self.wavelength_nm,
                         sensor_unit.gain_list[sensor_unit.gain_index],
                         sensor_unit.integration_time_ms_list[sensor_unit.integration_time_index],
                         0,
                         0,
                         0,
-                        sensor_unit.bandwidths_nm[self.index],
-                        sensor_unit.chip_number_in_wavelength_order[self.index],
+                        self.bandwidth_nm,
+                        self.chip_number,
                         0]
 
 
     def read(self):
-        pass
-        #self.values = [  ]
+        raw = self.sensor_unit.read_counts_by_index( self.index )
+        irrad = self.sensor_unit.read_calibrated_by_index( self.index )
+        gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
+        int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
+        normal_ct_per_s = round(1000*raw/(gain*int_time_ms),1)
+        self.values = [self.wavelength_nm,
+                        gain,
+                        int_time_ms,
+                        raw,
+                        normal_ct_per_s,
+                        irrad,
+                        self.bandwidth_nm,
+                        self.chip_number,
+                        0]
 
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
@@ -71,7 +87,11 @@ class as7265x_Spectrometer( Device ):
         self.number_of_channels = len( self.wavelength_bands_nm )
         self.band_designations_in_wavelength_order = "A","B","C","D","E","F","G","H","R","I","S","J","T","U","V","W","K","L"
         self.data_counts = []
-        for index in range( 0, self.number_of_channels): self.data_counts.append(0)
+        self.data_calibrated = []
+        for index in range( 0, self.number_of_channels):
+            self.data_counts.append(0)
+            self.data_calibrated.append(0)
+
         self.max_counts = 0
         self.min_counts = 0
         self.chip_number_in_wavelength_order = [3,3,3,3,3,3,2,2,1,2,1,2,1,1,1,1,2,2]
@@ -180,6 +200,35 @@ class as7265x_Spectrometer( Device ):
             print( "read channel counts failed: ", err )
             return False
 
+    def read_calibrated_by_index( self, index ):
+        try:
+            if index == 0: cal_uW_per_cm2 = self.swob.get_calibrated_a()
+            if index == 1: cal_uW_per_cm2 = self.swob.get_calibrated_b()
+            if index == 2: cal_uW_per_cm2 = self.swob.get_calibrated_c()
+            if index == 3: cal_uW_per_cm2 = self.swob.get_calibrated_d()
+            if index == 4: cal_uW_per_cm2 = self.swob.get_calibrated_e()
+            if index == 5: cal_uW_per_cm2 = self.swob.get_calibrated_f()
+            if index == 6: cal_uW_per_cm2 = self.swob.get_calibrated_g()
+            if index == 7: cal_uW_per_cm2 = self.swob.get_calibrated_h()
+            if index == 8: cal_uW_per_cm2 = self.swob.get_calibrated_r()
+            if index == 9: cal_uW_per_cm2 = self.swob.get_calibrated_i()
+            if index == 10: cal_uW_per_cm2 = self.swob.get_calibrated_s()
+            if index == 11: cal_uW_per_cm2 = self.swob.get_calibrated_j()
+            if index == 12: cal_uW_per_cm2 = self.swob.get_calibrated_t()
+            if index == 13: cal_uW_per_cm2 = self.swob.get_calibrated_u()
+            if index == 14: cal_uW_per_cm2 = self.swob.get_calibrated_v()
+            if index == 15: cal_uW_per_cm2 = self.swob.get_calibrated_w()
+            if index == 16: cal_uW_per_cm2 = self.swob.get_calibrated_k()
+            if index == 17: cal_uW_per_cm2 = self.swob.get_calibrated_l()
+            uW_per_W = 1000000
+            cm2_per_m2 = 10000
+            si_cal_W_per_m2 = round((cal_uW_per_cm2 * cm2_per_m2) / uW_per_W, 4)
+            self.data_calibrated[index] = si_cal_W_per_m2
+            return si_cal_W_per_m2
+        except Exception as err:
+            print( "read channel calibrated failed: ", err )
+            return False
+
     def read_counts_all( self ):
         for index in range( 0, self.number_of_channels):
             self.read_counts_by_index( index )
@@ -214,34 +263,7 @@ class as7265x_Spectrometer( Device ):
         return "WL.nm, irrad.uW/(cm^2), irrad.uncty.uW/(cm^2), counts, chip_num, chip_temp_C"
     def get_bandwidth(self, wavelength):
         return self.dict_bandwidths[wavelength]
-    '''
-    def log( self, wavelength):
-        if wavelength in self.bands:
-            logline = "{}".format( self.pn )
-            logline += ", {}".format( wavelength )
-            logline += ", {}".format( self.dict_bandwidths[wavelength] )
-            logline += ", {}".format( self.dict_counts[wavelength] )
-            logline += ", {}".format( self.dict_fcal[wavelength] )
-            logline += ", {}".format( self.dict_fcal[wavelength]*self.uncertainty_percent/100 )
-            logline += ", {}".format( self.gain_ratio )#gain
-            logline += ", {}".format( self.intg_time_ms )#integration time
-            logline += ", {}".format( self.dict_chip_n[wavelength] )#chip number
-            logline += ", {}".format( self.chip_temp_c[self.dict_chip_n[wavelength]] )#chip temperature
-            return logline
-    def serial_log(self, wavelength):
-        if wavelength in self.bands:
-            loglist = "pn: {}".format( self.pn )
-            loglist += ", WL-!-nm: {}".format( wavelength )
-            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
-            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
-            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_fcal[wavelength] )
-            loglist += ", gain-!-: {}".format( self.gain_ratio )
-            loglist += ", intg-!-ms: {}".format( self.intg_time_ms )
-            return loglist
 
-    def printlog(self,ch):
-        print( self.log(ch) )
-    '''
     def all_lamps_on(self):
         #print( "turn on the lamps")
         self.swob.enable_bulb(0)   # white
@@ -311,7 +333,6 @@ class Null_as7265x_Spectrometer( Device ):
         pass
     def read_irradiances_all_channels( self ):
         pass
-
     def read_counts( self, index ):
         pass
     def list_wavelength_bands_nm( self ):
@@ -320,14 +341,12 @@ class Null_as7265x_Spectrometer( Device ):
         pass
     def get_bandwidth(self, wavelength):
         return self.dict_bandwidths[wavelength]
-    '''
     def log( self, wavelength):
         pass
     def serial_log(self, wavelength):
         pass
     def printlog(self,ch):
         pass
-    '''
     def lamps_on(self):
         pass
     def lamps_off(self):
