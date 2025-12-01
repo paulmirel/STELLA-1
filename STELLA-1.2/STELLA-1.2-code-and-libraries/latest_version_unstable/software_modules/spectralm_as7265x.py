@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.1"
+SOFTWARE_VERSION_NUMBER = "1.0"
 DEVICE_TYPE = "as7265x_spectral_sensor"
 # Copyright NASA 2025
 # Author Paul Mirel
