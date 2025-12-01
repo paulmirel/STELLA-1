@@ -310,7 +310,7 @@ def main():
                 sample_time_accumulator = sample_time_accumulator + sample_time
                 instrument.measurement_counter += 1
             sample_time_average = sample_time_accumulator/(instrument.burst_count+1)
-            print( "sample_time_average, all sensors = ", sample_time_average )
+            print( "sample_time_average, all sensors, s = ", round(sample_time_average,3))
             if serial_out:
                 #onboard_neopixel.fill(devicem_neopixel.WHITE)
                 for sensor in instrument.sensors_present:
@@ -352,6 +352,7 @@ def main():
                 loop_times.pop(0)
             #print( "loop working time: min = {}, max = {},".format( min(loop_times), max(loop_times)))
             print( "loop working time average = {}".format( round(sum(loop_times)/len(loop_times),3)))
+            print()
             if instrument.record:
                 while (time.monotonic() < last_sample_time + instrument.sample_interval_s):
                     time.sleep(0.01)
