@@ -110,16 +110,15 @@ def main():
     spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
     # initialize spectral sensors
-    if ('0x49') in devices_present_hex:
-        from software_modules import spectralm_as7265x
-        as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
-
     if ('0x74') in devices_present_hex:
-        from software_modules import spectralm_as7331
+        from software_modules import spectralm_as7331 #UV
         as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
     if ('0x39') in devices_present_hex:
-        from software_modules import spectralm_as7341
+        from software_modules import spectralm_as7341 #VIS
         as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
+    if ('0x49') in devices_present_hex:
+        from software_modules import spectralm_as7265x #VIS+NIR
+        as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
     if instrument.spectral_sensors_present is not None:
         from software_modules import functionm_exposure_control
         #from software_modules import spectral_graph
