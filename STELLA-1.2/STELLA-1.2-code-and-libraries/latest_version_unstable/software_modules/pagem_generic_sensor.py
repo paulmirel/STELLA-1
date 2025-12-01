@@ -71,7 +71,7 @@ class Generic_Sensor_Page( Page ):
             self.group.append( text_group )
         #self.selection_rectangles[0].hidden = False
         value_selection_width = 60
-        value_x = 190
+        value_x = 190+24
         self.value_areas = []
         for index in range (0,self.rows):
             if False:

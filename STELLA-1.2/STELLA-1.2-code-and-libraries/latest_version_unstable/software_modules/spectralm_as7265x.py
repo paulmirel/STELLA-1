@@ -21,33 +21,41 @@ def initialize_as7265x_spectrometer( instrument ):
     return as7265x_spectrometer
 
 
-def initialize_spectral_channel( name, sensor_unit ):
+def initialize_spectral_channel( name, sensor_unit, index ):
     #try:
-    spectral_channel = Spectral_Channel( name, sensor_unit )
+    spectral_channel = Spectral_Channel( name, sensor_unit, index)
     sensor_unit.instrument.welcome_page.announce( "initialize_spectral_channel {}".format( name ) )
     sensor_unit.instrument.sensors_present.append( spectral_channel )
     return spectral_channel
 
 
 class Spectral_Channel( Device ):
-    def __init__( self, name, sensor_unit ):
+    def __init__( self, name, sensor_unit, index ):
         #super().__init__(name=name, sensor_group=sensor_group )
         super().__init__(name = name, pn = "as7256x", address = 0x49, swob = sensor_unit )
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "exposed_cts_per_ms", "irrad_uW_per_cm2", "bandwidth_nm",
+        self.index = index
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "exp_ct_per_ms", "irrad_uW_per_cm2", "bandwidth_nm",
                             "chip_number", "temperature_C"]
-        self.values = [0,0,0,0,0,0,0]
+        self.values = [sensor_unit.wavelength_bands_nm[self.index],
+                        sensor_unit.gain_list[sensor_unit.gain_index],
+                        sensor_unit.integration_time_ms_list[sensor_unit.integration_time_index],
+                        0,
+                        0,
+                        0,
+                        sensor_unit.bandwidths_nm[self.index],
+                        sensor_unit.chip_number_in_wavelength_order[self.index],
+                        0]
+
 
     def read(self):
         pass
         #self.values = [  ]
 
     def log(self):
-        pass
-        if False:
-            log = "{}, {}".format( self.name, self.pn )
-            for index in range (0, len(self.parameters)):
-                log = log + ", {}, {}".format( self.parameters[index], self.values[index])
-            return log
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
 
     def printlog(self):
         print( self.log())
@@ -66,9 +74,9 @@ class as7265x_Spectrometer( Device ):
         for index in range( 0, self.number_of_channels): self.data_counts.append(0)
         self.max_counts = 0
         self.min_counts = 0
-        self.chip_number_in_wavelength_order = 3,3,3,3,3,3,2,2,1,2,1,2,2,2,2,1,1
+        self.chip_number_in_wavelength_order = [3,3,3,3,3,3,2,2,1,2,1,2,1,1,1,1,2,2]
         #self.band_designations_in_read_all_order = ("R", "S", "T", "U", "V", "W", "G", "H", "I", "J", "K", "L", "A", "B", "C", "D", "E", "F" )
-        self.bandwidths_nm = 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
+        self.bandwidths_nm = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
 
         #self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
         #self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
@@ -111,9 +119,11 @@ class as7265x_Spectrometer( Device ):
 
 
     def make_spectral_channels( self ):
+        index = 0
         for item in self.wavelength_bands_nm:
             name = "{}nm_channel".format(item)
-            spectral_channel = initialize_spectral_channel( name, self )
+            spectral_channel = initialize_spectral_channel( name, self, index )
+            index += 1
 
     def set_gain(self, new_gain_index):
         self.gain_index = new_gain_index
