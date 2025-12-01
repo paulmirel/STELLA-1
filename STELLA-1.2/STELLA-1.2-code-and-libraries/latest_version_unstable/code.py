@@ -106,7 +106,10 @@ def main():
     battery_indicator = initialize_led( board.LED )
 
     instrument = create_instrument( i2c_bus, spi_bus, gps_uart_bus, UID, buzzer )
+    instrument.vfs = vfs
     instrument.welcome_page.show()
+    #make datafile
+    #write header
     spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
     # initialize spectral sensors
@@ -194,7 +197,7 @@ def main():
         from software_modules import devicem_vl53l1x
         vl53l1x_4m_range_sensor = devicem_vl53l1x.initialize_vl53l1x_4m_range_sensor( instrument )
 
-    instrument.welcome_page.announce( "Found {} external sensors".format( len(instrument.sensors_present) + len(instrument.spectral_sensors_present)))
+    instrument.welcome_page.announce( "Found {} sensors".format( len(instrument.sensors_present) + len(instrument.spectral_sensors_present)))
 
     for sensor in instrument.spectral_sensors_present:
         sensor.make_spectral_channels()
@@ -254,7 +257,6 @@ def main():
 
 
     instrument.make_wavelength_bands_list()
-    #print( instrument.wavelength_bands_list )
     serial_out = user_settings.serial_out
     operational = True
     first_sample_time = time.monotonic()
@@ -271,8 +273,9 @@ def main():
 
     try:
         if buzzer: buzzer.beep()
-        if vfs:
+        if instrument.vfs:
             onboard_neopixel.fill(devicem_neopixel.GREEN)
+            functionm_file.update_filename( instrument )
         else:
             onboard_neopixel.fill(devicem_neopixel.RED)
         instrument.check_inputs()
@@ -281,62 +284,48 @@ def main():
             instrument.show_active_page()
             instrument.update_active_page()
             instrument.handle_inputs()
-            controls_page.update_values( )
-            for sensor in instrument.sensors_present:   # minimum sensors, battery monitor, GPS: working time ~300ms
-                sensor.read()
-                instrument.handle_inputs()
+            controls_page.update_values()
+            sample_time_accumulator = 0
+            for instrument.burst_counter in range (0, instrument.burst_count):
+                sample_start_time = time.monotonic()
+                system_log = instrument.get_system_log()
+                for sensor in instrument.sensors_present:
+                    sensor.read()
+                    instrument.handle_inputs()
+                if not instrument.vfs:
+                    neo_color = devicem_neopixel.RED
+                elif instrument.take_burst:
+                    instrument.record = False
+                    neo_color = devicem_neopixel.BLUE
+                elif instrument.record:
+                    neo_color = devicem_neopixel.GREEN
+                onboard_neopixel.fill(neo_color)
+                for sensor in instrument.sensors_present:
+                    functionm_file.write_line( instrument, system_log, sensor.log() )
+                    instrument.handle_inputs()
+                if instrument.vfs:
+                    onboard_neopixel.fill(devicem_neopixel.OFF)
+                sample_stop_time = time.monotonic()
+                sample_time = sample_stop_time - sample_start_time
+                sample_time_accumulator = sample_time_accumulator + sample_time
+                instrument.measurement_counter += 1
+            sample_time_average = sample_time_accumulator/(instrument.burst_count+1)
+            print( "sample_time_average, all sensors = ", sample_time_average )
             if serial_out:
+                #onboard_neopixel.fill(devicem_neopixel.WHITE)
                 for sensor in instrument.sensors_present:
                     sensor.printlog()
                     instrument.handle_inputs()
-            print()
+                #onboard_neopixel.fill(devicem_neopixel.OFF)
+                print()
 
             '''
-            if not instrument.input_flag:
-                if ((time.monotonic() > last_sample_time + instrument.sample_interval_s) and instrument.record) or instrument.take_burst:
-                    last_sample_time = time.monotonic()
-                    #print( "sample interval satified at {} s".format(time.monotonic()-first_sample_time ))
-                    for instrument.burst_counter in range( 0, instrument.burst_count):
+            for instrument.burst_counter in range( 0, instrument.burst_count):
                         controls_page.update_burst_countdown( instrument.burst_count - instrument.burst_counter )
                         system_log = instrument.get_system_log()
-                        if not instrument.input_flag:
-                            for sensor in instrument.sensors_present:
-                                sensor.read()
-                            instrument.check_inputs()
-                        if not instrument.input_flag:
-                            for spectral_sensor in instrument.spectral_sensors_present:
-                                spectral_sensor.read()
-                                spectral_sensor.check_gain_ratio()
-                            instrument.check_inputs()
-                        #instrument.update_active_page()
-                        if not instrument.input_flag:
-                            if vfs:
                                 if instrument.take_burst:
                                     onboard_neopixel.fill(BLUE)
-                                else:
-                                    onboard_neopixel.fill(GREEN)
-                                try:
-                                    with open( "/sd/{}".format( instrument.filename ), "a" ) as f:
-                                        f.write( system_log )
-                                        if instrument.spectrometry:
-                                            for index in range (0, instrument.spectral_header_count):
-                                                f.write( ", - " ) # spectral column placeholders
-                                        for sensor in instrument.sensors_present:
-                                            f.write(", ")
-                                            f.write( sensor.log() )
-                                        f.write("\n")
-                                        for band in instrument.wavelength_bands_list_sorted:
-                                            f.write( system_log )
-                                            for spectral_sensor in instrument.spectral_sensors_present:
-                                                logline = spectral_sensor.log(band)
-                                                if logline is not None:
-                                                    f.write( ", " )
-                                                    f.write( spectral_sensor.log(band) )
-                                            f.write("\n")
-                                        f.close()
-                                except Exception as err:
-                                    print( "write to file failed: {}".format( err ))
-                                    vfs = False
+
                                 onboard_neopixel.fill(OFF)
                                 instrument.check_inputs()
                         if not instrument.input_flag:
@@ -349,15 +338,10 @@ def main():
                         instrument.measurement_counter += 1
                     instrument.take_burst = False
                     controls_page.burst_color.color_index = 16
-
-            if False: #battery percentage < 20:
-                flash_indicator( battery_indicator )
-            #TBD command 5V supply
-            #TBD command servo motors
-            #TBD command source lamps
-            #TBD command DAC output
-            instrument.check_calendar_day()
             '''
+            if battery_monitor.percentage < 20:
+                flash_indicator( battery_indicator )
+            instrument.check_calendar_day()
             if not vfs:
                 onboard_neopixel.fill(devicem_neopixel.RED)
             loop_stop = time.monotonic()
@@ -368,10 +352,11 @@ def main():
                 loop_times.pop(0)
             #print( "loop working time: min = {}, max = {},".format( min(loop_times), max(loop_times)))
             print( "loop working time average = {}".format( round(sum(loop_times)/len(loop_times),3)))
-            while (time.monotonic() < last_sample_time + instrument.sample_interval_s):
-                time.sleep(0.01)
-                instrument.handle_inputs()
-            last_sample_time = time.monotonic()
+            if instrument.record:
+                while (time.monotonic() < last_sample_time + instrument.sample_interval_s):
+                    time.sleep(0.01)
+                    instrument.handle_inputs()
+                last_sample_time = time.monotonic()
 
     finally:
         displayio.release_displays()
@@ -389,6 +374,8 @@ class Instrument:
         #self.usb_serial_out_enabled = usb_serial_out_enabled
         self.sample_interval_s = user_settings.sample_interval_s
         self.burst_count = user_settings.burst_count
+        self.take_burst = False
+        self.burst_counter = 0
         self.pages_list = []
         self.palette = functionm_palette.make_palette()
         self.main_display_group = devicem_ili9341_display.initialize_display( spi_bus )
@@ -419,9 +406,10 @@ class Instrument:
         self.active_page_number = 2
         self.last_active_page_number = 0
         self.previous_page_number = 1
-        self.take_burst = False
         self.combined_page_selection = 0
         self.combined_page_last_selection = 0
+        self.vfs = False
+        self.make_header()
 
     def show_active_page( self ):
         if self.active_page_number != self.last_active_page_number:
@@ -558,8 +546,7 @@ class Instrument:
         self.wavelength_bands_list_sorted = sorted( self.wavelength_bands_list )
         self.number_of_plot_points = len( self.wavelength_bands_list_sorted )
     def make_header( self ):
-        self.header = "line"
-        self.header += ", instrument_id"
+        self.header = "instrument_id"
         self.header += ", measurement_number"
         self.header += ", timestamp"
         self.header += ", decimal_hour"
@@ -573,8 +560,14 @@ class Instrument:
         self.header += ", value"
         self.header += ", parameter_units"
         self.header += ", value"
-        self.header += ("\n")
-        self.update_filename()
+        self.header += ", parameter_units"
+        self.header += ", value"
+        self.header += ", parameter_units"
+        self.header += ", value"
+        self.header += ", parameter_units"
+        self.header += ", value"
+        return self.header
+
     def hide_all_pages( self ):
         for item in self.pages_list:
             item.hide()
@@ -587,9 +580,9 @@ class Instrument:
         system_log = "{}".format( self.uid )
         system_log += ", {}".format( self.unique_measurement_number )
         system_log += ", {}".format( self.iso_time )
+        system_log += ", {}".format( self.decimal_time )
         system_log += ", {}".format( self.batch_number )
         system_log += ", {}".format( self.burst_counter )
-        system_log += ", {}".format( self.decimal_time )
         return system_log
 
 
@@ -618,7 +611,7 @@ def read_5V_supply( pin ):
 
 def flash_indicator( lamp ):
     flash_count = 4
-    flash_interval_s = 0.2
+    flash_interval_s = 0.1
     for index in range (0, flash_count):
         lamp.value = True
         time.sleep( flash_interval_s )

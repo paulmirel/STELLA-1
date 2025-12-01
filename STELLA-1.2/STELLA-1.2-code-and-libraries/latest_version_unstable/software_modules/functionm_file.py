@@ -17,6 +17,18 @@ def initialize_sd_card( spi_bus, sd_cs_pin ):
         vfs = False
     return vfs
 
+def write_line( instrument, system_log, line ):
+    try:
+        with open( "/sd/{}".format( instrument.filename ), "a" ) as f:
+            f.write( "{}, ".format(system_log))
+            f.write( "{}".format(line) )
+            f.write( "\n" )
+        return True
+    except Exception as err:
+        print( "failed to write to file: ", err )
+        instrument.vfs = False
+        return False
+
 def evaluate_sdcard_storage( vfs, bytes_per_hour, verbose ):
     try:
         sdcard_status = os.statvfs("/sd")
@@ -53,9 +65,6 @@ def evaluate_sdcard_storage( vfs, bytes_per_hour, verbose ):
         print( err )
         time_remaining_h = False
     return time_remaining_h
-
-
-
 
 
 def update_batch( datestamp ):
@@ -96,7 +105,6 @@ def update_filename( instrument ):
         last_filename_in_use = ("{}_data_{}{:02}{:02}-{}.csv".format(instrument.device_type, 2000,01,01,0))
         # look up today's date
         current_datestamp = "{:04}{:02}{:02}".format( timenow.tm_year, timenow.tm_mon, timenow.tm_mday)
-        previous_header = False
         # look up the last filename
         try:
             with open( "/sd/last_filename.txt", "r" ) as lfn:
@@ -125,20 +133,16 @@ def update_filename( instrument ):
                     previous_header = lfn.readline().rstrip()
                     previous_header += "\n"
             except OSError as err:
-                print( err )
-            #print( "previous header", previous_header )
-            #print( "current header", instrument.header )
-            #print( "equal", instrument.header == previous_header )
-            if instrument.header != previous_header:
-                print( "configuration change, start a new file" )
                 create_new_file = True
-            else:
-                filename_to_use = last_filename_in_use
+                print( "unable to open last filename: ", err )
+                print( "creating new file" )
+        filename_to_use = last_filename_in_use
         if create_new_file:
             filename_to_use = filename_of_the_day
             try:
                 with open( "/sd/{}".format(filename_to_use), "w" ) as fn:
                     fn.write( instrument.header )
+                    fn.write("\n")
             except OSError as err:
                 print( err )
             try:

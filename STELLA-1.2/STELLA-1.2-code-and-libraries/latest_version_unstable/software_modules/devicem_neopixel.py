@@ -7,6 +7,7 @@ import neopixel
 BLUE = ( 0, 0, 255 )
 GREEN = ( 255, 0, 0 )
 YELLOW = ( 127, 255, 0 )
+WHITE = ( 100, 100, 100 )
 RED = ( 0, 255, 0 )
 OFF = ( 0, 0, 0 )
 
