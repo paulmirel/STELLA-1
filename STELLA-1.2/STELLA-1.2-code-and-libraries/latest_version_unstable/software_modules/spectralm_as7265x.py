@@ -36,7 +36,7 @@ class Spectral_Channel( Device ):
         self.sensor_unit = sensor_unit
         self.index = index
         self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s", "irrad_W_per_m2", "bandwidth_nm",
-                            "chip_number", "temperature_C"]
+                            "chip_number", "chip_temp_C"]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
         self.chip_number = sensor_unit.chip_number_in_wavelength_order[self.index]
@@ -57,6 +57,7 @@ class Spectral_Channel( Device ):
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
         normal_ct_per_s = round(1000*raw/(gain*int_time_ms),1)
+        chip_temp = self.sensor_unit.read_chip_temperature_by_chip_number( self.chip_number)
         self.values = [self.wavelength_nm,
                         gain,
                         int_time_ms,
@@ -65,7 +66,7 @@ class Spectral_Channel( Device ):
                         irrad,
                         self.bandwidth_nm,
                         self.chip_number,
-                        0]
+                        chip_temp]
 
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
@@ -136,8 +137,7 @@ class as7265x_Spectrometer( Device ):
             self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
-
-
+        self.chip_temperatures = [ 0,0,0,0 ]
     def make_spectral_channels( self ):
         index = 0
         for item in self.wavelength_bands_nm:
@@ -246,11 +246,9 @@ class as7265x_Spectrometer( Device ):
         self.min_counts = min(self.data_counts)
         return self.max_counts, self.min_counts
 
-
-    def read_chip_temperatures( self ):
-        self.chip_temperatures_c_dict = { 1:self.swob.get_temperature(1), 2:self.swob.get_temperature(2), 3:self.swob.get_temperature(3) }
-
-
+    def read_chip_temperature_by_chip_number( self, chip_number):
+        self.chip_temperatures[ chip_number] = int(round(self.swob.get_temperature(device = chip_number),0))
+        return self.chip_temperatures[ chip_number]
 
     def read_irradiances_all_channels( self ):
         self.data_fcal_irradiances = self.swob.get_value(1) # 1 index returns factory calibrated irradiance values, bands in unsorted order
