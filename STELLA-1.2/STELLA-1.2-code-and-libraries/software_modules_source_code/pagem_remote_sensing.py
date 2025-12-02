@@ -9,15 +9,15 @@ import terminalio
 from .classm_page import Page
 
 class Remote_Sensing_Page( Page ):
-    def __init__( self, instrument, spectral_register):#, hdc3022_air_sensor, mlx90614_surface_thermometer ):#, lv_ez_mb1013_rangefinder ):
+    def __init__( self, instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ):
         super().__init__()
         self.page_name = "Remote"
         self.instrument = instrument
         self.palette = instrument.palette
         self.spectral_register = spectral_register
-        #self.hdc3022_air_sensor = hdc3022_air_sensor
-        #self.mlx90614_surface_thermometer = mlx90614_surface_thermometer
-        #self.lv_ez_mb1013_rangefinder = lv_ez_mb1013_rangefinder
+        self.hdc3022_air_sensor = hdc3022_air_sensor
+        self.mlx90614_surface_thermometer = mlx90614_surface_thermometer
+        self.lv_ez_mb1013_rangefinder = lv_ez_mb1013_rangefinder
         self.selection = 0
         self.selection_count = 0
 
@@ -151,7 +151,7 @@ class Remote_Sensing_Page( Page ):
         data_source_group.append(self.data_source_text_area)
         self.group.append(data_source_group)
         self.selection_count += 1
-
+        
 
         #graph_settings
         graph_settings_select_x = offset + data_source_select_width
@@ -242,7 +242,7 @@ class Remote_Sensing_Page( Page ):
         return_group.append(self.return_text_area)
         self.group.append(return_group)
         self.selection_count += 1
-
+        
         right_sidebar_width = 50
         right_sidebar_x = 320 - right_sidebar_width#tbd remove
         range_text_y = upper_control_y + 25
@@ -322,17 +322,13 @@ class Remote_Sensing_Page( Page ):
         self.group.append(right_value_group)
 
         return self.group
-
+        
     def add_spectral_graph_page(self, spectral_graph_page):
         self.spectral_graph_page = spectral_graph_page
-
+        
     def action( self ):
         self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-
     def update_selection( self ):
-        pass
-
-    def hide_all_selections( self ):
         pass
 
     def obsolete_update_values( self ):
@@ -471,7 +467,7 @@ class Remote_Sensing_Page( Page ):
             self.return_select.hidden = True
 
         if self.spectral_register.live:
-            if False: #self.mlx90614_surface_thermometer.pn and self.hdc3022_air_sensor.pn:
+            if self.mlx90614_surface_thermometer.pn and self.hdc3022_air_sensor.pn:
                 self.lv_ez_mb1013_rangefinder.read()
                 if self.lv_ez_mb1013_rangefinder.range_m < 0.3:
                     self.range_value_text_area.text = "<0.3"
@@ -495,9 +491,9 @@ class Remote_Sensing_Page( Page ):
                 self.humidity_value_text_area.text = " --"
                 self.temperature_value_text_area.text = " --"
 
-def make_remote_sensing_page( instrument, spectral_register):#, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ):
+def make_remote_sensing_page( instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ):
     instrument.welcome_page.announce( "make_remote_sensing_page" )
-    page = Remote_Sensing_Page( instrument, spectral_register)#, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder )
+    page = Remote_Sensing_Page( instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )

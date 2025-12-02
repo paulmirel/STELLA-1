@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.7.4"
+SOFTWARE_VERSION_NUMBER = "0.7.5"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -108,10 +108,9 @@ def main():
     instrument = create_instrument( i2c_bus, spi_bus, gps_uart_bus, UID, buzzer )
     instrument.vfs = vfs
     instrument.welcome_page.show()
-    #make datafile
-    #write header
-    spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
+
+    spectral_sensors_detected = False
     # initialize spectral sensors
     if ('0x74') in devices_present_hex:
         from software_modules import spectralm_as7331 #UV
@@ -123,9 +122,11 @@ def main():
         from software_modules import spectralm_as7265x #VIS+NIR
         as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
     if instrument.spectral_sensors_present is not None:
+        instrument.spectral_sensors_detected = True
         from software_modules import functionm_exposure_control
-        #from software_modules import spectral_graph
-        #from software_modules import remote_sensing_page
+        from software_modules import functionm_spectral_graph
+        from software_modules import pagem_remote_sensing
+        spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
     # initialize sensors
     gps = devicem_gps.initialize_gps( instrument )
@@ -235,18 +236,18 @@ def main():
     generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument )
     time_place_page = pagem_time_place.make_time_place_page( instrument )
     air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument )
-    if False: #spectral_sensors_detected:
-        remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder )
-        instrument.active_page_number = 9
+    if instrument.spectral_sensors_detected:
+        spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
+        remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register)#, hdc3022_air_sensor, mlx90614_surface_thermometer )#, lv_ez_mb1013_rangefinder )
         spectral_graph_page = functionm_spectral_graph.make_spectral_graph_page( instrument, spectral_register )
-        instrument.add_spectral_graph_page( spectral_graph_page )
-        remote_sensing_page.add_spectral_graph_page( spectral_graph_page )
     else:
         remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument )
+
+    if False:
+        for page in instrument.pages_list:
+            print( page.page_name )
     instrument.make_pages_dictionary()
-
-
-
+    #print( instrument.pages_dict )
 
     gc.collect()
     mem_free_after_pages = gc.mem_free()
@@ -261,8 +262,11 @@ def main():
     operational = True
     first_sample_time = time.monotonic()
     last_sample_time = time.monotonic() - instrument.sample_interval_s
+    last_serial_time = time.monotonic() - instrument.serial_interval_s
+    startup_end_time = time.monotonic()
+    startup_time_s = startup_end_time - startup_start_time
+    print( "startup_time_s = ", startup_time_s )
     instrument.take_burst = False
-    instrument.sample_interval_s = 2
     accumulator_cycles = 5
     loop_times = []
     if False: #go to startup page
@@ -270,6 +274,8 @@ def main():
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Generic"]
         generic_sensor_page.choose_sensor( instrument.sensors_present[1] )
+    if False:   #instrument.spectral_sensors_detected:
+        instrument.active_page_number = instrument.pages_dict["Remote"]
 
     try:
         if buzzer: buzzer.beep()
@@ -285,65 +291,43 @@ def main():
             instrument.update_active_page()
             instrument.handle_inputs()
             controls_page.update_values()
-            sample_time_accumulator = 0
-            for instrument.burst_counter in range (0, instrument.burst_count):
-                sample_start_time = time.monotonic()
-                system_log = instrument.get_system_log()
-                for sensor in instrument.sensors_present:
-                    sensor.read()
-                    instrument.handle_inputs()
-                if not instrument.vfs:
-                    neo_color = devicem_neopixel.RED
-                elif instrument.take_burst:
-                    instrument.record = False
-                    neo_color = devicem_neopixel.BLUE
-                elif instrument.record:
-                    neo_color = devicem_neopixel.GREEN
-                onboard_neopixel.fill(neo_color)
-                for sensor in instrument.sensors_present:
-                    functionm_file.write_line( instrument, system_log, sensor.log() )
-                    instrument.handle_inputs()
-                if instrument.vfs:
+            sample_start_time = time.monotonic()
+            system_log = instrument.get_system_log()
+            for sensor in instrument.sensors_present:
+                sensor.read()
+                instrument.handle_inputs()
+            sample_stop_time = time.monotonic()
+            sample_time = sample_stop_time - sample_start_time
+            print( "sample_time, all sensors, s = ", round(sample_time,3))
+            if instrument.vfs:
+                    if instrument.take_burst:
+                        instrument.record = False
+                        onboard_neopixel.fill(devicem_neopixel.BLUE)
+                        for sensor in instrument.sensors_present:
+                                functionm_file.write_line( instrument, system_log, sensor.log() )
+                                instrument.handle_inputs()
+                    if (time.monotonic() > last_sample_time + instrument.sample_interval_s):
+                        if instrument.record:
+                            onboard_neopixel.fill(devicem_neopixel.GREEN)
+                            for sensor in instrument.sensors_present:
+                                functionm_file.write_line( instrument, system_log, sensor.log() )
+                                instrument.handle_inputs()
+                        last_sample_time = time.monotonic()
                     onboard_neopixel.fill(devicem_neopixel.OFF)
-                sample_stop_time = time.monotonic()
-                sample_time = sample_stop_time - sample_start_time
-                sample_time_accumulator = sample_time_accumulator + sample_time
-                instrument.measurement_counter += 1
-            sample_time_average = sample_time_accumulator/(instrument.burst_count+1)
-            print( "sample_time_average, all sensors, s = ", round(sample_time_average,3))
-            if serial_out:
-                #onboard_neopixel.fill(devicem_neopixel.WHITE)
-                for sensor in instrument.sensors_present:
-                    sensor.printlog()
-                    instrument.handle_inputs()
-                #onboard_neopixel.fill(devicem_neopixel.OFF)
-                print()
+                    instrument.measurement_counter += 1
+            else:
+                onboard_neopixel.fill(devicem_neopixel.RED)
+            if (time.monotonic() > last_serial_time + instrument.serial_interval_s):
+                if serial_out:
+                    for sensor in instrument.sensors_present:
+                        sensor.printlog()
+                        instrument.handle_inputs()
+                    print()
+                    last_serial_time = time.monotonic()
 
-            '''
-            for instrument.burst_counter in range( 0, instrument.burst_count):
-                        controls_page.update_burst_countdown( instrument.burst_count - instrument.burst_counter )
-                        system_log = instrument.get_system_log()
-                                if instrument.take_burst:
-                                    onboard_neopixel.fill(BLUE)
-
-                                onboard_neopixel.fill(OFF)
-                                instrument.check_inputs()
-                        if not instrument.input_flag:
-                            if instrument.usb_serial_out_enabled:
-                                onboard_neopixel.fill(WHITE)
-                                #write to serial out
-                                time.sleep(0.2)
-                                onboard_neopixel.fill(OFF)
-                                instrument.check_inputs()
-                        instrument.measurement_counter += 1
-                    instrument.take_burst = False
-                    controls_page.burst_color.color_index = 16
-            '''
             if battery_monitor.percentage < 20:
                 flash_indicator( battery_indicator )
             instrument.check_calendar_day()
-            if not vfs:
-                onboard_neopixel.fill(devicem_neopixel.RED)
             loop_stop = time.monotonic()
             loop_time = loop_stop - loop_start
             #print("loop time {} s".format( loop_time ))
@@ -353,11 +337,8 @@ def main():
             #print( "loop working time: min = {}, max = {},".format( min(loop_times), max(loop_times)))
             print( "loop working time average = {}".format( round(sum(loop_times)/len(loop_times),3)))
             print()
-            if instrument.record:
-                while (time.monotonic() < last_sample_time + instrument.sample_interval_s):
-                    time.sleep(0.01)
-                    instrument.handle_inputs()
-                last_sample_time = time.monotonic()
+
+
 
     finally:
         displayio.release_displays()
@@ -375,6 +356,7 @@ class Instrument:
         #self.usb_serial_out_enabled = usb_serial_out_enabled
         self.sample_interval_s = user_settings.sample_interval_s
         self.burst_count = user_settings.burst_count
+        self.serial_interval_s = user_settings.serial_interval_s
         self.take_burst = False
         self.burst_counter = 0
         self.pages_list = []
@@ -432,7 +414,7 @@ class Instrument:
 
             if self.pages_list[self.active_page_number].page_name == "Remote":
                 if self.spectral_sensors_detected:
-                    self.pages_list[ self.pages_dict["Spectral_Graph"] ].show()
+                    self.pages_list[ self.pages_dict["Spectral_Graph"]].show()
 
     def handle_inputs( self ):
         self.check_inputs()
@@ -510,8 +492,8 @@ class Instrument:
         try:
             self.pages_list[ self.active_page_number ].update_values()
             if self.active_page_number == self.pages_dict["Remote"]:
-                if spectral_sensors_detected:
-                    self.spectral_graph_page.update_plot_data()
+                if self.spectral_sensors_detected:
+                    self.pages_list[self.pages_dict["Spectral_Graph"]].update_plot_data()
         except Exception as err:
             print("sensor read failed: ", err)
 
@@ -589,6 +571,7 @@ class Instrument:
 
     def add_spectral_graph_page( self, spectral_graph_page ):
         self.spectral_graph_page = spectral_graph_page
+
 
 
 

@@ -2,11 +2,15 @@
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
-import displayio
-from adafruit_display_text import label
-import vectorio
-import terminalio
-from .classm_page import Page
+class Page:
+    def __init__( self ):
+        pass
+    def show(self):
+        self.group.hidden = False
+    def hide(self):
+        self.group.hidden = True
+    def update_values(self):
+        pass
 
 class Spectral_Register:
     def __init__( self, instrument ):
@@ -49,7 +53,6 @@ class Spectral_Graph_Page( Page ):
     def __init__( self, instrument, spectral_register ):
         super().__init__()
         self.instrument = instrument
-        self.page_name = "Spectral_Graph"
         self.spectral_register = spectral_register
         self.palette = instrument.palette
         self.points = []
