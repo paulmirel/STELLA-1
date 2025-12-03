@@ -258,7 +258,6 @@ def main():
 
 
     instrument.make_wavelength_bands_list()
-    serial_out = user_settings.serial_out
     operational = True
     first_sample_time = time.monotonic()
     last_sample_time = time.monotonic() - instrument.sample_interval_s
@@ -288,46 +287,62 @@ def main():
         while operational:
             loop_start = time.monotonic()
             instrument.show_active_page()
-            instrument.update_active_page()
             instrument.handle_inputs()
             controls_page.update_values()
             sample_start_time = time.monotonic()
             system_log = instrument.get_system_log()
-            for sensor in instrument.sensors_present:
+            if instrument.active_page_number == instrument.pages_dict["Generic"]:
+                sensor = instrument.sensors_present[generic_sensor_page.sensor_choice]
                 sensor.read()
                 instrument.handle_inputs()
-            sample_stop_time = time.monotonic()
-            sample_time = sample_stop_time - sample_start_time
-            print( "sample_time, all sensors, s = ", round(sample_time,3))
-            if instrument.vfs:
-                    if instrument.take_burst:
-                        instrument.record = False
-                        onboard_neopixel.fill(devicem_neopixel.BLUE)
-                        for sensor in instrument.sensors_present:
-                                functionm_file.write_line( instrument, system_log, sensor.log() )
-                                instrument.handle_inputs()
-                    if (time.monotonic() > last_sample_time + instrument.sample_interval_s):
-                        if instrument.record:
-                            onboard_neopixel.fill(devicem_neopixel.GREEN)
-                            for sensor in instrument.sensors_present:
-                                functionm_file.write_line( instrument, system_log, sensor.log() )
-                                instrument.handle_inputs()
-                        last_sample_time = time.monotonic()
-                    onboard_neopixel.fill(devicem_neopixel.OFF)
-                    instrument.measurement_counter += 1
+                instrument.update_active_page()
+                if instrument.record:
+                    functionm_file.write_line( instrument, system_log, sensor.log() )
+                    instrument.handle_inputs()
+                instrument.measurement_counter += 1
+                if instrument.serial_out:
+                    sensor.printlog()
+                    instrument.handle_inputs()
+                sample_stop_time = time.monotonic()
+                sample_time = sample_stop_time - sample_start_time
+                print( "sample_time, one sensor, s = ", round(sample_time,3))
             else:
-                onboard_neopixel.fill(devicem_neopixel.RED)
-            if (time.monotonic() > last_serial_time + instrument.serial_interval_s):
-                if serial_out:
-                    for sensor in instrument.sensors_present:
-                        sensor.printlog()
-                        instrument.handle_inputs()
-                    print()
-                    last_serial_time = time.monotonic()
+                for sensor in instrument.sensors_present:
+                    sensor.read()
+                    instrument.handle_inputs()
+                instrument.update_active_page()
+                sample_stop_time = time.monotonic()
+                sample_time = sample_stop_time - sample_start_time
+                print( "sample_time, all sensors, s = ", round(sample_time,3))
+                if instrument.vfs:
+                        if instrument.take_burst:
+                            instrument.record = False
+                            onboard_neopixel.fill(devicem_neopixel.BLUE)
+                            for sensor in instrument.sensors_present:
+                                    functionm_file.write_line( instrument, system_log, sensor.log() )
+                                    instrument.handle_inputs()
+                        if (time.monotonic() > last_sample_time + instrument.sample_interval_s):
+                            if instrument.record:
+                                onboard_neopixel.fill(devicem_neopixel.GREEN)
+                                for sensor in instrument.sensors_present:
+                                    functionm_file.write_line( instrument, system_log, sensor.log() )
+                                    instrument.handle_inputs()
+                            last_sample_time = time.monotonic()
+                        onboard_neopixel.fill(devicem_neopixel.OFF)
+                        instrument.measurement_counter += 1
+                else:
+                    onboard_neopixel.fill(devicem_neopixel.RED)
+                if (time.monotonic() > last_serial_time + instrument.serial_interval_s):
+                    if instrument.serial_out:
+                        for sensor in instrument.sensors_present:
+                            sensor.printlog()
+                            instrument.handle_inputs()
+                        print()
+                        last_serial_time = time.monotonic()
 
-            if battery_monitor.percentage < 20:
-                flash_indicator( battery_indicator )
-            instrument.check_calendar_day()
+                if battery_monitor.percentage < 20:
+                    flash_indicator( battery_indicator )
+                instrument.check_calendar_day()
             loop_stop = time.monotonic()
             loop_time = loop_stop - loop_start
             #print("loop time {} s".format( loop_time ))
@@ -354,6 +369,7 @@ class Instrument:
         self.uid = UID
         self.buzzer = buzzer
         #self.usb_serial_out_enabled = usb_serial_out_enabled
+        self.serial_out = user_settings.serial_out
         self.sample_interval_s = user_settings.sample_interval_s
         self.burst_count = user_settings.burst_count
         self.serial_interval_s = user_settings.serial_interval_s
