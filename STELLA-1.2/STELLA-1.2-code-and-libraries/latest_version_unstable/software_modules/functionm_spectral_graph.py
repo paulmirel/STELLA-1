@@ -56,8 +56,8 @@ class Spectral_Graph_Page( Page ):
     def make_group( self ):
         self.group = displayio.Group()
         graph_x = 14 #4
-        graph_width = 320-60-24
-        graph_height = 240-124 #240-120
+        graph_width = 320 - graph_x *2
+        graph_height = 240-124
         message_height = int( graph_height/4 )
         message_offset = 10
         graph_y = 80

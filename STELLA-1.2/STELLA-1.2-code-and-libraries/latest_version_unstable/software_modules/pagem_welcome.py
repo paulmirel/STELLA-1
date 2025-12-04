@@ -7,7 +7,7 @@ from adafruit_display_text import label
 import vectorio
 import terminalio
 from .classm_page import Page
-        
+
 class Welcome_Page( Page ):
     def __init__( self ):
         super().__init__()
@@ -66,7 +66,7 @@ class Welcome_Page( Page ):
             version_group.append( version_area )
             self.group.append( version_group )
 
-            message_group = displayio.Group( scale=2, x=4, y=220 )
+            message_group = displayio.Group( scale=2, x=8, y=220 )
             text = "message here"
             self.message_area = label.Label( terminalio.FONT, text=text, color=0xFFFFFF )
             message_group.append( self.message_area )

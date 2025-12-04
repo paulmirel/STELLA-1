@@ -270,7 +270,7 @@ def main():
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
         sensors_page.choose_sensor( instrument.sensors_present[1] )
-    if False:   #instrument.spectral_sensors_detected:
+    if instrument.spectral_sensors_detected:
         instrument.active_page_number = instrument.pages_dict["Remote"]
 
     try:

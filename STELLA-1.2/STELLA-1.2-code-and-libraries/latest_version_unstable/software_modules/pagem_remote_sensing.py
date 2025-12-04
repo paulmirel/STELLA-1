@@ -39,6 +39,7 @@ class Remote_Sensing_Page( Page ):
         upper_control_y = upper_select_y + select_width
         rs_background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=rs_background_height, x=0, y=rs_background_y)
         self.group.append( rs_background )
+
         # scale
         scale_select_x = offset
         scale_color_x = scale_select_x + select_width
@@ -59,7 +60,7 @@ class Remote_Sensing_Page( Page ):
         self.group.append(scale_group)
 
         # units
-        units_y_select_x = offset + scale_select_width - select_width
+        units_y_select_x = 64
         units_y_color_x = units_y_select_x + select_width
         units_y_select_width = 73
         self.units_y_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_y_select_width, height=upper_select_height, x=units_y_select_x, y=upper_select_y)
@@ -72,13 +73,13 @@ class Remote_Sensing_Page( Page ):
         self.group.append( self.units_y_color )
         units_y_text_x = units_y_color_x + 3
         units_y_group = displayio.Group(scale=1, x=units_y_text_x, y=upper_text_y)
-        units_y_text = "irradiance"
+        units_y_text = "counts" #"irradiance"
         self.units_y_text_area = label.Label(terminalio.FONT, text=units_y_text, color=self.palette[0])
         units_y_group.append(self.units_y_text_area)
         self.group.append(units_y_group)
 
         # spectrum
-        spectrum_select_x = offset + scale_select_width + units_y_select_width - 2* select_width
+        spectrum_select_x = 120
         spectrum_color_x = spectrum_select_x + select_width
         spectrum_select_width = 96
         self.spectrum_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=spectrum_select_width, height=upper_select_height, x=spectrum_select_x, y=upper_select_y)
@@ -103,7 +104,7 @@ class Remote_Sensing_Page( Page ):
 
 
         # exposure
-        exposure_select_x = offset + scale_select_width + units_y_select_width + spectrum_select_width - 3*select_width
+        exposure_select_x = 244 #offset + scale_select_width + units_y_select_width + spectrum_select_width - 3*select_width
         exposure_color_x = exposure_select_x + select_width
         exposure_select_width = 49
         self.exposure_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=exposure_select_width, height=upper_select_height, x=exposure_select_x, y=upper_select_y)
@@ -116,12 +117,12 @@ class Remote_Sensing_Page( Page ):
         self.group.append( self.exposure_color )
         exposure_text_x = exposure_color_x + 3
         exposure_group = displayio.Group(scale=1, x=exposure_text_x, y=upper_text_y)
-        exposure_text = "autoEx"
+        exposure_text = "exposure->"
         self.exposure_text_area = label.Label(terminalio.FONT, text=exposure_text, color=self.palette[0])
         exposure_group.append(self.exposure_text_area)
         self.group.append(exposure_group)
 
-
+        '''
         # lamps
         lamps_select_x = offset + scale_select_width + units_y_select_width + spectrum_select_width + exposure_select_width - 4* select_width
         lamps_color_x = lamps_select_x + select_width
@@ -140,7 +141,7 @@ class Remote_Sensing_Page( Page ):
         self.lamps_text_area = label.Label(terminalio.FONT, text=lamps_text, color=self.palette[0])
         lamps_group.append(self.lamps_text_area)
         self.group.append(lamps_group)
-
+        '''
         # lower controls
         lower_control_height = 14
         lower_select_y = 240 - offset - separator_bar_height - lower_control_height - select_width
@@ -266,84 +267,6 @@ class Remote_Sensing_Page( Page ):
         return_group.append(self.return_text_area)
         self.group.append(return_group)
 
-
-        right_sidebar_width = 50
-        right_sidebar_x = 320 - right_sidebar_width#tbd remove
-        range_text_y = upper_control_y + 25
-        range_group = displayio.Group(scale=1, x=right_sidebar_x, y=range_text_y)
-        range_text = "range m"
-        range_text_area = label.Label(terminalio.FONT, text=range_text, color=self.palette[0])
-        range_group.append(range_text_area)
-        self.group.append(range_group)
-        range_value_group = displayio.Group(scale=2, x=right_sidebar_x, y=range_text_y+20)
-        range_value_text = "0.0m"
-        self.range_value_text_area = label.Label(terminalio.FONT, text=range_value_text, color=self.palette[0])
-        range_value_group.append(self.range_value_text_area)
-        self.group.append(range_value_group)
-        right_sidebar_spacing_y = 44
-        temperature_text_y = range_text_y + right_sidebar_spacing_y
-        temperature_group = displayio.Group(scale=1, x=right_sidebar_x, y=temperature_text_y)
-        temperature_text = "T sf-air"
-        temperature_text_area = label.Label(terminalio.FONT, text=temperature_text, color=self.palette[0])
-        temperature_group.append(temperature_text_area)
-        self.group.append(temperature_group)
-        temperature_value_group = displayio.Group(scale=2, x=right_sidebar_x, y=temperature_text_y+20)
-        temperature_value_text = "0.0C"
-        self.temperature_value_text_area = label.Label(terminalio.FONT, text=temperature_value_text, color=self.palette[0])
-        temperature_value_group.append(self.temperature_value_text_area)
-        self.group.append(temperature_value_group)
-        humidity_text_y = temperature_text_y + right_sidebar_spacing_y
-        humidity_group = displayio.Group(scale=1, x=right_sidebar_x, y=humidity_text_y)
-        humidity_text = "humidity"
-        humidity_text_area = label.Label(terminalio.FONT, text=humidity_text, color=self.palette[0])
-        humidity_group.append(humidity_text_area)
-        self.group.append(humidity_group)
-        humidity_value_group = displayio.Group(scale=2, x=right_sidebar_x, y=humidity_text_y+20)
-        humidity_value_text = "00%"
-        self.humidity_value_text_area = label.Label(terminalio.FONT, text=humidity_value_text, color=self.palette[0])
-        humidity_value_group.append(self.humidity_value_text_area)
-        self.group.append(humidity_value_group)
-        # values bar
-        values_bar_height = 14
-        values_bar_y = 240 - offset - values_bar_height - lower_control_height
-        values_bar_text_y = values_bar_y + 6
-        values_width = 26
-        left_value_x = 2* offset
-        values_spacing = int((320 - left_value_x - values_width - right_sidebar_width) / 4)
-        # left_value
-        left_value_group = displayio.Group(scale=1, x=left_value_x, y=values_bar_y)
-        left_value_text = "000"
-        self.left_value_text_area = label.Label(terminalio.FONT, text=left_value_text, color=self.palette[0])
-        left_value_group.append(self.left_value_text_area)
-        self.group.append(left_value_group)
-        # left_mid_value
-        left_mid_value_x = offset + values_spacing
-        left_mid_value_group = displayio.Group(scale=1, x=left_mid_value_x, y=values_bar_y)
-        left_mid_value_text = "000"
-        self.left_mid_value_text_area = label.Label(terminalio.FONT, text=left_mid_value_text, color=self.palette[0])
-        left_mid_value_group.append(self.left_mid_value_text_area)
-        self.group.append(left_mid_value_group)
-        # mid_value
-        mid_value_x = offset + 2* values_spacing
-        mid_value_group = displayio.Group(scale=1, x=mid_value_x, y=values_bar_y)
-        mid_value_text = "000"
-        self.mid_value_text_area = label.Label(terminalio.FONT, text=mid_value_text, color=self.palette[0])
-        mid_value_group.append(self.mid_value_text_area)
-        self.group.append(mid_value_group)
-        # right_mid_value
-        right_mid_value_x = offset + 3*values_spacing
-        right_mid_value_group = displayio.Group(scale=1, x=right_mid_value_x, y=values_bar_y)
-        right_mid_value_text = "000"
-        self.right_mid_value_text_area = label.Label(terminalio.FONT, text=right_mid_value_text, color=self.palette[0])
-        right_mid_value_group.append(self.right_mid_value_text_area)
-        self.group.append(right_mid_value_group)
-        # right_value
-        right_value_x = offset + 4*values_spacing
-        right_value_group = displayio.Group(scale=1, x=right_value_x, y=values_bar_y)
-        right_value_text = "000"
-        self.right_value_text_area = label.Label(terminalio.FONT, text=right_value_text, color=self.palette[0])
-        right_value_group.append(self.right_value_text_area)
-        self.group.append(right_value_group)
 
         return self.group
 
