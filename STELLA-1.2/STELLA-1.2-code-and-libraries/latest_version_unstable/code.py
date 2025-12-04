@@ -79,7 +79,7 @@ from software_modules import devicem_pcf8523_rtc, devicem_neopixel
 from software_modules import devicem_ili9341_display, devicem_gps
 from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
-from software_modules import pagem_settings, pagem_generic_sensor
+from software_modules import pagem_settings, pagem_sensors
 from software_modules import pagem_remote_sensing, pagem_air_analyzer, pagem_time_place
 
 
@@ -233,7 +233,7 @@ def main():
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
     status_page = pagem_status.make_status_page( instrument )
     settings_page = pagem_settings.make_settings_page( instrument )
-    generic_sensor_page = pagem_generic_sensor.make_generic_sensor_page( instrument )
+    sensors_page = pagem_sensors.make_sensors_page( instrument )
     time_place_page = pagem_time_place.make_time_place_page( instrument )
     air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument )
     if instrument.spectral_sensors_detected:
@@ -271,8 +271,8 @@ def main():
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
     if False: #go to startup page
-        instrument.active_page_number = instrument.pages_dict["Generic"]
-        generic_sensor_page.choose_sensor( instrument.sensors_present[1] )
+        instrument.active_page_number = instrument.pages_dict["Sensors"]
+        sensors_page.choose_sensor( instrument.sensors_present[1] )
     if False:   #instrument.spectral_sensors_detected:
         instrument.active_page_number = instrument.pages_dict["Remote"]
 
@@ -291,8 +291,8 @@ def main():
             controls_page.update_values()
             sample_start_time = time.monotonic()
             system_log = instrument.get_system_log()
-            if instrument.active_page_number == instrument.pages_dict["Generic"]:
-                sensor = instrument.sensors_present[generic_sensor_page.sensor_choice]
+            if instrument.active_page_number == instrument.pages_dict["Sensors"]:
+                sensor = instrument.sensors_present[sensors_page.sensor_choice]
                 sensor.read()
                 instrument.handle_inputs()
                 instrument.update_active_page()
@@ -532,11 +532,13 @@ class Instrument:
             self.update_filename()
             self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
             self.measurement_counter = 0
+
     def make_pages_dictionary( self ):
         self.pages_dict = {}
         for index in range (0, len(self.pages_list) ):
             self.pages_dict[ self.pages_list[index].page_name ] = index
             #print(self.pages_list[index].page_name, index)
+
     def make_wavelength_bands_list( self ):
         self.wavelength_bands_list = []
         for sensor in self.spectral_sensors_present:
@@ -544,6 +546,7 @@ class Instrument:
                 self.wavelength_bands_list.append(band)
         self.wavelength_bands_list_sorted = sorted( self.wavelength_bands_list )
         self.number_of_plot_points = len( self.wavelength_bands_list_sorted )
+
     def make_header( self ):
         self.header = "instrument_id"
         self.header += ", measurement_number"
@@ -573,6 +576,7 @@ class Instrument:
     def build_unique_measurement_number( self ):
         self.unique_measurement_number = "{}{}".format(self.session_tag, self.measurement_counter)
         return self.unique_measurement_number
+
     def get_system_log( self ):
         self.update_time()
         self.build_unique_measurement_number()
@@ -583,7 +587,6 @@ class Instrument:
         system_log += ", {}".format( self.batch_number )
         system_log += ", {}".format( self.burst_counter )
         return system_log
-
 
     def add_spectral_graph_page( self, spectral_graph_page ):
         self.spectral_graph_page = spectral_graph_page

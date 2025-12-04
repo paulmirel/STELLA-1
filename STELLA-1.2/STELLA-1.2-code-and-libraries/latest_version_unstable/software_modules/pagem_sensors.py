@@ -9,10 +9,10 @@ import terminalio
 from .classm_page import Page
 
 
-class Generic_Sensor_Page( Page ):
+class Sensors_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
-        self.page_name = "Generic"
+        self.page_name = "Sensors"
         self.instrument = instrument
         self.palette = instrument.palette
         self.selection = 0
@@ -159,9 +159,9 @@ class Generic_Sensor_Page( Page ):
                 self.value_areas[index].text = ""
 
 
-def make_generic_sensor_page( instrument ):
-    instrument.welcome_page.announce( "make_generic_sensor_page" )
-    page = Generic_Sensor_Page( instrument )
+def make_sensors_page( instrument ):
+    instrument.welcome_page.announce( "make_sensors_page" )
+    page = Sensors_Page( instrument )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )
