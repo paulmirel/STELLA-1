@@ -1,45 +1,20 @@
-SOFTWARE_VERSION_NUMBER = "1.0.0"
-DEVICE_TYPE = "STELLA-1.2_Exposure_control"
+
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
-#### begin parent class definitions ###
-
-class Page:
-    def __init__( self ):
-        pass
-    def show(self):
-        self.group.hidden = False
-    def hide(self):
-        self.group.hidden = True
-    def update_values(self):
-        pass
-
-class Device: #parent class
-    def __init__(self, name = None, pn = None, address = None, swob = None ):
-        self.name = name
-        self.swob = swob
-        self.pn = pn
-        self.address = address
-    def report(self):
-        found = False
-        if self.swob is not None:
-            print("report:", hex(self.address), self.pn, "\t", self.name, "found" )
-            found = True
-        return found
-    def found(self):
-        if self.swob is not None:
-            return True
-        else:
-            return False
-
-#### begin exposure control page class definition
+import displayio
+from adafruit_display_text import label
+import vectorio
+import terminalio
+from .classm_page import Page
 
 class Exposure_Control_Page( Page ):
-    def __init__( self, instrument ):
+    def __init__( self, instrument, spectral_register):
         super().__init__()
         self.instrument = instrument
         self.palette = self.instrument.palette
+        self.spectral_register = spectral_register
+        self.page_name = "Exposure"
         self.selection_color_index = 6
         self.field_selected_color_index = 5
         self.field_not_selected_color_index = 9
@@ -909,9 +884,10 @@ class Exposure_Control_Page( Page ):
 
         return self.group
 
-def make_exposure_control_page( instrument ):
-    page = Exposure_Control_Page( instrument )
+def make_exposure_control_page( instrument, spectral_register ):
+    page = Exposure_Control_Page( instrument, spectral_register )
     group = page.make_group()
-    #page.hide()
+    page.hide()
     instrument.main_display_group.append( group )
+    instrument.pages_list.append( page )
     return page

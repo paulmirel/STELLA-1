@@ -20,6 +20,7 @@ class Remote_Sensing_Page( Page ):
         #self.lv_ez_mb1013_rangefinder = lv_ez_mb1013_rangefinder
         self.selection = 0
         self.selection_count = 0
+        self.field_selected = False
 
     def make_group( self ):
         extra_space = 8

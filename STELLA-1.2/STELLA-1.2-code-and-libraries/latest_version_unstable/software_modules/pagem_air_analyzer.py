@@ -15,6 +15,10 @@ class Air_Analyzer_Page( Page ):
         self.palette = instrument.palette
         self.page_name = "Air"
         self.selection = 0
+        self.last_selection = -1
+        self.selection_count = 1
+        self.field_selected = False
+
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -81,10 +85,10 @@ class Air_Analyzer_Page( Page ):
         self.group.append(return_group)
 
         return self.group
-        
+
     def action( self ):
         self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-    def update_selection():
+    def update_selection(self):
         pass
 
 

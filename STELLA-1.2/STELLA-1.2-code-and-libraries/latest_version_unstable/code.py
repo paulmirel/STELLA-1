@@ -123,7 +123,7 @@ def main():
         as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
     if instrument.spectral_sensors_present is not None:
         instrument.spectral_sensors_detected = True
-        from software_modules import functionm_exposure_control
+        from software_modules import pagem_exposure
         from software_modules import functionm_spectral_graph
         from software_modules import pagem_remote_sensing
         spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
@@ -210,11 +210,6 @@ def main():
         lv_ez_mb1013_rangefinder = initialize_lv_ez_mb1013_rangefinder( instrument, analog_in_0, sense_5V )
     else:
         lv_ez_mb1013_rangefinder = False
-    '''
-
-
-
-    '''
     #plus_5v_supply = False #TBD make a device object with digital out and analog in, check it for rising and falling
     enable_5V = digitalio.DigitalInOut( board.D10 )
     enable_5V.direction = digitalio.Direction.OUTPUT
@@ -240,8 +235,10 @@ def main():
         spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
         remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register)#, hdc3022_air_sensor, mlx90614_surface_thermometer )#, lv_ez_mb1013_rangefinder )
         spectral_graph_page = functionm_spectral_graph.make_spectral_graph_page( instrument, spectral_register )
+        exposure_control_page = pagem_exposure.make_exposure_control_page( instrument, spectral_register )
     else:
         remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument )
+        exposure_control_page = pagem_exposure.make_exposure_control_missing_page( instrument )
 
     if False:
         for page in instrument.pages_list:
