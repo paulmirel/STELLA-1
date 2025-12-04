@@ -422,19 +422,24 @@ class Instrument:
                 self.previous_page_number = self.last_active_page_number
             self.pages_list[ self.last_active_page_number ].hide()
             self.pages_list[ self.pages_dict["Controls"] ].hide()
-            if self.pages_list[self.active_page_number].page_name == "Main" or self.pages_list[self.active_page_number].page_name == "Remote":
+            if self.pages_list[self.active_page_number].page_name == "Main":
                 self.pages_list[ self.pages_dict["Controls"] ].show()
                 self.pages_list[ self.active_page_number ].show()
-                if self.combined_page_selection < self.pages_list[ self.pages_dict["Controls"] ].selection_count:
-                    self.pages_list[ self.active_page_number ].hide_all_selections()
-                    self.pages_list[ self.pages_dict["Controls"] ].update_selection()
+                self.pages_list[ self.active_page_number ].hide_all_selections()
+                self.pages_list[ self.pages_dict["Controls"] ].update_selection()
+            elif self.pages_list[self.active_page_number].page_name == "Remote":
+                self.pages_list[ self.pages_dict["Controls"] ].show()
+                self.pages_list[ self.active_page_number ].show()
+                self.pages_list[ self.active_page_number ].update_selection()
+                self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
             else:
                 self.pages_list[ self.active_page_number ].show()
             self.last_active_page_number = self.active_page_number
-
             if self.pages_list[self.active_page_number].page_name == "Remote":
                 if self.spectral_sensors_detected:
                     self.pages_list[ self.pages_dict["Spectral_Graph"]].show()
+            else:
+                self.pages_list[ self.pages_dict["Spectral_Graph"]].hide()
 
     def handle_inputs( self ):
         self.check_inputs()

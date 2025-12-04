@@ -19,8 +19,10 @@ class Remote_Sensing_Page( Page ):
         #self.mlx90614_surface_thermometer = mlx90614_surface_thermometer
         #self.lv_ez_mb1013_rangefinder = lv_ez_mb1013_rangefinder
         self.selection = 0
-        self.selection_count = 0
+        self.last_selection = 0
+        self.selection_count = 1
         self.field_selected = False
+        self.selection_rectangles = []
 
     def make_group( self ):
         extra_space = 8
@@ -43,6 +45,8 @@ class Remote_Sensing_Page( Page ):
         scale_select_width = 49
         self.scale_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=scale_select_width, height=upper_select_height, x=scale_select_x, y=upper_select_y)
         self.group.append( self.scale_select )
+        self.selection_rectangles.append(self.scale_select)
+
         self.scale_select.hidden = True
         scale_control_width = scale_select_width - 2 * select_width
         self.scale_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=scale_control_width, height=upper_control_height, x=scale_color_x, y=upper_control_y)
@@ -53,13 +57,15 @@ class Remote_Sensing_Page( Page ):
         self.scale_text_area = label.Label(terminalio.FONT, text=scale_text, color=self.palette[0])
         scale_group.append(self.scale_text_area)
         self.group.append(scale_group)
-        self.selection_count += 1
+
         # units
         units_y_select_x = offset + scale_select_width - select_width
         units_y_color_x = units_y_select_x + select_width
         units_y_select_width = 73
         self.units_y_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_y_select_width, height=upper_select_height, x=units_y_select_x, y=upper_select_y)
         self.group.append( self.units_y_select )
+        self.selection_rectangles.append(self.units_y_select)
+
         self.units_y_select.hidden = True
         units_y_control_width = units_y_select_width - 2 * select_width
         self.units_y_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=units_y_control_width, height=upper_control_height, x=units_y_color_x, y=upper_control_y)
@@ -70,13 +76,15 @@ class Remote_Sensing_Page( Page ):
         self.units_y_text_area = label.Label(terminalio.FONT, text=units_y_text, color=self.palette[0])
         units_y_group.append(self.units_y_text_area)
         self.group.append(units_y_group)
-        self.selection_count += 1
+
         # spectrum
         spectrum_select_x = offset + scale_select_width + units_y_select_width - 2* select_width
         spectrum_color_x = spectrum_select_x + select_width
         spectrum_select_width = 96
         self.spectrum_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=spectrum_select_width, height=upper_select_height, x=spectrum_select_x, y=upper_select_y)
         self.group.append( self.spectrum_select )
+        self.selection_rectangles.append(self.spectrum_select)
+
         self.spectrum_select.hidden = True
         spectrum_control_width = spectrum_select_width - 2 * select_width
         self.spectrum_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=spectrum_control_width, height=upper_control_height, x=spectrum_color_x, y=upper_control_y)
@@ -91,7 +99,7 @@ class Remote_Sensing_Page( Page ):
         self.spectrum_text_area = label.Label(terminalio.FONT, text=spectrum_text, color=self.palette[0])
         spectrum_group.append(self.spectrum_text_area)
         self.group.append(spectrum_group)
-        self.selection_count += 1
+
 
 
         # exposure
@@ -100,6 +108,8 @@ class Remote_Sensing_Page( Page ):
         exposure_select_width = 49
         self.exposure_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=exposure_select_width, height=upper_select_height, x=exposure_select_x, y=upper_select_y)
         self.group.append( self.exposure_select )
+        self.selection_rectangles.append(self.exposure_select)
+
         self.exposure_select.hidden = True
         exposure_control_width = exposure_select_width - 2 * select_width
         self.exposure_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=exposure_control_width, height=upper_control_height, x=exposure_color_x, y=upper_control_y)
@@ -110,7 +120,7 @@ class Remote_Sensing_Page( Page ):
         self.exposure_text_area = label.Label(terminalio.FONT, text=exposure_text, color=self.palette[0])
         exposure_group.append(self.exposure_text_area)
         self.group.append(exposure_group)
-        self.selection_count += 1
+
 
         # lamps
         lamps_select_x = offset + scale_select_width + units_y_select_width + spectrum_select_width + exposure_select_width - 4* select_width
@@ -118,6 +128,8 @@ class Remote_Sensing_Page( Page ):
         lamps_select_width = 66
         self.lamps_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=lamps_select_width, height=upper_select_height, x=lamps_select_x, y=upper_select_y)
         self.group.append( self.lamps_select )
+        self.selection_rectangles.append(self.lamps_select)
+
         self.lamps_select.hidden = True
         lamps_control_width = lamps_select_width - 2 * select_width
         self.lamps_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=lamps_control_width, height=upper_control_height, x=lamps_color_x, y=upper_control_y)
@@ -128,7 +140,7 @@ class Remote_Sensing_Page( Page ):
         self.lamps_text_area = label.Label(terminalio.FONT, text=lamps_text, color=self.palette[0])
         lamps_group.append(self.lamps_text_area)
         self.group.append(lamps_group)
-        self.selection_count += 1
+
         # lower controls
         lower_control_height = 14
         lower_select_y = 240 - offset - separator_bar_height - lower_control_height - select_width
@@ -141,6 +153,8 @@ class Remote_Sensing_Page( Page ):
         data_source_select_width = 50
         self.data_source_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=data_source_select_width, height=lower_select_height, x=data_source_select_x, y=lower_select_y)
         self.group.append( self.data_source_select )
+        self.selection_rectangles.append(self.data_source_select)
+
         self.data_source_select.hidden = True
         data_source_control_width = data_source_select_width - 2 * select_width
         self.data_source_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=data_source_control_width, height=lower_control_height, x=data_source_color_x, y=lower_control_y)
@@ -151,7 +165,6 @@ class Remote_Sensing_Page( Page ):
         self.data_source_text_area = label.Label(terminalio.FONT, text=data_source_text, color=self.palette[0])
         data_source_group.append(self.data_source_text_area)
         self.group.append(data_source_group)
-        self.selection_count += 1
 
 
         #graph_settings
@@ -160,6 +173,8 @@ class Remote_Sensing_Page( Page ):
         graph_settings_select_width = 36
         self.graph_settings_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=graph_settings_select_width, height=lower_select_height, x=graph_settings_select_x, y=lower_select_y)
         self.group.append( self.graph_settings_select )
+        self.selection_rectangles.append(self.graph_settings_select)
+
         self.graph_settings_select.hidden = True
         graph_settings_control_width = graph_settings_select_width - 2 * select_width
         self.graph_settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=graph_settings_control_width, height=lower_control_height, x=graph_settings_color_x, y=lower_control_y)
@@ -170,13 +185,15 @@ class Remote_Sensing_Page( Page ):
         self.graph_settings_text_area = label.Label(terminalio.FONT, text=graph_settings_text, color=self.palette[0])
         graph_settings_group.append(self.graph_settings_text_area)
         self.group.append(graph_settings_group)
-        self.selection_count += 1
+
         # units_x
         units_x_select_x = offset + data_source_control_width +graph_settings_select_width+ extra_space - 4
         units_x_color_x = units_x_select_x + select_width
         units_x_select_width = 96
         self.units_x_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_x_select_width, height=lower_select_height, x=units_x_select_x, y=lower_select_y)
         self.group.append( self.units_x_select )
+        self.selection_rectangles.append(self.units_x_select)
+
         self.units_x_select.hidden = True
         units_x_control_width = units_x_select_width - 2 * select_width
         self.units_x_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=units_x_control_width, height=lower_control_height, x=units_x_color_x, y=lower_control_y)
@@ -187,7 +204,7 @@ class Remote_Sensing_Page( Page ):
         self.units_x_text_area = label.Label(terminalio.FONT, text=units_x_text, color=self.palette[0])
         units_x_group.append(self.units_x_text_area)
         self.group.append(units_x_group)
-        self.selection_count += 1
+
 
         # table / graph
         table_graph_select_width = 46
@@ -195,6 +212,8 @@ class Remote_Sensing_Page( Page ):
         table_graph_color_x = table_graph_select_x + select_width
         self.table_graph_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=table_graph_select_width, height=lower_select_height, x=table_graph_select_x, y=lower_select_y)
         self.group.append( self.table_graph_select )
+        self.selection_rectangles.append(self.table_graph_select)
+
         self.table_graph_select.hidden = True
         table_graph_control_width = table_graph_select_width - 2 * select_width
         self.table_graph_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=table_graph_control_width, height=lower_control_height, x=table_graph_color_x, y=lower_control_y)
@@ -205,7 +224,7 @@ class Remote_Sensing_Page( Page ):
         self.table_graph_text_area = label.Label(terminalio.FONT, text=table_graph_text, color=self.palette[0])
         table_graph_group.append(self.table_graph_text_area)
         self.group.append(table_graph_group)
-        self.selection_count += 1
+
 
         # live
         live_select_width = 36
@@ -213,6 +232,8 @@ class Remote_Sensing_Page( Page ):
         live_color_x = live_select_x + select_width
         self.live_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=live_select_width, height=lower_select_height, x=live_select_x, y=lower_select_y)
         self.group.append( self.live_select )
+        self.selection_rectangles.append(self.live_select)
+
         self.live_select.hidden = True
         live_control_width = live_select_width - 2 * select_width
         self.live_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=live_control_width, height=lower_control_height, x=live_color_x, y=lower_control_y)
@@ -223,7 +244,7 @@ class Remote_Sensing_Page( Page ):
         self.live_text_area = label.Label(terminalio.FONT, text=live_text, color=self.palette[0])
         live_group.append(self.live_text_area)
         self.group.append(live_group)
-        self.selection_count += 1
+
 
         # RETURN
 
@@ -232,6 +253,8 @@ class Remote_Sensing_Page( Page ):
         return_color_x = return_select_x + select_width
         self.return_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=return_select_width, height=lower_select_height, x=return_select_x, y=lower_select_y)
         self.group.append( self.return_select )
+        self.selection_rectangles.append(self.return_select)
+        self.selection_count = len( self.selection_rectangles )
         self.return_select.hidden = True
         return_control_width = return_select_width - 2 * select_width
         self.return_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=return_control_width, height=lower_control_height, x=return_color_x, y=lower_control_y)
@@ -242,7 +265,7 @@ class Remote_Sensing_Page( Page ):
         self.return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
         return_group.append(self.return_text_area)
         self.group.append(return_group)
-        self.selection_count += 1
+
 
         right_sidebar_width = 50
         right_sidebar_x = 320 - right_sidebar_width#tbd remove
@@ -331,10 +354,13 @@ class Remote_Sensing_Page( Page ):
         self.instrument.active_page_number = self.instrument.pages_dict["Main"]
 
     def update_selection( self ):
-        pass
+        self.selection_rectangles[self.last_selection].hidden = True
+        self.selection_rectangles[self.selection].hidden = False
 
     def hide_all_selections( self ):
-        pass
+        for item in self.selection_rectangles:
+            if item.hidden == False:
+                item.hidden = True
 
     def obsolete_update_values( self ):
         banner_duration = 3

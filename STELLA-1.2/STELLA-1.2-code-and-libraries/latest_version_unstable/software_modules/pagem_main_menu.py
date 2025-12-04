@@ -41,7 +41,7 @@ class Main_Menu_Page( Page ):
         self.selection_rectangles = []
         self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x, y=selection_start_y))
         self.group.append( self.selection_rectangles[0] )
-        #self.selection_rectangles[0].hidden = True
+        self.selection_rectangles[0].hidden = True
         self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x+selection_offset_x, y=selection_start_y))
         self.group.append( self.selection_rectangles[1] )
         self.selection_rectangles[1].hidden = True
