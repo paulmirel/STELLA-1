@@ -15,7 +15,8 @@ class Time_Place_Page( Page ):
         self.palette = instrument.palette
         self.selection = 0
         self.selection_count = 0
-        
+        self.field_selected = False
+
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -83,10 +84,11 @@ class Time_Place_Page( Page ):
         self.group.append(return_group)
 
         return self.group
-   
+
     def action( self ):
         self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-    def update_selection():
+
+    def update_selection(self):
         pass
 
 
@@ -105,6 +107,7 @@ class GPS_Page( Page ):
     def __init__( self, palette):
         super().__init__()
         self.palette = palette
+
     def make_group( self ):
         self.group = displayio.Group()
         gps_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -143,6 +146,7 @@ class GPS_Page( Page ):
         self.group.append(return_group)
 
         return self.group
+
     def update_values( self, gps ):
         gps.read()
         if gps.fix():

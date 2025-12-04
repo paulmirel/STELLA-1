@@ -171,7 +171,7 @@ class Controls_Page( Page ):
         self.group.append(battery_value_group)
         self.selection_count += 1
         return self.group
-        
+
     def update_selection( self ):
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
@@ -179,14 +179,14 @@ class Controls_Page( Page ):
         for item in self.selection_rectangles:
             if item.hidden == False:
                 item.hidden = True
-    
-    
+
+
     def update_burst_countdown( self, value ):
         if value < 10:
             self.burst_value_text_area.text = " {}".format(value)
         else:
             self.burst_value_text_area.text = "{}".format(value)
-    
+
     def update_values( self ):
         if self.gps.fix():
             self.gps_value_text_area.text = " FIX"
@@ -200,11 +200,19 @@ class Controls_Page( Page ):
         else:
             battery_text = "{}".format(battery_level)
         self.battery_value_text_area.text =  battery_text
-        
-        if self.instrument.burst_count < 10:
-            self.burst_value_text_area.text = " {}".format(self.instrument.burst_count)
+
+        if self.instrument.burst_counter < self.instrument.burst_count:
+            value =  self.instrument.burst_count - self.instrument.burst_counter
+            if value < 10:
+                self.burst_value_text_area.text = " {}".format(value)
+            else:
+                self.burst_value_text_area.text = "{}".format(value)
         else:
-            self.burst_value_text_area.text = "{}".format(self.instrument.burst_count)
+            self.burst_color.color_index = 16
+            if self.instrument.burst_count < 10:
+                self.burst_value_text_area.text = " {}".format(self.instrument.burst_count)
+            else:
+                self.burst_value_text_area.text = "{}".format(self.instrument.burst_count)
         if self.instrument.record:
             self.record_circle.hidden = False
         else:
@@ -230,12 +238,15 @@ class Controls_Page( Page ):
             self.instrument.take_burst = True
             self.instrument.record = False
             self.burst_color.color_index = 6
+        else:
+            self.burst_color.color_index = 16
+            self.instrument.take_burst = False
         if self.selection == 4:
             self.instrument.active_page_number = self.instrument.pages_dict["Settings"]
         if self.selection == 5:
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]
-    
-    
+
+
     def obsolete_actions(self):
         if instrument.active_page_number == 9: # remote sensing
             if instrument.remote_sensing_select == 0:

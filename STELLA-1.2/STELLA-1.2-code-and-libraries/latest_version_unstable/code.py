@@ -316,11 +316,18 @@ def main():
                 print( "sample_time, all sensors, s = ", round(sample_time,3))
                 if instrument.vfs:
                         if instrument.take_burst:
-                            instrument.record = False
-                            onboard_neopixel.fill(devicem_neopixel.BLUE)
-                            for sensor in instrument.sensors_present:
-                                    functionm_file.write_line( instrument, system_log, sensor.log() )
-                                    instrument.handle_inputs()
+                            if instrument.burst_counter < instrument.burst_count:
+                                instrument.burst_counter += 1
+                                instrument.record = False
+                                onboard_neopixel.fill(devicem_neopixel.BLUE)
+                                for sensor in instrument.sensors_present:
+                                        functionm_file.write_line( instrument, system_log, sensor.log() )
+                                        instrument.handle_inputs()
+                            else:
+                                controls_page.update_burst_countdown( instrument.burst_count )
+                                instrument.take_burst = False
+                        else:
+                            instrument.burst_counter = 0
                         if (time.monotonic() > last_sample_time + instrument.sample_interval_s):
                             if instrument.record:
                                 onboard_neopixel.fill(devicem_neopixel.GREEN)
