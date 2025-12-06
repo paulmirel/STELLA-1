@@ -1,4 +1,4 @@
-# main menu page module
+# heat page module
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
@@ -8,10 +8,10 @@ import vectorio
 import terminalio
 from .classm_page import Page
 
-class Main_Menu_Page( Page ):
+class Heat_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
-        self.page_name = "Main"
+        self.page_name = "Heat"
         self.instrument = instrument
         self.palette = instrument.palette
         self.selection = 0
@@ -19,8 +19,6 @@ class Main_Menu_Page( Page ):
         self.selection_count = 1
         self.field_selected = False
     def make_group( self ):
-        menu_list = "Remote Sense", "Set Exposure", "Heat", "Air Analyzer", "Time / Place", "Sensors", "*future use", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
-        menu_color_list = 20, 5, 11, 12, 14, 21, 19, 19, 19, 19
         self.group = displayio.Group()
         start_y = 54
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240-start_y, x=0, y=start_y )
@@ -28,7 +26,7 @@ class Main_Menu_Page( Page ):
         title_bar = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=320-2*5, height=24, x=0+5, y=start_y)
         self.group.append( title_bar )
         title_group = displayio.Group(scale=2, x=100, y=12+start_y)
-        title_text = "Main Menu"
+        title_text = "Heat"
         title_text_area = label.Label(terminalio.FONT, text=title_text, color=self.palette[0])
         title_group.append(title_text_area)
         self.group.append(title_group)
@@ -37,7 +35,7 @@ class Main_Menu_Page( Page ):
         selection_start_y = 78
         selection_offset_x = 158
         selection_offset_y = 31
-
+        '''
         self.selection_rectangles = []
         self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x, y=selection_start_y))
         self.group.append( self.selection_rectangles[0] )
@@ -166,7 +164,7 @@ class Main_Menu_Page( Page ):
         return_group.append(return_text_area)
         self.group.append(return_group)
         self.selection_count += 1
-
+        '''
         return self.group
 
     def update_selection( self ):
@@ -179,17 +177,16 @@ class Main_Menu_Page( Page ):
                 item.hidden = True
 
     def action( self ):
+        '''
         if self.selection == 0:
             self.instrument.active_page_number = self.instrument.pages_dict["Remote"]
         if self.selection == 1:
             self.instrument.active_page_number = self.instrument.pages_dict["Exposure"]
         if self.selection == 2:
-            self.instrument.active_page_number = self.instrument.pages_dict["Heat"]
-        if self.selection == 3:
             self.instrument.active_page_number = self.instrument.pages_dict["Air"]
-        if self.selection == 4:
+        if self.selection == 3:
             self.instrument.active_page_number = self.instrument.pages_dict["Time"]
-        if self.selection == 5:
+        if self.selection == 4:
             self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
         if self.selection == 8:
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]
@@ -197,73 +194,13 @@ class Main_Menu_Page( Page ):
             print( "return whence")
             self.instrument.active_page_number = self.instrument.previous_page_number
 
+        '''
 
 
 
-    def obsolete_update_values( self ):
-        if self.instrument.main_menu_select in range( 10, 13 ): ### skip future use choices
-            instrument.main_menu_select = 14
-        if self.instrument.main_menu_select == 15:  ### skip future use *more option
-            self.instrument.main_menu_select = 16
-
-        if self.instrument.main_menu_select == 6:
-            self.selection_rectangles[0].hidden = False
-            self.instrument.active_page_number = 9
-        else:
-            self.selection_rectangles[0].hidden = True
-        if self.instrument.main_menu_select == 7:
-            self.selection_rectangles[1].hidden = False
-            self.instrument.active_page_number = 8
-
-        else:
-            self.selection_rectangles[1].hidden = True
-        if self.instrument.main_menu_select == 8:
-            self.selection_rectangles[2].hidden = False
-            self.instrument.active_page_number = 5
-
-        else:
-            self.selection_rectangles[2].hidden = True
-        if self.instrument.main_menu_select == 9:
-            self.instrument.active_page_number = 7
-            self.selection_rectangles[3].hidden = False
-        else:
-            self.selection_rectangles[3].hidden = True
-        if self.instrument.main_menu_select == 10:
-            self.selection_rectangles[4].hidden = False
-        else:
-            self.selection_rectangles[4].hidden = True
-        if self.instrument.main_menu_select == 11:
-            self.selection_rectangles[5].hidden = False
-        else:
-            self.selection_rectangles[5].hidden = True
-        if self.instrument.main_menu_select == 12:
-            self.selection_rectangles[6].hidden = False
-        else:
-            self.selection_rectangles[6].hidden = True
-        if self.instrument.main_menu_select == 13:
-            self.selection_rectangles[7].hidden = False
-        else:
-            self.selection_rectangles[7].hidden = True
-        if self.instrument.main_menu_select == 14:
-            self.selection_rectangles[8].hidden = False
-            self.instrument.active_page_number = 3
-        else:
-            self.selection_rectangles[8].hidden = True
-        if self.instrument.main_menu_select == 15:
-            self.selection_rectangles[9].hidden = False
-        else:
-            self.selection_rectangles[9].hidden = True
-        if self.instrument.main_menu_select == 16:
-            self.selection_rectangles[10].hidden = False
-            print("TBD go back to previous page" )
-
-        else:
-            self.selection_rectangles[10].hidden = True
-
-
-def make_main_menu_page( instrument ):
-    instrument.welcome_page.announce( "make_main_menu_page" )
-    page = Main_Menu_Page(instrument)
+def make_heat_page( instrument ):
+    instrument.welcome_page.announce( "make_heat_page" )
+    page = Heat_Page(instrument)
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )

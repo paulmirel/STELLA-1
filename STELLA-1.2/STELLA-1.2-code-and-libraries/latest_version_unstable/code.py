@@ -79,7 +79,7 @@ from software_modules import devicem_pcf8523_rtc, devicem_neopixel
 from software_modules import devicem_ili9341_display, devicem_gps
 from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
-from software_modules import pagem_settings, pagem_sensors
+from software_modules import pagem_settings, pagem_sensors, pagem_heat
 from software_modules import pagem_remote_sensing, pagem_air_analyzer, pagem_time_place
 
 
@@ -231,6 +231,7 @@ def main():
     sensors_page = pagem_sensors.make_sensors_page( instrument )
     time_place_page = pagem_time_place.make_time_place_page( instrument )
     air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument )
+    heat_page = pagem_heat.make_heat_page( instrument )
     if instrument.spectral_sensors_detected:
         spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
         remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register)#, hdc3022_air_sensor, mlx90614_surface_thermometer )#, lv_ez_mb1013_rangefinder )
@@ -270,7 +271,7 @@ def main():
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
         sensors_page.choose_sensor( instrument.sensors_present[1] )
-    if instrument.spectral_sensors_detected:
+    if False: #instrument.spectral_sensors_detected:
         instrument.active_page_number = instrument.pages_dict["Remote"]
 
     try:
@@ -432,6 +433,11 @@ class Instrument:
                 self.pages_list[ self.active_page_number ].show()
                 self.pages_list[ self.active_page_number ].update_selection()
                 self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
+            elif self.pages_list[self.active_page_number].page_name == "Heat":
+                self.pages_list[ self.pages_dict["Controls"] ].show()
+                self.pages_list[ self.active_page_number ].show()
+                self.pages_list[ self.active_page_number ].update_selection()
+                self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
             else:
                 self.pages_list[ self.active_page_number ].show()
             self.last_active_page_number = self.active_page_number
@@ -450,7 +456,7 @@ class Instrument:
                 active_page.action()
 
             else:
-                if active_page.page_name == "Main" or active_page.page_name == "Remote":
+                if active_page.page_name == "Main" or active_page.page_name == "Remote" or active_page.page_name == "Heat":
                     combined = True
                 else:
                     combined = False
