@@ -110,23 +110,24 @@ def main():
     instrument.welcome_page.show()
 
 
-    spectral_sensors_detected = False
+    instrument.spectral_sensors_detected = False
     # initialize spectral sensors
-    if ('0x74') in devices_present_hex:
-        from software_modules import spectralm_as7331 #UV
-        as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
-    if ('0x39') in devices_present_hex:
-        from software_modules import spectralm_as7341 #VIS
-        as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
-    if ('0x49') in devices_present_hex:
-        from software_modules import spectralm_as7265x #VIS+NIR
-        as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
-    if instrument.spectral_sensors_present is not None:
-        instrument.spectral_sensors_detected = True
-        from software_modules import pagem_exposure
-        from software_modules import functionm_spectral_graph
-        from software_modules import pagem_remote_sensing
-        spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
+    if False:
+        if ('0x74') in devices_present_hex:
+            from software_modules import spectralm_as7331 #UV
+            as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
+        if ('0x39') in devices_present_hex:
+            from software_modules import spectralm_as7341 #VIS
+            as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
+        if ('0x49') in devices_present_hex:
+            from software_modules import spectralm_as7265x #VIS+NIR
+            as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
+        if instrument.spectral_sensors_present is not None:
+            instrument.spectral_sensors_detected = True
+            from software_modules import pagem_exposure
+            from software_modules import functionm_spectral_graph
+            from software_modules import pagem_remote_sensing
+            spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
     # initialize sensors
     gps = devicem_gps.initialize_gps( instrument )
@@ -239,7 +240,7 @@ def main():
         exposure_control_page = pagem_exposure.make_exposure_control_page( instrument, spectral_register )
     else:
         remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument )
-        exposure_control_page = pagem_exposure.make_exposure_control_missing_page( instrument )
+        #exposure_control_page = pagem_exposure.make_exposure_control_missing_page( instrument )
 
     if False:
         for page in instrument.pages_list:
@@ -266,6 +267,8 @@ def main():
     instrument.take_burst = False
     accumulator_cycles = 5
     loop_times = []
+    if True:
+        instrument.active_page_number = instrument.pages_dict["Heat"]
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
     if False: #go to startup page
@@ -441,11 +444,12 @@ class Instrument:
             else:
                 self.pages_list[ self.active_page_number ].show()
             self.last_active_page_number = self.active_page_number
-            if self.pages_list[self.active_page_number].page_name == "Remote":
-                if self.spectral_sensors_detected:
-                    self.pages_list[ self.pages_dict["Spectral_Graph"]].show()
-            else:
-                self.pages_list[ self.pages_dict["Spectral_Graph"]].hide()
+            if False: ##### TBD
+                if self.pages_list[self.active_page_number].page_name == "Remote":
+                    if self.spectral_sensors_detected:
+                        self.pages_list[ self.pages_dict["Spectral_Graph"]].show()
+                else:
+                    self.pages_list[ self.pages_dict["Spectral_Graph"]].hide()
 
     def handle_inputs( self ):
         self.check_inputs()
