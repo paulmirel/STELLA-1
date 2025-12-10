@@ -130,7 +130,7 @@ class Remote_Sensing_Page( Page ):
         # data_source
         data_source_select_x = offset
         data_source_color_x = data_source_select_x + select_width
-        data_source_select_width = 50
+        data_source_select_width = 64
         self.data_source_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=data_source_select_width, height=lower_select_height, x=data_source_select_x, y=lower_select_y)
         self.group.append( self.data_source_select )
         self.selection_rectangles.append(self.data_source_select)
@@ -147,7 +147,7 @@ class Remote_Sensing_Page( Page ):
         self.group.append(data_source_group)
 
         # units_x
-        units_x_select_x = 80
+        units_x_select_x = 68
         units_x_color_x = units_x_select_x + select_width
         units_x_select_width = 96
         self.units_x_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_x_select_width, height=lower_select_height, x=units_x_select_x, y=lower_select_y)
@@ -166,8 +166,9 @@ class Remote_Sensing_Page( Page ):
         self.group.append(units_x_group)
 
         # distance
-        distance_select_width = 46
-        distance_select_x =170
+        distance_select_x = 164
+        distance_select_width = 60
+
         distance_color_x = distance_select_x + select_width
         self.distance_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=distance_select_width, height=lower_select_height, x=distance_select_x, y=lower_select_y)
         self.group.append( self.distance_select )
@@ -187,7 +188,7 @@ class Remote_Sensing_Page( Page ):
 
         # live
         live_select_width = 36
-        live_select_x = 230
+        live_select_x = 226
         live_color_x = live_select_x + select_width
         self.live_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=live_select_width, height=lower_select_height, x=live_select_x, y=lower_select_y)
         self.group.append( self.live_select )
