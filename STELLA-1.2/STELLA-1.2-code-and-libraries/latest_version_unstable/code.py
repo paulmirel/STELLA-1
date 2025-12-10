@@ -112,7 +112,7 @@ def main():
 
     instrument.spectral_sensors_detected = False
     # initialize spectral sensors
-    if False:
+    if True:
         if ('0x74') in devices_present_hex:
             from software_modules import spectralm_as7331 #UV
             as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
@@ -267,14 +267,14 @@ def main():
     instrument.take_burst = False
     accumulator_cycles = 5
     loop_times = []
-    if True:
+    if False:
         instrument.active_page_number = instrument.pages_dict["Heat"]
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
         sensors_page.choose_sensor( instrument.sensors_present[1] )
-    if False: #instrument.spectral_sensors_detected:
+    if instrument.spectral_sensors_detected:
         instrument.active_page_number = instrument.pages_dict["Remote"]
 
     try:
