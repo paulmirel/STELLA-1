@@ -175,6 +175,7 @@ class Controls_Page( Page ):
     def update_selection( self ):
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
+
     def hide_all_selections( self ):
         for item in self.selection_rectangles:
             if item.hidden == False:

@@ -415,6 +415,7 @@ class Instrument:
         self.combined_page_last_selection = 0
         self.vfs = False
         self.make_header()
+        self.combined = False
 
     def show_active_page( self ):
         if self.active_page_number != self.last_active_page_number:
@@ -427,9 +428,13 @@ class Instrument:
             if self.pages_list[self.active_page_number].page_name == "Main":
                 self.pages_list[ self.pages_dict["Controls"] ].show()
                 self.pages_list[ self.active_page_number ].show()
-                self.pages_list[ self.active_page_number ].hide_all_selections()
-                self.pages_list[ self.pages_dict["Controls"] ].update_selection()
-            elif self.pages_list[self.active_page_number].page_name == "Remote":
+                if self.combined_page_selection < self.pages_list[ self.pages_dict["Controls"] ].selection_count:
+                    self.pages_list[ self.active_page_number ].hide_all_selections()
+                    self.pages_list[ self.pages_dict["Controls"] ].update_selection()
+                else:
+                    self.pages_list[ self.active_page_number ].update_selection()
+                    self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
+            elif self.pages_list[self.active_page_number].page_name == "Light":
                 self.pages_list[ self.pages_dict["Controls"] ].show()
                 self.pages_list[ self.active_page_number ].show()
                 self.pages_list[ self.active_page_number ].update_selection()
@@ -454,13 +459,13 @@ class Instrument:
 
             else:
                 if active_page.page_name == "Main" or active_page.page_name == "Light" or active_page.page_name == "Heat":
-                    combined = True
+                    self.combined = True
                 else:
-                    combined = False
+                    self.combined = False
                 if self.encoder_increment != 0:
                     #print( "track the selection and hand off between both controls and the active page" )
                     self.combined_page_last_selection = self.combined_page_selection
-                    if combined:
+                    if self.combined:
                         combined_selection_count = active_page.selection_count + controls_page.selection_count
                         self.combined_page_selection = (self.combined_page_selection + self.encoder_increment) % combined_selection_count
                         if self.combined_page_selection < controls_page.selection_count:
@@ -473,27 +478,27 @@ class Instrument:
                             active_page.last_selection = active_page.selection
                             active_page.selection = self.combined_page_selection - controls_page.selection_count
                             active_page.update_selection()
-
                     else:
                         active_page.last_selection = active_page.selection
                         active_page.selection = ( active_page.selection + self.encoder_increment ) % active_page.selection_count
                         active_page.update_selection()
+                    self.update_active_page()
                     self.encoder_increment = 0
                 if self.button_pressed:
-                    if combined:
+                    if self.combined:
                         if self.combined_page_selection < controls_page.selection_count:
                             #print( "act on controls page on selection {}".format( controls_page.selection ) )
                             controls_page.action()
                         else:
                             #print( "act on active page of combination on selection {}".format(active_page.selection ))
                             active_page.action()
-                        #print( self.combined_page_selection )
                     else:
                         active_page.action()
                         #print( active_page.selection  )
                     #print( "button pressed, do something with that")
                     self.button_pressed = False
-            controls_page.update_values()
+            #controls_page.update_values()
+            #self.update_active_page()
             self.input_flag = False
 
 
@@ -517,6 +522,15 @@ class Instrument:
                 self.input_flag = True
 
     def update_active_page( self ):
+        if self.combined:
+            active_page = self.pages_list[ self.last_active_page_number ]
+            controls_page = self.pages_list[ self.pages_dict["Controls"] ]
+            if self.combined_page_selection < controls_page.selection_count:
+                active_page.hide_all_selections()
+                controls_page.update_selection()
+            else:
+                controls_page.hide_all_selections()
+                active_page.update_selection()
         try:
             self.pages_list[ self.active_page_number ].update_values()
         except Exception as err:

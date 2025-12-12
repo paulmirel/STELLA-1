@@ -400,7 +400,7 @@ class Light_Missing_Page( Page ):
         self.group.append(text_group)
 
         text_group = displayio.Group(scale=2, x=10, y=18+4*text_spacing_y)
-        text = "to view spectral graph"
+        text = "and restart"
         text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
         text_group.append(text_area)
         self.group.append(text_group)
