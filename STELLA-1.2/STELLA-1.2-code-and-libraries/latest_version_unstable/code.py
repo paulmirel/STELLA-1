@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.7.5"
+SOFTWARE_VERSION_NUMBER = "0.7.6"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -122,13 +122,8 @@ def main():
         if ('0x49') in devices_present_hex:
             from software_modules import spectralm_as7265x #VIS+NIR
             as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
-        if False: # do this in the light page#
-            #instrument.spectral_sensors_present is not None:
+        if instrument.spectral_sensors_present is not None:
             instrument.spectral_sensors_detected = True
-            from software_modules import pagem_exposure
-            from software_modules import functionm_spectral_graph
-            from software_modules import pagem_remote_sensing
-            # do this in the light page# spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
     # initialize sensors
     gps = devicem_gps.initialize_gps( instrument )
@@ -272,8 +267,8 @@ def main():
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
         sensors_page.choose_sensor( instrument.sensors_present[1] )
-    if False: #instrument.spectral_sensors_detected:
-        instrument.active_page_number = instrument.pages_dict["Remote"]
+    if instrument.spectral_sensors_detected:
+        instrument.active_page_number = instrument.pages_dict["Light"]
 
     try:
         if buzzer: buzzer.beep()
@@ -374,8 +369,7 @@ class Instrument:
         self.device_type = DEVICE_TYPE
         self.uid = UID
         self.buzzer = buzzer
-        #self.usb_serial_out_enabled = usb_serial_out_enabled
-        self.serial_out = user_settings.serial_out
+        self.serial_out = False #TBD user_settings.serial_out
         self.sample_interval_s = user_settings.sample_interval_s
         self.burst_count = user_settings.burst_count
         self.serial_interval_s = user_settings.serial_interval_s
@@ -425,7 +419,7 @@ class Instrument:
                 self.previous_page_number = self.last_active_page_number
             self.pages_list[ self.last_active_page_number ].hide()
             self.pages_list[ self.pages_dict["Controls"] ].hide()
-            if self.pages_list[self.active_page_number].page_name == "Main":
+            if self.pages_list[self.active_page_number].page_name == "Main" or self.pages_list[self.active_page_number].page_name == "Light":
                 self.pages_list[ self.pages_dict["Controls"] ].show()
                 self.pages_list[ self.active_page_number ].show()
                 if self.combined_page_selection < self.pages_list[ self.pages_dict["Controls"] ].selection_count:
@@ -434,16 +428,6 @@ class Instrument:
                 else:
                     self.pages_list[ self.active_page_number ].update_selection()
                     self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
-            elif self.pages_list[self.active_page_number].page_name == "Light":
-                self.pages_list[ self.pages_dict["Controls"] ].show()
-                self.pages_list[ self.active_page_number ].show()
-                self.pages_list[ self.active_page_number ].update_selection()
-                self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
-            elif self.pages_list[self.active_page_number].page_name == "Heat":
-                self.pages_list[ self.pages_dict["Controls"] ].show()
-                self.pages_list[ self.active_page_number ].show()
-                self.pages_list[ self.active_page_number ].update_selection()
-                self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
             else:
                 self.pages_list[ self.active_page_number ].show()
             self.last_active_page_number = self.active_page_number

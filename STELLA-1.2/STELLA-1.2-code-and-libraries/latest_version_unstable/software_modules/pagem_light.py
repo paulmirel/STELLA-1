@@ -8,16 +8,69 @@ import vectorio
 import terminalio
 from .classm_page import Page
 
+class Spectral_Register:
+    def __init__( self, instrument ):
+        self.instrument = instrument
+        self.scale_choices = ["linear", "log"]
+        self.scale_index = 0
+        self.units_y_choices = ["counts", "cts_per_ms", "irradiance" ]
+        self.units_y_index = 0
+        self.spectrum_choices = ["ultraviolet", "visible", "near infrared", "uv + vis", "vis + nir", "uv + vis + nir" ]
+        self.spectrum_index = 0
+        self.data_source_choices = ["sensors", "reference"]
+        self.data_source_index = 0
+        self.units_x_choices = ["wavelength nm", "frequency THz", "energy eV", "wavenumber/cm"]
+        self.units_x_index = 0
+        self.live = True
+        self.distance_popup = False
+        #self.scale_linear = True
+        #self.y_axis_irradiance = True
+        #self.scope = 0
+        #self.number_of_scope_choices = 6
+        self.five_x_values = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+        #self.data_source = 0
+        #self.number_of_data_source_choices = 3
+        #self.x_axis_units = 0
+        #self.number_of_x_axis_units_choices = 4
+        self.number_of_plot_points = 0
+        #self.show_table = False
+        self.wavelength_range = (410, 1000)
+        self.wavelengths_to_plot = []
+    def calculate_five_x_values( self ):
+        c_m_per_s = 299792458
+        nm_per_m = 10**9
+        Hz_per_THz = 10**12
+        h_e_V_per_Hz = 4.135667696/10**15
+        self.five_x_values[0][2] = int( (self.five_x_values[0][0] + self.five_x_values[0][4])/2 )
+        self.five_x_values[0][1] = int( (self.five_x_values[0][0] + self.five_x_values[0][2])/2 )
+        self.five_x_values[0][3] = int( (self.five_x_values[0][2] + self.five_x_values[0][4])/2 )
+        for index in range( 0, 5 ):
+            self.five_x_values[1][index] = int((c_m_per_s / ((self.five_x_values[0][index])/nm_per_m))/Hz_per_THz) # frequency
+            self.five_x_values[2][index] = round((self.five_x_values[1][index]* Hz_per_THz)*h_e_V_per_Hz,1)  # energy
+            self.five_x_values[3][index] = int( 10000000/self.five_x_values[0][index] )  # wave number
+
+def create_spectral_register( instrument ):
+    spectral_register = Spectral_Register( instrument )
+    return spectral_register
+
 class Light_Page( Page ):
     def __init__( self, instrument):
         super().__init__()
         self.page_name = "Light"
         self.instrument = instrument
         self.palette = instrument.palette
+        self.spectral_register = create_spectral_register(self.instrument)
+        self.selection = 0
+        self.last_selection = 0
+        self.selection_rectangles = []
+        self.field_selected_color_index = 5
+        self.field_not_selected_color_index = 9
+        self.field_selected = False
 
     def update_selection( self ):
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
+
 
 
     def action( self ):
@@ -30,7 +83,7 @@ class Light_Page( Page ):
             if self.selection == 9:
                 self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             elif self.selection == 3:
-                self.instrument.active_page_number = self.instrument.pages_dict["Exposure"]
+                print( "go to exposure control" )
             elif self.selection == 4:
                 self.instrument.active_page_number = self.instrument.pages_dict["Heat"]
             else:
