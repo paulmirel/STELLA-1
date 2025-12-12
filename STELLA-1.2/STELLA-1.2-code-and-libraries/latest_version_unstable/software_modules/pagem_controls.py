@@ -141,8 +141,8 @@ class Controls_Page( Page ):
         settings_text_area = label.Label(terminalio.FONT, text=settings_text, color=self.palette[9])
         settings_group.append(settings_text_area)
         self.group.append(settings_group)
-        settings_value_group = displayio.Group(scale=2, x=settings_text_x+3, y=text_y2)
-        settings_value_text = " >>"
+        settings_value_group = displayio.Group(scale=2, x=settings_text_x+3, y=text_y2) #x=settings_text_x+3,
+        settings_value_text = "*>>"
         self.settings_value_text_area = label.Label(terminalio.FONT, text=settings_value_text, color=self.palette[9])
         settings_value_group.append(self.settings_value_text_area)
         self.group.append(settings_value_group)
@@ -227,8 +227,7 @@ class Controls_Page( Page ):
 
         ## processing inputs
     def action( self ):
-        if self.selection == 0:
-            print( "go to time_place page" )
+        if False:#self.selection == 0:
             self.instrument.active_page_number = self.instrument.pages_dict["Time"]
         if self.selection == 1:
             self.instrument.update_batch()

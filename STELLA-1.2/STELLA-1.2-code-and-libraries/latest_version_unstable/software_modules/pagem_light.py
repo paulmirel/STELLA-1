@@ -1,4 +1,4 @@
-# remote sensing page module
+# light page module
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
@@ -8,32 +8,12 @@ import vectorio
 import terminalio
 from .classm_page import Page
 
-class Remote_Sensing_Page( Page ):
-    def __init__( self, instrument, spectral_register):#, hdc3022_air_sensor, mlx90614_surface_thermometer ):#, lv_ez_mb1013_rangefinder ):
+class Light_Page( Page ):
+    def __init__( self, instrument):
         super().__init__()
-        self.page_name = "Remote"
+        self.page_name = "Light"
         self.instrument = instrument
         self.palette = instrument.palette
-        self.spectral_register = spectral_register
-        self.selection = 0
-        self.last_selection = 0
-        self.selection_rectangles = []
-        self.field_selected_color_index = 5
-        self.field_not_selected_color_index = 9
-        self.field_selected = False
-        self.scale_choices = ["linear", "log"]
-        self.scale_index = 0
-        self.units_y_choices = ["counts", "cts_per_ms", "irradiance" ]
-        self.units_y_index = 0
-        self.spectrum_choices = ["uv + vis + nir", "vis + nir", "visible", "near infrared", "ultraviolet"]
-        self.spectrum_index = 0
-        self.data_source_choices = ["sensors", "reference"]
-        self.data_source_index = 0
-        self.units_x_choices = ["wavelength nm", "frequency THz", "energy eV", "wavenumber/cm"]
-        self.units_x_index = 0
-        self.live = True
-        self.distance_popup = False
-
 
     def update_selection( self ):
         self.selection_rectangles[self.last_selection].hidden = True
@@ -41,23 +21,9 @@ class Remote_Sensing_Page( Page ):
 
 
     def action( self ):
-
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
-                if self.selection == 0:
-                   self.scale_index = (self.scale_index + self.instrument.encoder_increment) % len(self.scale_choices)
-                if self.selection == 1:
-                   self.units_y_index = (self.units_y_index + self.instrument.encoder_increment) % len(self.units_y_choices)
-                if self.selection == 2:
-                    self.spectrum_index = (self.spectrum_index + self.instrument.encoder_increment) % len(self.spectrum_choices)
-                if self.selection == 4:
-                   self.data_source_index = (self.data_source_index + self.instrument.encoder_increment) % len(self.data_source_choices)
-                if self.selection == 5:
-                    self.units_x_index = (self.units_x_index + self.instrument.encoder_increment) % len(self.units_x_choices)
-                if self.selection == 6:
-                    self.distance_popup = not self.distance_popup
-                if self.selection == 7:
-                    self.live = not self.live
+                pass
             self.instrument.encoder_increment = 0
 
         if self.instrument.button_pressed:
@@ -110,184 +76,7 @@ class Remote_Sensing_Page( Page ):
             self.instrument.button_pressed = False
 
     def update_values( self ):
-        self.scale_text_area.text = self.scale_choices[self.scale_index]
-        self.units_y_text_area.text = self.units_y_choices[self.units_y_index]
-        self.spectrum_text_area.text = self.spectrum_choices[self.spectrum_index]
-        self.data_source_text_area.text = self.data_source_choices[self.data_source_index]
-        self.units_x_text_area.text = self.units_x_choices[self.units_x_index]
-        if self.distance_popup:
-            self.distance_text_area.scale = 2
-            self.distance_text_area.text = "-- m"
-        else:
-            self.distance_text_area.scale = 1
-            self.distance_text_area.text = "distance"
-        if self.live:
-            self.live_text_area.text = "LIVE"
-        else:
-            self.live_text_area.text = "HOLD"
-        self.left_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][0])
-        self.left_mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][1])
-        self.mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][2])
-        self.right_mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][3])
-        self.right_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][4])
-
-    def obsolete_update_values( self ):
-        banner_duration = 3
-
-        if self.spectral_register.scale_linear:
-            self.scale_text_area.text = "linear"
-        else:
-            self.scale_text_area.text = "log"
-        if self.spectral_register.y_axis_irradiance:
-            self.units_y_text_area.text = "irradiance"
-        else:
-            self.units_y_text_area.text = "raw counts"
-        if self.spectral_register.scope == 0:
-            self.spectrum_text_area.text = "visible + nir"
-        if self.spectral_register.scope == 1:
-            self.spectrum_text_area.text = "visible"
-        if self.spectral_register.scope == 2:
-            self.spectrum_text_area.text = "near infrared"
-        if self.spectral_register.scope == 3:
-            self.spectrum_text_area.text = "uv + vis + nir"
-        if self.spectral_register.scope == 4:
-            self.spectrum_text_area.text = "uv + visible"
-        if self.spectral_register.scope == 5:
-            self.spectrum_text_area.text = "ultraviolet"
-        if self.spectral_register.autoexposure:
-            self.exposure_text_area.text = "autoEx"
-        else:
-            self.exposure_text_area.text = "holdEx"
-        if self.spectral_register.lamps_on:
-            self.lamps_text_area.text = "lamps on"
-        else:
-            self.lamps_text_area.text = "lamps off"
-        if self.spectral_register.data_source == 0:
-            self.data_source_text_area.text = "sample"
-        if self.spectral_register.data_source == 1:
-            self.data_source_text_area.text = "s/ref"
-        if self.spectral_register.data_source == 2:
-            self.data_source_text_area.text = "ref"
-        if self.spectral_register.x_axis_units == 0:
-            self.units_x_text_area.text = "wavelength nm"
-        if self.spectral_register.x_axis_units == 1:
-            self.units_x_text_area.text = "frequency THz"
-        if self.spectral_register.x_axis_units == 2:
-            self.units_x_text_area.text = "energy eV"
-        if self.spectral_register.x_axis_units == 3:
-            self.units_x_text_area.text = "wavenumber/cm"
-        if self.spectral_register.live:
-            self.live_text_area.text = "LIVE"
-        else:
-            self.live_text_area.text = "HOLD"
-        if self.spectral_register.show_table:
-            self.table_graph_text_area.text = "graph"
-        else:
-            self.table_graph_text_area.text = "table"
-
-        if self.instrument.remote_sensing_select == 6:
-            self.scale_select.hidden = False
-            self.spectral_register.scale_linear = not self.spectral_register.scale_linear
-
-        else:
-            self.scale_select.hidden = True
-        if self.instrument.remote_sensing_select == 7:
-            self.units_y_select.hidden = False
-            self.spectral_register.y_axis_irradiance = not self.spectral_register.y_axis_irradiance
-        else:
-            self.units_y_select.hidden = True
-        if instrument.remote_sensing_select == 8:
-            self.spectrum_select.hidden = False
-            self.spectral_register.scope = (self.spectral_register.scope + 1) % self.spectral_register.number_of_scope_choices
-        else:
-            self.spectrum_select.hidden = True
-        if instrument.remote_sensing_select == 9:
-            self.exposure_select.hidden = False
-            self.spectral_graph_page.banner_group.hidden = False
-            self.spectral_graph_page.banner_message_area.text = "autoexposure"
-            #self.spectral_register.autoexposure = not self.spectral_register.autoexposure
-            time.sleep(banner_duration)
-        else:
-            self.spectral_graph_page.banner_group.hidden = True
-            self.exposure_select.hidden = True
-        if instrument.remote_sensing_select == 10:
-            self.lamps_select.hidden = False
-            self.spectral_register.lamps_on = not self.spectral_register.lamps_on
-            for spectral_sensor in self.instrument.spectral_sensors_present:
-                if self.spectral_register.lamps_on:
-                    spectral_sensor.lamps_on()
-                else:
-                    spectral_sensor.lamps_off()
-        else:
-            self.lamps_select.hidden = True
-        if instrument.remote_sensing_select == 11:
-            self.data_source_select.hidden = False
-            self.spectral_graph_page.banner_message_area.text = "sample, ref, s/ref"
-            self.spectral_graph_page.banner_group.hidden = False
-            #self.spectral_register.data_source = (self.spectral_register.data_source + 1) % self.spectral_register.number_of_data_source_choices
-            time.sleep(banner_duration)
-        else:
-            self.spectral_graph_page.banner_group.hidden = True
-            self.data_source_select.hidden = True
-        if instrument.remote_sensing_select == 12:
-            self.graph_settings_select.hidden = False
-            self.spectral_graph_page.banner_message_area.text = "sensor + ref set"
-            self.spectral_graph_page.banner_group.hidden = False
-            time.sleep(banner_duration)
-        else:
-            self.graph_settings_select.hidden = True
-            self.spectral_graph_page.banner_group.hidden = True
-        if instrument.remote_sensing_select == 13:
-            self.units_x_select.hidden = False
-            self.spectral_register.x_axis_units = (self.spectral_register.x_axis_units + 1) % self.spectral_register.number_of_x_axis_units_choices
-        else:
-            self.units_x_select.hidden = True
-        if instrument.remote_sensing_select == 14:
-            self.table_graph_select.hidden = False
-            self.spectral_graph_page.banner_message_area.text = "table or graph"
-            self.spectral_graph_page.banner_group.hidden = False
-            #self.spectral_register.show_table = not self.spectral_register.show_table
-            time.sleep(banner_duration)
-        else:
-            self.table_graph_select.hidden = True
-            self.spectral_graph_page.banner_group.hidden = True
-        if instrument.remote_sensing_select == 15:
-            self.live_select.hidden = False
-            self.spectral_register.live = not self.spectral_register.live
-        else:
-            self.live_select.hidden = True
-        if instrument.remote_sensing_select == 16:
-            self.return_select.hidden = False
-            instrument.active_page_number = 2
-        else:
-            self.return_select.hidden = True
-
-        if self.spectral_register.live:
-            if False: #self.mlx90614_surface_thermometer.pn and self.hdc3022_air_sensor.pn:
-                self.lv_ez_mb1013_rangefinder.read()
-                if self.lv_ez_mb1013_rangefinder.range_m < 0.3:
-                    self.range_value_text_area.text = "<0.3"
-                elif self.lv_ez_mb1013_rangefinder.range_m > 2.5:
-                    self.range_value_text_area.text = ">2.5"
-                else:
-                    self.range_value_text_area.text = "{}".format(round(self.lv_ez_mb1013_rangefinder.range_m,2))
-                self.mlx90614_surface_thermometer.read()
-                self.hdc3022_air_sensor.read()
-                t_surface_minus_air_C = int(self.mlx90614_surface_thermometer.surface_temperature_C - self.hdc3022_air_sensor.temperature_C)
-                if t_surface_minus_air_C < 0:
-                    self.temperature_value_text_area.text = "{}C".format(t_surface_minus_air_C)
-                elif t_surface_minus_air_C < 10:
-                    self.temperature_value_text_area.text = " {}C".format(t_surface_minus_air_C)
-                else:
-                    self.temperature_value_text_area.text = "{}C".format(t_surface_minus_air_C)
-
-                self.humidity_value_text_area.text = "{}%".format(int(self.hdc3022_air_sensor.humidity_percent))
-            else:
-                self.range_value_text_area.text = " --"
-                self.humidity_value_text_area.text = " --"
-                self.temperature_value_text_area.text = " --"
-
-
+        pass
 
     def make_group( self ):
         extra_space = 8
@@ -554,11 +343,6 @@ class Remote_Sensing_Page( Page ):
 
         return self.group
 
-    def add_spectral_graph_page(self, spectral_graph_page):
-        self.spectral_graph_page = spectral_graph_page
-
-
-
     def hide_all_selections( self ):
         for item in self.selection_rectangles:
             if item.hidden == False:
@@ -566,9 +350,9 @@ class Remote_Sensing_Page( Page ):
 
 
 
-def make_remote_sensing_page( instrument, spectral_register):#, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder ):
-    instrument.welcome_page.announce( "make_remote_sensing_page" )
-    page = Remote_Sensing_Page( instrument, spectral_register)#, hdc3022_air_sensor, mlx90614_surface_thermometer, lv_ez_mb1013_rangefinder )
+def make_light_page( instrument ):
+    instrument.welcome_page.announce( "make_light_page" )
+    page = Light_Page( instrument )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )
@@ -577,21 +361,22 @@ def make_remote_sensing_page( instrument, spectral_register):#, hdc3022_air_sens
 
 
 
-class Remote_Sensing_Missing_Page( Page ):
+class Light_Missing_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
-        self.page_name = "Remote"
+        self.page_name = "Light"
         self.instrument = instrument
         self.palette = instrument.palette
         self.selection = 0
         self.selection_count = 0
+        self.field_selected = False
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
         self.group.append( status_background )
         text_spacing_y = 28
         status_title_group = displayio.Group(scale=2, x=10, y=18)
-        status_title_text = "Remote Sensing Missing:"
+        status_title_text = "No spectral sensor(s):"
         status_title_text_area = label.Label(terminalio.FONT, text=status_title_text, color=self.palette[0])
         status_title_group.append(status_title_text_area)
         self.group.append(status_title_group)
@@ -609,7 +394,7 @@ class Remote_Sensing_Missing_Page( Page ):
         self.group.append(text_group)
 
         text_group = displayio.Group(scale=2, x=10, y=18+3*text_spacing_y)
-        text = "or as7265x_Spectrometer"
+        text = "or a spectral sensor"
         text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
         text_group.append(text_area)
         self.group.append(text_group)
@@ -648,10 +433,12 @@ class Remote_Sensing_Missing_Page( Page ):
         pass
     def action( self ):
         self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+    def update_selection( self ):
+        pass
 
-def make_remote_sensing_missing_page( instrument ):
-    instrument.welcome_page.announce( "make_remote_sensing_missing_page" )
-    page = Remote_Sensing_Missing_Page( instrument )
+def make_light_missing_page( instrument ):
+    instrument.welcome_page.announce( "make_light_missing_page" )
+    page = Light_Missing_Page( instrument )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )

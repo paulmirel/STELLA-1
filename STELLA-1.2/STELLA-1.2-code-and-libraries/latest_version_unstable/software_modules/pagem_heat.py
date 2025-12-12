@@ -91,102 +91,103 @@ class Heat_Page( Page ):
         lower_select_height = lower_control_height + 2*select_width
         lower_control_y = lower_select_y + select_width
         lower_text_y = lower_control_y + 6
-        # data_source
-        data_source_select_x = offset
-        data_source_color_x = data_source_select_x + select_width
-        data_source_select_width = 50
-        self.data_source_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=data_source_select_width, height=lower_select_height, x=data_source_select_x, y=lower_select_y)
-        self.group.append( self.data_source_select )
-        self.selection_rectangles.append(self.data_source_select)
+        if False:
+            # data_source
+            data_source_select_x = offset
+            data_source_color_x = data_source_select_x + select_width
+            data_source_select_width = 50
+            self.data_source_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=data_source_select_width, height=lower_select_height, x=data_source_select_x, y=lower_select_y)
+            self.group.append( self.data_source_select )
+            self.selection_rectangles.append(self.data_source_select)
 
-        self.data_source_select.hidden = True
-        data_source_control_width = data_source_select_width - 2 * select_width
-        self.data_source_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=data_source_control_width, height=lower_control_height, x=data_source_color_x, y=lower_control_y)
-        self.group.append( self.data_source_color )
-        data_source_text_x = data_source_color_x + 3
-        data_source_group = displayio.Group(scale=1, x=data_source_text_x, y=lower_text_y)
-        data_source_text = "s/ref"
-        self.data_source_text_area = label.Label(terminalio.FONT, text=data_source_text, color=self.palette[0])
-        data_source_group.append(self.data_source_text_area)
-        self.group.append(data_source_group)
-
-
-        #graph_settings
-        graph_settings_select_x = offset + data_source_select_width
-        graph_settings_color_x = graph_settings_select_x + select_width
-        graph_settings_select_width = 36
-        self.graph_settings_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=graph_settings_select_width, height=lower_select_height, x=graph_settings_select_x, y=lower_select_y)
-        self.group.append( self.graph_settings_select )
-        self.selection_rectangles.append(self.graph_settings_select)
-
-        self.graph_settings_select.hidden = True
-        graph_settings_control_width = graph_settings_select_width - 2 * select_width
-        self.graph_settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=graph_settings_control_width, height=lower_control_height, x=graph_settings_color_x, y=lower_control_y)
-        self.group.append( self.graph_settings_color )
-        graph_settings_text_x = graph_settings_color_x + 3
-        graph_settings_group = displayio.Group(scale=1, x=graph_settings_text_x, y=lower_text_y)
-        graph_settings_text = "set"
-        self.graph_settings_text_area = label.Label(terminalio.FONT, text=graph_settings_text, color=self.palette[0])
-        graph_settings_group.append(self.graph_settings_text_area)
-        self.group.append(graph_settings_group)
-
-        # units_x
-        units_x_select_x = offset + data_source_control_width +graph_settings_select_width
-        units_x_color_x = units_x_select_x + select_width
-        units_x_select_width = 96
-        self.units_x_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_x_select_width, height=lower_select_height, x=units_x_select_x, y=lower_select_y)
-        self.group.append( self.units_x_select )
-        self.selection_rectangles.append(self.units_x_select)
-
-        self.units_x_select.hidden = True
-        units_x_control_width = units_x_select_width - 2 * select_width
-        self.units_x_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=units_x_control_width, height=lower_control_height, x=units_x_color_x, y=lower_control_y)
-        self.group.append( self.units_x_color )
-        units_x_text_x = units_x_color_x + 4
-        units_x_group = displayio.Group(scale=1, x=units_x_text_x, y=lower_text_y)
-        units_x_text = "wavelength nm"
-        self.units_x_text_area = label.Label(terminalio.FONT, text=units_x_text, color=self.palette[0])
-        units_x_group.append(self.units_x_text_area)
-        self.group.append(units_x_group)
-
-        # table / graph
-        table_graph_select_width = 46
-        table_graph_select_x = offset + data_source_control_width + graph_settings_control_width + units_x_control_width
-        table_graph_color_x = table_graph_select_x + select_width
-        self.table_graph_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=table_graph_select_width, height=lower_select_height, x=table_graph_select_x, y=lower_select_y)
-        self.group.append( self.table_graph_select )
-        self.selection_rectangles.append(self.table_graph_select)
-
-        self.table_graph_select.hidden = True
-        table_graph_control_width = table_graph_select_width - 2 * select_width
-        self.table_graph_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=table_graph_control_width, height=lower_control_height, x=table_graph_color_x, y=lower_control_y)
-        self.group.append( self.table_graph_color )
-        table_graph_text_x = table_graph_color_x + 3
-        table_graph_group = displayio.Group(scale=1, x=table_graph_text_x, y=lower_text_y)
-        table_graph_text = "table"
-        self.table_graph_text_area = label.Label(terminalio.FONT, text=table_graph_text, color=self.palette[0])
-        table_graph_group.append(self.table_graph_text_area)
-        self.group.append(table_graph_group)
+            self.data_source_select.hidden = True
+            data_source_control_width = data_source_select_width - 2 * select_width
+            self.data_source_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=data_source_control_width, height=lower_control_height, x=data_source_color_x, y=lower_control_y)
+            self.group.append( self.data_source_color )
+            data_source_text_x = data_source_color_x + 3
+            data_source_group = displayio.Group(scale=1, x=data_source_text_x, y=lower_text_y)
+            data_source_text = "s/ref"
+            self.data_source_text_area = label.Label(terminalio.FONT, text=data_source_text, color=self.palette[0])
+            data_source_group.append(self.data_source_text_area)
+            self.group.append(data_source_group)
 
 
-        # live
-        live_select_width = 36
-        live_select_x = offset + data_source_control_width + graph_settings_control_width + units_x_control_width + table_graph_select_width
-        live_color_x = live_select_x + select_width
-        self.live_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=live_select_width, height=lower_select_height, x=live_select_x, y=lower_select_y)
-        self.group.append( self.live_select )
-        self.selection_rectangles.append(self.live_select)
+            #graph_settings
+            graph_settings_select_x = offset + data_source_select_width
+            graph_settings_color_x = graph_settings_select_x + select_width
+            graph_settings_select_width = 36
+            self.graph_settings_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=graph_settings_select_width, height=lower_select_height, x=graph_settings_select_x, y=lower_select_y)
+            self.group.append( self.graph_settings_select )
+            self.selection_rectangles.append(self.graph_settings_select)
 
-        self.live_select.hidden = True
-        live_control_width = live_select_width - 2 * select_width
-        self.live_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=live_control_width, height=lower_control_height, x=live_color_x, y=lower_control_y)
-        self.group.append( self.live_color )
-        live_text_x = live_color_x + 3
-        live_group = displayio.Group(scale=1, x=live_text_x, y=lower_text_y)
-        live_text = "LIVE"
-        self.live_text_area = label.Label(terminalio.FONT, text=live_text, color=self.palette[0])
-        live_group.append(self.live_text_area)
-        self.group.append(live_group)
+            self.graph_settings_select.hidden = True
+            graph_settings_control_width = graph_settings_select_width - 2 * select_width
+            self.graph_settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=graph_settings_control_width, height=lower_control_height, x=graph_settings_color_x, y=lower_control_y)
+            self.group.append( self.graph_settings_color )
+            graph_settings_text_x = graph_settings_color_x + 3
+            graph_settings_group = displayio.Group(scale=1, x=graph_settings_text_x, y=lower_text_y)
+            graph_settings_text = "set"
+            self.graph_settings_text_area = label.Label(terminalio.FONT, text=graph_settings_text, color=self.palette[0])
+            graph_settings_group.append(self.graph_settings_text_area)
+            self.group.append(graph_settings_group)
+
+            # units_x
+            units_x_select_x = offset + data_source_control_width +graph_settings_select_width
+            units_x_color_x = units_x_select_x + select_width
+            units_x_select_width = 96
+            self.units_x_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_x_select_width, height=lower_select_height, x=units_x_select_x, y=lower_select_y)
+            self.group.append( self.units_x_select )
+            self.selection_rectangles.append(self.units_x_select)
+
+            self.units_x_select.hidden = True
+            units_x_control_width = units_x_select_width - 2 * select_width
+            self.units_x_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=units_x_control_width, height=lower_control_height, x=units_x_color_x, y=lower_control_y)
+            self.group.append( self.units_x_color )
+            units_x_text_x = units_x_color_x + 4
+            units_x_group = displayio.Group(scale=1, x=units_x_text_x, y=lower_text_y)
+            units_x_text = "wavelength nm"
+            self.units_x_text_area = label.Label(terminalio.FONT, text=units_x_text, color=self.palette[0])
+            units_x_group.append(self.units_x_text_area)
+            self.group.append(units_x_group)
+
+            # table / graph
+            table_graph_select_width = 46
+            table_graph_select_x = offset + data_source_control_width + graph_settings_control_width + units_x_control_width
+            table_graph_color_x = table_graph_select_x + select_width
+            self.table_graph_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=table_graph_select_width, height=lower_select_height, x=table_graph_select_x, y=lower_select_y)
+            self.group.append( self.table_graph_select )
+            self.selection_rectangles.append(self.table_graph_select)
+
+            self.table_graph_select.hidden = True
+            table_graph_control_width = table_graph_select_width - 2 * select_width
+            self.table_graph_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=table_graph_control_width, height=lower_control_height, x=table_graph_color_x, y=lower_control_y)
+            self.group.append( self.table_graph_color )
+            table_graph_text_x = table_graph_color_x + 3
+            table_graph_group = displayio.Group(scale=1, x=table_graph_text_x, y=lower_text_y)
+            table_graph_text = "table"
+            self.table_graph_text_area = label.Label(terminalio.FONT, text=table_graph_text, color=self.palette[0])
+            table_graph_group.append(self.table_graph_text_area)
+            self.group.append(table_graph_group)
+
+
+            # live
+            live_select_width = 36
+            live_select_x = offset + data_source_control_width + graph_settings_control_width + units_x_control_width + table_graph_select_width
+            live_color_x = live_select_x + select_width
+            self.live_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=live_select_width, height=lower_select_height, x=live_select_x, y=lower_select_y)
+            self.group.append( self.live_select )
+            self.selection_rectangles.append(self.live_select)
+
+            self.live_select.hidden = True
+            live_control_width = live_select_width - 2 * select_width
+            self.live_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=live_control_width, height=lower_control_height, x=live_color_x, y=lower_control_y)
+            self.group.append( self.live_color )
+            live_text_x = live_color_x + 3
+            live_group = displayio.Group(scale=1, x=live_text_x, y=lower_text_y)
+            live_text = "LIVE"
+            self.live_text_area = label.Label(terminalio.FONT, text=live_text, color=self.palette[0])
+            live_group.append(self.live_text_area)
+            self.group.append(live_group)
 
 
         return_select_width = 50
@@ -216,134 +217,7 @@ class Heat_Page( Page ):
         title_group.append(title_text_area)
         self.group.append(title_group)
         '''
-        '''
-        #selection rectangles
-        selection_start_x = 2
-        selection_start_y = 78
-        selection_offset_x = 158
-        selection_offset_y = 31
 
-        '''
-        '''
-        self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x+selection_offset_x, y=selection_start_y+selection_offset_y))
-        self.group.append( self.selection_rectangles[3] )
-        self.selection_rectangles[3].hidden = True
-        self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x, y=selection_start_y+selection_offset_y*2))
-        self.group.append( self.selection_rectangles[4] )
-        self.selection_rectangles[4].hidden = True
-        self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x+selection_offset_x, y=selection_start_y+selection_offset_y*2))
-        self.group.append( self.selection_rectangles[5] )
-        self.selection_rectangles[5].hidden = True
-        self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x, y=selection_start_y+selection_offset_y*3))
-        self.group.append( self.selection_rectangles[6] )
-        self.selection_rectangles[6].hidden = True
-        self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x+selection_offset_x, y=selection_start_y+selection_offset_y*3))
-        self.group.append( self.selection_rectangles[7] )
-        self.selection_rectangles[7].hidden = True
-        #choice color rectangles
-        selection_border = 5
-        choice_rectangles = []
-        #TBD be more clever about this section
-        choice_width = 158-2*selection_border
-        choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[0],
-            width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border))
-        self.group.append( choice_rectangles[0] )
-        self.selection_count += 1
-
-        choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[1],
-            width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border))
-        self.group.append( choice_rectangles[1] )
-        self.selection_count += 1
-
-        choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[2],
-            width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border+selection_offset_y))
-        self.group.append( choice_rectangles[2] )
-        self.selection_count += 1
-
-        choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[3],
-            width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border+selection_offset_y))
-        self.group.append( choice_rectangles[3] )
-        self.selection_count += 1
-
-        choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[4],
-            width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border+selection_offset_y*2))
-        self.group.append( choice_rectangles[4] )
-        self.selection_count += 1
-
-        choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[5],
-            width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border+selection_offset_y*2))
-        self.group.append( choice_rectangles[5] )
-        self.selection_count += 1
-
-        choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[6],
-            width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border, y=selection_start_y+selection_border+selection_offset_y*3))
-        self.group.append( choice_rectangles[6] )
-        self.selection_count += 1
-
-        choice_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=menu_color_list[7],
-            width=choice_width, height=36-2*selection_border, x=selection_start_x+selection_border+selection_offset_x, y=selection_start_y+selection_border+selection_offset_y*3))
-        self.group.append( choice_rectangles[7] )
-        self.selection_count += 1
-
-
-
-        #choice text
-        menu_spacing_y = selection_offset_y
-        menu_start_y = 12+start_y+30
-        menu_spacing_x = 158
-        menu_start_x = 10
-        for index in range ( 0, len(menu_list), 2):
-            item_group = displayio.Group(scale=2, x=menu_start_x, y=menu_start_y+menu_spacing_y*int(index/2))
-            item_text = menu_list[ index ]
-            item_text_area = label.Label(terminalio.FONT, text=item_text, color=self.palette[0])
-            item_group.append(item_text_area)
-            self.group.append(item_group)
-            if index + 1 < len(menu_list):
-                item_group = displayio.Group(scale=2, x=menu_start_x+menu_spacing_x, y=menu_start_y+menu_spacing_y*int(index/2))
-                item_text = menu_list[ index+1 ]
-                item_text_area = label.Label(terminalio.FONT, text=item_text, color=self.palette[0])
-                item_group.append(item_text_area)
-                self.group.append(item_group)
-
-        footer_start_y = 204
-        footer_offset_x = 106
-        self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=104, height=36, x=selection_start_x, y=footer_start_y))
-        self.group.append( self.selection_rectangles[8] )
-        self.selection_rectangles[8].hidden = True
-        self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=104, height=36, x=selection_start_x+footer_offset_x, y=footer_start_y))
-        self.group.append( self.selection_rectangles[9] )
-        self.selection_rectangles[9].hidden = True
-        self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=104, height=36, x=selection_start_x+2*footer_offset_x, y=footer_start_y))
-        self.group.append( self.selection_rectangles[10] )
-        self.selection_rectangles[10].hidden = True
-        status_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=16, width=96, height=28, x=selection_start_x+4, y=208)
-        self.group.append( status_color )
-        self.more_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=96, height=28, x=selection_start_x+4+footer_offset_x, y=208)
-        self.group.append( self.more_color )
-        self.return_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=22, width=96, height=28, x=selection_start_x+4+2*footer_offset_x, y=208)
-        self.group.append( self.return_color )
-
-        footer_text_start_x = 14
-        footer_text_y = 222
-        status_text = "Status"
-        status_group = displayio.Group(scale=2, x=footer_text_start_x, y=footer_text_y)
-        status_text_area = label.Label(terminalio.FONT, text=status_text, color=self.palette[0])
-        status_group.append(status_text_area)
-        self.group.append(status_group)
-        self.selection_count += 1
-
-        more_text =   "*more.."
-        more_group = displayio.Group(scale=2, x=footer_text_start_x+footer_offset_x, y=footer_text_y)
-        more_text_area = label.Label(terminalio.FONT, text=more_text, color=self.palette[0])
-        more_group.append(more_text_area)
-        self.group.append(more_group)
-        return_text = "RETURN"
-        return_group = displayio.Group(scale=2, x=footer_text_start_x+2*footer_offset_x, y=footer_text_y)
-        return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
-        return_group.append(return_text_area)
-        self.group.append(return_group)
-        self.selection_count += 1
-        '''
         return self.group
 
     def update_selection( self ):
@@ -356,7 +230,7 @@ class Heat_Page( Page ):
                 item.hidden = True
 
     def action( self ):
-        pass
+        self.instrument.active_page_number = self.instrument.previous_page_number
         '''
         if self.selection == 0:
             self.instrument.active_page_number = self.instrument.pages_dict["Remote"]
@@ -372,7 +246,7 @@ class Heat_Page( Page ):
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]
         if self.selection == 10:
             print( "return whence")
-            self.instrument.active_page_number = self.instrument.previous_page_number
+
 
         '''
 

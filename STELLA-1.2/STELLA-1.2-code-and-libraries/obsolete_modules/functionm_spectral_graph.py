@@ -11,20 +11,29 @@ from .classm_page import Page
 class Spectral_Register:
     def __init__( self, instrument ):
         self.instrument = instrument
-        self.scale_linear = True
-        self.y_axis_irradiance = True
-        self.scope = 0
-        self.number_of_scope_choices = 6
-        self.autoexposure = False
-        self.lamps_on = False
-        self.five_x_values = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
-        self.data_source = 0
-        self.number_of_data_source_choices = 3
-        self.x_axis_units = 0
-        self.number_of_x_axis_units_choices = 4
+        self.scale_choices = ["linear", "log"]
+        self.scale_index = 0
+        self.units_y_choices = ["counts", "cts_per_ms", "irradiance" ]
+        self.units_y_index = 0
+        self.spectrum_choices = ["ultraviolet", "visible", "near infrared", "uv + vis", "vis + nir", "uv + vis + nir" ]
+        self.spectrum_index = 0
+        self.data_source_choices = ["sensors", "reference"]
+        self.data_source_index = 0
+        self.units_x_choices = ["wavelength nm", "frequency THz", "energy eV", "wavenumber/cm"]
+        self.units_x_index = 0
         self.live = True
+        self.distance_popup = False
+        #self.scale_linear = True
+        #self.y_axis_irradiance = True
+        #self.scope = 0
+        #self.number_of_scope_choices = 6
+        self.five_x_values = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]
+        #self.data_source = 0
+        #self.number_of_data_source_choices = 3
+        #self.x_axis_units = 0
+        #self.number_of_x_axis_units_choices = 4
         self.number_of_plot_points = 0
-        self.show_table = False
+        #self.show_table = False
         self.wavelength_range = (410, 1000)
         self.wavelengths_to_plot = []
     def calculate_five_x_values( self ):
@@ -80,87 +89,25 @@ class Spectral_Graph_Page( Page ):
             self.points.append(point)
             self.group.append(point)
 
-        self.message_bar = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9,
-                        width=graph_width-2*message_offset, height=message_height,
-                        x=self.graph_pix_x0+message_offset, y=self.graph_pix_y0 - message_offset - message_height )
-        self.group.append( self.message_bar )
-        self.message_bar.hidden = True
-        message_group = displayio.Group(scale=2, x=self.graph_pix_x0+3*message_offset, y=self.graph_pix_y0 - message_height+4)
-        message_text = "updating graph"
-        self.message_text_area = label.Label(terminalio.FONT, text=message_text, color=self.palette[19])
-        message_group.append(self.message_text_area)
-        self.message_text_area.hidden = True
-        self.group.append(message_group)
-
-        # future function banner
-        self.banner_group = displayio.Group()
-        select_width = 2
-        banner_width = 250
-        banner_height = 60
-        banner_x = 30
-        banner_y = 110
-        banner_color_x = banner_x + select_width
-        banner_color_y = banner_y + select_width
-        banner_border = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=banner_width, height=banner_height, x=banner_x, y=banner_y)
-        self.banner_group.append( banner_border )
-        banner_color_width = banner_width - 2 * select_width
-        banner_color_height = banner_height - 2 * select_width
-        banner_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=banner_color_width, height=banner_color_height, x=banner_color_x, y=banner_color_y)
-        self.banner_group.append( banner_color )
-        banner_text_x = banner_color_x + 3
-        banner_text_y = banner_color_y + 12
-        banner_text_group = displayio.Group(scale=2, x=banner_text_x, y=banner_text_y)
-        banner_text = "*future function: "
-        banner_text_area = label.Label(terminalio.FONT, text=banner_text, color=self.palette[0])
-        banner_text_group.append(banner_text_area)
-        self.banner_group.append(banner_text_group)
-        self.banner_message_group = displayio.Group(scale=2, x=banner_text_x, y=banner_text_y+26)
-        banner_message = "message goes here"
-        self.banner_message_area = label.Label(terminalio.FONT, text=banner_message, color=self.palette[0])
-        self.banner_message_group.append( self.banner_message_area )
-        self.banner_group.append(self.banner_message_group)
-        self.group.append( self.banner_group )
-        self.banner_group.hidden = True
-
         return self.group
 
     def update_plot_data( self ):
         if self.spectral_register.live:
             data_dict_to_plot = {}
-            if self.spectral_register.y_axis_irradiance:
-                for spectral_sensor in self.instrument.spectral_sensors_present:
-                    if spectral_sensor.pn == "as7256x":
-                        spectral_sensor.read_fcal()
-                        data_dict_to_plot.update( spectral_sensor.dict_fcal )
-                    if spectral_sensor.pn == "as7331":
-                        spectral_sensor.read_fcal()
-                        data_dict_to_plot.update( spectral_sensor.dict_fcal )
-                    if spectral_sensor.pn == "as7341":
-                        spectral_sensor.read()
-                        data_dict_to_plot.update( as7341_spectrometer.dict_stenocal )
-            else:
-                for spectral_sensor in self.instrument.spectral_sensors_present:
-                    if spectral_sensor.pn == "as7256x":
-                        spectral_sensor.read_counts()
-                        data_dict_to_plot.update( spectral_sensor.dict_counts )
-                    if spectral_sensor.pn == "as7331":
-                        spectral_sensor.read_counts()
-                        data_dict_to_plot.update( spectral_sensor.dict_counts )
-                    if spectral_sensor.pn == "as7341":
-                        spectral_sensor.read()
-                        data_dict_to_plot.update( as7341_spectrometer.dict_counts )
-            if self.spectral_register.scope == 0: # vis +nir
+
+            if self.spectrum_choices[ spectrum_index ] == "vis + nir":
                 wavelength_range = (410, 1000)
-            if self.spectral_register.scope == 1: # vis
+            if self.spectrum_choices[ spectrum_index ] == "visible":
                 wavelength_range = (410, 700)
-            if self.spectral_register.scope == 2: # nir
+            if self.spectrum_choices[ spectrum_index ] == "near infrared":
                 wavelength_range = (700, 1000)
-            if self.spectral_register.scope == 3: # uv + vis + nir
+            if self.spectrum_choices[ spectrum_index ] == "uv + vis + nir":
                 wavelength_range = (200, 1000)
-            if self.spectral_register.scope == 4: # uv + vis
+            if self.spectrum_choices[ spectrum_index ] == "uv + vis":
                 wavelength_range = (200, 700)
-            if self.spectral_register.scope == 5: # uv
+            if self.spectrum_choices[ spectrum_index ] == "ultraviolet":
                 wavelength_range = (200, 400)
+
             wavelengths_to_plot = []
             for item in self.instrument.wavelength_bands_list_sorted:
                 if item in range (wavelength_range[0], wavelength_range[1]):

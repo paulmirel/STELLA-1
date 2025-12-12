@@ -74,13 +74,13 @@ mem_free_after_imports = gc.mem_free()
 print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), int(100*(gc.mem_free()/1000)/start_mem_free_kB )) )
 
 from software_modules import classm_device
-from software_modules import functionm_file, functionm_palette, functionm_spectral_graph
+from software_modules import functionm_file, functionm_palette
 from software_modules import devicem_pcf8523_rtc, devicem_neopixel
 from software_modules import devicem_ili9341_display, devicem_gps
 from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
-from software_modules import pagem_settings, pagem_sensors, pagem_heat
-from software_modules import pagem_remote_sensing, pagem_air_analyzer, pagem_time_place
+from software_modules import pagem_settings, pagem_sensors
+from software_modules import pagem_light, pagem_heat, pagem_air, pagem_time_place
 
 
 def main():
@@ -122,12 +122,13 @@ def main():
         if ('0x49') in devices_present_hex:
             from software_modules import spectralm_as7265x #VIS+NIR
             as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
-        if instrument.spectral_sensors_present is not None:
+        if False: # do this in the light page#
+            #instrument.spectral_sensors_present is not None:
             instrument.spectral_sensors_detected = True
             from software_modules import pagem_exposure
             from software_modules import functionm_spectral_graph
             from software_modules import pagem_remote_sensing
-            spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
+            # do this in the light page# spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
 
     # initialize sensors
     gps = devicem_gps.initialize_gps( instrument )
@@ -203,6 +204,7 @@ def main():
 
     for sensor in instrument.spectral_sensors_present:
         sensor.make_spectral_channels()
+    instrument.make_wavelength_bands_list()
 
     '''
     sense_5V = AnalogIn(board.A1)
@@ -228,18 +230,15 @@ def main():
     controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
     status_page = pagem_status.make_status_page( instrument )
-    settings_page = pagem_settings.make_settings_page( instrument )
+    #settings_page = pagem_settings.make_settings_page( instrument )
     sensors_page = pagem_sensors.make_sensors_page( instrument )
-    time_place_page = pagem_time_place.make_time_place_page( instrument )
-    air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument )
+    #time_place_page = pagem_time_place.make_time_place_page( instrument )
+    #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
     if instrument.spectral_sensors_detected:
-        remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register)#, hdc3022_air_sensor, mlx90614_surface_thermometer )#, lv_ez_mb1013_rangefinder )
-        spectral_graph_page = functionm_spectral_graph.make_spectral_graph_page( instrument, spectral_register )
-        exposure_control_page = pagem_exposure.make_exposure_control_page( instrument, spectral_register )
+        light_page = pagem_light.make_light_page( instrument)
     else:
-        remote_sensing_missing_page = pagem_remote_sensing.make_remote_sensing_missing_page( instrument )
-        #exposure_control_page = pagem_exposure.make_exposure_control_missing_page( instrument )
+        light_missing_page = pagem_light.make_light_missing_page( instrument )
 
     if False:
         for page in instrument.pages_list:
@@ -255,7 +254,7 @@ def main():
                                             int( 100 * ( mem_free_after_devices - mem_free_after_pages)/1000/start_mem_free_kB)))
 
 
-    instrument.make_wavelength_bands_list()
+
     operational = True
     first_sample_time = time.monotonic()
     last_sample_time = time.monotonic() - instrument.sample_interval_s
@@ -273,7 +272,7 @@ def main():
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
         sensors_page.choose_sensor( instrument.sensors_present[1] )
-    if instrument.spectral_sensors_detected:
+    if False: #instrument.spectral_sensors_detected:
         instrument.active_page_number = instrument.pages_dict["Remote"]
 
     try:
@@ -443,11 +442,7 @@ class Instrument:
             else:
                 self.pages_list[ self.active_page_number ].show()
             self.last_active_page_number = self.active_page_number
-            if self.pages_list[self.active_page_number].page_name == "Remote":
-                if self.spectral_sensors_detected:
-                    self.pages_list[ self.pages_dict["Spectral_Graph"]].show()
-            else:
-                self.pages_list[ self.pages_dict["Spectral_Graph"]].hide()
+
 
     def handle_inputs( self ):
         self.check_inputs()
@@ -458,7 +453,7 @@ class Instrument:
                 active_page.action()
 
             else:
-                if active_page.page_name == "Main" or active_page.page_name == "Remote" or active_page.page_name == "Heat":
+                if active_page.page_name == "Main" or active_page.page_name == "Light" or active_page.page_name == "Heat":
                     combined = True
                 else:
                     combined = False
@@ -524,11 +519,8 @@ class Instrument:
     def update_active_page( self ):
         try:
             self.pages_list[ self.active_page_number ].update_values()
-            if self.active_page_number == self.pages_dict["Remote"]:
-                if self.spectral_sensors_detected:
-                    self.pages_list[self.pages_dict["Spectral_Graph"]].update_plot_data()
         except Exception as err:
-            print("sensor read failed: ", err)
+            print("values update failed: ", err)
 
 
     def update_batch(self):
