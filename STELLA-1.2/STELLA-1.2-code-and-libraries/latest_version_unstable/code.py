@@ -234,7 +234,6 @@ def main():
     air_analyzer_page = pagem_air_analyzer.make_air_analyzer_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
     if instrument.spectral_sensors_detected:
-        spectral_register = functionm_spectral_graph.create_spectral_register( instrument )
         remote_sensing_page = pagem_remote_sensing.make_remote_sensing_page( instrument, spectral_register)#, hdc3022_air_sensor, mlx90614_surface_thermometer )#, lv_ez_mb1013_rangefinder )
         spectral_graph_page = functionm_spectral_graph.make_spectral_graph_page( instrument, spectral_register )
         exposure_control_page = pagem_exposure.make_exposure_control_page( instrument, spectral_register )
@@ -444,12 +443,11 @@ class Instrument:
             else:
                 self.pages_list[ self.active_page_number ].show()
             self.last_active_page_number = self.active_page_number
-            if False: ##### TBD
-                if self.pages_list[self.active_page_number].page_name == "Remote":
-                    if self.spectral_sensors_detected:
-                        self.pages_list[ self.pages_dict["Spectral_Graph"]].show()
-                else:
-                    self.pages_list[ self.pages_dict["Spectral_Graph"]].hide()
+            if self.pages_list[self.active_page_number].page_name == "Remote":
+                if self.spectral_sensors_detected:
+                    self.pages_list[ self.pages_dict["Spectral_Graph"]].show()
+            else:
+                self.pages_list[ self.pages_dict["Spectral_Graph"]].hide()
 
     def handle_inputs( self ):
         self.check_inputs()

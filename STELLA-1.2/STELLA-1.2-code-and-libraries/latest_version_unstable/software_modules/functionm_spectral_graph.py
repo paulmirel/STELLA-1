@@ -53,6 +53,7 @@ class Spectral_Graph_Page( Page ):
         self.spectral_register = spectral_register
         self.palette = instrument.palette
         self.points = []
+
     def make_group( self ):
         self.group = displayio.Group()
         graph_x = 14 #4

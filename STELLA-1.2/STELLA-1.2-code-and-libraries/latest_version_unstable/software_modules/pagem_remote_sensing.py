@@ -34,6 +34,7 @@ class Remote_Sensing_Page( Page ):
         self.live = True
         self.distance_popup = False
 
+
     def update_selection( self ):
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
@@ -60,10 +61,12 @@ class Remote_Sensing_Page( Page ):
             self.instrument.encoder_increment = 0
 
         if self.instrument.button_pressed:
-            if self.selection == 8:
+            if self.selection == 9:
                 self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             elif self.selection == 3:
                 self.instrument.active_page_number = self.instrument.pages_dict["Exposure"]
+            elif self.selection == 4:
+                self.instrument.active_page_number = self.instrument.pages_dict["Heat"]
             else:
                 self.field_selected = not self.field_selected
                 print( "field selected = ", self.field_selected )
@@ -83,23 +86,23 @@ class Remote_Sensing_Page( Page ):
                         self.spectrum_color.color_index = self.field_selected_color_index
                     else:
                         self.spectrum_color.color_index = self.field_not_selected_color_index
-                if self.selection == 4:
+                if self.selection == 5:
                     if self.field_selected:
                         self.data_source_color.color_index = self.field_selected_color_index
                     else:
                         self.data_source_color.color_index = self.field_not_selected_color_index
-                if self.selection == 5:
+                if self.selection == 6:
                     if self.field_selected:
                         self.units_x_color.color_index = self.field_selected_color_index
                     else:
                         self.units_x_color.color_index = self.field_not_selected_color_index
-                if self.selection == 6:
+                if self.selection == 7:
                     print( "open range tab" )
                     if self.field_selected:
                         self.distance_color.color_index = self.field_selected_color_index
                     else:
                         self.distance_color.color_index = self.field_not_selected_color_index
-                if self.selection == 7:
+                if self.selection == 8:
                     if self.field_selected:
                         self.live_color.color_index = self.field_selected_color_index
                     else:
@@ -114,7 +117,7 @@ class Remote_Sensing_Page( Page ):
         self.units_x_text_area.text = self.units_x_choices[self.units_x_index]
         if self.distance_popup:
             self.distance_text_area.scale = 2
-            self.distance_text_area.text = "***"
+            self.distance_text_area.text = "-- m"
         else:
             self.distance_text_area.scale = 1
             self.distance_text_area.text = "distance"
@@ -122,14 +125,15 @@ class Remote_Sensing_Page( Page ):
             self.live_text_area.text = "LIVE"
         else:
             self.live_text_area.text = "HOLD"
-
-    def obsolete_update_values( self ):
-        banner_duration = 3
         self.left_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][0])
         self.left_mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][1])
         self.mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][2])
         self.right_mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][3])
         self.right_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.x_axis_units][4])
+
+    def obsolete_update_values( self ):
+        banner_duration = 3
+
         if self.spectral_register.scale_linear:
             self.scale_text_area.text = "linear"
         else:
@@ -321,7 +325,7 @@ class Remote_Sensing_Page( Page ):
         self.group.append(scale_group)
 
         # units
-        units_y_select_x = 62
+        units_y_select_x = 54
         units_y_color_x = units_y_select_x + select_width
         units_y_select_width = 73
         self.units_y_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_y_select_width, height=upper_select_height, x=units_y_select_x, y=upper_select_y)
@@ -341,7 +345,7 @@ class Remote_Sensing_Page( Page ):
         self.group.append(units_y_group)
 
         # spectrum
-        spectrum_select_x = 148
+        spectrum_select_x = 124
         spectrum_color_x = spectrum_select_x + select_width
         spectrum_select_width = 96
         self.spectrum_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=spectrum_select_width, height=upper_select_height, x=spectrum_select_x, y=upper_select_y)
@@ -364,7 +368,7 @@ class Remote_Sensing_Page( Page ):
         self.group.append(spectrum_group)
 
         # exposure
-        exposure_select_x = 254 #offset + scale_select_width + units_y_select_width + spectrum_select_width - 3*select_width
+        exposure_select_x = 218 #offset + scale_select_width + units_y_select_width + spectrum_select_width - 3*select_width
         exposure_color_x = exposure_select_x + select_width
         exposure_select_width = 62
         self.exposure_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=exposure_select_width, height=upper_select_height, x=exposure_select_x, y=upper_select_y)
@@ -381,6 +385,25 @@ class Remote_Sensing_Page( Page ):
         self.exposure_text_area = label.Label(terminalio.FONT, text=exposure_text, color=self.palette[0])
         exposure_group.append(self.exposure_text_area)
         self.group.append(exposure_group)
+
+        # heat
+        heat_select_x = 278 #offset + scale_select_width + units_y_select_width + spectrum_select_width - 3*select_width
+        heat_color_x = heat_select_x + select_width
+        heat_select_width = 36
+        self.heat_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=heat_select_width, height=upper_select_height, x=heat_select_x, y=upper_select_y)
+        self.group.append( self.heat_select )
+        self.selection_rectangles.append(self.heat_select)
+
+        self.heat_select.hidden = True
+        heat_control_width = heat_select_width - 2 * select_width
+        self.heat_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=heat_control_width, height=upper_control_height, x=heat_color_x, y=upper_control_y)
+        self.group.append( self.heat_color )
+        heat_text_x = heat_color_x + 3
+        heat_group = displayio.Group(scale=1, x=heat_text_x, y=upper_text_y)
+        heat_text = "heat"
+        self.heat_text_area = label.Label(terminalio.FONT, text=heat_text, color=self.palette[0])
+        heat_group.append(self.heat_text_area)
+        self.group.append(heat_group)
 
         # lower controls
         lower_control_height = 14
@@ -487,6 +510,47 @@ class Remote_Sensing_Page( Page ):
         return_group.append(self.return_text_area)
         self.group.append(return_group)
 
+        # values bar
+        values_bar_height = 14
+        values_bar_y = 240 - offset - values_bar_height - lower_control_height
+        values_bar_text_y = values_bar_y + 6
+        values_width = 26
+        left_value_x = 2* offset
+        values_spacing = int((320 - left_value_x - values_width ) / 4)
+        # left_value
+        left_value_group = displayio.Group(scale=1, x=left_value_x, y=values_bar_y)
+        left_value_text = "000"
+        self.left_value_text_area = label.Label(terminalio.FONT, text=left_value_text, color=self.palette[0])
+        left_value_group.append(self.left_value_text_area)
+        self.group.append(left_value_group)
+        # left_mid_value
+        left_mid_value_x = offset + values_spacing
+        left_mid_value_group = displayio.Group(scale=1, x=left_mid_value_x, y=values_bar_y)
+        left_mid_value_text = "000"
+        self.left_mid_value_text_area = label.Label(terminalio.FONT, text=left_mid_value_text, color=self.palette[0])
+        left_mid_value_group.append(self.left_mid_value_text_area)
+        self.group.append(left_mid_value_group)
+        # mid_value
+        mid_value_x = offset + 2* values_spacing
+        mid_value_group = displayio.Group(scale=1, x=mid_value_x, y=values_bar_y)
+        mid_value_text = "000"
+        self.mid_value_text_area = label.Label(terminalio.FONT, text=mid_value_text, color=self.palette[0])
+        mid_value_group.append(self.mid_value_text_area)
+        self.group.append(mid_value_group)
+        # right_mid_value
+        right_mid_value_x = offset + 3*values_spacing
+        right_mid_value_group = displayio.Group(scale=1, x=right_mid_value_x, y=values_bar_y)
+        right_mid_value_text = "000"
+        self.right_mid_value_text_area = label.Label(terminalio.FONT, text=right_mid_value_text, color=self.palette[0])
+        right_mid_value_group.append(self.right_mid_value_text_area)
+        self.group.append(right_mid_value_group)
+        # right_value
+        right_value_x = offset + 4*values_spacing
+        right_value_group = displayio.Group(scale=1, x=right_value_x, y=values_bar_y)
+        right_value_text = "000"
+        self.right_value_text_area = label.Label(terminalio.FONT, text=right_value_text, color=self.palette[0])
+        right_value_group.append(self.right_value_text_area)
+        self.group.append(right_value_group)
 
         return self.group
 
