@@ -35,7 +35,6 @@ class Spectral_Register:
         #self.number_of_x_axis_units_choices = 4
         self.number_of_plot_points = 0
         #self.show_table = False
-        self.wavelength_range = (410, 1000)
         self.wavelengths_to_plot = []
 
     def calculate_five_x_values( self ):
@@ -45,8 +44,8 @@ class Spectral_Register:
         for item in self.instrument.wavelength_bands_list_sorted:
             if item in range (wl_min, wl_max):
                 self.wavelengths_to_plot.append(item)
-        self.five_x_values[0][0] = self.wavelengths_to_plot[0]
-        self.five_x_values[0][4] = self.wavelengths_to_plot[-1]
+        self.five_x_values[0][0] = self.wavelength_ranges[self.spectrum_index][0]
+        self.five_x_values[0][4] = self.wavelength_ranges[self.spectrum_index][1]
         c_m_per_s = 299792458
         nm_per_m = 10**9
         Hz_per_THz = 10**12
@@ -58,6 +57,7 @@ class Spectral_Register:
             self.five_x_values[1][index] = int((c_m_per_s / ((self.five_x_values[0][index])/nm_per_m))/Hz_per_THz) # frequency
             self.five_x_values[2][index] = round((self.five_x_values[1][index]* Hz_per_THz)*h_e_V_per_Hz,1)  # energy
             self.five_x_values[3][index] = int( 10000000/self.five_x_values[0][index] )  # wave number
+
 
 def create_spectral_register( instrument ):
     spectral_register = Spectral_Register( instrument )
@@ -109,8 +109,23 @@ class Light_Page( Page ):
     def action( self ):
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
-                pass
+                if self.selection == 0:
+                   self.spectral_register.scale_index = (self.spectral_register.scale_index + self.instrument.encoder_increment) % len(self.spectral_register.scale_choices)
+                if self.selection == 1:
+                   self.spectral_register.units_y_index = (self.spectral_register.units_y_index + self.instrument.encoder_increment) % len(self.spectral_register.units_y_choices)
+                if self.selection == 2:
+                    self.spectral_register.spectrum_index = (self.spectral_register.spectrum_index + self.instrument.encoder_increment) % len(self.spectral_register.spectrum_choices)
+                    self.spectral_register.calculate_five_x_values()
+                if self.selection == 5:
+                   self.spectral_register.data_source_index = (self.spectral_register.data_source_index + self.instrument.encoder_increment) % len(self.spectral_register.data_source_choices)
+                if self.selection == 6:
+                    self.spectral_register.units_x_index = (self.spectral_register.units_x_index + self.instrument.encoder_increment) % len(self.spectral_register.units_x_choices)
+                if self.selection == 7:
+                    self.spectral_register.distance_popup = not self.spectral_register.distance_popup
+                if self.selection == 8:
+                    self.spectral_register.live = not self.spectral_register.live
             self.instrument.encoder_increment = 0
+            self.update_values()
 
         if self.instrument.button_pressed:
             if self.selection == 9:
@@ -121,8 +136,6 @@ class Light_Page( Page ):
                 self.instrument.active_page_number = self.instrument.pages_dict["Heat"]
             else:
                 self.field_selected = not self.field_selected
-                print( "field selected = ", self.field_selected )
-
                 if self.selection == 0:
                     if self.field_selected:
                         self.scale_color.color_index = self.field_selected_color_index
@@ -160,6 +173,7 @@ class Light_Page( Page ):
                     else:
                         self.live_color.color_index = self.field_not_selected_color_index
             self.instrument.button_pressed = False
+            self.update_values()
 
 
 
@@ -288,7 +302,7 @@ class Light_Page( Page ):
         # data_source
         data_source_select_x = offset
         data_source_color_x = data_source_select_x + select_width
-        data_source_select_width = 64
+        data_source_select_width = 68
         self.data_source_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=data_source_select_width, height=lower_select_height, x=data_source_select_x, y=lower_select_y)
         self.group.append( self.data_source_select )
         self.selection_rectangles.append(self.data_source_select)
