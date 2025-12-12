@@ -16,7 +16,8 @@ class Spectral_Register:
         self.units_y_choices = ["counts", "cts_per_ms", "irradiance" ]
         self.units_y_index = 0
         self.spectrum_choices = ["ultraviolet", "visible", "near infrared", "uv + vis", "vis + nir", "uv + vis + nir" ]
-        self.spectrum_index = 0
+        self.wavelength_ranges = [(200,400),(410,700),(700,1000),(200,700),(410,1000),(200,1000)]
+        self.spectrum_index = 4
         self.data_source_choices = ["sensors", "reference"]
         self.data_source_index = 0
         self.units_x_choices = ["wavelength nm", "frequency THz", "energy eV", "wavenumber/cm"]
@@ -36,7 +37,16 @@ class Spectral_Register:
         #self.show_table = False
         self.wavelength_range = (410, 1000)
         self.wavelengths_to_plot = []
+
     def calculate_five_x_values( self ):
+        self.wavelengths_to_plot = []
+        wl_min = self.wavelength_ranges[self.spectrum_index][0]
+        wl_max = self.wavelength_ranges[self.spectrum_index][1]
+        for item in self.instrument.wavelength_bands_list_sorted:
+            if item in range (wl_min, wl_max):
+                self.wavelengths_to_plot.append(item)
+        self.five_x_values[0][0] = self.wavelengths_to_plot[0]
+        self.five_x_values[0][4] = self.wavelengths_to_plot[-1]
         c_m_per_s = 299792458
         nm_per_m = 10**9
         Hz_per_THz = 10**12
@@ -67,11 +77,34 @@ class Light_Page( Page ):
         self.field_not_selected_color_index = 9
         self.field_selected = False
 
+    def update_values( self ):
+        self.scale_text_area.text = self.spectral_register.scale_choices[ self.spectral_register.scale_index ]
+        self.units_y_text_area.text = self.spectral_register.units_y_choices[ self.spectral_register.units_y_index ]
+        self.spectrum_text_area.text = self.spectral_register.spectrum_choices[ self.spectral_register.spectrum_index ]
+        self.data_source_text_area.text = self.spectral_register.data_source_choices[ self.spectral_register.data_source_index ]
+        self.units_x_text_area.text = self.spectral_register.units_x_choices[ self.spectral_register.units_x_index ]
+        if self.spectral_register.distance_popup:
+            self.distance_text_area.scale = 2
+            self.distance_text_area.text = "-- m"
+        else:
+            self.distance_text_area.scale = 1
+            self.distance_text_area.text = "distance"
+        if self.spectral_register.live:
+            self.live_text_area.text = "LIVE"
+        else:
+            self.live_text_area.text = "HOLD"
+
+        self.spectral_register.calculate_five_x_values()
+        self.left_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.units_x_index][0])
+        self.left_mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.units_x_index][1])
+        self.mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.units_x_index][2])
+        self.right_mid_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.units_x_index][3])
+        self.right_value_text_area.text = "{}".format(self.spectral_register.five_x_values[self.spectral_register.units_x_index][4])
+
+
     def update_selection( self ):
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
-
-
 
     def action( self ):
         if self.instrument.encoder_increment != 0:
@@ -128,8 +161,7 @@ class Light_Page( Page ):
                         self.live_color.color_index = self.field_not_selected_color_index
             self.instrument.button_pressed = False
 
-    def update_values( self ):
-        pass
+
 
     def make_group( self ):
         extra_space = 8
@@ -161,7 +193,7 @@ class Light_Page( Page ):
         self.group.append( self.scale_color )
         scale_text_x = scale_color_x + 3
         scale_group = displayio.Group(scale=1, x=scale_text_x, y=upper_text_y)
-        scale_text = "linear"
+        scale_text = " --"
         self.scale_text_area = label.Label(terminalio.FONT, text=scale_text, color=self.palette[0])
         scale_group.append(self.scale_text_area)
         self.group.append(scale_group)
@@ -180,7 +212,7 @@ class Light_Page( Page ):
         self.group.append( self.units_y_color )
         units_y_text_x = units_y_color_x + 3
         units_y_group = displayio.Group(scale=1, x=units_y_text_x, y=upper_text_y)
-        units_y_text = "irradiance"#"counts" #"irradiance"
+        units_y_text = "  --"#"counts" #"irradiance"
                                 #"cts_per_ms
         self.units_y_text_area = label.Label(terminalio.FONT, text=units_y_text, color=self.palette[0])
         units_y_group.append(self.units_y_text_area)
@@ -200,7 +232,7 @@ class Light_Page( Page ):
         self.group.append( self.spectrum_color )
         spectrum_text_x = spectrum_color_x + 3
         spectrum_group = displayio.Group(scale=1, x=spectrum_text_x, y=upper_text_y)
-        spectrum_text = "uv + vis + nir"
+        spectrum_text = "    --"
         #spectrum_text = "near infrared"
         #spectrum_text = "ultraviolet"
         #spectrum_text = "visible"
@@ -267,7 +299,7 @@ class Light_Page( Page ):
         self.group.append( self.data_source_color )
         data_source_text_x = data_source_color_x + 3
         data_source_group = displayio.Group(scale=1, x=data_source_text_x, y=lower_text_y)
-        data_source_text = "filename" #"cal " #"active", "file"
+        data_source_text = "  --" #"cal " #"active", "file"
         self.data_source_text_area = label.Label(terminalio.FONT, text=data_source_text, color=self.palette[0])
         data_source_group.append(self.data_source_text_area)
         self.group.append(data_source_group)
@@ -286,7 +318,7 @@ class Light_Page( Page ):
         self.group.append( self.units_x_color )
         units_x_text_x = units_x_color_x + 4
         units_x_group = displayio.Group(scale=1, x=units_x_text_x, y=lower_text_y)
-        units_x_text = "wavelength nm"
+        units_x_text = "   --"
         self.units_x_text_area = label.Label(terminalio.FONT, text=units_x_text, color=self.palette[0])
         units_x_group.append(self.units_x_text_area)
         self.group.append(units_x_group)
@@ -306,7 +338,7 @@ class Light_Page( Page ):
         self.group.append( self.distance_color )
         distance_text_x = distance_color_x + 3
         distance_group = displayio.Group(scale=1, x=distance_text_x, y=lower_text_y)
-        distance_text = "distance"
+        distance_text = "   -- "
         self.distance_text_area = label.Label(terminalio.FONT, text=distance_text, color=self.palette[0])
         distance_group.append(self.distance_text_area)
         self.group.append(distance_group)
@@ -326,7 +358,7 @@ class Light_Page( Page ):
         self.group.append( self.live_color )
         live_text_x = live_color_x + 3
         live_group = displayio.Group(scale=1, x=live_text_x, y=lower_text_y)
-        live_text = "LIVE"
+        live_text = " -- "
         self.live_text_area = label.Label(terminalio.FONT, text=live_text, color=self.palette[0])
         live_group.append(self.live_text_area)
         self.group.append(live_group)

@@ -299,7 +299,7 @@ def main():
                     instrument.handle_inputs()
                 sample_stop_time = time.monotonic()
                 sample_time = sample_stop_time - sample_start_time
-                print( "sample_time, one sensor, s = ", round(sample_time,3))
+                #print( "sample_time, one sensor, s = ", round(sample_time,3))
             else:
                 for sensor in instrument.sensors_present:
                     sensor.read()
@@ -307,7 +307,7 @@ def main():
                 instrument.update_active_page()
                 sample_stop_time = time.monotonic()
                 sample_time = sample_stop_time - sample_start_time
-                print( "sample_time, all sensors, s = ", round(sample_time,3))
+                #print( "sample_time, all sensors, s = ", round(sample_time,3))
                 if instrument.vfs:
                         if instrument.take_burst:
                             if instrument.burst_counter < instrument.burst_count:
@@ -351,8 +351,8 @@ def main():
             if len(loop_times) > accumulator_cycles:
                 loop_times.pop(0)
             #print( "loop working time: min = {}, max = {},".format( min(loop_times), max(loop_times)))
-            print( "loop working time average = {}".format( round(sum(loop_times)/len(loop_times),3)))
-            print()
+            #print( "loop working time average = {}".format( round(sum(loop_times)/len(loop_times),3)))
+            #print()
 
 
 
