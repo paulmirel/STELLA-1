@@ -104,157 +104,135 @@ class Light_Page( Page ):
             spectral_bandwidths_nm = []
             spectral_graph_y_values = []
             data_dict_to_plot = {}
-
-
             # make a data dict to plot of the form key=band, value = tuple( counts, normal_counts, irradiance, bandwidth )
-
             for sensor in self.instrument.sensors_present:
                 if sensor.pn == "as7331" or sensor.pn == "as7265x" or sensor.pn == "as7341":
                     wl = sensor.get_wavelength()
                     values = sensor.get_plot_values()
                     data_dict_to_plot.update({wl:values})
-
-            print( data_dict_to_plot )
-
-            '''
-            if False:
-                spectral_bandwidths_nm.append( sensor.get_bandwidth )
-                if units_y == "counts":
-                    if self.spectral_register.scale_choices == "linear" :
-                        spectral_graph_y_values.append( sensor.get_counts )
-
-                                spectral_graph_y_values.append( data_dict_to_plot.get(band) )
-                            elif self.spectral_register.scale_choices == "log" :
-                                if data_dict_to_plot.get(band) < 1:
-                                    spectral_graph_y_values.append( 0 )
-                                else:
-                                    spectral_graph_y_values.append( math.log(data_dict_to_plot.get(band),10))
-
-
-
-
-
-
-
-
-
+            #print( data_dict_to_plot )
             for band in self.instrument.wavelength_bands_list_sorted:
                 if band in range ( self.spectral_register.wl_min, self.spectral_register.wl_max ):
                     self.instrument.handle_inputs()
+                    spectral_graph_x_values_nm.append(band)
+                    channel_values = data_dict_to_plot.get(band)
+                    if channel_values is not None:
+                        spectral_bandwidths_nm.append( channel_values[3] )
+                        if units_y == "counts": #["counts", "cts_per_s", "irradiance" ]
+                            linear_y_value = channel_values[0]
+                        elif units_y == "cts_per_s":
+                            linear_y_value = channel_values[1]
+                        elif units_y == "irradiance":
+                            linear_y_value = channel_values[2]
+                        scale_choice = self.spectral_register.scale_choices[ self.spectral_register.scale_index]
+                        if scale_choice == "linear" :
+                            spectral_graph_y_values.append( linear_y_value )
+                        elif scale_choice == "log" :
+                            if linear_y_value < 1:
+                                spectral_graph_y_values.append( 0 )
+                            else:
+                                spectral_graph_y_values.append( math.log(linear_y_value,10))
 
-                    if False:
-                        if data_dict_to_plot.get(band) is not None:
-                            spectral_graph_x_values_nm.append( band )
-                            for spectral_sensor in self.instrument.spectral_sensors_present:
-                                bw = spectral_sensor.get_bandwidth(band)
-                                if bw is not None:
-                                    spectral_bandwidths_nm.append(bw)
-
-                            if self.spectral_register.scale_choices == "linear" :
-                                spectral_graph_y_values.append( data_dict_to_plot.get(band) )
-                            elif self.spectral_register.scale_choices == "log" :
-                                if data_dict_to_plot.get(band) < 1:
-                                    spectral_graph_y_values.append( 0 )
-                                else:
-                                    spectral_graph_y_values.append( math.log(data_dict_to_plot.get(band),10))
+            #print(spectral_graph_x_values_nm)
+            #print(spectral_graph_y_values)
             #print(spectral_bandwidths_nm)
-            '''
 
 
 
-            # TBD look up the bandwidth for each
-            # TBD plot all the points. set their color, width, height, offset. Interpolate the inactive points.
-            if spectral_graph_y_values:
-                #print( spectral_graph_x_values_nm[0], spectral_graph_x_values_nm[-1])
-                wavelength_nm_per_point = (spectral_graph_x_values_nm[-1] - spectral_graph_x_values_nm[0])/(self.number_of_points - 1 )
-                #print( wavelength_nm_per_point )
+            if False:
+                # TBD look up the bandwidth for each
+                # TBD plot all the points. set their color, width, height, offset. Interpolate the inactive points.
+                if spectral_graph_y_values:
+                    #print( spectral_graph_x_values_nm[0], spectral_graph_x_values_nm[-1])
+                    wavelength_nm_per_point = (spectral_graph_x_values_nm[-1] - spectral_graph_x_values_nm[0])/(self.number_of_points - 1 )
+                    #print( wavelength_nm_per_point )
 
-                inactive_point_color = 19
-                indicies_of_active_points = []
-                point_wavelengths_nm = []  # wavelength for each point
-                point_active = []       # boolean list, true if there's real data for that point
-                point_colors = []       # color index for each point
-                point_bandwidths = []   # bandwidth for each point ( 0 for inactive points )
-                point_y_values = []     # y value in counts or irradiance for each point
-                point_y_location = []   # display position in y pixels for each point: plot this value
+                    inactive_point_color = 19
+                    indicies_of_active_points = []
+                    point_wavelengths_nm = []  # wavelength for each point
+                    point_active = []       # boolean list, true if there's real data for that point
+                    point_colors = []       # color index for each point
+                    point_bandwidths = []   # bandwidth for each point ( 0 for inactive points )
+                    point_y_values = []     # y value in counts or irradiance for each point
+                    point_y_location = []   # display position in y pixels for each point: plot this value
 
-                for value in spectral_graph_x_values_nm:
-                    indicies_of_active_points.append(int( round((value - spectral_graph_x_values_nm[0]) / wavelength_nm_per_point,0)))
+                    for value in spectral_graph_x_values_nm:
+                        indicies_of_active_points.append(int( round((value - spectral_graph_x_values_nm[0]) / wavelength_nm_per_point,0)))
 
-                slopes_delta_y_per_point = []
-                for index in range ( 0, len(indicies_of_active_points)-1):
-                    slopes_delta_y_per_point.append( (spectral_graph_y_values[index+1]-spectral_graph_y_values[index])/(indicies_of_active_points[index+1]-indicies_of_active_points[index]) )
+                    slopes_delta_y_per_point = []
+                    for index in range ( 0, len(indicies_of_active_points)-1):
+                        slopes_delta_y_per_point.append( (spectral_graph_y_values[index+1]-spectral_graph_y_values[index])/(indicies_of_active_points[index+1]-indicies_of_active_points[index]) )
 
-                y_value_index = -1
-                last_index = 0
-                for index in range (0, self.number_of_points):
-                    self.instrument.handle_inputs()
-                    point_wavelengths_nm.append( spectral_graph_x_values_nm[0] + index * wavelength_nm_per_point)
-                    if index in indicies_of_active_points:
-                        y_value_index += 1
-                        point_active.append( True )
-                        bandwidth = spectral_bandwidths_nm[y_value_index]
-                        wavelength = spectral_graph_x_values_nm[y_value_index]
-                        if wavelength in range(390,420):
-                            self.points[index].color_index = 25
-                        if wavelength in range(420,450):
-                            self.points[index].color_index = 26
-                        if wavelength in range(450,470):
-                            self.points[index].color_index = 27
-                        if wavelength in range(470,500):
-                            self.points[index].color_index = 28
-                        if wavelength in range(500,520):
-                            self.points[index].color_index = 29
-                        if wavelength in range(520,550):
-                            self.points[index].color_index = 30
-                        if wavelength in range(550,570):
-                            self.points[index].color_index = 31
-                        if wavelength in range(570,600):
-                            self.points[index].color_index = 32
-                        if wavelength in range(600,630):
-                            self.points[index].color_index = 33
-                        if wavelength in range(630,660):
-                            self.points[index].color_index = 34
-                        if wavelength in range(660,690):
-                            self.points[index].color_index = 35
-                        if wavelength in range(690,720):
-                            self.points[index].color_index = 36
-                        if wavelength in range(720,745):
-                            self.points[index].color_index = 37
-                        if wavelength in range(745,785):
-                            self.points[index].color_index = 38
-                        if wavelength > 785 or wavelength < 390:
-                            self.points[index].color_index = 0
-                        bw_in_points = int( bandwidth/wavelength_nm_per_point )*self.pixels_per_point
-                        self.points[index].width = bw_in_points
-                        self.points[index].x = self.graph_pix_x0 + index*self.pixels_per_point - int(bw_in_points/2)
-                        self.points[index].height = self.point_height *3
-                        point_y_values.append( spectral_graph_y_values[ y_value_index ] )
-                        last_index = index
+                    y_value_index = -1
+                    last_index = 0
+                    for index in range (0, self.number_of_points):
+                        self.instrument.handle_inputs()
+                        point_wavelengths_nm.append( spectral_graph_x_values_nm[0] + index * wavelength_nm_per_point)
+                        if index in indicies_of_active_points:
+                            y_value_index += 1
+                            point_active.append( True )
+                            bandwidth = spectral_bandwidths_nm[y_value_index]
+                            wavelength = spectral_graph_x_values_nm[y_value_index]
+                            if wavelength in range(390,420):
+                                self.points[index].color_index = 25
+                            if wavelength in range(420,450):
+                                self.points[index].color_index = 26
+                            if wavelength in range(450,470):
+                                self.points[index].color_index = 27
+                            if wavelength in range(470,500):
+                                self.points[index].color_index = 28
+                            if wavelength in range(500,520):
+                                self.points[index].color_index = 29
+                            if wavelength in range(520,550):
+                                self.points[index].color_index = 30
+                            if wavelength in range(550,570):
+                                self.points[index].color_index = 31
+                            if wavelength in range(570,600):
+                                self.points[index].color_index = 32
+                            if wavelength in range(600,630):
+                                self.points[index].color_index = 33
+                            if wavelength in range(630,660):
+                                self.points[index].color_index = 34
+                            if wavelength in range(660,690):
+                                self.points[index].color_index = 35
+                            if wavelength in range(690,720):
+                                self.points[index].color_index = 36
+                            if wavelength in range(720,745):
+                                self.points[index].color_index = 37
+                            if wavelength in range(745,785):
+                                self.points[index].color_index = 38
+                            if wavelength > 785 or wavelength < 390:
+                                self.points[index].color_index = 0
+                            bw_in_points = int( bandwidth/wavelength_nm_per_point )*self.pixels_per_point
+                            self.points[index].width = bw_in_points
+                            self.points[index].x = self.graph_pix_x0 + index*self.pixels_per_point - int(bw_in_points/2)
+                            self.points[index].height = self.point_height *3
+                            point_y_values.append( spectral_graph_y_values[ y_value_index ] )
+                            last_index = index
+                        else:
+                            point_active.append( False )
+                            self.points[index].color_index = 19
+                            self.points[index].width = self.pixels_per_point
+                            self.points[index].height = self.point_height
+                            self.points[index].x=self.graph_pix_x0 + index*self.pixels_per_point
+                            point_y_values.append( (index-last_index)*slopes_delta_y_per_point[y_value_index] + spectral_graph_y_values[ y_value_index ] )
+
+                    y_pixel_span = self.graph_pix_y0 - self.graph_pix_yn
+                    y_value_span = max( point_y_values ) -  min( point_y_values )
+                    if y_value_span > 0:
+                        y_pix_per_value = y_pixel_span / y_value_span
                     else:
-                        point_active.append( False )
-                        self.points[index].color_index = 19
-                        self.points[index].width = self.pixels_per_point
-                        self.points[index].height = self.point_height
-                        self.points[index].x=self.graph_pix_x0 + index*self.pixels_per_point
-                        point_y_values.append( (index-last_index)*slopes_delta_y_per_point[y_value_index] + spectral_graph_y_values[ y_value_index ] )
+                        y_pix_per_value = 1
 
-                y_pixel_span = self.graph_pix_y0 - self.graph_pix_yn
-                y_value_span = max( point_y_values ) -  min( point_y_values )
-                if y_value_span > 0:
-                    y_pix_per_value = y_pixel_span / y_value_span
-                else:
-                    y_pix_per_value = 1
+                    y_pix_coords = []
+                    for item in point_y_values:
+                        self.instrument.handle_inputs()
+                        y_pix_coords.append( self.graph_pix_y0 - self.point_height - int( y_pix_per_value *(item - min(point_y_values))) )
 
-                y_pix_coords = []
-                for item in point_y_values:
-                    self.instrument.handle_inputs()
-                    y_pix_coords.append( self.graph_pix_y0 - self.point_height - int( y_pix_per_value *(item - min(point_y_values))) )
-
-                for index in range (0, self.number_of_points):
-                    self.instrument.handle_inputs()
-                    #print( index, y_pix_coords[index] )
-                    self.points[index].y = y_pix_coords[index]
+                    for index in range (0, self.number_of_points):
+                        self.instrument.handle_inputs()
+                        #print( index, y_pix_coords[index] )
+                        self.points[index].y = y_pix_coords[index]
         else:
             pass
 
