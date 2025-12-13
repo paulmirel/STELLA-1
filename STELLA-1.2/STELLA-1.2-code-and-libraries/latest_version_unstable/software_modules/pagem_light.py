@@ -76,6 +76,34 @@ class Light_Page( Page ):
         self.field_selected_color_index = 5
         self.field_not_selected_color_index = 9
         self.field_selected = False
+        self.points =[]
+
+    def create_plot( self ):
+        graph_x = 14 #4
+        graph_width = 320 - graph_x *2
+        graph_height = 240-124
+        message_height = int( graph_height/4 )
+        message_offset = 10
+        graph_y = 80
+        self.graph_pix_y0 = graph_y + graph_height
+        self.graph_pix_x0 = graph_x
+        self.graph_pix_xn = self.graph_pix_x0 + graph_width
+        self.graph_pix_yn = self.graph_pix_y0 - graph_height
+        ## make all the plot points, store them on the x-axis
+        self.pixels_per_point = 2 #4
+        self.point_height = 2
+        self.number_of_points = int(graph_width / self.pixels_per_point)
+        #print( "number_of_points", self.number_of_points )
+        for index in range (0, self.number_of_points):
+            #color_index = index % 10 or color_index = 0
+            point = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0 , width=self.pixels_per_point, height=self.point_height,
+                        x=self.graph_pix_x0 + index*self.pixels_per_point, y=self.graph_pix_y0 - self.point_height )
+            self.points.append(point)
+            self.group.append(point)
+
+
+    def update_plot( self ):
+        pass
 
     def update_values( self ):
         self.scale_text_area.text = self.spectral_register.scale_choices[ self.spectral_register.scale_index ]
@@ -88,7 +116,7 @@ class Light_Page( Page ):
             self.distance_text_area.text = "-- m"
         else:
             self.distance_text_area.scale = 1
-            self.distance_text_area.text = "distance"
+            self.distance_text_area.text = "standoff"
         if self.spectral_register.live:
             self.live_text_area.text = "LIVE"
         else:
@@ -454,6 +482,7 @@ def make_light_page( instrument ):
     page = Light_Page( instrument )
     group = page.make_group()
     page.hide()
+    page.create_plot()
     instrument.main_display_group.append( group )
     instrument.pages_list.append( page )
     return page
