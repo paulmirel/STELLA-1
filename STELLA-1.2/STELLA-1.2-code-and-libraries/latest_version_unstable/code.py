@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.7.7"
+SOFTWARE_VERSION_NUMBER = "0.7.8"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -240,9 +240,7 @@ def main():
         for page in instrument.pages_list:
             print( page.page_name )
     instrument.make_pages_dictionary()
-    stop = time.monotonic()
-    elapsed = stop - start
-    print( "time to make light page is {}s".format( elapsed ))
+
     #print( instrument.pages_dict )
 
     gc.collect()
@@ -261,11 +259,13 @@ def main():
     startup_end_time = time.monotonic()
     startup_time_s = startup_end_time - startup_start_time
     print( "startup_time_s = ", startup_time_s )
+    stop = time.monotonic()
+    elapsed = stop - start
+    print( "time to make light page is {}s".format( elapsed ))
     instrument.take_burst = False
     accumulator_cycles = 5
     loop_times = []
-    if False:
-        instrument.active_page_number = instrument.pages_dict["Heat"]
+
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
     if False: #go to startup page
@@ -273,6 +273,8 @@ def main():
         sensors_page.choose_sensor( instrument.sensors_present[1] )
     if instrument.spectral_sensors_detected:
         instrument.active_page_number = instrument.pages_dict["Light"]
+    if True:
+        instrument.active_page_number = instrument.pages_dict["Heat"]
 
     try:
         if buzzer: buzzer.beep()
@@ -425,7 +427,8 @@ class Instrument:
                 self.previous_page_number = self.last_active_page_number
             self.pages_list[ self.last_active_page_number ].hide()
             self.pages_list[ self.pages_dict["Controls"] ].hide()
-            if self.pages_list[self.active_page_number].page_name == "Main" or self.pages_list[self.active_page_number].page_name == "Light":
+            active_page_name = self.pages_list[self.active_page_number].page_name
+            if active_page_name == "Main" or active_page_name == "Light" or active_page_name == "Heat":
                 self.pages_list[ self.pages_dict["Controls"] ].show()
                 self.pages_list[ self.active_page_number ].show()
                 if self.combined_page_selection < self.pages_list[ self.pages_dict["Controls"] ].selection_count:
