@@ -7,13 +7,14 @@ from adafruit_display_text import label
 import vectorio
 import terminalio
 from .classm_page import Page
+import math
 
-class Exposure_Control_Page( Page ):
-    def __init__( self, instrument, spectral_register):
+class Exposure_Page( Page ):
+    def __init__( self, instrument ):
         super().__init__()
         self.instrument = instrument
         self.palette = self.instrument.palette
-        self.spectral_register = spectral_register
+        #self.spectral_register = self.instrument.pages_list[
         self.page_name = "Exposure"
         self.selection_color_index = 6
         self.field_selected_color_index = 5
@@ -28,6 +29,10 @@ class Exposure_Control_Page( Page ):
         self.scale_choices = "linear scale", "log scale"
         self.scale_choice = 1
         self.selection = 0
+        self.last_selection = -1
+        self.selection_count = 1
+        self.field_selected = False
+        self.field_selected_list = []
         self.spectral_sensors = self.instrument.spectral_sensors_present
         self.active_sensor_index = 0
         self.exposure_max_value = 65535
@@ -44,12 +49,31 @@ class Exposure_Control_Page( Page ):
         for sensor_index in range (0, self.number_of_sensors):
             self.lamp_current_mA_index.append( 0 )
         self.lamp_selection_index = 0
+        self.selection_rectangles = []
 
 
+    def action( self ):
+        if self.instrument.encoder_increment != 0:
+            if self.field_selected:
+                pass
+
+            self.instrument.encoder_increment = 0
+            self.update_values()
+
+        if self.instrument.button_pressed:
+            if self.selection == 0:
+                self.instrument.active_page_number = self.instrument.pages_dict["Light"]
+            else:
+                self.field_selected_list[self.selection] = not self.field_selected_list[self.selection]
+            self.instrument.button_pressed = False
+            self.update_values()
 
     def update_values( self ):
+
+        #### rip out the guts of selection and field changes, and do it over
+        '''
         number_of_selections = len(self.selection_list)
-        if any( self.field_selected ):
+        if any( self.field_selected_list ):
             pass
         else:
             if self.instrument.encoder_increment != 0:
@@ -81,9 +105,9 @@ class Exposure_Control_Page( Page ):
                     if index == 0:
                         print( "return whence" )
                     else:
-                        self.field_selected[index] = not self.field_selected[index]
+                        self.field_selected_list[index] = not self.field_selected_list[index]
                     self.instrument.button_pressed = False
-                if self.field_selected[index]:
+                if self.field_selected_list[index]:
                     self.field_list[index].color_index = self.field_selected_color_index
                     if self.instrument.encoder_increment != 0:
                         if index == 1:
@@ -133,6 +157,11 @@ class Exposure_Control_Page( Page ):
 
             else:
                 self.selection_list[ index ].hidden = True
+        '''
+
+
+
+
 
         ## update interface text
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
@@ -147,9 +176,9 @@ class Exposure_Control_Page( Page ):
             self.gain_area.color_index = 19
             self.integration_time_area.color_index = 19
         else:
-            if not self.field_selected[4]:
+            if not self.field_selected_list[4]:
                 self.gain_area.color_index = 9
-            if not self.field_selected[5]:
+            if not self.field_selected_list[5]:
                 self.integration_time_area.color_index = 9
 
         ## get exposure and drive slider, value, label, brackets
@@ -523,7 +552,7 @@ class Exposure_Control_Page( Page ):
                                                     height=return_select_height, x=return_select_x, y=return_select_y )
         self.group.append( self.return_select )
         self.return_select.hidden = True
-        self.selection_list.append(self.return_select)
+        self.selection_rectangles.append( self.return_select)
 
         return_border_width = return_select_width - 2*select_width
         return_border_height = return_select_height - 2*select_width
@@ -541,7 +570,7 @@ class Exposure_Control_Page( Page ):
                                             height=return_area_height, x=return_area_x, y=return_area_y ) #color_index = 19
         self.group.append( self.return_area )
         self.field_list.append( self.return_area )
-        self.field_selected.append( False )
+        self.field_selected_list.append( False )
 
         return_triangle_x = return_border_x
         return_triangle_y = return_border_y
@@ -556,7 +585,7 @@ class Exposure_Control_Page( Page ):
                                                     height=sensor_choice_select_height, x=sensor_choice_select_x, y=sensor_choice_select_y )
         self.group.append( self.sensor_choice_select )
         self.sensor_choice_select.hidden = True
-        self.selection_list.append(self.sensor_choice_select)
+        self.selection_rectangles.append( self.sensor_choice_select )
 
         sensor_choice_border_width = sensor_choice_select_width - 2*select_width
         sensor_choice_border_height = sensor_choice_select_height - 2*select_width
@@ -574,7 +603,7 @@ class Exposure_Control_Page( Page ):
                                             height=sensor_choice_area_height, x=sensor_choice_area_x, y=sensor_choice_area_y )
         self.group.append( self.sensor_choice_area )
         self.field_list.append( self.sensor_choice_area )
-        self.field_selected.append( False )
+        self.field_selected_list.append( False )
 
         sensor_choice_text_x = sensor_choice_area_x+text_offset_x
         sensor_choice_text_y = sensor_choice_area_y+text_offset_y
@@ -593,7 +622,7 @@ class Exposure_Control_Page( Page ):
                                                     height=setting_select_height, x=setting_select_x, y=setting_select_y )
         self.group.append( self.setting_select )
         self.setting_select.hidden = True
-        self.selection_list.append(self.setting_select)
+        self.selection_rectangles.append( self.setting_select )
 
 
         setting_border_width = setting_select_width - 2*select_width
@@ -612,7 +641,7 @@ class Exposure_Control_Page( Page ):
                                             height=setting_area_height, x=setting_area_x, y=setting_area_y )
         self.group.append( self.setting_area )
         self.field_list.append( self.setting_area )
-        self.field_selected.append( False )
+        self.field_selected_list.append( False )
 
         setting_text_x = setting_area_x+text_offset_x
         setting_text_y = setting_area_y+text_offset_y
@@ -631,7 +660,7 @@ class Exposure_Control_Page( Page ):
                                                     height=slider_scale_select_height, x=slider_scale_select_x, y=slider_scale_select_y )
         self.group.append( self.slider_scale_select )
         self.slider_scale_select.hidden = True
-        self.selection_list.append(self.slider_scale_select)
+        self.selection_rectangles.append( self.slider_scale_select )
 
         slider_scale_border_width = slider_scale_select_width - 2*select_width
         slider_scale_border_height = slider_scale_select_height - 2*select_width
@@ -646,7 +675,7 @@ class Exposure_Control_Page( Page ):
                                             height=slider_scale_area_height, x=slider_scale_area_x, y=slider_scale_area_y )
         self.group.append( self.slider_scale_area )
         self.field_list.append( self.slider_scale_area )
-        self.field_selected.append( False )
+        self.field_selected_list.append( False )
         #self.slider_scale_area.hidden = True
 
 
@@ -667,7 +696,7 @@ class Exposure_Control_Page( Page ):
                                                     height=gain_select_height, x=gain_select_x, y=gain_select_y )
         self.group.append( self.gain_select )
         self.gain_select.hidden = True
-        self.selection_list.append(self.gain_select)
+        self.selection_rectangles.append( self.gain_select )
 
         gain_border_width = gain_select_width - 2*select_width
         gain_border_height = gain_select_height - 2*select_width
@@ -685,7 +714,7 @@ class Exposure_Control_Page( Page ):
                                             height=gain_area_height, x=gain_area_x, y=gain_area_y )
         self.group.append( self.gain_area )
         self.field_list.append( self.gain_area )
-        self.field_selected.append( False )
+        self.field_selected_list.append( False )
 
         gain_text_x = gain_area_x+text_offset_x
         gain_text_y = gain_area_y+text_offset_y
@@ -703,7 +732,7 @@ class Exposure_Control_Page( Page ):
                                                     height=integration_time_select_height, x=integration_time_select_x, y=integration_time_select_y )
         self.group.append( self.integration_time_select )
         self.integration_time_select.hidden = True
-        self.selection_list.append(self.integration_time_select)
+        self.selection_rectangles.append( self.integration_time_select )
 
 
         integration_time_border_width = integration_time_select_width - 2*select_width
@@ -722,7 +751,7 @@ class Exposure_Control_Page( Page ):
                                             height=integration_time_area_height, x=integration_time_area_x, y=integration_time_area_y )
         self.group.append( self.integration_time_area )
         self.field_list.append( self.integration_time_area )
-        self.field_selected.append( False )
+        self.field_selected_list.append( False )
 
         integration_time_text_x = integration_time_area_x+text_offset_x
         integration_time_text_y = integration_time_area_y+text_offset_y
@@ -740,7 +769,7 @@ class Exposure_Control_Page( Page ):
                                                     height=lamp_current_select_height, x=lamp_current_select_x, y=lamp_current_select_y )
         self.group.append( self.lamp_current_select )
         self.lamp_current_select.hidden = True
-        self.selection_list.append(self.lamp_current_select)
+        self.selection_rectangles.append( self.lamp_current_select )
 
         lamp_current_border_width = lamp_current_select_width - 2*select_width
         lamp_current_border_height = lamp_current_select_height - 2*select_width
@@ -758,7 +787,7 @@ class Exposure_Control_Page( Page ):
                                             height=lamp_current_area_height, x=lamp_current_area_x, y=lamp_current_area_y )
         self.group.append( self.lamp_current_area )
         self.field_list.append( self.lamp_current_area )
-        self.field_selected.append( False )
+        self.field_selected_list.append( False )
 
         lamp_current_text_x = lamp_current_area_x+text_offset_x
         lamp_current_text_y = lamp_current_area_y+text_offset_y
@@ -835,7 +864,7 @@ class Exposure_Control_Page( Page ):
                                                     height=lamp_choice_select_height, x=lamp_choice_select_x, y=lamp_choice_select_y )
         self.group.append( self.lamp_choice_select )
         self.lamp_choice_select.hidden = True
-        self.selection_list.append(self.lamp_choice_select)
+        self.selection_rectangles.append( self.lamp_choice_select )
 
         lamp_choice_border_width = lamp_choice_select_width - 2*select_width
         lamp_choice_border_height = lamp_choice_select_height - 2*select_width
@@ -854,7 +883,7 @@ class Exposure_Control_Page( Page ):
                                             height=lamp_choice_area_height, x=lamp_choice_area_x, y=lamp_choice_area_y )
         self.group.append( self.lamp_choice_area )
         self.field_list.append( self.lamp_choice_area )
-        self.field_selected.append( False )
+        self.field_selected_list.append( False )
 
         lamp_choice_text_x = 166+6
         lamp_choice_text_y = gain_area_y - 10
@@ -881,11 +910,16 @@ class Exposure_Control_Page( Page ):
         exposure_label_text_group.append(self.exposure_label_text_area)
         self.group.append(exposure_label_text_group)
         self.exposure_label_text_area.hidden = True
-
+        self.selection_count = len( self.selection_rectangles )
         return self.group
 
-def make_exposure_control_page( instrument, spectral_register ):
-    page = Exposure_Control_Page( instrument, spectral_register )
+    def update_selection( self ):
+        self.selection_rectangles[self.last_selection].hidden = True
+        self.selection_rectangles[self.selection].hidden = False
+
+
+def make_exposure_page( instrument ):
+    page = Exposure_Page( instrument )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )

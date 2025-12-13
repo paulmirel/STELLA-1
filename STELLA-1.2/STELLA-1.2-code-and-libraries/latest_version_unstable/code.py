@@ -80,7 +80,7 @@ from software_modules import devicem_ili9341_display, devicem_gps
 from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
 from software_modules import pagem_settings, pagem_sensors
-from software_modules import pagem_light, pagem_heat, pagem_air, pagem_time_place
+from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air, pagem_time_place
 
 
 def main():
@@ -232,7 +232,8 @@ def main():
     heat_page = pagem_heat.make_heat_page( instrument )
     start = time.monotonic()
     if instrument.spectral_sensors_detected:
-        light_page = pagem_light.make_light_page( instrument)
+        light_page = pagem_light.make_light_page( instrument )
+        exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:
         light_missing_page = pagem_light.make_light_missing_page( instrument )
 

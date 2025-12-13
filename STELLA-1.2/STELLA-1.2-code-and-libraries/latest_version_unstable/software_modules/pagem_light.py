@@ -19,7 +19,7 @@ class Spectral_Register:
         self.spectrum_choices = ["ultraviolet", "visible", "near infrared", "uv + vis", "vis + nir", "uv + vis + nir" ]
         self.wavelength_ranges = [(200,400),(410,700),(700,1000),(200,700),(410,1000),(200,1000)]
         self.spectrum_index = 5
-        self.data_source_choices = ["sensors", "reference"]
+        self.data_source_choices = ["sensors", "*future"]#"reference"]
         self.data_source_index = 0
         self.units_x_choices = ["wavelength nm", "frequency THz", "energy eV", "wavenumber/cm"]
         self.units_x_index = 0
@@ -286,6 +286,7 @@ class Light_Page( Page ):
                 self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             elif self.selection == 3:
                 print( "go to exposure control" )
+                self.instrument.active_page_number = self.instrument.pages_dict["Exposure"]
             elif self.selection == 4:
                 self.instrument.active_page_number = self.instrument.pages_dict["Heat"]
             else:
@@ -335,17 +336,17 @@ class Light_Page( Page ):
         extra_space = 8
         self.group = displayio.Group()
         separator_bar_height = 2
-        rs_background_y = 54 + separator_bar_height
-        rs_background_height = 240 - rs_background_y
-        upper_text_y = rs_background_y + 14
+        light_background_y = 54 + separator_bar_height
+        light_background_height = 240 - light_background_y
+        upper_text_y = light_background_y + 14
         select_width = 4
         offset = 4
-        upper_select_y = offset + rs_background_y
+        upper_select_y = offset + light_background_y
         upper_control_height = 14
         upper_select_height = upper_control_height + 2*select_width
         upper_control_y = upper_select_y + select_width
-        rs_background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=rs_background_height, x=0, y=rs_background_y)
-        self.group.append( rs_background )
+        light_background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=light_background_height, x=0, y=light_background_y)
+        self.group.append( light_background )
 
         # scale
         scale_select_x = offset
@@ -594,6 +595,8 @@ class Light_Page( Page ):
         right_value_group.append(self.right_value_text_area)
         self.group.append(right_value_group)
 
+        self.create_plot()
+
         return self.group
 
     def hide_all_selections( self ):
@@ -604,11 +607,10 @@ class Light_Page( Page ):
 
 
 def make_light_page( instrument ):
-    instrument.welcome_page.announce( "make_light_page (~40s)" )
+    instrument.welcome_page.announce( "make_light_page (~50s)" )
     page = Light_Page( instrument )
     group = page.make_group()
     page.hide()
-    page.create_plot()
     instrument.main_display_group.append( group )
     instrument.pages_list.append( page )
     return page
