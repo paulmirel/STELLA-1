@@ -32,7 +32,7 @@ def initialize_spectral_channel( name, sensor_unit, index ):
 class Spectral_Channel( Device ):
     def __init__( self, name, sensor_unit, index ):
         #super().__init__(name=name, sensor_group=sensor_group )
-        super().__init__(name = name, pn = "as7256x", address = 0x49, swob = sensor_unit )
+        super().__init__(name = name, pn = "as7265x", address = 0x49, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
         self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s", "irrad_W_per_m2", "bandwidth_nm",
@@ -50,6 +50,10 @@ class Spectral_Channel( Device ):
                         self.chip_number,
                         0]
 
+    def get_wavelength( self ):
+        return self.wavelength_nm
+    def get_plot_values( self ):
+        return (self.values[3],self.values[4],self.values[5],self.values[6])
 
     def read(self):
         raw = self.sensor_unit.read_counts_by_index( self.index )

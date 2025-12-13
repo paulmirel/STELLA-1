@@ -46,6 +46,12 @@ class Spectral_Channel( Device ):
                         0,
                         self.bandwidth_nm,
                         0]
+                        
+    def get_wavelength( self ):
+        return self.wavelength_nm
+    def get_plot_values( self ):
+        return (self.values[3],self.values[4],0,self.values[6])
+        
     def read(self):
         raw_values = self.sensor_unit.read_counts_all()
         if raw_values is not None:
