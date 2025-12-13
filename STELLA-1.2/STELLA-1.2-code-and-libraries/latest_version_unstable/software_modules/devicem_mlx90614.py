@@ -36,6 +36,9 @@ class mlx90614_Surface_Thermometer( Device ):
     def printlog(self):
         print( self.log())
 
+    def get_values( self ):
+        return( self.values )
+
 class Null_mlx90614_Surface_Thermometer(Device):
     def __init__( self ):
         super().__init__(name = None, swob = None)

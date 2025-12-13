@@ -18,6 +18,26 @@ class Heat_Page( Page ):
         self.last_selection = 0
         self.selection_count = 1
         self.field_selected = False
+
+    def update_values( self ):
+        air_sensor_in_use = False
+        surface_sensor_in_use = False
+        for sensor in self.instrument.sensors_present:
+            if sensor.pn == "hdc3022":
+                air_sensor_in_use = sensor
+            if sensor.pn == "mlx90614":
+                surface_sensor_in_use = sensor
+        if air_sensor_in_use:
+            air_sensor_values = air_sensor_in_use.get_values()
+            air_temp_C = air_sensor_values[0]
+            self.tair_text_area.text = "{}C".format( air_temp_C )
+        if surface_sensor_in_use:
+            surface_sensor_values = surface_sensor_in_use.get_values()
+            surface_temp_C = surface_sensor_values[0]
+            self.tsurface_text_area.text = "{}C".format( surface_temp_C )
+        if air_sensor_in_use and surface_sensor_in_use:
+            self.tdiff_text_area.text = "{}C".format( round(surface_temp_C - air_temp_C,1) )
+
     def make_group( self ):
         self.group = displayio.Group()
         start_y = 54
@@ -25,11 +45,11 @@ class Heat_Page( Page ):
         self.group.append( status_background )
 
 
-        label_x_start = 12
-        value_x_start = label_x_start
-        value_y_start = 64
+        label_x_start = 18
+        value_x_start = 12
+        value_y_start = 80
         column_spacing = 106
-        label_y_start = value_y_start  + 30
+        label_y_start = value_y_start  + 20
 
         label_group = displayio.Group(scale=1, x=label_x_start, y=label_y_start)
         label_text = "Tsurface"
@@ -38,46 +58,82 @@ class Heat_Page( Page ):
         self.group.append(label_group)
 
         value_group = displayio.Group(scale=2, x=value_x_start, y=value_y_start)
-        value_text = "100.0C"
+        value_text = " -- "
         self.tsurface_text_area = label.Label(terminalio.FONT, text=value_text, color=self.palette[0])
         value_group.append(self.tsurface_text_area)
         self.group.append(value_group)
 
-        label_group = displayio.Group(scale=1, x=label_x_start+int(2*column_spacing/3), y=label_y_start)
+        label_group = displayio.Group(scale=1, x=label_x_start+64+3, y=label_y_start)
         label_text = "-"
         label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
         label_group.append(label_text_area)
         self.group.append(label_group)
 
-        label_group = displayio.Group(scale=1, x=label_x_start+column_spacing, y=label_y_start)
+        label_group = displayio.Group(scale=2, x=label_x_start+64, y=value_y_start)
+        label_text = "-"
+        label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
+        label_group.append(label_text_area)
+        self.group.append(label_group)
+
+        label_group = displayio.Group(scale=1, x=label_x_start+column_spacing+20, y=label_y_start)
         label_text = "Tair"
         label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
         label_group.append(label_text_area)
         self.group.append(label_group)
 
         value_group = displayio.Group(scale=2, x=value_x_start+column_spacing, y=value_y_start)
-        value_text = "100.0C"
+        value_text = " -- "
         self.tair_text_area = label.Label(terminalio.FONT, text=value_text, color=self.palette[0])
         value_group.append(self.tair_text_area)
         self.group.append(value_group)
 
-        label_group = displayio.Group(scale=1, x=label_x_start+int(3*column_spacing/2), y=label_y_start)
+        label_group = displayio.Group(scale=1, x=label_x_start+ 186+3, y=label_y_start)
         label_text = "="
         label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
         label_group.append(label_text_area)
         self.group.append(label_group)
 
-        label_group = displayio.Group(scale=1, x=label_x_start+2*column_spacing, y=label_y_start)
+        label_group = displayio.Group(scale=2, x=label_x_start+ 186, y=value_y_start)
+        label_text = "="
+        label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
+        label_group.append(label_text_area)
+        self.group.append(label_group)
+
+        label_group = displayio.Group(scale=1, x=label_x_start+2*column_spacing+8+12, y=label_y_start)
         label_text = "Tdiff"
         label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
         label_group.append(label_text_area)
         self.group.append(label_group)
 
-        value_group = displayio.Group(scale=2, x=value_x_start+2*column_spacing, y=value_y_start)
-        value_text = "100.0C"
+        value_group = displayio.Group(scale=2, x=value_x_start+2*column_spacing+12, y=value_y_start)
+        value_text = " -- "
         self.tdiff_text_area = label.Label(terminalio.FONT, text=value_text, color=self.palette[0])
         value_group.append(self.tdiff_text_area)
         self.group.append(value_group)
+
+        label_group = displayio.Group(scale=1, x=label_x_start, y=160)
+        label_text = "TBD humidity, dew point, heat index"
+        label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
+        label_group.append(label_text_area)
+        self.group.append(label_group)
+
+        label_group = displayio.Group(scale=1, x=label_x_start, y=180)
+        label_text = "TBD co2 ppm, ch4 ppm, h20 ppm"
+        label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
+        label_group.append(label_text_area)
+        self.group.append(label_group)
+
+        label_group = displayio.Group(scale=1, x=label_x_start, y=200)
+        label_text = "TBD C/F/K"
+        label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
+        label_group.append(label_text_area)
+        self.group.append(label_group)
+
+        label_group = displayio.Group(scale=1, x=label_x_start, y=220)
+        label_text = "TBD auto choose available sensor"
+        label_text_area = label.Label(terminalio.FONT, text=label_text, color=self.palette[0])
+        label_group.append(label_text_area)
+        self.group.append(label_group)
 
 
         self.selection_rectangles = []
@@ -91,104 +147,6 @@ class Heat_Page( Page ):
         lower_select_height = lower_control_height + 2*select_width
         lower_control_y = lower_select_y + select_width
         lower_text_y = lower_control_y + 6
-        if False:
-            # data_source
-            data_source_select_x = offset
-            data_source_color_x = data_source_select_x + select_width
-            data_source_select_width = 50
-            self.data_source_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=data_source_select_width, height=lower_select_height, x=data_source_select_x, y=lower_select_y)
-            self.group.append( self.data_source_select )
-            self.selection_rectangles.append(self.data_source_select)
-
-            self.data_source_select.hidden = True
-            data_source_control_width = data_source_select_width - 2 * select_width
-            self.data_source_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=data_source_control_width, height=lower_control_height, x=data_source_color_x, y=lower_control_y)
-            self.group.append( self.data_source_color )
-            data_source_text_x = data_source_color_x + 3
-            data_source_group = displayio.Group(scale=1, x=data_source_text_x, y=lower_text_y)
-            data_source_text = "s/ref"
-            self.data_source_text_area = label.Label(terminalio.FONT, text=data_source_text, color=self.palette[0])
-            data_source_group.append(self.data_source_text_area)
-            self.group.append(data_source_group)
-
-
-            #graph_settings
-            graph_settings_select_x = offset + data_source_select_width
-            graph_settings_color_x = graph_settings_select_x + select_width
-            graph_settings_select_width = 36
-            self.graph_settings_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=graph_settings_select_width, height=lower_select_height, x=graph_settings_select_x, y=lower_select_y)
-            self.group.append( self.graph_settings_select )
-            self.selection_rectangles.append(self.graph_settings_select)
-
-            self.graph_settings_select.hidden = True
-            graph_settings_control_width = graph_settings_select_width - 2 * select_width
-            self.graph_settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=graph_settings_control_width, height=lower_control_height, x=graph_settings_color_x, y=lower_control_y)
-            self.group.append( self.graph_settings_color )
-            graph_settings_text_x = graph_settings_color_x + 3
-            graph_settings_group = displayio.Group(scale=1, x=graph_settings_text_x, y=lower_text_y)
-            graph_settings_text = "set"
-            self.graph_settings_text_area = label.Label(terminalio.FONT, text=graph_settings_text, color=self.palette[0])
-            graph_settings_group.append(self.graph_settings_text_area)
-            self.group.append(graph_settings_group)
-
-            # units_x
-            units_x_select_x = offset + data_source_control_width +graph_settings_select_width
-            units_x_color_x = units_x_select_x + select_width
-            units_x_select_width = 96
-            self.units_x_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_x_select_width, height=lower_select_height, x=units_x_select_x, y=lower_select_y)
-            self.group.append( self.units_x_select )
-            self.selection_rectangles.append(self.units_x_select)
-
-            self.units_x_select.hidden = True
-            units_x_control_width = units_x_select_width - 2 * select_width
-            self.units_x_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=units_x_control_width, height=lower_control_height, x=units_x_color_x, y=lower_control_y)
-            self.group.append( self.units_x_color )
-            units_x_text_x = units_x_color_x + 4
-            units_x_group = displayio.Group(scale=1, x=units_x_text_x, y=lower_text_y)
-            units_x_text = "wavelength nm"
-            self.units_x_text_area = label.Label(terminalio.FONT, text=units_x_text, color=self.palette[0])
-            units_x_group.append(self.units_x_text_area)
-            self.group.append(units_x_group)
-
-            # table / graph
-            table_graph_select_width = 46
-            table_graph_select_x = offset + data_source_control_width + graph_settings_control_width + units_x_control_width
-            table_graph_color_x = table_graph_select_x + select_width
-            self.table_graph_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=table_graph_select_width, height=lower_select_height, x=table_graph_select_x, y=lower_select_y)
-            self.group.append( self.table_graph_select )
-            self.selection_rectangles.append(self.table_graph_select)
-
-            self.table_graph_select.hidden = True
-            table_graph_control_width = table_graph_select_width - 2 * select_width
-            self.table_graph_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=table_graph_control_width, height=lower_control_height, x=table_graph_color_x, y=lower_control_y)
-            self.group.append( self.table_graph_color )
-            table_graph_text_x = table_graph_color_x + 3
-            table_graph_group = displayio.Group(scale=1, x=table_graph_text_x, y=lower_text_y)
-            table_graph_text = "table"
-            self.table_graph_text_area = label.Label(terminalio.FONT, text=table_graph_text, color=self.palette[0])
-            table_graph_group.append(self.table_graph_text_area)
-            self.group.append(table_graph_group)
-
-
-            # live
-            live_select_width = 36
-            live_select_x = offset + data_source_control_width + graph_settings_control_width + units_x_control_width + table_graph_select_width
-            live_color_x = live_select_x + select_width
-            self.live_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=live_select_width, height=lower_select_height, x=live_select_x, y=lower_select_y)
-            self.group.append( self.live_select )
-            self.selection_rectangles.append(self.live_select)
-
-            self.live_select.hidden = True
-            live_control_width = live_select_width - 2 * select_width
-            self.live_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=live_control_width, height=lower_control_height, x=live_color_x, y=lower_control_y)
-            self.group.append( self.live_color )
-            live_text_x = live_color_x + 3
-            live_group = displayio.Group(scale=1, x=live_text_x, y=lower_text_y)
-            live_text = "LIVE"
-            self.live_text_area = label.Label(terminalio.FONT, text=live_text, color=self.palette[0])
-            live_group.append(self.live_text_area)
-            self.group.append(live_group)
-
 
         return_select_width = 50
         return_select_x = 320 - offset - return_select_width
@@ -231,24 +189,6 @@ class Heat_Page( Page ):
 
     def action( self ):
         self.instrument.active_page_number = self.instrument.previous_page_number
-        '''
-        if self.selection == 0:
-            self.instrument.active_page_number = self.instrument.pages_dict["Remote"]
-        if self.selection == 1:
-            self.instrument.active_page_number = self.instrument.pages_dict["Exposure"]
-        if self.selection == 2:
-            self.instrument.active_page_number = self.instrument.pages_dict["Air"]
-        if self.selection == 3:
-            self.instrument.active_page_number = self.instrument.pages_dict["Time"]
-        if self.selection == 4:
-            self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
-        if self.selection == 8:
-            self.instrument.active_page_number = self.instrument.pages_dict["Status"]
-        if self.selection == 10:
-            print( "return whence")
-
-
-        '''
 
 
 

@@ -37,6 +37,9 @@ class hdc3022_Air_Sensor( Device ):
 
     def printlog(self):
         print( self.log())
+        
+    def get_values( self ):
+        return( self.values )
 
 
 class Null_hdc3022_Air_Sensor(Device):
