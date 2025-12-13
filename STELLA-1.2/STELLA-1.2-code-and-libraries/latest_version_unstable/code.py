@@ -230,6 +230,7 @@ def main():
     #time_place_page = pagem_time_place.make_time_place_page( instrument )
     #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
+    start = time.monotonic()
     if instrument.spectral_sensors_detected:
         light_page = pagem_light.make_light_page( instrument)
     else:
@@ -239,6 +240,9 @@ def main():
         for page in instrument.pages_list:
             print( page.page_name )
     instrument.make_pages_dictionary()
+    stop = time.monotonic()
+    elapsed = stop - start
+    print( "time to make light page is {}s".format( elapsed ))
     #print( instrument.pages_dict )
 
     gc.collect()
@@ -304,10 +308,12 @@ def main():
                 for sensor in instrument.sensors_present:
                     sensor.read()
                     instrument.handle_inputs()
-                instrument.update_active_page()
                 sample_stop_time = time.monotonic()
                 sample_time = sample_stop_time - sample_start_time
                 #print( "sample_time, all sensors, s = ", round(sample_time,3))
+                instrument.update_active_page()
+                if instrument.active_page_number == instrument.pages_dict["Light"]:
+                    light_page.update_plot()
                 if instrument.vfs:
                         if instrument.take_burst:
                             if instrument.burst_counter < instrument.burst_count:
