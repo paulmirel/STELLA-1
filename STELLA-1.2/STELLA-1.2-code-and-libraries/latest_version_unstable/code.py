@@ -273,7 +273,7 @@ def main():
         sensors_page.choose_sensor( instrument.sensors_present[1] )
     if instrument.spectral_sensors_detected:
         instrument.active_page_number = instrument.pages_dict["Light"]
-    if True:
+    if False:
         instrument.active_page_number = instrument.pages_dict["Heat"]
 
     try:
