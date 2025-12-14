@@ -16,9 +16,9 @@ class Spectral_Register:
         self.scale_index = 0
         self.units_y_choices = ["counts", "cts_per_s", "irradiance" ]
         self.units_y_index = 0
-        self.spectrum_choices = ["ultraviolet", "visible", "near infrared", "uv + vis", "vis + nir", "uv + vis + nir" ]
-        self.wavelength_ranges = [(200,400),(410,700),(700,1000),(200,700),(410,1000),(200,1000)]
-        self.spectrum_index = 5
+        self.spectrum_choices = ["visible", "near infrared", "vis + nir" ]#["ultraviolet", "visible", "near infrared", "uv + vis", "vis + nir", "uv + vis + nir" ]
+        self.wavelength_ranges = [(410,700),(700,1000),(410,1000)]        #[(200,400),(410,700),(700,1000),(200,700),(410,1000),(200,1000)]
+        self.spectrum_index = 2
         self.data_source_choices = ["sensors", "*future"]#"reference"]
         self.data_source_index = 0
         self.units_x_choices = ["wavelength nm", "frequency THz", "energy eV", "wavenumber/cm"]
@@ -268,6 +268,7 @@ class Light_Page( Page ):
                 if self.selection == 1:
                    self.spectral_register.units_y_index = (self.spectral_register.units_y_index + self.instrument.encoder_increment) % len(self.spectral_register.units_y_choices)
                 if self.selection == 2:
+                    last_spectrum_index = self.spectral_register.spectrum_index
                     self.spectral_register.spectrum_index = (self.spectral_register.spectrum_index + self.instrument.encoder_increment) % len(self.spectral_register.spectrum_choices)
                     self.spectral_register.calculate_five_x_values()
                 if self.selection == 5:
