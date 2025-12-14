@@ -691,6 +691,8 @@ class Light_Missing_Page( Page ):
         self.instrument.active_page_number = self.instrument.pages_dict["Main"]
     def update_selection( self ):
         pass
+    def update_plot( self ):
+        pass
 
 def make_light_missing_page( instrument ):
     instrument.welcome_page.announce( "make_light_missing_page" )

@@ -37,6 +37,8 @@ class Heat_Page( Page ):
             self.tsurface_text_area.text = "{}C".format( surface_temp_C )
         if air_sensor_in_use and surface_sensor_in_use:
             self.tdiff_text_area.text = "{}C".format( round(surface_temp_C - air_temp_C,1) )
+        if not air_sensor_in_use and not surface_sensor_in_use:
+            self.banner_group.hidden = False
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -166,15 +168,21 @@ class Heat_Page( Page ):
         return_group.append(self.return_text_area)
         self.group.append(return_group)
 
-        '''
-        title_bar = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=320-2*5, height=24, x=0+5, y=start_y)
-        self.group.append( title_bar )
-        title_group = displayio.Group(scale=2, x=100, y=12+start_y)
-        title_text = "Heat"
-        title_text_area = label.Label(terminalio.FONT, text=title_text, color=self.palette[0])
-        title_group.append(title_text_area)
-        self.group.append(title_group)
-        '''
+        self.banner_group = displayio.Group()
+        banner_bar = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=320-2*5, height=60, x=0+5, y=70)
+        self.banner_group.append( banner_bar )
+        banner_text_group = displayio.Group(scale=2, x=20, y=70+16)
+        banner_text = "Connect a temperature"
+        banner_text_area = label.Label(terminalio.FONT, text=banner_text, color=self.palette[0])
+        banner_text_group.append(banner_text_area)
+        self.banner_group.append(banner_text_group)
+        banner_text_group_2 = displayio.Group(scale=2, x=20, y=70+28+16)
+        banner_text = "sensor and restart"
+        banner_text_area_2 = label.Label(terminalio.FONT, text=banner_text, color=self.palette[0])
+        banner_text_group_2.append(banner_text_area_2)
+        self.banner_group.append(banner_text_group_2)
+        self.group.append(self.banner_group)
+        self.banner_group.hidden = True
 
         return self.group
 

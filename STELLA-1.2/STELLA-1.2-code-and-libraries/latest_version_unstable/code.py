@@ -114,15 +114,18 @@ def main():
     # initialize spectral sensors
     if True:
         if ('0x74') in devices_present_hex:
+            print("7331 found")
             from software_modules import spectralm_as7331 #UV
             as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
         if ('0x39') in devices_present_hex:
+            print("7341 found")
             from software_modules import spectralm_as7341 #VIS
             as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
         if ('0x49') in devices_present_hex:
+            print("7265x found ")
             from software_modules import spectralm_as7265x #VIS+NIR
             as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
-        if instrument.spectral_sensors_present is not None:
+        if len( instrument.spectral_sensors_present ) > 0:
             instrument.spectral_sensors_detected = True
 
     # initialize sensors
@@ -235,7 +238,7 @@ def main():
         light_page = pagem_light.make_light_page( instrument )
         exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:
-        light_missing_page = pagem_light.make_light_missing_page( instrument )
+        light_page = pagem_light.make_light_missing_page( instrument )
 
     if False:
         for page in instrument.pages_list:
