@@ -55,18 +55,97 @@ class Exposure_Page( Page ):
     def action( self ):
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
-                pass
+                if self.selection == 1:
+                    self.active_sensor_index = ( self.active_sensor_index + self.instrument.encoder_increment ) % self.number_of_sensors
+                elif self.selection == 2:
+                    self.setting_mode = ( self.setting_mode + self.instrument.encoder_increment) % len( self.setting_modes )
+                elif self.selection == 3:
+                    self.scale_choice = ( self.scale_choice + self.instrument.encoder_increment ) % len( self.scale_choices )
+                elif self.selection == 4:
+                    if self.setting_mode == 0:
+                        self.gain_index[self.active_sensor_index] = (
+                                self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
+                                self.spectral_sensors[self.active_sensor_index].gain_list )
+                        self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+                elif self.selection == 5:
+                    if self.setting_mode == 0:
+                        self.integration_time_index[self.active_sensor_index] = (
+                                self.integration_time_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
+                                self.spectral_sensors[self.active_sensor_index].integration_time_ms_list )
+                        self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
+                elif self.selection == 6:
+                    if len( self.spectral_sensors[self.active_sensor_index].lamp_selection_list ) < 2:
+                        number_of_current_states = len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list )
+                    else:
+                        number_of_current_states = len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
+                    self.lamp_current_mA_index[self.active_sensor_index] = ( self.lamp_current_mA_index[self.active_sensor_index] + self.instrument.encoder_increment ) % number_of_current_states
+                    self.spectral_sensors[self.active_sensor_index].set_lamp_current_mA( self.lamp_current_mA_index[self.active_sensor_index], self.lamp_selection_index )
+                    hide_limit = True
+                    if len( self.spectral_sensors[self.active_sensor_index].lamp_selection_list ) < 2:
+                        if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list) - 1) :
+                            hide_limit = False
+                    else:
+                        if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[self.lamp_selection_index] ) - 1) :
+                            hide_limit = False
+                    if hide_limit:
+                        self.current_limit_text_area.hidden = True
+                    else:
+                        self.current_limit_text_area.hidden = False
+                elif self.selection == 7:
+                    if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is not None:
+                        self.lamp_selection_index = ( self.lamp_selection_index + self.instrument.encoder_increment ) % len(
+                                self.spectral_sensors[self.active_sensor_index].lamp_selection_list )
 
             self.instrument.encoder_increment = 0
-            self.update_values()
 
         if self.instrument.button_pressed:
             if self.selection == 0:
                 self.instrument.active_page_number = self.instrument.pages_dict["Light"]
             else:
-                self.field_selected_list[self.selection] = not self.field_selected_list[self.selection]
+                self.field_selected = not self.field_selected
+                if self.selection == 1:
+                    if self.field_selected:
+                        self.sensor_choice_area.color_index = self.field_selected_color_index
+                    else:
+                        self.sensor_choice_area.color_index = self.field_not_selected_color_index
+                if self.selection == 2:
+                    if self.field_selected:
+                        self.setting_area.color_index = self.field_selected_color_index
+                    else:
+                        self.setting_area.color_index = self.field_not_selected_color_index
+                if self.selection == 3:
+                    if self.field_selected:
+                        self.slider_scale_area.color_index = self.field_selected_color_index
+                    else:
+                        self.slider_scale_area.color_index = self.field_not_selected_color_index
+                if self.selection == 4:
+                    if self.field_selected:
+                        if self.setting_mode != 0:
+                            self.gain_area.color_index = 19
+                        else:
+                            self.gain_area.color_index = self.field_selected_color_index
+                    else:
+                        self.gain_area.color_index = self.field_not_selected_color_index
+                if self.selection == 5:
+                    if self.field_selected:
+                        if self.setting_mode != 0:
+                            self.integration_time_area.color_index = 19
+                        else:
+                            self.integration_time_area.color_index = self.field_selected_color_index
+                    else:
+                        self.integration_time_area.color_index = self.field_not_selected_color_index
+                if self.selection == 6:
+                    if self.field_selected:
+                        self.lamp_current_area.color_index = self.field_selected_color_index
+                    else:
+                        self.lamp_current_area.color_index = self.field_not_selected_color_index
+                if self.selection == 7:
+                    if self.field_selected:
+                        self.lamp_choice_area.color_index = self.field_selected_color_index
+                    else:
+                        self.lamp_choice_area.color_index = self.field_not_selected_color_index
             self.instrument.button_pressed = False
-            self.update_values()
+        self.update_values()
 
     def update_values( self ):
 
@@ -92,10 +171,7 @@ class Exposure_Page( Page ):
                 self.selection = temporary_selection % temporary_number_of_selections
                 self.instrument.encoder_increment = 0
 
-        if self.selection == 3:
-            self.slider_scale_area.hidden = False
-        else:
-            self.slider_scale_area.hidden = True
+
 
 
         for index in range( 0, number_of_selections):
@@ -107,58 +183,17 @@ class Exposure_Page( Page ):
                     else:
                         self.field_selected_list[index] = not self.field_selected_list[index]
                     self.instrument.button_pressed = False
-                if self.field_selected_list[index]:
-                    self.field_list[index].color_index = self.field_selected_color_index
-                    if self.instrument.encoder_increment != 0:
-                        if index == 1:
-                            self.active_sensor_index = ( self.active_sensor_index + self.instrument.encoder_increment ) % self.number_of_sensors
-                        elif index == 2:
-                            self.setting_mode = ( self.setting_mode + self.instrument.encoder_increment) % len( self.setting_modes )
-                        elif index == 3:
-                            self.scale_choice = ( self.scale_choice + self.instrument.encoder_increment ) % len( self.scale_choices )
-                        elif index == 4:
-                            self.gain_index[self.active_sensor_index] = (
-                                    self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
-                                    self.spectral_sensors[self.active_sensor_index].gain_list )
-                            self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
-                        elif index == 5:
-                            self.integration_time_index[self.active_sensor_index] = (
-                                    self.integration_time_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
-                                    self.spectral_sensors[self.active_sensor_index].integration_time_ms_list )
-                            self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
-                        elif index == 6:
-                            if len( self.spectral_sensors[self.active_sensor_index].lamp_selection_list ) < 2:
-                                number_of_current_states = len(
-                                    self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list)
-                            else:
-                                number_of_current_states = len(
-                                    self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
-                            self.lamp_current_mA_index[self.active_sensor_index] = (
-                                    self.lamp_current_mA_index[self.active_sensor_index] + self.instrument.encoder_increment ) % number_of_current_states
-                            self.spectral_sensors[self.active_sensor_index].set_lamp_current_mA( self.lamp_current_mA_index[self.active_sensor_index], self.lamp_selection_index )
-                            hide_limit = True
-                            if len( self.spectral_sensors[self.active_sensor_index].lamp_selection_list ) < 2:
-                                if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list) - 1) :
-                                    hide_limit = False
-                            else:
-                                if self.lamp_current_mA_index[self.active_sensor_index] == ( len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[self.lamp_selection_index] ) - 1) :
-                                    hide_limit = False
-                            if hide_limit:
-                                self.current_limit_text_area.hidden = True
-                            else:
-                                self.current_limit_text_area.hidden = False
-                        elif index == 7:
-                            if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is not None:
-                                self.lamp_selection_index = ( self.lamp_selection_index + self.instrument.encoder_increment ) % len(
-                                        self.spectral_sensors[self.active_sensor_index].lamp_selection_list )
-                        self.instrument.encoder_increment = 0
+
                 else:
                     self.field_list[index].color_index = self.field_not_selected_color_index
 
             else:
                 self.selection_list[ index ].hidden = True
         '''
-
+        if self.selection == 3:
+            self.slider_scale_area.hidden = False
+        else:
+            self.slider_scale_area.hidden = True
 
 
 
@@ -172,14 +207,15 @@ class Exposure_Page( Page ):
         else:
             self.lamp_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].lamp_selection_list[ self.lamp_selection_index ]
 
-        if self.setting_mode != 0:
-            self.gain_area.color_index = 19
-            self.integration_time_area.color_index = 19
-        else:
-            if not self.field_selected_list[4]:
-                self.gain_area.color_index = 9
-            if not self.field_selected_list[5]:
-                self.integration_time_area.color_index = 9
+        if False:
+            if self.setting_mode != 0:
+                self.gain_area.color_index = 19
+                self.integration_time_area.color_index = 19
+            else:
+                if not self.field_selected_list[4]:
+                    self.gain_area.color_index = 9
+                if not self.field_selected_list[5]:
+                    self.integration_time_area.color_index = 9
 
         ## get exposure and drive slider, value, label, brackets
         self.spectral_sensors[self.active_sensor_index].read_counts_all()
