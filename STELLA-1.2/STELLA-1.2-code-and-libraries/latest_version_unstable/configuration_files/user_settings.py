@@ -9,6 +9,6 @@ record_on_startup = True #False
 
 serial_out = True
 
-serial_interval_s = 5.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
+serial_interval_s = 10.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
 
 

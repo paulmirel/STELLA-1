@@ -378,7 +378,7 @@ class Instrument:
         self.device_type = DEVICE_TYPE
         self.uid = UID
         self.buzzer = buzzer
-        self.serial_out = False #TBD user_settings.serial_out
+        self.serial_out = user_settings.serial_out
         self.sample_interval_s = user_settings.sample_interval_s
         self.burst_count = user_settings.burst_count
         self.serial_interval_s = user_settings.serial_interval_s
