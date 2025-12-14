@@ -51,24 +51,22 @@ class Exposure_Page( Page ):
             self.lamp_current_mA_index.append( 0 )
         self.lamp_selection_index = 0
         self.selection_rectangles = []
+        self.no_lamp = False
+        self.last_no_lamp = False
 
     def update_selection( self ):
-        greyed_out = 19
         if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is None:
-            no_lamp = True
+            self.no_lamp = True
         else:
-            no_lamp = False
-
-        if no_lamp:
-            self.lamp_current_area.color_index = greyed_out
+            self.no_lamp = False
+        if self.no_lamp:
             if self.last_selection == 5 and self.selection == 6:
                 self.selection = 0
 
             if self.last_selection == 0 and self.selection == 7:
                 self.selection = 5
-
         if self.setting_mode != 0:
-            if no_lamp:
+            if self.no_lamp:
                 if self.last_selection == 3 and self.selection == 4:
                     self.selection = 0
                 if self.last_selection == 0 and self.selection == 7:
@@ -78,13 +76,8 @@ class Exposure_Page( Page ):
                     self.selection = 6
                 if self.last_selection == 6 and self.selection == 5:
                     self.selection = 3
-
-
         self.selection_rectangles[self.last_selection].hidden = True
         self.selection_rectangles[self.selection].hidden = False
-
-
-
 
     def action( self ):
         if self.instrument.encoder_increment != 0:
@@ -193,6 +186,13 @@ class Exposure_Page( Page ):
         elif self.last_setting_mode != self.setting_mode:
             self.gain_area.color_index = self.field_not_selected_color_index
             self.integration_time_area.color_index = self.field_not_selected_color_index
+
+        if self.no_lamp:
+            self.lamp_current_area.color_index = greyed_out
+            self.last_no_lamp = True
+        elif ( not self.no_lamp ) and self.last_no_lamp:
+            self.lamp_current_area.color_index = self.field_not_selected_color_index
+            self.last_no_lamp = False
 
         if self.selection == 3:
             self.slider_scale_area.hidden = False
