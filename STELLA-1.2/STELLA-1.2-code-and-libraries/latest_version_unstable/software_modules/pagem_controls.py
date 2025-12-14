@@ -135,14 +135,14 @@ class Controls_Page( Page ):
         settings_control_width = settings_select_width - 2 * select_width
         settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=7, width=settings_control_width, height=control_height, x=settings_color_x, y=control_y)
         self.group.append( settings_color )
-        settings_text_x = settings_color_x + 5
-        settings_group = displayio.Group(scale=1, x=settings_text_x-3, y=text_y1)
-        settings_text = "settings"
+        settings_text_x = settings_color_x + 3
+        settings_group = displayio.Group(scale=1, x=settings_text_x, y=text_y1)
+        settings_text = "*system"
         settings_text_area = label.Label(terminalio.FONT, text=settings_text, color=self.palette[9])
         settings_group.append(settings_text_area)
         self.group.append(settings_group)
-        settings_value_group = displayio.Group(scale=2, x=settings_text_x+3, y=text_y2) #x=settings_text_x+3,
-        settings_value_text = "*>>"
+        settings_value_group = displayio.Group(scale=1, x=settings_text_x, y=text_y2) #x=settings_text_x+3,
+        settings_value_text = "settings"
         self.settings_value_text_area = label.Label(terminalio.FONT, text=settings_value_text, color=self.palette[9])
         settings_value_group.append(self.settings_value_text_area)
         self.group.append(settings_value_group)
@@ -226,10 +226,9 @@ class Controls_Page( Page ):
         else:
             self.batch_value_group.x = self.batch_text_x-3
 
-        ## processing inputs
     def action( self ):
         if False:#self.selection == 0:
-            self.instrument.active_page_number = self.instrument.pages_dict["Time"]
+            self.instrument.active_page_number = self.instrument.pages_dict["Time"] #TBD send to page when it exists
         if self.selection == 1:
             self.instrument.update_batch()
         if self.selection == 2:
@@ -242,57 +241,10 @@ class Controls_Page( Page ):
             self.burst_color.color_index = 16
             self.instrument.take_burst = False
         if self.selection == 4:
-            self.instrument.active_page_number = self.instrument.pages_dict["Settings"]
+            pass#self.instrument.active_page_number = self.instrument.pages_dict["Settings"]
         if self.selection == 5:
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]
 
-
-    def obsolete_actions(self):
-        if instrument.active_page_number == 9: # remote sensing
-            if instrument.remote_sensing_select == 0:
-                self.gps_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.active_page_number = 7
-                    instrument.button_pressed = False
-            else:
-                self.gps_select.hidden = True
-            if instrument.remote_sensing_select == 1:
-                self.batch_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.update_batch()
-                    instrument.button_pressed = False
-            else:
-                self.batch_select.hidden = True
-            if instrument.remote_sensing_select == 2:
-                self.pause_record_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.record = not instrument.record
-                    instrument.button_pressed = False
-            else:
-                self.pause_record_select.hidden = True
-            if instrument.remote_sensing_select == 3:
-                self.burst_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.take_burst = True
-                    instrument.record = False
-                    self.burst_color.color_index = 6
-                    instrument.button_pressed = False
-            else:
-                self.burst_select.hidden = True
-            if instrument.remote_sensing_select == 4:
-                self.settings_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.active_page_number = 4
-                    instrument.button_pressed = False
-            else:
-                self.settings_select.hidden = True
-            if instrument.remote_sensing_select == 5:
-                self.battery_select.hidden = False
-                if instrument.button_pressed:
-                    instrument.active_page_number = 3
-                    instrument.button_pressed = False
-            else:
-                self.battery_select.hidden = True
 
 
 def make_controls_page( instrument, gps, battery_monitor ):

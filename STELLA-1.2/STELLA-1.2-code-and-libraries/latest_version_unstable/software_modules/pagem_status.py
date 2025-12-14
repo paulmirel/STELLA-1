@@ -14,8 +14,8 @@ class Status_Page( Page ):
         self.palette = instrument.palette
         self.instrument = instrument
         self.selection = 0
-        self.selection_count = 1
-        self.last_selection = -1
+        self.selection_count = 0
+        self.last_selection = 0
         self.field_selected = False
 
     def make_group( self ):
@@ -30,19 +30,19 @@ class Status_Page( Page ):
         self.group.append(status_title_group)
 
         text_group = displayio.Group(scale=2, x=10, y=18+text_spacing_y)
-        text = "main battery status"
+        text = "TBD main battery status"
         text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
         text_group.append(text_area)
         self.group.append(text_group)
 
         text_group = displayio.Group(scale=2, x=10, y=18+2*text_spacing_y)
-        text = "clock battery status"
+        text = "TBD clock battery status"
         text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
         text_group.append(text_area)
         self.group.append(text_group)
 
         text_group = displayio.Group(scale=2, x=10, y=18+3*text_spacing_y)
-        text = "sd card storage remaining"
+        text = "TBD sd card storage remaining"
         text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
         text_group.append(text_area)
         self.group.append(text_group)
@@ -72,11 +72,12 @@ class Status_Page( Page ):
 
         return self.group
 
-
+    def hide_all_selections( self ):
+        pass
     def update_selection( self ):
         pass
     def action( self ):
-        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+        self.instrument.active_page_number = self.instrument.previous_page_number
 
 
 def make_status_page( instrument ):

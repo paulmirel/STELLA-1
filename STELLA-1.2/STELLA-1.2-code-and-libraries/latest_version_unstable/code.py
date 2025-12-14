@@ -228,7 +228,7 @@ def main():
     controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
     status_page = pagem_status.make_status_page( instrument )
-    #settings_page = pagem_settings.make_settings_page( instrument )
+    settings_page = pagem_settings.make_settings_page( instrument )
     sensors_page = pagem_sensors.make_sensors_page( instrument )
     #time_place_page = pagem_time_place.make_time_place_page( instrument )
     #air_page = pagem_air.make_air_page( instrument )

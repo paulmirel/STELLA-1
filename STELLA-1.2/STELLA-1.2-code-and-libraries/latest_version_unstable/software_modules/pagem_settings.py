@@ -16,7 +16,9 @@ class Settings_Page( Page ):
         self.palette = instrument.palette
         self.selection = 0
         self.selection_count = 0
-        
+        self.last_selection = 0
+        self.field_selected = False
+
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -51,7 +53,7 @@ class Settings_Page( Page ):
         self.interval_value_select.hidden = True
 
         interval_value_group = displayio.Group(scale=2, x=value_x, y= 18 + spacing_y)
-        interval_value_text = "000s"
+        interval_value_text = " -- "
         self.interval_value_text_area = label.Label(terminalio.FONT, text=interval_value_text, color=self.palette[0])
         interval_value_group.append(self.interval_value_text_area)
         self.group.append(interval_value_group)
@@ -72,13 +74,13 @@ class Settings_Page( Page ):
         self.burst_value_select.hidden = True
 
         burst_value_group = displayio.Group(scale=2, x=value_x, y= 18 + 2*spacing_y)
-        burst_value_text = "000"
+        burst_value_text = " -- "
         self.burst_value_text_area = label.Label(terminalio.FONT, text=burst_value_text, color=self.palette[0])
         burst_value_group.append(self.burst_value_text_area)
         self.group.append(burst_value_group)
 
         serial_out_group = displayio.Group(scale=2, x=10, y= 18 +3* spacing_y)
-        serial_out_text = "USB serial data output:"
+        serial_out_text = "Serial output:"
         serial_out_text_area = label.Label(terminalio.FONT, text=serial_out_text, color=self.palette[0])
         serial_out_group.append(serial_out_text_area)
         self.group.append(serial_out_group)
@@ -94,7 +96,7 @@ class Settings_Page( Page ):
         self.serial_out_value_select.hidden = True
 
         serial_out_value_group = displayio.Group(scale=2, x=value_x+70, y= 18 + 3*spacing_y)
-        serial_out_value_text = "N"
+        serial_out_value_text = " --"
         self.serial_out_value_text_area = label.Label(terminalio.FONT, text=serial_out_value_text, color=self.palette[0])
         serial_out_value_group.append(self.serial_out_value_text_area)
         self.group.append(serial_out_value_group)
@@ -105,69 +107,6 @@ class Settings_Page( Page ):
         text_group.append(text_area)
         self.group.append(text_group)
 
-        if False:
-            spectral_sensor_group = displayio.Group(scale=2, x=10, y=int(18+4.5*spacing_y))
-            spectral_sensor_text = "Spectral Sensor:"
-            spectral_sensor_text_area = label.Label(terminalio.FONT, text=spectral_sensor_text, color=self.palette[0])
-            spectral_sensor_group.append(spectral_sensor_text_area)
-            self.group.append(spectral_sensor_group)
-
-            self.sensor_value_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=select_width,
-                                                            height=select_height, x=select_x, y=int( select_start_y + 3.5* spacing_y) )
-            self.group.append( self.sensor_value_select )
-            self.sensor_value_highlight = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9,
-                                                            width=select_width - 2* border_width, height=select_height-2*border_width,
-                                                            x=select_x+border_width, y=int( select_start_y+border_width + 3.5* spacing_y) )
-            self.group.append( self.sensor_value_highlight )
-            self.sensor_value_select.hidden = True
-
-            spectral_sensor_value_group = displayio.Group(scale=2, x=value_x, y=int(18+4.5*spacing_y))
-            spectral_sensor_value_text = "as7265x"
-            self.spectral_sensor_value_text_area = label.Label(terminalio.FONT, text=spectral_sensor_value_text, color=self.palette[0])
-            spectral_sensor_value_group.append(self.spectral_sensor_value_text_area)
-            self.group.append(spectral_sensor_value_group)
-
-            gain_group = displayio.Group(scale=2, x=10, y=int(18 + 5.5* spacing_y))
-            gain_text = "Gain:"
-            gain_text_area = label.Label(terminalio.FONT, text=gain_text, color=self.palette[0])
-            gain_group.append(gain_text_area)
-            self.group.append(gain_group)
-
-            self.gain_value_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=select_width,
-                                                            height=select_height, x=select_x, y=int( select_start_y + 4.5* spacing_y) )
-            self.group.append( self.gain_value_select )
-            self.gain_value_highlight = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9,
-                                                            width=select_width - 2* border_width, height=select_height-2*border_width,
-                                                            x=select_x+border_width, y=int( select_start_y+border_width + 4.5* spacing_y) )
-            self.group.append( self.gain_value_highlight )
-            self.gain_value_select.hidden = True
-
-            gain_value_group = displayio.Group(scale=2, x=value_x, y=int(18 + 5.5* spacing_y))
-            gain_value_text = "1X"
-            self.gain_value_text_area = label.Label(terminalio.FONT, text=gain_value_text, color=self.palette[0])
-            gain_value_group.append(self.gain_value_text_area)
-            self.group.append(gain_value_group)
-
-            integration_time_group = displayio.Group(scale=2, x=10, y=int(18+6.5*spacing_y))
-            integration_time_text = "Integration Time:"
-            integration_time_text_area = label.Label(terminalio.FONT, text=integration_time_text, color=self.palette[0])
-            integration_time_group.append(integration_time_text_area)
-            self.group.append(integration_time_group)
-
-            self.integration_time_value_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = 0, width=select_width,
-                                                            height=select_height, x=select_x, y=int( select_start_y + 5.5* spacing_y) )
-            self.group.append( self.integration_time_value_select )
-            self.integration_time_value_highlight = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9,
-                                                            width=select_width - 2* border_width, height=select_height-2*border_width,
-                                                            x=select_x+border_width, y=int( select_start_y+border_width + 5.5* spacing_y) )
-            self.group.append( self.integration_time_value_highlight )
-            self.integration_time_value_select.hidden = True
-
-            integration_time_value_group = displayio.Group(scale=2, x=value_x, y=int(18+6.5*spacing_y))
-            integration_time_value_text = "166ms"
-            self.integration_time_value_text_area = label.Label(terminalio.FONT, text=integration_time_value_text, color=self.palette[0])
-            integration_time_value_group.append(self.integration_time_value_text_area)
-            self.group.append(integration_time_value_group)
 
         # RETURN
         select_width = 4
@@ -193,12 +132,16 @@ class Settings_Page( Page ):
         self.group.append(return_group)
 
         return self.group
-        
+
     def action( self ):
-        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-    def update_selection():
+        self.instrument.active_page_number = self.instrument.previous_page_number
+
+    def update_selection( self ):
         pass
-        
+
+    def hide_all_selections( self ):
+        pass
+
     def update_values( self ):
         self.instrument.active_page_number = 2
         intervals = self.instrument.sample_interval_s
@@ -231,8 +174,7 @@ class Settings_Page( Page ):
         #if instrument.usb_serial_out:
         #    self.serial_out_value_text_area.text = "Y"
         #else:
-        #    self.serial_out_value_text_area.text = "N"
-
+        #    self.serial_out_value_text_area.text =
 
         self.burst_value_text_area.text = burst_text
 
