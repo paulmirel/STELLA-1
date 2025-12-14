@@ -51,6 +51,35 @@ class Exposure_Page( Page ):
         self.lamp_selection_index = 0
         self.selection_rectangles = []
 
+    def update_selection( self ):
+        if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is None:
+            no_lamp = True
+        else:
+            no_lamp = False
+
+        if no_lamp:
+            if self.last_selection == 5 and self.selection == 6:
+                self.selection = 0
+
+            if self.last_selection == 0 and self.selection == 7:
+                self.selection = 5
+
+        if self.setting_mode != 0:
+            if no_lamp:
+                if self.last_selection == 3 and self.selection == 4:
+                    self.selection = 0
+                if self.last_selection == 0 and self.selection == 7:
+                    self.selection = 3
+            else:
+                if self.last_selection == 3 and self.selection == 4:
+                    self.selection = 6
+                if self.last_selection == 6 and self.selection == 5:
+                    self.selection = 3
+
+
+        self.selection_rectangles[self.last_selection].hidden = True
+        self.selection_rectangles[self.selection].hidden = False
+
 
     def action( self ):
         if self.instrument.encoder_increment != 0:
@@ -145,58 +174,16 @@ class Exposure_Page( Page ):
                     else:
                         self.lamp_choice_area.color_index = self.field_not_selected_color_index
             self.instrument.button_pressed = False
-        self.update_values()
+        if self.setting_mode == 0 and (self.selection == 4 or self.selection ==5 ) :
+           pass
+        else:
+            self.update_values()
 
     def update_values( self ):
-
-        #### rip out the guts of selection and field changes, and do it over
-        '''
-        number_of_selections = len(self.selection_list)
-        if any( self.field_selected_list ):
-            pass
-        else:
-            if self.instrument.encoder_increment != 0:
-                temporary_number_of_selections = number_of_selections
-                temporary_selection = self.selection + self.instrument.encoder_increment
-                if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is None:
-                    temporary_number_of_selections = ( number_of_selections - 2 )
-                else:
-                    if len( self.spectral_sensors[self.active_sensor_index].lamp_selection_list ) < 2:
-                        temporary_number_of_selections = ( number_of_selections - 1 )
-                if self.setting_mode != 0:
-                    if temporary_selection == 4 and self.selection == 3:
-                        temporary_selection = 6
-                    if temporary_selection == 5 and self.selection == 6:
-                        temporary_selection = 3
-                self.selection = temporary_selection % temporary_number_of_selections
-                self.instrument.encoder_increment = 0
-
-
-
-
-        for index in range( 0, number_of_selections):
-            if index == self.selection:
-                self.selection_list[ index ].hidden = False
-                if self.instrument.button_pressed:
-                    if index == 0:
-                        print( "return whence" )
-                    else:
-                        self.field_selected_list[index] = not self.field_selected_list[index]
-                    self.instrument.button_pressed = False
-
-                else:
-                    self.field_list[index].color_index = self.field_not_selected_color_index
-
-            else:
-                self.selection_list[ index ].hidden = True
-        '''
         if self.selection == 3:
             self.slider_scale_area.hidden = False
         else:
             self.slider_scale_area.hidden = True
-
-
-
 
         ## update interface text
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
@@ -949,9 +936,6 @@ class Exposure_Page( Page ):
         self.selection_count = len( self.selection_rectangles )
         return self.group
 
-    def update_selection( self ):
-        self.selection_rectangles[self.last_selection].hidden = True
-        self.selection_rectangles[self.selection].hidden = False
 
 
 def make_exposure_page( instrument ):
