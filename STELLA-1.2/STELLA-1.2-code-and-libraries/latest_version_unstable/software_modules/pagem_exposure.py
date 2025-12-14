@@ -25,6 +25,7 @@ class Exposure_Page( Page ):
         self.slider_pixel_span = self.slider_min_y - self.slider_max_y
         self.setting_modes = [ "Manual", "Auto" ]#, "Sunny", "Cloudy", "Indoor", "Dark", "Save" ] #append to this list when configurations are saved
         self.setting_mode = 0
+        self.last_setting_mode = 0
         self.auto_exposure_engaged = False
         self.scale_choices = "linear scale", "log scale"
         self.scale_choice = 1
@@ -52,12 +53,14 @@ class Exposure_Page( Page ):
         self.selection_rectangles = []
 
     def update_selection( self ):
+        greyed_out = 19
         if self.spectral_sensors[self.active_sensor_index].lamp_selection_list is None:
             no_lamp = True
         else:
             no_lamp = False
 
         if no_lamp:
+            self.lamp_current_area.color_index = greyed_out
             if self.last_selection == 5 and self.selection == 6:
                 self.selection = 0
 
@@ -81,12 +84,15 @@ class Exposure_Page( Page ):
         self.selection_rectangles[self.selection].hidden = False
 
 
+
+
     def action( self ):
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
                 if self.selection == 1:
                     self.active_sensor_index = ( self.active_sensor_index + self.instrument.encoder_increment ) % self.number_of_sensors
                 elif self.selection == 2:
+                    self.last_setting_mode = self.setting_mode
                     self.setting_mode = ( self.setting_mode + self.instrument.encoder_increment) % len( self.setting_modes )
                 elif self.selection == 3:
                     self.scale_choice = ( self.scale_choice + self.instrument.encoder_increment ) % len( self.scale_choices )
@@ -180,6 +186,14 @@ class Exposure_Page( Page ):
             self.update_values()
 
     def update_values( self ):
+        greyed_out = 19
+        if self.setting_mode != 0:
+            self.gain_area.color_index = greyed_out
+            self.integration_time_area.color_index = greyed_out
+        elif self.last_setting_mode != self.setting_mode:
+            self.gain_area.color_index = self.field_not_selected_color_index
+            self.integration_time_area.color_index = self.field_not_selected_color_index
+
         if self.selection == 3:
             self.slider_scale_area.hidden = False
         else:
