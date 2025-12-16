@@ -34,7 +34,7 @@ class Spectral_Channel( Device ):
         super().__init__(name = name, pn = "as7341", address = 0x39, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s", "bandwidth_nm"]
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s", "irradiance", "bandwidth_nm", "chip_temp_C"]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
         self.values = [ self.wavelength_nm,
@@ -42,25 +42,31 @@ class Spectral_Channel( Device ):
                         sensor_unit.integration_time_ms_list[sensor_unit.integration_time_index],
                         0,
                         0,
-                        self.bandwidth_nm]
+                        0,
+                        self.bandwidth_nm,
+                        0]
 
     def get_wavelength( self ):
         return self.wavelength_nm
     def get_plot_values( self ):
         return (self.values[3],self.values[4],self.values[5],self.values[6])
-    
-    
+
+
     def read(self):
         raw = self.sensor_unit.read_counts_by_index( self.index )
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
-        int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
-        normal_ct_per_s = round(1000*raw/(gain*int_time_ms),1)
+        int_time_ms = self.sensor_unit.integration_time_ms_list[self.index]
+        normal_ct_per_s = round(1000*raw/(gain*int_time_ms),3)
+        irradiance = round(raw/self.sensor_unit.steno_cal_counts_per_irradiance[self.index],3)
+        chip_temp_C = 0
         self.values = [self.wavelength_nm,
                         gain,
                         int_time_ms,
                         raw,
                         normal_ct_per_s,
-                        self.bandwidth_nm]
+                        irradiance,
+                        self.bandwidth_nm,
+                        chip_temp_C]
 
     def log(self):
         log = "{}, {}".format( self.name, self.pn )

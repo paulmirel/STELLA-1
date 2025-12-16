@@ -114,15 +114,15 @@ def main():
     # initialize spectral sensors
     if True:
         if ('0x74') in devices_present_hex:
-            print("7331 found")
+            print("as7331 found")
             from software_modules import spectralm_as7331 #UV
             as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
         if ('0x39') in devices_present_hex:
-            print("7341 found")
+            print("as7341 found")
             from software_modules import spectralm_as7341 #VIS
             as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
         if ('0x49') in devices_present_hex:
-            print("7265x found ")
+            print("as7265x found ")
             from software_modules import spectralm_as7265x #VIS+NIR
             as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
         if len( instrument.spectral_sensors_present ) > 0:
