@@ -34,7 +34,7 @@ class Spectral_Channel( Device ):
         super().__init__(name = name, pn = "as7341", address = 0x39, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s", "irradiance", "bandwidth_nm", "chip_temp_C"]
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s_nm", "irradiance", "bandwidth_nm", "chip_temp_C"]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
         self.values = [ self.wavelength_nm,
@@ -55,17 +55,18 @@ class Spectral_Channel( Device ):
     def read(self):
         raw = self.sensor_unit.read_counts_by_index( self.index )
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
-        int_time_ms = self.sensor_unit.integration_time_ms_list[self.index]
-        normal_ct_per_s = round(1000*raw/(gain*int_time_ms),3)
+        int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
+        bandwidth_nm = self.bandwidth_nm
+        normal_ct_per_s_nm = round(1000*raw/(gain*int_time_ms*bandwidth_nm),3)
         irradiance = round(raw/self.sensor_unit.steno_cal_counts_per_irradiance[self.index],3)
         chip_temp_C = 0
         self.values = [self.wavelength_nm,
                         gain,
                         int_time_ms,
                         raw,
-                        normal_ct_per_s,
+                        normal_ct_per_s_nm,
                         irradiance,
-                        self.bandwidth_nm,
+                        bandwidth_nm,
                         chip_temp_C]
 
     def log(self):
@@ -189,44 +190,6 @@ class as7341_Spectrometer( Device ):
         except Exception as err:
             print( "failed to set current:", err )
             return False
-
-    '''
-        for ch in range (0,8):
-            self.irradiance[ch] = self.raw[ch]/self.steno_cal_counts_per_irradiance[ch]
-        self.dict_stenocal = {key:value for key, value in zip(self.bands, self.irradiance )}
-
-    def list_channels():
-        return self.center_wavelengths
-    def header(self, ch):
-        return " {}.WL.nm, {}.counts, {}.W/(m^2*nm), {}.uncty.W/(m^2*nm)".format( self.colors[ch], self.colors[ch], self.colors[ch], self.colors[ch] )
-    def log( self, wavelength):
-        if wavelength in self.bands:
-            logline = "{}".format( self.pn )
-            logline += ", {}".format( wavelength )
-            logline += ", {}".format( self.dict_bandwidths[wavelength] )
-            logline += ", {}".format( self.dict_counts[wavelength] )
-            logline += ", {}".format( self.dict_stenocal[wavelength] )
-            logline += ", {}".format( " - " )
-            logline += ", {}".format( " - " )#gain
-            logline += ", {}".format( " - " )#integration time
-            logline += ", {}".format( " - " )#chip number
-            logline += ", {}".format( " - " )#chip temperature
-            return logline
-    def serial_log(self, wavelength):
-        if wavelength in self.bands:
-            loglist = "pn: {}".format( self.pn )
-            loglist += ", WL-!-nm: {}".format( wavelength )
-            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
-            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
-            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_stenocal[wavelength] )
-            loglist += ", gain-!-: {}".format( '-' ) #self.gain_ratio )
-            loglist += ", intg-!-ms: {}".format( '-' )#self.intg_time_ms )
-            return loglist
-    def get_bandwidth(self, wavelength):
-        return self.dict_bandwidths[wavelength]
-    def printlog(self,ch):
-        print( self.log(ch))
-'''
 
 class Null_as7341_Spectrometer(Device):
     def __init__( self ):

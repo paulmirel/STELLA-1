@@ -34,24 +34,30 @@ class Spectral_Channel( Device ):
         super().__init__(name = name, pn = "as7331", address = 0x74, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s", "conv_value", "bandwidth_nm",
-                            "chip_temp_C"]
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s_nm", "irradiance", "conv_value", "bandwidth_nm"]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
+        gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
+        int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
-        self.values = [ self.wavelength_nm,
-                        sensor_unit.gain_list[sensor_unit.gain_index],
-                        sensor_unit.integration_time_ms_list[sensor_unit.integration_time_index],
-                        0,
-                        0,
-                        0,
-                        self.bandwidth_nm,
-                        0]
-                        
+        bandwidth_nm = self.bandwidth_nm
+        normal_ct_per_s_nm = 0
+        irradiance = 0
+        conv_value = 0
+        raw = 0
+        self.values = [self.wavelength_nm,
+                        gain,
+                        int_time_ms,
+                        raw,
+                        normal_ct_per_s_nm,
+                        irradiance,
+                        conv_value,
+                        bandwidth_nm]
+
     def get_wavelength( self ):
         return self.wavelength_nm
     def get_plot_values( self ):
         return (self.values[3],self.values[4],0,self.values[6])
-        
+
     def read(self):
         raw_values = self.sensor_unit.read_counts_all()
         if raw_values is not None:
@@ -60,22 +66,22 @@ class Spectral_Channel( Device ):
             raw = 0
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
-        normal_ct_per_s = round(1000*raw/(gain*int_time_ms),1)
+        normal_ct_per_s_nm = round(1000*raw/(gain*int_time_ms*self.bandwidth_nm),3)
         converted_values  = self.sensor_unit.read_converted_all()
         if converted_values is not None:
             conv_value = converted_values[ self.index ]
             chip_temp = converted_values[ 3 ]
         else:
             conv_value = 0
-            chip_temp = 0
+        irradiance = 0
         self.values = [self.wavelength_nm,
                         gain,
                         int_time_ms,
                         raw,
-                        normal_ct_per_s,
+                        normal_ct_per_s_nm,
+                        irradiance,
                         conv_value,
-                        self.bandwidth_nm,
-                        chip_temp]
+                        self.bandwidth_nm]
 
     def log(self):
         log = "{}, {}".format( self.name, self.pn )

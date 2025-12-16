@@ -14,10 +14,10 @@ class Spectral_Register:
         self.instrument = instrument
         self.scale_choices = ["linear", "log"]
         self.scale_index = 0
-        self.units_y_choices = ["counts", "cts_per_s", "irradiance" ]
+        self.units_y_choices = ["counts", "ct_per_s_nm", "irradiance" ]
         self.units_y_index = 0
-        self.spectrum_choices = ["visible", "near infrared", "vis + nir" ]#["ultraviolet", "visible", "near infrared", "uv + vis", "vis + nir", "uv + vis + nir" ]
-        self.wavelength_ranges = [(410,700),(700,1000),(410,1000)]        #[(200,400),(410,700),(700,1000),(200,700),(410,1000),(200,1000)]
+        self.spectrum_choices = ["ultraviolet", "uv + vis", "uv + vis + nir", "visible",  "vis + nir", "near infrared"]
+        self.wavelength_ranges = [(200,400),(200,700),(200,1000),(410,700),(410,1000),(700,1000)]
         self.spectrum_index = 2
         self.data_source_choices = ["sensors", "*future"]#"reference"]
         self.data_source_index = 0
@@ -120,7 +120,7 @@ class Light_Page( Page ):
                         spectral_bandwidths_nm.append( channel_values[3] )
                         if units_y == "counts": #["counts", "cts_per_s", "irradiance" ]
                             linear_y_value = channel_values[0]
-                        elif units_y == "cts_per_s":
+                        elif units_y == "ct_per_s_nm":
                             linear_y_value = channel_values[1]
                         elif units_y == "irradiance":
                             linear_y_value = channel_values[2]
@@ -369,9 +369,9 @@ class Light_Page( Page ):
         self.group.append(scale_group)
 
         # units
-        units_y_select_x = 54
+        units_y_select_x = 50
         units_y_color_x = units_y_select_x + select_width
-        units_y_select_width = 73
+        units_y_select_width = 77
         self.units_y_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_y_select_width, height=upper_select_height, x=units_y_select_x, y=upper_select_y)
         self.group.append( self.units_y_select )
         self.selection_rectangles.append(self.units_y_select)
@@ -389,7 +389,7 @@ class Light_Page( Page ):
         self.group.append(units_y_group)
 
         # spectrum
-        spectrum_select_x = 124
+        spectrum_select_x = 126
         spectrum_color_x = spectrum_select_x + select_width
         spectrum_select_width = 96
         self.spectrum_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=spectrum_select_width, height=upper_select_height, x=spectrum_select_x, y=upper_select_y)

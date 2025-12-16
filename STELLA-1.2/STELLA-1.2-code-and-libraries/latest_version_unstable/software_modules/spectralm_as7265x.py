@@ -57,20 +57,21 @@ class Spectral_Channel( Device ):
 
     def read(self):
         raw = self.sensor_unit.read_counts_by_index( self.index )
-        irrad = self.sensor_unit.read_calibrated_by_index( self.index )
+        irradiance = self.sensor_unit.read_calibrated_by_index( self.index )
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
-        normal_ct_per_s = round(1000*raw/(gain*int_time_ms),1)
-        chip_temp = self.sensor_unit.read_chip_temperature_by_chip_number( self.chip_number)
+        bandwidth_nm = self.bandwidth_nm
+        normal_ct_per_s_nm = round(1000*raw/(gain*int_time_ms*bandwidth_nm),3)
+        chip_temp_C = self.sensor_unit.read_chip_temperature_by_chip_number( self.chip_number)
         self.values = [self.wavelength_nm,
                         gain,
                         int_time_ms,
                         raw,
-                        normal_ct_per_s,
-                        irrad,
-                        self.bandwidth_nm,
+                        normal_ct_per_s_nm,
+                        irradiance,
+                        bandwidth_nm,
                         self.chip_number,
-                        chip_temp]
+                        chip_temp_C]
 
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
