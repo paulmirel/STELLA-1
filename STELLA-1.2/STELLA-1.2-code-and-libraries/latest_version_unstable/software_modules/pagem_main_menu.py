@@ -19,8 +19,8 @@ class Main_Menu_Page( Page ):
         self.selection_count = 1
         self.field_selected = False
     def make_group( self ):
-        menu_list = "Light", "Heat", "*Air", "*Plants", "*Time+Place", "Sensors", "*future use", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
-        menu_color_list = 5, 11, 12, 20, 14, 21, 19, 19, 19, 19
+        menu_list = "Light", "Heat", "*Air", "*Plants", "Fluorescence", "*Time+Place", "Sensors", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
+        menu_color_list = 32, 11, 12, 20, 29, 14, 21, 19, 19, 19
         self.group = displayio.Group()
         start_y = 54
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240-start_y, x=0, y=start_y )
