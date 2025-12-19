@@ -79,7 +79,7 @@ from software_modules import devicem_pcf8523_rtc, devicem_neopixel
 from software_modules import devicem_ili9341_display, devicem_gps
 from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
-from software_modules import pagem_settings, pagem_sensors
+from software_modules import pagem_settings, pagem_sensors, pagem_fluorescence
 from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air, pagem_time_place
 
 
@@ -233,6 +233,7 @@ def main():
     #time_place_page = pagem_time_place.make_time_place_page( instrument )
     #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
+    fluorescence_page = pagem_fluorescence.make_fluorescence_page( instrument )
     start = time.monotonic()
     if instrument.spectral_sensors_detected:
         light_page = pagem_light.make_light_page( instrument )
@@ -246,6 +247,7 @@ def main():
     instrument.make_pages_dictionary()
 
     #print( instrument.pages_dict )
+    #stall()
 
     gc.collect()
     mem_free_after_pages = gc.mem_free()
@@ -275,10 +277,10 @@ def main():
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
         sensors_page.choose_sensor( instrument.sensors_present[1] )
-    if instrument.spectral_sensors_detected:
-        instrument.active_page_number = instrument.pages_dict["Light"]
     if False:
         instrument.active_page_number = instrument.pages_dict["Heat"]
+    if False: #instrument.spectral_sensors_detected:
+        instrument.active_page_number = instrument.pages_dict["Light"]
 
     try:
         if buzzer: buzzer.beep()
@@ -318,7 +320,7 @@ def main():
                 sample_time = sample_stop_time - sample_start_time
                 #print( "sample_time, all sensors, s = ", round(sample_time,3))
                 instrument.update_active_page()
-                if instrument.active_page_number == instrument.pages_dict["Light"]:
+                if instrument.active_page_number == instrument.pages_dict["Light"] or instrument.active_page_number == instrument.pages_dict["Fluorescence"] :
                     light_page.update_plot()
                 if instrument.vfs:
                         if instrument.take_burst:
@@ -441,6 +443,10 @@ class Instrument:
                 else:
                     self.pages_list[ self.active_page_number ].update_selection()
                     self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
+            elif active_page_name == "Fluorescence":
+                self.pages_list[ self.pages_dict["Controls"] ].hide()
+                self.pages_list[ self.pages_dict["Fluorescence"] ].show()
+                self.pages_list[ self.pages_dict["Light"] ].show()
             else:
                 self.pages_list[ self.active_page_number ].show()
             self.last_active_page_number = self.active_page_number
@@ -529,7 +535,17 @@ class Instrument:
                 controls_page.hide_all_selections()
                 active_page.update_selection()
         try:
-            self.pages_list[ self.active_page_number ].update_values()
+            if active_page == self.pages_list[ self.pages_dict["Fluorescence"] ]:
+                self.pages_list[ self.pages_dict["Light"] ].update_values()
+                if False: #self.combined_page_selection < controls_page.selection_count:
+                    active_page.hide_all_selections()
+                    controls_page.update_selection()
+                else:
+                    pass
+                    #controls_page.hide_all_selections()
+                    #active_page.update_selection()
+            else:
+                self.pages_list[ self.active_page_number ].update_values()
         except Exception as err:
             print("values update failed: ", err)
 

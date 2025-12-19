@@ -187,7 +187,9 @@ class Main_Menu_Page( Page ):
             self.instrument.active_page_number = self.instrument.pages_dict["Air"]
         if False: #self.selection == 3:
             self.instrument.active_page_number = self.instrument.pages_dict["Plants"]
-        if False: #self.selection == 4:
+        if self.selection == 4:
+            self.instrument.active_page_number = self.instrument.pages_dict["Fluorescence"]
+        if self.selection == 5:
             self.instrument.active_page_number = self.instrument.pages_dict["Time"]
         if self.selection == 5:
             self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
