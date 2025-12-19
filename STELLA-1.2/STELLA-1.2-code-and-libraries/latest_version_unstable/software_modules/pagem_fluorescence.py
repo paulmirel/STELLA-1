@@ -43,17 +43,21 @@ class Fluorescence_Page( Page ):
         self.selection_rectangles.append( self.gps_select )
         self.gps_select.hidden = True
         gps_control_width = gps_select_width - 2 * select_width
-        self.gps_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=8, width=gps_control_width, height=control_height, x=gps_color_x, y=control_y)
+        self.gps_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=gps_control_width, height=control_height, x=gps_color_x, y=control_y)
         self.group.append( self.gps_color )
         gps_text_x = gps_color_x + 3
         gps_group = displayio.Group(scale=1, x=gps_text_x, y=text_y1+2)
-        gps_text = " -- "
-        gps_text_area = label.Label(terminalio.FONT, text=gps_text, color=self.palette[9])
+
+        gps_text = " "#lamp   wavelength  current  ON  tag  mode GO "
+
+        gps_text_area = label.Label(terminalio.FONT, text=gps_text, color=self.palette[0])
         gps_group.append(gps_text_area)
         self.group.append(gps_group)
         gps_value_group = displayio.Group(scale=1, x=gps_text_x, y=text_y2)
-        gps_value_text = "nofix"
-        self.gps_value_text_area = label.Label(terminalio.FONT, text=gps_value_text, color=self.palette[9])
+
+        gps_value_text = ""#excite  488nm   25mA  OFF t234057 single  GO"
+
+        self.gps_value_text_area = label.Label(terminalio.FONT, text=gps_value_text, color=self.palette[0])
         gps_value_group.append(self.gps_value_text_area)
         self.group.append(gps_value_group)
         self.selection_count += 1
@@ -66,7 +70,7 @@ class Fluorescence_Page( Page ):
         self.selection_rectangles.append( self.batch_select )
         self.batch_select.hidden = True
         batch_control_width = batch_select_width - 2 * select_width
-        batch_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=6, width=batch_control_width, height=control_height, x=batch_color_x, y=control_y)
+        batch_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=batch_control_width, height=control_height, x=batch_color_x, y=control_y)
         self.group.append( batch_color )
         self.batch_text_x = batch_color_x + 5
         batch_group = displayio.Group(scale=1, x=self.batch_text_x+1, y=text_y1)
@@ -96,7 +100,7 @@ class Fluorescence_Page( Page ):
         self.group.append( pause_base )
         pause_split = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=8, height=26, x=pause_record_x+9+pause_record_offset_x, y=pause_record_y)
         self.group.append( pause_split )
-        self.record_circle = vectorio.Circle( pixel_shader=self.palette, color_index=2, radius=18, x=pause_record_x+12+pause_record_offset_x, y=pause_record_y+13 )
+        self.record_circle = vectorio.Circle( pixel_shader=self.palette, color_index=9, radius=18, x=pause_record_x+12+pause_record_offset_x, y=pause_record_y+13 )
         self.group.append( self.record_circle )
         #self.record_circle.hidden = True
         self.pause_record_select.hidden = True
@@ -110,16 +114,16 @@ class Fluorescence_Page( Page ):
         self.selection_rectangles.append( self.burst_select )
         self.burst_select.hidden = True
         burst_control_width = burst_select_width - 2 * select_width
-        self.burst_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=16, width=burst_control_width, height=control_height, x=burst_color_x, y=control_y)
+        self.burst_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=burst_control_width, height=control_height, x=burst_color_x, y=control_y)
         self.group.append( self.burst_color )
         burst_text_x = burst_color_x + 6
         burst_group = displayio.Group(scale=1, x=burst_text_x-2, y=text_y1)
-        burst_text = " -- "
+        burst_text = ""
         burst_text_area = label.Label(terminalio.FONT, text=burst_text, color=self.palette[9])
         burst_group.append(burst_text_area)
         self.group.append(burst_group)
         burst_value_group = displayio.Group(scale=2, x=burst_text_x+1, y=text_y2)
-        burst_value_text = "-"
+        burst_value_text = ""
         self.burst_value_text_area = label.Label(terminalio.FONT, text=burst_value_text, color=self.palette[9])
         burst_value_group.append(self.burst_value_text_area)
         self.group.append(burst_value_group)
@@ -133,16 +137,16 @@ class Fluorescence_Page( Page ):
         self.selection_rectangles.append( self.settings_select )
         self.settings_select.hidden = True
         settings_control_width = settings_select_width - 2 * select_width
-        settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=7, width=settings_control_width, height=control_height, x=settings_color_x, y=control_y)
+        settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=settings_control_width, height=control_height, x=settings_color_x, y=control_y)
         self.group.append( settings_color )
         settings_text_x = settings_color_x + 3
         settings_group = displayio.Group(scale=1, x=settings_text_x, y=text_y1)
-        settings_text = " -- "
+        settings_text = ""
         settings_text_area = label.Label(terminalio.FONT, text=settings_text, color=self.palette[9])
         settings_group.append(settings_text_area)
         self.group.append(settings_group)
         settings_value_group = displayio.Group(scale=1, x=settings_text_x, y=text_y2) #x=settings_text_x+3,
-        settings_value_text = " -- "
+        settings_value_text = ""
         self.settings_value_text_area = label.Label(terminalio.FONT, text=settings_value_text, color=self.palette[9])
         settings_value_group.append(self.settings_value_text_area)
         self.group.append(settings_value_group)
@@ -156,20 +160,42 @@ class Fluorescence_Page( Page ):
         self.selection_rectangles.append( self.battery_select )
         self.battery_select.hidden = True
         battery_control_width = battery_select_width - 2 * select_width
-        battery_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=15, width=battery_control_width, height=control_height, x=battery_color_x, y=control_y)
+        battery_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=battery_control_width, height=control_height, x=battery_color_x, y=control_y)
         self.group.append( battery_color )
         battery_text_x = battery_color_x + 6
         battery_group = displayio.Group(scale=1, x=battery_text_x-2, y=text_y1)
-        battery_text = " -- "
+        battery_text = ""
         battery_text_area = label.Label(terminalio.FONT, text=battery_text, color=self.palette[9])
         battery_group.append(battery_text_area)
         self.group.append(battery_group)
         battery_value_group = displayio.Group(scale=2, x=battery_text_x+1, y=text_y2)
-        battery_value_text = " - "
+        battery_value_text = ""
         self.battery_value_text_area = label.Label(terminalio.FONT, text=battery_value_text, color=self.palette[9])
         battery_value_group.append(self.battery_value_text_area)
         self.group.append(battery_value_group)
         self.selection_count += 1
+
+
+        top_text    = "lamp        color  current status mode      GO/STOP"
+        bottom_text = "excitation  488nm  1000mA  OFF    sequence  BUSY/DONE"
+
+
+        top_text    = "settings lamp   sequence_name  tag_number   GO/STOP"
+        bottom_text = " panel   ON/OFF adhjaoerub349  34958y2304   BUSY/DONE"
+
+
+        top_text_group = displayio.Group(scale=1, x=6, y=text_y1)
+
+        top_text_area = label.Label(terminalio.FONT, text=top_text, color=self.palette[0])
+        top_text_group.append(top_text_area)
+        self.group.append(top_text_group)
+
+
+        bottom_text_group = displayio.Group(scale=1, x=6, y=text_y2)
+
+        bottom_text_area = label.Label(terminalio.FONT, text=bottom_text, color=self.palette[0])
+        bottom_text_group.append(bottom_text_area)
+        self.group.append(bottom_text_group)
 
         return self.group
 
@@ -225,6 +251,7 @@ class Fluorescence_Page( Page ):
         '''
 
     def action( self ):
+        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
         pass
         '''
         if False:#self.selection == 0:

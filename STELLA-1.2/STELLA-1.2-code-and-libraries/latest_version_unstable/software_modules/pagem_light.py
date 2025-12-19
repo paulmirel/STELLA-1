@@ -232,6 +232,8 @@ class Light_Page( Page ):
             pass
 
     def update_values( self ):
+        #if self.instrument.active_page == self.pages_list[ self.pages_dict["Fluorescence"] ]:
+        #    self.spectral_register.spectrum_index = 3 #show only vis
         self.scale_text_area.text = self.spectral_register.scale_choices[ self.spectral_register.scale_index ]
         self.units_y_text_area.text = self.spectral_register.units_y_choices[ self.spectral_register.units_y_index ]
         self.spectrum_text_area.text = self.spectral_register.spectrum_choices[ self.spectral_register.spectrum_index ]

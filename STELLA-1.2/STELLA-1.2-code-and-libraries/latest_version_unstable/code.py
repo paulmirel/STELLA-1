@@ -273,7 +273,7 @@ def main():
     loop_times = []
 
     if False: #go to startup page
-        instrument.active_page_number = instrument.pages_dict["Sensors"]
+        instrument.active_page_number = instrument.pages_dict["Fluorescence"]
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
         sensors_page.choose_sensor( instrument.sensors_present[1] )
@@ -466,6 +466,7 @@ class Instrument:
                 else:
                     self.combined = False
                 if self.encoder_increment != 0:
+                    #TBD fluorescence_page selection combined with light_page
                     #print( "track the selection and hand off between both controls and the active page" )
                     self.combined_page_last_selection = self.combined_page_selection
                     if self.combined:
@@ -525,8 +526,8 @@ class Instrument:
                 self.input_flag = True
 
     def update_active_page( self ):
+        active_page = self.pages_list[ self.last_active_page_number ]
         if self.combined:
-            active_page = self.pages_list[ self.last_active_page_number ]
             controls_page = self.pages_list[ self.pages_dict["Controls"] ]
             if self.combined_page_selection < controls_page.selection_count:
                 active_page.hide_all_selections()
@@ -534,7 +535,8 @@ class Instrument:
             else:
                 controls_page.hide_all_selections()
                 active_page.update_selection()
-        try:
+        if True:
+        #try:
             if active_page == self.pages_list[ self.pages_dict["Fluorescence"] ]:
                 self.pages_list[ self.pages_dict["Light"] ].update_values()
                 if False: #self.combined_page_selection < controls_page.selection_count:
@@ -546,8 +548,8 @@ class Instrument:
                     #active_page.update_selection()
             else:
                 self.pages_list[ self.active_page_number ].update_values()
-        except Exception as err:
-            print("values update failed: ", err)
+        #except Exception as err:
+        #    print("values update failed: ", err)
 
 
     def update_batch(self):
