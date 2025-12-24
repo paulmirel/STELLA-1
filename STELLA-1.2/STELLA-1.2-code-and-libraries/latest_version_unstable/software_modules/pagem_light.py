@@ -14,7 +14,7 @@ class Spectral_Register:
         self.instrument = instrument
         self.scale_choices = ["linear", "log"]
         self.scale_index = 0
-        self.units_y_choices = ["counts", "ct_per_s_nm", "irradiance" ]
+        self.units_y_choices = ["counts", "ct_per_s_nm", "uW_per_cm^2"]#"irradiance" ]
         self.units_y_index = 0
         self.spectrum_choices = ["ultraviolet", "uv + vis", "uv + vis + nir", "visible",  "vis + nir", "near infrared"]
         self.wavelength_ranges = [(200,400),(200,700),(200,1000),(410,700),(410,1000),(700,1000)]
@@ -73,7 +73,7 @@ class Light_Page( Page ):
         self.points =[]
 
     def create_plot( self ):
-        graph_x = 14 #4
+        graph_x = 60#14
         graph_width = 320 - graph_x *2
         graph_height = 240-124
         message_height = int( graph_height/4 )
@@ -122,7 +122,7 @@ class Light_Page( Page ):
                             linear_y_value = channel_values[0]
                         elif units_y == "ct_per_s_nm":
                             linear_y_value = channel_values[1]
-                        elif units_y == "irradiance":
+                        elif units_y == "uW_per_cm^2":
                             linear_y_value = channel_values[2]
                         scale_choice = self.spectral_register.scale_choices[ self.spectral_register.scale_index]
                         if scale_choice == "linear" :
@@ -265,9 +265,9 @@ class Light_Page( Page ):
     def action( self ):
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
-                if self.selection == 0:
-                   self.spectral_register.scale_index = (self.spectral_register.scale_index + self.instrument.encoder_increment) % len(self.spectral_register.scale_choices)
                 if self.selection == 1:
+                   self.spectral_register.scale_index = (self.spectral_register.scale_index + self.instrument.encoder_increment) % len(self.spectral_register.scale_choices)
+                if self.selection == 0:
                    self.spectral_register.units_y_index = (self.spectral_register.units_y_index + self.instrument.encoder_increment) % len(self.spectral_register.units_y_choices)
                 if self.selection == 2:
                     last_spectrum_index = self.spectral_register.spectrum_index
@@ -294,12 +294,12 @@ class Light_Page( Page ):
                 self.instrument.active_page_number = self.instrument.pages_dict["Heat"]
             else:
                 self.field_selected = not self.field_selected
-                if self.selection == 0:
+                if self.selection == 1:
                     if self.field_selected:
                         self.scale_color.color_index = self.field_selected_color_index
                     else:
                         self.scale_color.color_index = self.field_not_selected_color_index
-                if self.selection == 1:
+                if self.selection == 0:
                     if self.field_selected:
                         self.units_y_color.color_index = self.field_selected_color_index
                     else:
@@ -341,18 +341,38 @@ class Light_Page( Page ):
         separator_bar_height = 2
         light_background_y = 54 + separator_bar_height
         light_background_height = 240 - light_background_y
-        upper_text_y = light_background_y + 14
+        upper_text_y = light_background_y + 10
         select_width = 4
         offset = 4
-        upper_select_y = offset + light_background_y
+        upper_select_y = light_background_y
         upper_control_height = 14
         upper_select_height = upper_control_height + 2*select_width
         upper_control_y = upper_select_y + select_width
         light_background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=light_background_height, x=0, y=light_background_y)
         self.group.append( light_background )
 
+        # units
+        units_y_select_x = 0
+        units_y_color_x = units_y_select_x + select_width
+        units_y_select_width = 77
+        self.units_y_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_y_select_width, height=upper_select_height, x=units_y_select_x, y=upper_select_y)
+        self.group.append( self.units_y_select )
+        self.selection_rectangles.append(self.units_y_select)
+
+        self.units_y_select.hidden = True
+        units_y_control_width = units_y_select_width - 2 * select_width
+        self.units_y_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=units_y_control_width, height=upper_control_height, x=units_y_color_x, y=upper_control_y)
+        self.group.append( self.units_y_color )
+        units_y_text_x = units_y_color_x + 2
+        units_y_group = displayio.Group(scale=1, x=units_y_text_x, y=upper_text_y)
+        units_y_text = "  --"#"counts" #"irradiance"
+                                #"cts_per_ms
+        self.units_y_text_area = label.Label(terminalio.FONT, text=units_y_text, color=self.palette[0])
+        units_y_group.append(self.units_y_text_area)
+        self.group.append(units_y_group)
+
         # scale
-        scale_select_x = offset
+        scale_select_x = 78
         scale_color_x = scale_select_x + select_width
         scale_select_width = 49
         self.scale_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=scale_select_width, height=upper_select_height, x=scale_select_x, y=upper_select_y)
@@ -370,25 +390,7 @@ class Light_Page( Page ):
         scale_group.append(self.scale_text_area)
         self.group.append(scale_group)
 
-        # units
-        units_y_select_x = 50
-        units_y_color_x = units_y_select_x + select_width
-        units_y_select_width = 77
-        self.units_y_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=units_y_select_width, height=upper_select_height, x=units_y_select_x, y=upper_select_y)
-        self.group.append( self.units_y_select )
-        self.selection_rectangles.append(self.units_y_select)
 
-        self.units_y_select.hidden = True
-        units_y_control_width = units_y_select_width - 2 * select_width
-        self.units_y_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=units_y_control_width, height=upper_control_height, x=units_y_color_x, y=upper_control_y)
-        self.group.append( self.units_y_color )
-        units_y_text_x = units_y_color_x + 3
-        units_y_group = displayio.Group(scale=1, x=units_y_text_x, y=upper_text_y)
-        units_y_text = "  --"#"counts" #"irradiance"
-                                #"cts_per_ms
-        self.units_y_text_area = label.Label(terminalio.FONT, text=units_y_text, color=self.palette[0])
-        units_y_group.append(self.units_y_text_area)
-        self.group.append(units_y_group)
 
         # spectrum
         spectrum_select_x = 126
@@ -414,7 +416,7 @@ class Light_Page( Page ):
         self.group.append(spectrum_group)
 
         # exposure
-        exposure_select_x = 218 #offset + scale_select_width + units_y_select_width + spectrum_select_width - 3*select_width
+        exposure_select_x = 220 #offset + scale_select_width + units_y_select_width + spectrum_select_width - 3*select_width
         exposure_color_x = exposure_select_x + select_width
         exposure_select_width = 62
         self.exposure_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=exposure_select_width, height=upper_select_height, x=exposure_select_x, y=upper_select_y)
@@ -433,7 +435,7 @@ class Light_Page( Page ):
         self.group.append(exposure_group)
 
         # heat
-        heat_select_x = 278 #offset + scale_select_width + units_y_select_width + spectrum_select_width - 3*select_width
+        heat_select_x = 282 #offset + scale_select_width + units_y_select_width + spectrum_select_width - 3*select_width
         heat_color_x = heat_select_x + select_width
         heat_select_width = 36
         self.heat_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=heat_select_width, height=upper_select_height, x=heat_select_x, y=upper_select_y)
@@ -450,6 +452,41 @@ class Light_Page( Page ):
         self.heat_text_area = label.Label(terminalio.FONT, text=heat_text, color=self.palette[0])
         heat_group.append(self.heat_text_area)
         self.group.append(heat_group)
+
+        y_values_x = 4
+        high_value_y = upper_text_y + 16
+        dynamic_range_value_y = high_value_y + 16 #102
+        low_value_y = 194
+
+
+        high_value_group = displayio.Group(scale=1, x=y_values_x, y=high_value_y)
+        high_value_text = "65535"#"186"#
+        self.high_value_text_area = label.Label(terminalio.FONT, text=high_value_text, color=self.palette[0])
+        high_value_group.append(self.high_value_text_area)
+        self.group.append(high_value_group)
+
+        dynamic_range_value_group = displayio.Group(scale=1, x=y_values_x, y=dynamic_range_value_y)
+        dynamic_range_value_text = "SAT"#"99%dr"#
+        self.dynamic_range_value_text_area = label.Label(terminalio.FONT, text=dynamic_range_value_text, color=self.palette[0])
+        dynamic_range_value_group.append(self.dynamic_range_value_text_area)
+        self.group.append(dynamic_range_value_group)
+
+        low_value_group = displayio.Group(scale=1, x=y_values_x, y=low_value_y)
+        low_value_text = "65535"#"20"#
+        self.low_value_text_area = label.Label(terminalio.FONT, text=low_value_text, color=self.palette[0])
+        low_value_group.append(self.low_value_text_area)
+        self.group.append(low_value_group)
+
+        origin_x = 36
+        origin_y = 198
+        height_y = 124
+
+        y_axis_line = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=1, height= height_y, x=origin_x, y=origin_y - height_y )
+        self.group.append( y_axis_line )
+
+        x_axis_line = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=280, height=1, x=origin_x, y=origin_y)
+        self.group.append( x_axis_line )
+
 
         # lower controls
         lower_control_height = 14

@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.8.0"
+SOFTWARE_VERSION_NUMBER = "0.8.1"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -279,7 +279,7 @@ def main():
         sensors_page.choose_sensor( instrument.sensors_present[1] )
     if False:
         instrument.active_page_number = instrument.pages_dict["Heat"]
-    if False: #instrument.spectral_sensors_detected:
+    if instrument.spectral_sensors_detected:
         instrument.active_page_number = instrument.pages_dict["Light"]
 
     try:
