@@ -47,10 +47,6 @@ class Spectral_Register:
         if self.ultraviolet_present:
             self.spectrum_choices.append("ultraviolet")
             self.wavelength_ranges.append((200,400))
-
-
-        print( self.spectrum_choices )
-        print( self.wavelength_ranges )
         self.spectrum_index = 0
         self.data_source_choices = ["sensors", "*future"]#"reference"]
         self.data_source_index = 0
