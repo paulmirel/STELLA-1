@@ -85,7 +85,7 @@ class Spectral_Channel( Device ):
 
 class as7265x_Spectrometer( Device ):
     def __init__( self, instrument ): #com_bus ):
-        super().__init__(name = "spectral", pn = "as7256x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  ))
+        super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  ))
         self.choice_label = "as7256x V+NIR"
         self.instrument = instrument
         #self.wavelength_bands_nm = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535

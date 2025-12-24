@@ -16,9 +16,42 @@ class Spectral_Register:
         self.scale_index = 0
         self.units_y_choices = ["counts", "ct_per_s_nm", "uW_per_cm^2"]#"irradiance" ]
         self.units_y_index = 0
-        self.spectrum_choices = ["ultraviolet", "uv + vis", "uv + vis + nir", "visible",  "vis + nir", "near infrared"]
-        self.wavelength_ranges = [(200,400),(200,700),(200,1000),(410,700),(410,1000),(700,1000)]
-        self.spectrum_index = 2
+        self.visible_present = False
+        self.ultraviolet_present = False
+        self.near_infrared_present = False
+        for sensor in self.instrument.spectral_sensors_present:
+            if sensor.pn == "as7331":
+                self.ultraviolet_present = True
+            if sensor.pn == "as7265x":
+                self.visible_present = True
+                self.near_infrared_present = True
+            if sensor.pn == "as7341":
+                self.visible_present = True
+        self.spectrum_choices = []
+        self.wavelength_ranges = []
+        if self.ultraviolet_present and self.visible_present and self.near_infrared_present:
+            self.spectrum_choices.append("uv + vis + nir")
+            self.wavelength_ranges.append((200,1000))
+        if self.visible_present and self.near_infrared_present:
+            self.spectrum_choices.append("vis + nir")
+            self.wavelength_ranges.append((410,1000))
+        if self.visible_present:
+            self.spectrum_choices.append("visible")
+            self.wavelength_ranges.append((410,700))
+        if self.near_infrared_present:
+            self.spectrum_choices.append("near infrared")
+            self.wavelength_ranges.append((700,1000))
+        if self.ultraviolet_present and self.visible_present:
+            self.spectrum_choices.append("uv + vis")
+            self.wavelength_ranges.append((200,700))
+        if self.ultraviolet_present:
+            self.spectrum_choices.append("ultraviolet")
+            self.wavelength_ranges.append((200,400))
+
+
+        print( self.spectrum_choices )
+        print( self.wavelength_ranges )
+        self.spectrum_index = 0
         self.data_source_choices = ["sensors", "*future"]#"reference"]
         self.data_source_index = 0
         self.units_x_choices = ["wavelength nm", "frequency THz", "energy eV", "wavenumber/cm"]
@@ -74,7 +107,7 @@ class Light_Page( Page ):
 
     def create_plot( self ):
         graph_x = 44#14
-        graph_width = 320 - graph_x - 8
+        graph_width = 320 - graph_x - 12
         graph_height = 240-124
         message_height = int( graph_height/4 )
         message_offset = 10
