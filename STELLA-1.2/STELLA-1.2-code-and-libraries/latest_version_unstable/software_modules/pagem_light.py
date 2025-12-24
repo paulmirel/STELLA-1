@@ -73,8 +73,8 @@ class Light_Page( Page ):
         self.points =[]
 
     def create_plot( self ):
-        graph_x = 60#14
-        graph_width = 320 - graph_x *2
+        graph_x = 44#14
+        graph_width = 320 - graph_x - 8
         graph_height = 240-124
         message_height = int( graph_height/4 )
         message_offset = 10
@@ -111,6 +111,8 @@ class Light_Page( Page ):
                     values = sensor.get_plot_values()
                     data_dict_to_plot.update({wl:values})
             #print( data_dict_to_plot )
+            linear_y_values = []
+            linear_y_counts = []
             for band in self.instrument.wavelength_bands_list_sorted:
                 if band in range ( self.spectral_register.wl_min, self.spectral_register.wl_max ):
                     self.instrument.handle_inputs()
@@ -124,6 +126,8 @@ class Light_Page( Page ):
                             linear_y_value = channel_values[1]
                         elif units_y == "uW_per_cm^2":
                             linear_y_value = channel_values[2]
+                        linear_y_values.append( linear_y_value )
+                        linear_y_counts.append(channel_values[0])
                         scale_choice = self.spectral_register.scale_choices[ self.spectral_register.scale_index]
                         if scale_choice == "linear" :
                             spectral_graph_y_values.append( linear_y_value )
@@ -133,6 +137,16 @@ class Light_Page( Page ):
                             else:
                                 spectral_graph_y_values.append( math.log(linear_y_value,10))
 
+            self.high_value_text_area.text = "{}".format(round(max(linear_y_values),2))
+            self.low_value_text_area.text = "{}".format(round(min(linear_y_values),2))
+            percent_dynamic_range = 100*max(linear_y_counts) / 65535
+            if percent_dynamic_range < 100:
+                if percent_dynamic_range < 10:
+                    self.dynamic_range_value_text_area.text = "{}%".format(round(percent_dynamic_range,2))
+                else:
+                    self.dynamic_range_value_text_area.text = "{}%".format(int(percent_dynamic_range))
+            else:
+                self.dynamic_range_value_text_area.text = "SATURATED"
             #print(spectral_graph_x_values_nm)
             #print(spectral_graph_y_values)
             #print(spectral_bandwidths_nm)
@@ -460,19 +474,25 @@ class Light_Page( Page ):
 
 
         high_value_group = displayio.Group(scale=1, x=y_values_x, y=high_value_y)
-        high_value_text = "65535"#"186"#
+        high_value_text = "--"#"186"#
         self.high_value_text_area = label.Label(terminalio.FONT, text=high_value_text, color=self.palette[0])
         high_value_group.append(self.high_value_text_area)
         self.group.append(high_value_group)
 
         dynamic_range_value_group = displayio.Group(scale=1, x=y_values_x, y=dynamic_range_value_y)
-        dynamic_range_value_text = "SAT"#"99%dr"#
+        dynamic_range_value_text = "--"#"99%dr"#
         self.dynamic_range_value_text_area = label.Label(terminalio.FONT, text=dynamic_range_value_text, color=self.palette[0])
         dynamic_range_value_group.append(self.dynamic_range_value_text_area)
         self.group.append(dynamic_range_value_group)
 
+        dynamic_range_legend_group = displayio.Group(scale=1, x=y_values_x, y=dynamic_range_value_y+16)
+        dynamic_range_legend_text = "of DR"
+        self.dynamic_range_legend_text_area = label.Label(terminalio.FONT, text=dynamic_range_legend_text, color=self.palette[0])
+        dynamic_range_legend_group.append(self.dynamic_range_legend_text_area)
+        self.group.append(dynamic_range_legend_group)
+
         low_value_group = displayio.Group(scale=1, x=y_values_x, y=low_value_y)
-        low_value_text = "65535"#"20"#
+        low_value_text = "--"#"20"#
         self.low_value_text_area = label.Label(terminalio.FONT, text=low_value_text, color=self.palette[0])
         low_value_group.append(self.low_value_text_area)
         self.group.append(low_value_group)
@@ -597,9 +617,9 @@ class Light_Page( Page ):
         values_bar_height = 14
         values_bar_y = 240 - offset - values_bar_height - lower_control_height
         values_bar_text_y = values_bar_y + 6
-        values_width = 26
-        left_value_x = 2* offset
-        values_spacing = int((320 - left_value_x - values_width ) / 4)
+        values_width = 20
+        left_value_x = 30
+        values_spacing = int((290 - values_width ) / 4)
         # left_value
         left_value_group = displayio.Group(scale=1, x=left_value_x, y=values_bar_y)
         left_value_text = "000"
@@ -607,28 +627,28 @@ class Light_Page( Page ):
         left_value_group.append(self.left_value_text_area)
         self.group.append(left_value_group)
         # left_mid_value
-        left_mid_value_x = offset + values_spacing
+        left_mid_value_x = left_value_x + values_spacing
         left_mid_value_group = displayio.Group(scale=1, x=left_mid_value_x, y=values_bar_y)
         left_mid_value_text = "000"
         self.left_mid_value_text_area = label.Label(terminalio.FONT, text=left_mid_value_text, color=self.palette[0])
         left_mid_value_group.append(self.left_mid_value_text_area)
         self.group.append(left_mid_value_group)
         # mid_value
-        mid_value_x = offset + 2* values_spacing
+        mid_value_x = left_value_x + 2* values_spacing
         mid_value_group = displayio.Group(scale=1, x=mid_value_x, y=values_bar_y)
         mid_value_text = "000"
         self.mid_value_text_area = label.Label(terminalio.FONT, text=mid_value_text, color=self.palette[0])
         mid_value_group.append(self.mid_value_text_area)
         self.group.append(mid_value_group)
         # right_mid_value
-        right_mid_value_x = offset + 3*values_spacing
+        right_mid_value_x = left_value_x + 3*values_spacing
         right_mid_value_group = displayio.Group(scale=1, x=right_mid_value_x, y=values_bar_y)
         right_mid_value_text = "000"
         self.right_mid_value_text_area = label.Label(terminalio.FONT, text=right_mid_value_text, color=self.palette[0])
         right_mid_value_group.append(self.right_mid_value_text_area)
         self.group.append(right_mid_value_group)
         # right_value
-        right_value_x = offset + 4*values_spacing
+        right_value_x = left_value_x + 4*values_spacing
         right_value_group = displayio.Group(scale=1, x=right_value_x, y=values_bar_y)
         right_value_text = "000"
         self.right_value_text_area = label.Label(terminalio.FONT, text=right_value_text, color=self.palette[0])
