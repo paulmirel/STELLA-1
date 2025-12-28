@@ -19,7 +19,7 @@ class Main_Menu_Page( Page ):
         self.selection_count = 1
         self.field_selected = False
     def make_group( self ):
-        menu_list = "Light", "Heat", "*Air", "*Plants", "Fluorescence", "*Time+Place", "Sensors", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
+        menu_list = "Light", "Heat", "*Air", "*Plants", "Lab_Spec", "*Time+Place", "Sensors", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
         menu_color_list = 32, 11, 12, 20, 29, 14, 21, 19, 19, 19
         self.group = displayio.Group()
         start_y = 54
@@ -188,7 +188,7 @@ class Main_Menu_Page( Page ):
         if False: #self.selection == 3:
             self.instrument.active_page_number = self.instrument.pages_dict["Plants"]
         if self.selection == 4:
-            self.instrument.active_page_number = self.instrument.pages_dict["Fluorescence"]
+            self.instrument.active_page_number = self.instrument.pages_dict["Lab_Spec"]
         if self.selection == 5:
             self.instrument.active_page_number = self.instrument.pages_dict["Time"]
         if self.selection == 5:
