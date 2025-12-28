@@ -9,10 +9,10 @@ import terminalio
 from .classm_page import Page
 
 
-class Fluorescence_Page( Page ):
+class Lab_Spec_Page( Page ):
     def __init__( self, instrument ):
         super().__init__()
-        self.page_name = "Fluorescence"
+        self.page_name = "Lab_Spec"
         self.instrument = instrument
         self.palette = instrument.palette
         self.selection = 0
@@ -275,9 +275,9 @@ class Fluorescence_Page( Page ):
 
 
 
-def make_fluorescence_page( instrument ):
-    instrument.welcome_page.announce( "make_fluorescence_page" )
-    page = Fluorescence_Page( instrument )
+def make_lab_spec_page( instrument ):
+    instrument.welcome_page.announce( "make_lab_spec_page" )
+    page = Lab_Spec_Page( instrument )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )

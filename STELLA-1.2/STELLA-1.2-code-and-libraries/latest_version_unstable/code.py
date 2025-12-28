@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.8.1"
+SOFTWARE_VERSION_NUMBER = "0.8.2"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -41,7 +41,7 @@ devices_present_hex = []
 for device_address in devices_present:
     devices_present_hex.append(hex(device_address))
 i2c_bus.unlock()
-#print( devices_present_hex )
+print( devices_present_hex )
 
 # supported devices by i2c_address:
 # 0x12 pmsa0031 particulates sensor
@@ -59,6 +59,7 @@ i2c_bus.unlock()
 # 0x38 focaltouch   Capacitive touch screen sensor
 # 0x39 as7341   Visible spectral sensor
 # 0x44 hdc302x  Precision temperature and humidity sensor
+# 0x48 ads1015  Analog to digital converter, 12 bits, 4 channels
 # 0x49 as7265x  Visible and Near Infrared spectral sensor
 # 0x4a ads1115  Analog to digital converter, 16 bits, 4 channels ### connect ADDR to SDA to set address
 # 0x4f pcf8591  Analog to digital converter, 8 bits, 4 channels, and digital to analog converter, 1 channel ### close a0, a1, a2 address jumpers on board to set address
@@ -79,7 +80,7 @@ from software_modules import devicem_pcf8523_rtc, devicem_neopixel
 from software_modules import devicem_ili9341_display, devicem_gps
 from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
-from software_modules import pagem_settings, pagem_sensors, pagem_fluorescence
+from software_modules import pagem_settings, pagem_sensors, pagem_lab_spec
 from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air, pagem_time_place
 
 
@@ -204,6 +205,10 @@ def main():
         sensor.make_spectral_channels()
     instrument.make_wavelength_bands_list()
 
+    enable_5V = digitalio.DigitalInOut( board.D10 )
+    enable_5V.direction = digitalio.Direction.OUTPUT
+    enable_5V.value = False
+
     '''
     sense_5V = AnalogIn(board.A1)
     analog_in_0 = AnalogIn(board.A0)
@@ -212,9 +217,7 @@ def main():
     else:
         lv_ez_mb1013_rangefinder = False
     #plus_5v_supply = False #TBD make a device object with digital out and analog in, check it for rising and falling
-    enable_5V = digitalio.DigitalInOut( board.D10 )
-    enable_5V.direction = digitalio.Direction.OUTPUT
-    enable_5V.value = True
+
     # plus_5v_supply.enable(), .read(), .log(), .disable()
     '''
     gc.collect()
@@ -233,7 +236,7 @@ def main():
     #time_place_page = pagem_time_place.make_time_place_page( instrument )
     #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
-    fluorescence_page = pagem_fluorescence.make_fluorescence_page( instrument )
+    lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument )
     start = time.monotonic()
     if instrument.spectral_sensors_detected:
         light_page = pagem_light.make_light_page( instrument )
@@ -273,7 +276,7 @@ def main():
     loop_times = []
 
     if False: #go to startup page
-        instrument.active_page_number = instrument.pages_dict["Fluorescence"]
+        instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
         sensors_page.choose_sensor( instrument.sensors_present[1] )
@@ -320,7 +323,7 @@ def main():
                 sample_time = sample_stop_time - sample_start_time
                 #print( "sample_time, all sensors, s = ", round(sample_time,3))
                 instrument.update_active_page()
-                if instrument.active_page_number == instrument.pages_dict["Light"] or instrument.active_page_number == instrument.pages_dict["Fluorescence"] :
+                if instrument.active_page_number == instrument.pages_dict["Light"] or instrument.active_page_number == instrument.pages_dict["Lab_Spec"] :
                     light_page.update_plot()
                 if instrument.vfs:
                         if instrument.take_burst:
@@ -443,9 +446,9 @@ class Instrument:
                 else:
                     self.pages_list[ self.active_page_number ].update_selection()
                     self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
-            elif active_page_name == "Fluorescence":
+            elif active_page_name == "Lab_Spec":
                 self.pages_list[ self.pages_dict["Controls"] ].hide()
-                self.pages_list[ self.pages_dict["Fluorescence"] ].show()
+                self.pages_list[ self.pages_dict["Lab_Spec"] ].show()
                 self.pages_list[ self.pages_dict["Light"] ].show()
             else:
                 self.pages_list[ self.active_page_number ].show()
@@ -466,7 +469,7 @@ class Instrument:
                 else:
                     self.combined = False
                 if self.encoder_increment != 0:
-                    #TBD fluorescence_page selection combined with light_page
+                    #TBD lab_spec_page selection combined with light_page
                     #print( "track the selection and hand off between both controls and the active page" )
                     self.combined_page_last_selection = self.combined_page_selection
                     if self.combined:
@@ -537,7 +540,7 @@ class Instrument:
                 active_page.update_selection()
         if True:
         #try:
-            if active_page == self.pages_list[ self.pages_dict["Fluorescence"] ]:
+            if active_page == self.pages_list[ self.pages_dict["Lab_Spec"] ]:
                 self.pages_list[ self.pages_dict["Light"] ].update_values()
                 if False: #self.combined_page_selection < controls_page.selection_count:
                     active_page.hide_all_selections()
