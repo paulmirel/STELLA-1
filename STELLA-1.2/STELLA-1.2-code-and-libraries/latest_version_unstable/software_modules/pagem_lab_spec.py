@@ -22,18 +22,23 @@ class Lab_Spec_Page( Page ):
         self.field_selected = False
     def make_group( self ):
         self.group = displayio.Group()
-        control_bar_height = 54
-        text_y1 = 16
-        text_y2 = text_y1 + 14 + 3
-        select_width = 4
-        offset = 4
-        select_height = control_bar_height - 2 * offset
-        select_y = offset
-        control_y = select_y + select_width
-        control_height = select_height - 2 * select_width
-        controls_background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=control_bar_height, x=0, y=0)
-        self.group.append( controls_background )
+        background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
+        self.group.append( background )
 
+        title_string = " year    month day       time UTC      batch  +=1"
+        text_group = displayio.Group(scale=1, x=12, y= 10)
+        text_area = label.Label(terminalio.FONT, text=title_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        test_string = "YYYY-MM-DD HH:MM:SS NN [+]"
+        text_group = displayio.Group(scale=2, x=6, y=14+16)
+        text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+
+        '''
         # gps
         gps_select_x = offset - 1
         gps_color_x = gps_select_x + select_width
@@ -196,7 +201,7 @@ class Lab_Spec_Page( Page ):
         bottom_text_area = label.Label(terminalio.FONT, text=bottom_text, color=self.palette[0])
         bottom_text_group.append(bottom_text_area)
         self.group.append(bottom_text_group)
-
+    '''
         return self.group
 
     def update_selection( self ):

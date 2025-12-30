@@ -5,13 +5,10 @@ sample_interval_s = 10.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
 
 burst_count = 3
 
-record_on_startup = False
+record_on_startup = True #False
 
-serial_out = False
+serial_out = True
 
 serial_interval_s = 10.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
 
-# some instances of the STELLA-1.2 main board have a jfet inverter on the 5V enable line,
-# so that the 5V doesn't come on at boot (outputs are all high at boot)
-inverted_5V_enable = False
 

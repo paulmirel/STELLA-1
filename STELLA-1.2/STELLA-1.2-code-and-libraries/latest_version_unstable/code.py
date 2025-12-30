@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.8.2"
+SOFTWARE_VERSION_NUMBER = "0.8.3"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -207,7 +207,7 @@ def main():
 
     enable_5V = digitalio.DigitalInOut( board.D10 )
     enable_5V.direction = digitalio.Direction.OUTPUT
-    enable_5V.value = False
+    enable_5V.value = True#False
 
     '''
     sense_5V = AnalogIn(board.A1)
@@ -238,7 +238,8 @@ def main():
     heat_page = pagem_heat.make_heat_page( instrument )
     lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument )
     start = time.monotonic()
-    if instrument.spectral_sensors_detected:
+
+    if False: #instrument.spectral_sensors_detected:
         light_page = pagem_light.make_light_page( instrument )
         exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:
@@ -275,14 +276,14 @@ def main():
     accumulator_cycles = 5
     loop_times = []
 
-    if False: #go to startup page
+    if True: #False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
     if False: #go to startup page
         instrument.active_page_number = instrument.pages_dict["Sensors"]
         sensors_page.choose_sensor( instrument.sensors_present[1] )
     if False:
         instrument.active_page_number = instrument.pages_dict["Heat"]
-    if instrument.spectral_sensors_detected:
+    if False: #instrument.spectral_sensors_detected:
         instrument.active_page_number = instrument.pages_dict["Light"]
 
     try:
@@ -323,7 +324,7 @@ def main():
                 sample_time = sample_stop_time - sample_start_time
                 #print( "sample_time, all sensors, s = ", round(sample_time,3))
                 instrument.update_active_page()
-                if instrument.active_page_number == instrument.pages_dict["Light"] or instrument.active_page_number == instrument.pages_dict["Lab_Spec"] :
+                if instrument.active_page_number == instrument.pages_dict["Light"]:
                     light_page.update_plot()
                 if instrument.vfs:
                         if instrument.take_burst:
@@ -449,7 +450,7 @@ class Instrument:
             elif active_page_name == "Lab_Spec":
                 self.pages_list[ self.pages_dict["Controls"] ].hide()
                 self.pages_list[ self.pages_dict["Lab_Spec"] ].show()
-                self.pages_list[ self.pages_dict["Light"] ].show()
+                #self.pages_list[ self.pages_dict["Light"] ].show()
             else:
                 self.pages_list[ self.active_page_number ].show()
             self.last_active_page_number = self.active_page_number
@@ -538,19 +539,8 @@ class Instrument:
             else:
                 controls_page.hide_all_selections()
                 active_page.update_selection()
-        if True:
-        #try:
-            if active_page == self.pages_list[ self.pages_dict["Lab_Spec"] ]:
-                self.pages_list[ self.pages_dict["Light"] ].update_values()
-                if False: #self.combined_page_selection < controls_page.selection_count:
-                    active_page.hide_all_selections()
-                    controls_page.update_selection()
-                else:
-                    pass
-                    #controls_page.hide_all_selections()
-                    #active_page.update_selection()
-            else:
-                self.pages_list[ self.active_page_number ].update_values()
+        else:
+            self.pages_list[ self.active_page_number ].update_values()
         #except Exception as err:
         #    print("values update failed: ", err)
 
