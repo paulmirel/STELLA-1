@@ -37,6 +37,70 @@ class Lab_Spec_Page( Page ):
         text_group.append(text_area)
         self.group.append(text_group)
 
+        second_row_y = 42
+        title_string = "lamp position      wavelength     set_current ON/OFF"
+        text_group = displayio.Group(scale=1, x=6, y=10+second_row_y)
+        text_area = label.Label(terminalio.FONT, text=title_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        test_string = "Backlight XXXnm  XXXmA OFF"
+        text_group = displayio.Group(scale=2, x=6, y=14+16+second_row_y)
+        text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        third_row_y = 42*2
+        title_string = "gain       int_time    current    status  write_data"
+        text_group = displayio.Group(scale=1, x=6, y=10+third_row_y)
+        text_area = label.Label(terminalio.FONT, text=title_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        test_string = "16x VVVVms XXXmA  OK WRITE"
+        text_group = displayio.Group(scale=2, x=6, y=14+16+third_row_y)
+        text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        fourth_row_y = 42*3
+        title_string = "ch  center_wavelength value   %DR         A/B"
+        text_group = displayio.Group(scale=1, x=6, y=10+fourth_row_y)
+        text_area = label.Label(terminalio.FONT, text=title_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        test_string = "A: VVVnm CCCCC XX%"
+        text_group = displayio.Group(scale=2, x=6, y=14+16+fourth_row_y)
+        text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        test_string = "B: VVVnm CCCCC XX%"
+        text_group = displayio.Group(scale=2, x=6, y=16*3+6+fourth_row_y)
+        text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        test_string = "0.398"
+        text_group = displayio.Group(scale=2, x=238, y=16*3-6+fourth_row_y)
+        text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        fifth_row_y = 42*4+16+6
+        title_string = "instruction             do/repeat   next_step   main"
+        text_group = displayio.Group(scale=1, x=6, y=10+fifth_row_y)
+        text_area = label.Label(terminalio.FONT, text=title_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
+        test_string = "instruction   DO  NEXT  MM"
+        text_group = displayio.Group(scale=2, x=6, y=14+16+fifth_row_y)
+        text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
+        text_group.append(text_area)
+        self.group.append(text_group)
+
 
         '''
         # gps

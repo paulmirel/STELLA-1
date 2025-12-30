@@ -207,7 +207,7 @@ def main():
 
     enable_5V = digitalio.DigitalInOut( board.D10 )
     enable_5V.direction = digitalio.Direction.OUTPUT
-    enable_5V.value = True#False
+    enable_5V.value = False
 
     '''
     sense_5V = AnalogIn(board.A1)
@@ -276,15 +276,16 @@ def main():
     accumulator_cycles = 5
     loop_times = []
 
-    if True: #False: #go to startup page
-        instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
-    if False: #go to startup page
-        instrument.active_page_number = instrument.pages_dict["Sensors"]
-        sensors_page.choose_sensor( instrument.sensors_present[1] )
-    if False:
-        instrument.active_page_number = instrument.pages_dict["Heat"]
-    if False: #instrument.spectral_sensors_detected:
-        instrument.active_page_number = instrument.pages_dict["Light"]
+    if True: #False: #non-menu startup page
+        if True: #False: #go to startup page
+            instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
+        if False: #go to startup page
+            instrument.active_page_number = instrument.pages_dict["Sensors"]
+            sensors_page.choose_sensor( instrument.sensors_present[1] )
+        if False:
+            instrument.active_page_number = instrument.pages_dict["Heat"]
+        if False: #instrument.spectral_sensors_detected:
+            instrument.active_page_number = instrument.pages_dict["Light"]
 
     try:
         if buzzer: buzzer.beep()
