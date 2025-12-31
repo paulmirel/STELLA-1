@@ -26,85 +26,140 @@ class Lab_Spec_Page( Page ):
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
         self.group.append( background )
 
-        start_x = 6
-        line1_y = 2
+        start_x = 1
+        line_y = 2
         select_width = 4
         border_width = 2
         height_1 = 14
         offset_1 = 6
-        height_2 = 28
+        height_2 = 32
         offset_2 = 6
         self.selectables = []
         self.value_areas = []
         self.text_areas = []
 
-        line1_names = ["year", "month", "day", "time UTC", "batch", "+=1"]
-        line1_values = ["YYYY", "MM", "DD", "HH:MM:SS", "XX", "B+"]
-        line1_selectable = [ False, False, False, False, False, True ]
-        line1_widths = [60, 34, 34, 108, 40, 34]
+        line_names = ["year", "month", "day", "time UTC", "batch", "+=1"]
+        line_values = ["YYYY", "MM", "DD", "HH:MM:SS", "XX", "B+"]
+        line_selectable = [ False, False, False, False, False, True ]
+        line_widths = [60, 34, 34, 108, 40, 34]
         x = start_x
-        for index in range(0, len(line1_names)):
+        for index in range(0, len(line_names)):
             #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
             #                                    height=height_1, x=x, y=line1_y)
             #self.group.append(area_rectangle)
-            text_group = displayio.Group(scale=1, x=x+offset_1, y=line1_y+int(height_1/2))
-            text_area = label.Label(terminalio.FONT, text=line1_names[index], color=self.palette[0])
+            text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
             text_group.append(text_area)
             self.group.append(text_group)
-            if line1_selectable[index]:
-                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line1_widths[index],
-                                                                    height=height_2, x=x, y=line1_y+height_1)
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=line_y+height_1)
+                selection_rectangle.hidden = True
                 self.group.append(selection_rectangle)
                 self.selectables.append(selection_rectangle)
 
-                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line1_widths[index]-2*(select_width-border_width),
-                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line1_y+height_1+select_width-border_width)
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
                 self.group.append(border_rectangle)
 
-                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line1_widths[index]-2*select_width,
-                                                            height=height_2-2*select_width, x=x+select_width, y=line1_y+height_1+select_width)
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line_y+height_1+select_width)
                 self.group.append(self.area_rectangle)
                 self.value_areas.append(self.area_rectangle)
 
-            text_group = displayio.Group(scale=2, x=x+offset_1, y=line1_y+height_1 +int(height_2/2))
-            self.text_area = label.Label(terminalio.FONT, text=line1_values[index], color=self.palette[0])
+            text_group = displayio.Group(scale=2, x=x+offset_1, y=line_y+height_1 +int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
             self.group.append(text_group)
 
-            x += line1_widths[index]
+            x += line_widths[index]
 
         self.value_areas[-1].color_index = 6
         self.text_areas[-1].color = self.palette[9]
 
 
+        line_y += 46
+        line_names = ["lamp position", "wavelength", "set_current", "ON/OFF" ]
+        line_values = ["backlight", "488nm", "1000mA", "OFF"]
+        line_selectable = [ True, True, True, True ]
+        line_widths = [118, 72, 84, 44]
+        x = start_x
+        for index in range(0, len(line_names)):
+            #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
+            #                                    height=height_1, x=x, y=line1_y)
+            #self.group.append(area_rectangle)
+            text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=line_y+height_1)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selectables.append(selection_rectangle)
+
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
+                self.group.append(border_rectangle)
+
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line_y+height_1+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+
+            text_group = displayio.Group(scale=2, x=x+offset_1, y=line_y+height_1 +int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+
+            x += line_widths[index]
+
+        line_y += 46
+        line_names = ["gain", "int_time", "current", "status", "data" ]
+        line_values = ["256", "999ms", "1000mA", "busy", "LOG"]
+        line_selectable = [ True, True, True, False, True ]
+        line_widths = [50, 74, 84, 60, 50]
+        x = start_x
+        for index in range(0, len(line_names)):
+            #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
+            #                                    height=height_1, x=x, y=line1_y)
+            #self.group.append(area_rectangle)
+            text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=line_y+height_1)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selectables.append(selection_rectangle)
+
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
+                self.group.append(border_rectangle)
+
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line_y+height_1+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+
+            text_group = displayio.Group(scale=2, x=x+offset_1, y=line_y+height_1 +int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+
+            x += line_widths[index]
+
+        self.value_areas[-1].color_index = 5
+
+
         '''
-        title_string = " year    month day       time UTC      batch  +=1"
-        text_group = displayio.Group(scale=1, x=12, y= 10)
-        text_area = label.Label(terminalio.FONT, text=title_string, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
 
-        test_string = "YYYY-MM-DD HH:MM:SS NN [+]"
-        text_group = displayio.Group(scale=2, x=6, y=14+16)
-        text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
-
-        second_row_y = 42
-        title_string = "lamp position      wavelength     set_current ON/OFF"
-        text_group = displayio.Group(scale=1, x=6, y=10+second_row_y)
-        text_area = label.Label(terminalio.FONT, text=title_string, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
-
-        test_string = "Backlight XXXnm  XXXmA OFF"
-        text_group = displayio.Group(scale=2, x=6, y=14+16+second_row_y)
-        text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
-
-        third_row_y = 42*2
         title_string = "gain       int_time    current    status  write_data"
         text_group = displayio.Group(scale=1, x=6, y=10+third_row_y)
         text_area = label.Label(terminalio.FONT, text=title_string, color=self.palette[0])
