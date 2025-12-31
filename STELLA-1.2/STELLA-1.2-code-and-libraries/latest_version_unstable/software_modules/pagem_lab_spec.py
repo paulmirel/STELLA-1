@@ -278,7 +278,16 @@ class Lab_Spec_Page( Page ):
         self.value_areas[-1].color_index = 0
         self.text_areas[-1].color = self.palette[9]
 
-        ## add ratio value
+        line_y = 140
+        line_values = ["00.00"]
+        x = 250
+        text_group = displayio.Group(scale=2, x=x+offset_1, y=line_y+height_1 +int(height_2/2))
+        self.text_area = label.Label(terminalio.FONT, text=line_values[0], color=self.palette[0])
+        self.text_areas.append(self.text_area)
+        text_group.append(self.text_area)
+        self.group.append(text_group)
+
+
 
         return self.group
 
