@@ -7,6 +7,7 @@ from adafruit_display_text import label
 import vectorio
 import terminalio
 from .classm_page import Page
+import time
 
 
 class Lab_Spec_Page( Page ):
@@ -25,6 +26,59 @@ class Lab_Spec_Page( Page ):
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
         self.group.append( background )
 
+        start_x = 6
+        line1_y = 2
+        select_width = 4
+        border_width = 2
+        height_1 = 14
+        offset_1 = 6
+        height_2 = 28
+        offset_2 = 6
+        self.selectables = []
+        self.value_areas = []
+        self.text_areas = []
+
+        line1_names = ["year", "month", "day", "time UTC", "batch", "+=1"]
+        line1_values = ["YYYY", "MM", "DD", "HH:MM:SS", "XX", "B+"]
+        line1_selectable = [ False, False, False, False, False, True ]
+        line1_widths = [60, 34, 34, 108, 40, 34]
+        x = start_x
+        for index in range(0, len(line1_names)):
+            #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
+            #                                    height=height_1, x=x, y=line1_y)
+            #self.group.append(area_rectangle)
+            text_group = displayio.Group(scale=1, x=x+offset_1, y=line1_y+int(height_1/2))
+            text_area = label.Label(terminalio.FONT, text=line1_names[index], color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
+            if line1_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line1_widths[index],
+                                                                    height=height_2, x=x, y=line1_y+height_1)
+                self.group.append(selection_rectangle)
+                self.selectables.append(selection_rectangle)
+
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line1_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line1_y+height_1+select_width-border_width)
+                self.group.append(border_rectangle)
+
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line1_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line1_y+height_1+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+
+            text_group = displayio.Group(scale=2, x=x+offset_1, y=line1_y+height_1 +int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line1_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+
+            x += line1_widths[index]
+
+        self.value_areas[-1].color_index = 6
+        self.text_areas[-1].color = self.palette[9]
+
+
+        '''
         title_string = " year    month day       time UTC      batch  +=1"
         text_group = displayio.Group(scale=1, x=12, y= 10)
         text_area = label.Label(terminalio.FONT, text=title_string, color=self.palette[0])
@@ -100,172 +154,8 @@ class Lab_Spec_Page( Page ):
         text_area = label.Label(terminalio.FONT, text=test_string, color=self.palette[0])
         text_group.append(text_area)
         self.group.append(text_group)
-
-
         '''
-        # gps
-        gps_select_x = offset - 1
-        gps_color_x = gps_select_x + select_width
-        gps_select_width = 44
-        self.gps_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=gps_select_width, height=select_height, x=gps_select_x, y=select_y)
-        self.group.append( self.gps_select )
-        self.selection_rectangles.append( self.gps_select )
-        self.gps_select.hidden = True
-        gps_control_width = gps_select_width - 2 * select_width
-        self.gps_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=gps_control_width, height=control_height, x=gps_color_x, y=control_y)
-        self.group.append( self.gps_color )
-        gps_text_x = gps_color_x + 3
-        gps_group = displayio.Group(scale=1, x=gps_text_x, y=text_y1+2)
 
-        gps_text = " "#lamp   wavelength  current  ON  tag  mode GO "
-
-        gps_text_area = label.Label(terminalio.FONT, text=gps_text, color=self.palette[0])
-        gps_group.append(gps_text_area)
-        self.group.append(gps_group)
-        gps_value_group = displayio.Group(scale=1, x=gps_text_x, y=text_y2)
-
-        gps_value_text = ""#excite  488nm   25mA  OFF t234057 single  GO"
-
-        self.gps_value_text_area = label.Label(terminalio.FONT, text=gps_value_text, color=self.palette[0])
-        gps_value_group.append(self.gps_value_text_area)
-        self.group.append(gps_value_group)
-        self.selection_count += 1
-        # batch
-        batch_select_x = 2*offset+gps_select_width-3
-        batch_color_x = batch_select_x + select_width
-        batch_select_width = 52
-        self.batch_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=batch_select_width, height=select_height, x=batch_select_x, y=select_y)
-        self.group.append( self.batch_select )
-        self.selection_rectangles.append( self.batch_select )
-        self.batch_select.hidden = True
-        batch_control_width = batch_select_width - 2 * select_width
-        batch_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=batch_control_width, height=control_height, x=batch_color_x, y=control_y)
-        self.group.append( batch_color )
-        self.batch_text_x = batch_color_x + 5
-        batch_group = displayio.Group(scale=1, x=self.batch_text_x+1, y=text_y1)
-        batch_text = " -- "
-        batch_text_area = label.Label(terminalio.FONT, text=batch_text, color=self.palette[9])
-        batch_group.append(batch_text_area)
-        self.group.append(batch_group)
-        self.batch_value_group = displayio.Group(scale=2, x=self.batch_text_x, y=text_y2)
-        batch_value_text = " - "
-        self.batch_value_text_area = label.Label(terminalio.FONT, text=batch_value_text, color=self.palette[9])
-        self.batch_value_group.append(self.batch_value_text_area)
-        self.group.append(self.batch_value_group)
-        self.selection_count += 1
-        # pause and record
-        pause_record_select_x = 2*offset+gps_select_width+batch_select_width+2
-        pause_record_x = pause_record_select_x + select_width
-        pause_record_select_width = select_height
-        self.pause_record_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=pause_record_select_width, height=select_height, x=pause_record_select_x, y=select_y)
-        self.group.append( self.pause_record_select )
-        self.selection_rectangles.append( self.pause_record_select )
-        pause_record_control_width = pause_record_select_width - 2 * select_width
-        pause_record_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=pause_record_control_width, height=control_height, x=pause_record_x, y=control_y)
-        self.group.append( pause_record_color )
-        pause_record_offset_x = 6
-        pause_record_y = 14
-        pause_base = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=26, height=26, x=pause_record_x+pause_record_offset_x, y=pause_record_y)
-        self.group.append( pause_base )
-        pause_split = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=8, height=26, x=pause_record_x+9+pause_record_offset_x, y=pause_record_y)
-        self.group.append( pause_split )
-        self.record_circle = vectorio.Circle( pixel_shader=self.palette, color_index=9, radius=18, x=pause_record_x+12+pause_record_offset_x, y=pause_record_y+13 )
-        self.group.append( self.record_circle )
-        #self.record_circle.hidden = True
-        self.pause_record_select.hidden = True
-        self.selection_count += 1
-        # burst
-        burst_select_x = pause_record_select_width + pause_record_x # - offset
-        burst_color_x = burst_select_x + select_width
-        burst_select_width = 44
-        self.burst_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=burst_select_width, height=select_height, x=burst_select_x, y=select_y)
-        self.group.append( self.burst_select )
-        self.selection_rectangles.append( self.burst_select )
-        self.burst_select.hidden = True
-        burst_control_width = burst_select_width - 2 * select_width
-        self.burst_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=burst_control_width, height=control_height, x=burst_color_x, y=control_y)
-        self.group.append( self.burst_color )
-        burst_text_x = burst_color_x + 6
-        burst_group = displayio.Group(scale=1, x=burst_text_x-2, y=text_y1)
-        burst_text = ""
-        burst_text_area = label.Label(terminalio.FONT, text=burst_text, color=self.palette[9])
-        burst_group.append(burst_text_area)
-        self.group.append(burst_group)
-        burst_value_group = displayio.Group(scale=2, x=burst_text_x+1, y=text_y2)
-        burst_value_text = ""
-        self.burst_value_text_area = label.Label(terminalio.FONT, text=burst_value_text, color=self.palette[9])
-        burst_value_group.append(self.burst_value_text_area)
-        self.group.append(burst_value_group)
-        self.selection_count += 1
-        # settings
-        settings_select_x = burst_select_width + burst_color_x - 2
-        settings_color_x = settings_select_x + select_width
-        settings_select_width = 58
-        self.settings_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=settings_select_width, height=select_height, x=settings_select_x, y=select_y)
-        self.group.append( self.settings_select )
-        self.selection_rectangles.append( self.settings_select )
-        self.settings_select.hidden = True
-        settings_control_width = settings_select_width - 2 * select_width
-        settings_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=settings_control_width, height=control_height, x=settings_color_x, y=control_y)
-        self.group.append( settings_color )
-        settings_text_x = settings_color_x + 3
-        settings_group = displayio.Group(scale=1, x=settings_text_x, y=text_y1)
-        settings_text = ""
-        settings_text_area = label.Label(terminalio.FONT, text=settings_text, color=self.palette[9])
-        settings_group.append(settings_text_area)
-        self.group.append(settings_group)
-        settings_value_group = displayio.Group(scale=1, x=settings_text_x, y=text_y2) #x=settings_text_x+3,
-        settings_value_text = ""
-        self.settings_value_text_area = label.Label(terminalio.FONT, text=settings_value_text, color=self.palette[9])
-        settings_value_group.append(self.settings_value_text_area)
-        self.group.append(settings_value_group)
-        self.selection_count += 1
-        # battery
-        battery_select_x = settings_select_width + settings_color_x - 2
-        battery_color_x = battery_select_x + select_width
-        battery_select_width = 56
-        self.battery_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=battery_select_width, height=select_height, x=battery_select_x, y=select_y)
-        self.group.append( self.battery_select )
-        self.selection_rectangles.append( self.battery_select )
-        self.battery_select.hidden = True
-        battery_control_width = battery_select_width - 2 * select_width
-        battery_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=battery_control_width, height=control_height, x=battery_color_x, y=control_y)
-        self.group.append( battery_color )
-        battery_text_x = battery_color_x + 6
-        battery_group = displayio.Group(scale=1, x=battery_text_x-2, y=text_y1)
-        battery_text = ""
-        battery_text_area = label.Label(terminalio.FONT, text=battery_text, color=self.palette[9])
-        battery_group.append(battery_text_area)
-        self.group.append(battery_group)
-        battery_value_group = displayio.Group(scale=2, x=battery_text_x+1, y=text_y2)
-        battery_value_text = ""
-        self.battery_value_text_area = label.Label(terminalio.FONT, text=battery_value_text, color=self.palette[9])
-        battery_value_group.append(self.battery_value_text_area)
-        self.group.append(battery_value_group)
-        self.selection_count += 1
-
-
-        top_text    = "lamp        color  current status mode      GO/STOP"
-        bottom_text = "excitation  488nm  1000mA  OFF    sequence  BUSY/DONE"
-
-
-        top_text    = "settings lamp   sequence_name  tag_number   GO/STOP"
-        bottom_text = " panel   ON/OFF adhjaoerub349  34958y2304   BUSY/DONE"
-
-
-        top_text_group = displayio.Group(scale=1, x=6, y=text_y1)
-
-        top_text_area = label.Label(terminalio.FONT, text=top_text, color=self.palette[0])
-        top_text_group.append(top_text_area)
-        self.group.append(top_text_group)
-
-
-        bottom_text_group = displayio.Group(scale=1, x=6, y=text_y2)
-
-        bottom_text_area = label.Label(terminalio.FONT, text=bottom_text, color=self.palette[0])
-        bottom_text_group.append(bottom_text_area)
-        self.group.append(bottom_text_group)
-    '''
         return self.group
 
     def update_selection( self ):
@@ -279,6 +169,14 @@ class Lab_Spec_Page( Page ):
 
 
     def update_values( self ):
+        if False:
+            while True:
+                time.sleep(1)
+                print( "hide" )
+                self.selectables[0].hidden = True
+                time.sleep(1)
+                print( "show" )
+                self.selectables[0].hidden = False
         pass
         '''
         if self.gps.fix():
