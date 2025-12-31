@@ -35,6 +35,14 @@ class Lab_Spec_Page( Page ):
         self.integration_time_index = []
         for sensor_index in range (0, self.number_of_sensors):
             self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
+        self.status_index = 0
+        self.status_list = [" OK", "busy", "fail", "noSD", "LowB"]
+        self.adc_sensor = False
+        for sensor in self.instrument.sensors_present:
+            if sensor.pn == "ads1015":
+                self.adc_sensor = sensor
+        self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
+        self.mmt_number = 0
     def make_group( self ):
         self.group = displayio.Group()
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
@@ -96,6 +104,7 @@ class Lab_Spec_Page( Page ):
             x += line_widths[index]
 
         #self.text_areas[-2].color = self.palette[6]
+        self.selection_rectangles[-1].hidden = False
         self.value_areas[-1].color_index = 12
         #self.text_areas[-1].color = self.palette[9]
 
@@ -355,6 +364,9 @@ class Lab_Spec_Page( Page ):
         self.text_areas[4].text = "{}".format(self.instrument.batch_number)
 
         self.spectral_sensors[self.active_sensor_index].read_counts_all()
+        self.adc_sensor.read()
+        lamp_currrent_voltage = self.adc_sensor.voltage[0]
+
         gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
         self.text_areas[10].text = "{}".format(gain)
         integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
@@ -363,6 +375,9 @@ class Lab_Spec_Page( Page ):
         else:
             self.text_areas[11].text = "{}s".format(round(integration_time_ms/1000,1))
 
+        self.text_areas[12].text = "{}mA".format(int(round(lamp_currrent_voltage*1000,1)))
+        self.text_areas[13].text = self.status_list[ self.status_index ]
+        self.text_areas[15].text = "M{:03}".format( self.mmt_number )
 
 
     def action( self ):
