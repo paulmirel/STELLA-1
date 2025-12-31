@@ -26,6 +26,7 @@ class Lab_Spec_Page( Page ):
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
         self.group.append( background )
 
+
         line_spacing = 43
         start_x = 1
         line_y = 0
@@ -39,10 +40,14 @@ class Lab_Spec_Page( Page ):
         self.value_areas = []
         self.text_areas = []
 
+        batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=12, width=48-2*select_width,
+                                                            height=height_2-2*select_width, x=242, y=line_y+height_1+select_width)
+        self.group.append(batch_highlight)
+
         line_names = ["year", "month", "day", "time UTC", "batch", "+=1"]
-        line_values = ["YYYY", "MM", "DD", "HH:MM:SS", "XX", "B+"]
+        line_values = ["YYYY-MM-DD", "", "", "HH:MM:SS", "XX", "B+"]
         line_selectable = [ False, False, False, False, False, True ]
-        line_widths = [60, 34, 34, 108, 40, 34]
+        line_widths = [62, 34, 34, 106, 48, 34]
         x = start_x
         for index in range(0, len(line_names)):
             #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
@@ -76,6 +81,7 @@ class Lab_Spec_Page( Page ):
 
             x += line_widths[index]
 
+        #self.text_areas[-2].color = self.palette[6]
         self.value_areas[-1].color_index = 6
         self.text_areas[-1].color = self.palette[9]
 
@@ -121,7 +127,7 @@ class Lab_Spec_Page( Page ):
         line_y += line_spacing
         line_names = ["gain", "int_time", "live_current", "status", "data" ]
         line_values = ["256", "999ms", "1000mA", "busy", "LOG"]
-        line_selectable = [ True, True, True, False, True ]
+        line_selectable = [ True, True, False, False, True ]
         line_widths = [50, 74, 84, 60, 50]
         x = start_x
         for index in range(0, len(line_names)):
@@ -275,8 +281,8 @@ class Lab_Spec_Page( Page ):
         self.value_areas[-3].color_index = 7
         self.text_areas[-3].color = self.palette[9]
         self.value_areas[-2].color_index = 32
-        self.value_areas[-1].color_index = 0
-        self.text_areas[-1].color = self.palette[9]
+        self.value_areas[-1].color_index = 15
+        #self.text_areas[-1].color = self.palette[9]
 
         line_y = 140
         line_values = ["00.00"]
@@ -300,76 +306,44 @@ class Lab_Spec_Page( Page ):
 
 
     def update_values( self ):
-        if False:
-            while True:
-                time.sleep(1)
-                print( "hide" )
-                self.selection_rectangles[0].hidden = True
-                time.sleep(1)
-                print( "show" )
-                self.selection_rectangles[0].hidden = False
-        pass
-        '''
-        if self.gps.fix():
-            self.gps_value_text_area.text = " FIX"
-            self.gps_color.color_index = 18
-        else:
-            self.gps_value_text_area.text = "nofix"
-            self.gps_color.color_index = 8
-        battery_level = int(self.battery_monitor.percentage)
-        if battery_level < 100:
-            battery_text = "{}%".format(battery_level)
-        else:
-            battery_text = "{}".format(battery_level)
-        self.battery_value_text_area.text =  battery_text
+        timenow = self.instrument.hardware_clock.read()
+        self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
+        self.text_areas[3].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
+        self.text_areas[4].text = "{}".format(self.instrument.batch_number)
 
-        if self.instrument.burst_counter < self.instrument.burst_count:
-            value =  self.instrument.burst_count - self.instrument.burst_counter
-            if value < 10:
-                self.burst_value_text_area.text = " {}".format(value)
-            else:
-                self.burst_value_text_area.text = "{}".format(value)
-        else:
-            self.burst_color.color_index = 16
-            if self.instrument.burst_count < 10:
-                self.burst_value_text_area.text = " {}".format(self.instrument.burst_count)
-            else:
-                self.burst_value_text_area.text = "{}".format(self.instrument.burst_count)
-        if self.instrument.record:
-            self.record_circle.hidden = False
-        else:
-            self.record_circle.hidden = True
-        self.batch_value_text_area.text = "{}".format(self.instrument.batch_number)
-        if self.instrument.batch_number < 10:
-            self.batch_value_group.x = self.batch_text_x+7
-        elif self.instrument.batch_number < 100:
-            self.batch_value_group.x = self.batch_text_x+5
-        else:
-            self.batch_value_group.x = self.batch_text_x-3
-        '''
+
 
     def action( self ):
-        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-        pass
-        '''
-        if False:#self.selection == 0:
-            self.instrument.active_page_number = self.instrument.pages_dict["Time"] #TBD send to page when it exists
-        if self.selection == 1:
+        if self.selection == 13:
+            self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+        if self.selection == 0:
             self.instrument.update_batch()
+        if self.selection == 1:
+            pass
         if self.selection == 2:
-            self.instrument.record = not self.instrument.record
+            pass
         if self.selection == 3:
-            self.instrument.take_burst = True
-            self.instrument.record = False
-            self.burst_color.color_index = 6
-        else:
-            self.burst_color.color_index = 16
-            self.instrument.take_burst = False
+            pass
         if self.selection == 4:
-            pass#self.instrument.active_page_number = self.instrument.pages_dict["Settings"]
+            pass
         if self.selection == 5:
-            self.instrument.active_page_number = self.instrument.pages_dict["Status"]
-        '''
+            pass
+        if self.selection == 6:
+            pass
+        if self.selection == 7:
+            pass
+        if self.selection == 8:
+            pass
+        if self.selection == 9:
+            pass
+        if self.selection == 10:
+            pass
+        if self.selection == 11:
+            pass
+        if self.selection == 12:
+            pass
+
+
 
 
 
