@@ -21,6 +21,20 @@ class Lab_Spec_Page( Page ):
         self.selection_count = 0
         self.selection_rectangles = []
         self.field_selected = False
+        self.chA_index = 0
+        self.chB_index = 1
+        self.spectral_sensors = self.instrument.spectral_sensors_present
+        self.active_sensor_index = 0
+        self.exposure_max_value = 65535
+        self.exposure_target_fraction_high = 0.9
+        self.exposure_target_fraction_low = 0.5
+        self.number_of_sensors = len( self.spectral_sensors )
+        self.gain_index = []
+        for sensor_index in range (0, self.number_of_sensors):
+            self.gain_index.append( self.spectral_sensors[sensor_index].gain_index )
+        self.integration_time_index = []
+        for sensor_index in range (0, self.number_of_sensors):
+            self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
     def make_group( self ):
         self.group = displayio.Group()
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
@@ -82,13 +96,13 @@ class Lab_Spec_Page( Page ):
             x += line_widths[index]
 
         #self.text_areas[-2].color = self.palette[6]
-        self.value_areas[-1].color_index = 6
-        self.text_areas[-1].color = self.palette[9]
+        self.value_areas[-1].color_index = 12
+        #self.text_areas[-1].color = self.palette[9]
 
 
         line_y += line_spacing
         line_names = ["lamp position", "wavelength", "set_current", "ON/OFF" ]
-        line_values = ["backlight", "488nm", "1000mA", "OFF"]
+        line_values = ["bottom", "488nm", "--mA", "OFF"]
         line_selectable = [ True, True, True, True ]
         line_widths = [118, 72, 84, 44]
         x = start_x
@@ -126,7 +140,7 @@ class Lab_Spec_Page( Page ):
 
         line_y += line_spacing
         line_names = ["gain", "int_time", "live_current", "status", "data" ]
-        line_values = ["256", "999ms", "1000mA", "busy", "LOG"]
+        line_values = [" --", "---ms", " --mA", " --", "LOG"]
         line_selectable = [ True, True, False, False, True ]
         line_widths = [50, 74, 84, 60, 50]
         x = start_x
@@ -184,7 +198,7 @@ class Lab_Spec_Page( Page ):
         self.value_areas.append(self.area_rectangle)
 
         text_group = displayio.Group(scale=2, x=mline_x+offset_2+2, y=mline_y+height_1 +int(height_2/2))
-        self.text_area = label.Label(terminalio.FONT, text="M999", color=self.palette[0])
+        self.text_area = label.Label(terminalio.FONT, text="M---", color=self.palette[0])
         self.text_areas.append(self.text_area)
         text_group.append(self.text_area)
         self.group.append(text_group)
@@ -193,7 +207,7 @@ class Lab_Spec_Page( Page ):
 
         line_y += line_spacing
         line_names = ["ch", "ctr_wavelength", "value_counts", " DR%", "" ]
-        line_values = ["A:", "1000nm", "65535", "99%", ""]
+        line_values = ["A:", " ---nm", " --", "--%", ""]
         line_selectable = [ False, True, False, False, False]
         line_widths = [30, 90, 80, 54, 50]
         x = start_x
@@ -231,7 +245,7 @@ class Lab_Spec_Page( Page ):
 
         line_y += line_spacing - 18
         line_names = ["ch", "ctr_wavelength", "value_counts", " DR%", "A/B" ]
-        line_values = ["B:", "1000nm", "65535", "99%", "00.00"]
+        line_values = ["B:", " ---nm", " --", "--%", " -- "]
         line_selectable = [ False, True, False, False, False]
         line_widths = [30, 90, 80, 48, 68]
         x = start_x
@@ -270,7 +284,7 @@ class Lab_Spec_Page( Page ):
 
         line_y += line_spacing
         line_names = ["instruction", "do/rep", "next_step", "main" ]
-        line_values = ["instruction", "DO", "NEXT", "MM"]
+        line_values = ["*instruction", "DO", "NEXT", "MM"]
         line_selectable = [ True, True, True, True ]
         line_widths = [186, 40, 58, 34]
         x = start_x
@@ -340,6 +354,15 @@ class Lab_Spec_Page( Page ):
         self.text_areas[3].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
         self.text_areas[4].text = "{}".format(self.instrument.batch_number)
 
+        self.spectral_sensors[self.active_sensor_index].read_counts_all()
+        gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
+        self.text_areas[10].text = "{}".format(gain)
+        integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
+        if integration_time_ms < 1000:
+            self.text_areas[11].text = "{}ms".format(integration_time_ms)
+        else:
+            self.text_areas[11].text = "{}s".format(round(integration_time_ms/1000,1))
+
 
 
     def action( self ):
@@ -348,29 +371,33 @@ class Lab_Spec_Page( Page ):
         if self.selection == 0:
             self.instrument.update_batch()
         if self.selection == 1:
-            pass
+            print( "enter to select from available lamps by position" )
         if self.selection == 2:
-            pass
+            print( "enter to select from available lamps by wavelength" )
         if self.selection == 3:
-            pass
+            print( "enter to set desired current" )
         if self.selection == 4:
-            pass
+            print( "toggle lamp on/off" )
         if self.selection == 5:
-            pass
+            print( "enter to set gain" )
+            self.gain_index[self.active_sensor_index] = (
+                                self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
+                                self.spectral_sensors[self.active_sensor_index].gain_list )
+            self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
         if self.selection == 6:
-            pass
+            print( "enter to select integration time" )
         if self.selection == 7:
-            pass
+            print( "write current values to file" )
         if self.selection == 8:
-            pass
+            print( "enter to select channel A" )
         if self.selection == 9:
-            pass
+            print( "enter to select channel B" )
         if self.selection == 10:
-            pass
+            print( "enter to select instruction" )
         if self.selection == 11:
-            pass
+            print( "execute measurement sequence" )
         if self.selection == 12:
-            pass
+            print( "advance to the next instruction" )
 
 
 

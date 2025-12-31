@@ -302,7 +302,10 @@ def main():
             controls_page.update_values()
             sample_start_time = time.monotonic()
             system_log = instrument.get_system_log()
-            if instrument.active_page_number == instrument.pages_dict["Sensors"]:
+            if instrument.active_page_number == instrument.pages_dict["Lab_Spec"]:
+                instrument.handle_inputs()
+                instrument.update_active_page()
+            elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
                 sensor = instrument.sensors_present[sensors_page.sensor_choice]
                 sensor.read()
                 instrument.handle_inputs()
