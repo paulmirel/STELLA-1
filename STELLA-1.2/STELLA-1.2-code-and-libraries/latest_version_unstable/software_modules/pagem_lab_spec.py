@@ -35,7 +35,7 @@ class Lab_Spec_Page( Page ):
         offset_1 = 6
         height_2 = 32
         offset_2 = 6
-        self.selectables = []
+        self.selection_rectangles = []
         self.value_areas = []
         self.text_areas = []
 
@@ -57,7 +57,7 @@ class Lab_Spec_Page( Page ):
                                                                     height=height_2, x=x, y=line_y+height_1)
                 selection_rectangle.hidden = True
                 self.group.append(selection_rectangle)
-                self.selectables.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
 
                 border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
                                                                     height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
@@ -99,7 +99,7 @@ class Lab_Spec_Page( Page ):
                                                                     height=height_2, x=x, y=line_y+height_1)
                 selection_rectangle.hidden = True
                 self.group.append(selection_rectangle)
-                self.selectables.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
 
                 border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
                                                                     height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
@@ -137,7 +137,7 @@ class Lab_Spec_Page( Page ):
                                                                     height=height_2, x=x, y=line_y+height_1)
                 selection_rectangle.hidden = True
                 self.group.append(selection_rectangle)
-                self.selectables.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
 
                 border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
                                                                     height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
@@ -177,7 +177,7 @@ class Lab_Spec_Page( Page ):
                                                                     height=height_2, x=x, y=line_y+height_1)
                 selection_rectangle.hidden = True
                 self.group.append(selection_rectangle)
-                self.selectables.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
 
                 border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
                                                                     height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
@@ -215,7 +215,7 @@ class Lab_Spec_Page( Page ):
                                                                     height=height_2, x=x, y=line_y+height_1)
                 selection_rectangle.hidden = True
                 self.group.append(selection_rectangle)
-                self.selectables.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
 
                 border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
                                                                     height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
@@ -253,7 +253,7 @@ class Lab_Spec_Page( Page ):
                                                                     height=height_2, x=x, y=line_y+height_1)
                 selection_rectangle.hidden = True
                 self.group.append(selection_rectangle)
-                self.selectables.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
 
                 border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
                                                                     height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
@@ -286,9 +286,7 @@ class Lab_Spec_Page( Page ):
         self.text_areas.append(self.text_area)
         text_group.append(self.text_area)
         self.group.append(text_group)
-
-
-
+        self.selection_count = len( self.selection_rectangles )
         return self.group
 
     def update_selection( self ):
@@ -306,10 +304,10 @@ class Lab_Spec_Page( Page ):
             while True:
                 time.sleep(1)
                 print( "hide" )
-                self.selectables[0].hidden = True
+                self.selection_rectangles[0].hidden = True
                 time.sleep(1)
                 print( "show" )
-                self.selectables[0].hidden = False
+                self.selection_rectangles[0].hidden = False
         pass
         '''
         if self.gps.fix():
