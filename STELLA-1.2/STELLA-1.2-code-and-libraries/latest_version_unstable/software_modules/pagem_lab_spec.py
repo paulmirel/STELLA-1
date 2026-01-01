@@ -41,7 +41,8 @@ class Lab_Spec_Page( Page ):
         for sensor in self.instrument.sensors_present:
             if sensor.pn == "ads1015":
                 self.adc_sensor = sensor
-        self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
+        if self.adc_sensor:
+            self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
     def make_group( self ):
         self.group = displayio.Group()
@@ -363,17 +364,20 @@ class Lab_Spec_Page( Page ):
         self.text_areas[3].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
         self.text_areas[4].text = "{}".format(self.instrument.batch_number)
 
-        self.spectral_sensors[self.active_sensor_index].read_counts_all()
-        self.adc_sensor.read()
-        lamp_currrent_voltage = self.adc_sensor.voltage[0]
-
-        gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
-        self.text_areas[10].text = "{}".format(gain)
-        integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
-        if integration_time_ms < 1000:
-            self.text_areas[11].text = "{}ms".format(integration_time_ms)
+        if self.adc_sensor:
+            self.adc_sensor.read()
+            lamp_currrent_voltage = self.adc_sensor.voltage[0]
         else:
-            self.text_areas[11].text = "{}s".format(round(integration_time_ms/1000,1))
+            lamp_currrent_voltage = 0
+        if len(self.spectral_sensors) >0:
+            self.spectral_sensors[self.active_sensor_index].read_counts_all()
+            gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
+            self.text_areas[10].text = "{}".format(gain)
+            integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
+            if integration_time_ms < 1000:
+                self.text_areas[11].text = "{}ms".format(integration_time_ms)
+            else:
+                self.text_areas[11].text = "{}s".format(round(integration_time_ms/1000,1))
 
         self.text_areas[12].text = "{}mA".format(int(round(lamp_currrent_voltage*1000,1)))
         self.text_areas[13].text = self.status_list[ self.status_index ]
