@@ -205,9 +205,9 @@ def main():
         sensor.make_spectral_channels()
     instrument.make_wavelength_bands_list()
 
-    enable_5V = digitalio.DigitalInOut( board.D10 )
-    enable_5V.direction = digitalio.Direction.OUTPUT
-    enable_5V.value = False
+    disable_5V = digitalio.DigitalInOut( board.D10 )
+    disable_5V.direction = digitalio.Direction.OUTPUT
+    disable_5V.value = True
 
     '''
     sense_5V = AnalogIn(board.A1)
