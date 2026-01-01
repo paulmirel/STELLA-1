@@ -21,11 +21,11 @@ class Lab_Spec_Page( Page ):
         self.selection_count = 0
         self.selection_rectangles = []
         self.field_selected = False
-        self.chA_index = 0
-        self.chB_index = 1
+        self.chA_index = 3
+        self.chB_index = 2
         self.spectral_sensors = self.instrument.spectral_sensors_present
         self.active_sensor_index = 0
-        self.exposure_max_value = 65535
+        self.max_counts = 65535
         self.exposure_target_fraction_high = 0.9
         self.exposure_target_fraction_low = 0.5
         self.number_of_sensors = len( self.spectral_sensors )
@@ -257,7 +257,7 @@ class Lab_Spec_Page( Page ):
         line_names = ["ch", "ctr_wavelength", "value_counts", " DR%", "A/B" ]
         line_values = ["B:", " ---nm", " --", "--%", " -- "]
         line_selectable = [ False, True, False, False, False]
-        line_widths = [30, 90, 80, 48, 68]
+        line_widths = [30, 90, 80, 56, 68]
         x = start_x
         for index in range(0, len(line_names)):
             #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
@@ -339,7 +339,7 @@ class Lab_Spec_Page( Page ):
         if True:
             ratio_y = 164
             ratio_text = "A/B"
-            ratio_x = 256
+            ratio_x = 266
             text_group = displayio.Group(scale=1, x=ratio_x, y=ratio_y)
             self.text_area = label.Label(terminalio.FONT, text=ratio_text, color=self.palette[0])
             self.text_areas.append(self.text_area)
@@ -382,7 +382,30 @@ class Lab_Spec_Page( Page ):
         self.text_areas[12].text = "{}mA".format(int(round(lamp_currrent_voltage*1000,1)))
         self.text_areas[13].text = self.status_list[ self.status_index ]
         self.text_areas[15].text = "M{:03}".format( self.mmt_number )
-
+        self.text_areas[17].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chA_index])
+        chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
+        chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
+        self.text_areas[18].text = "{}".format(chA_counts)
+        chA_pdr = 100*chA_counts/self.max_counts
+        if chA_pdr < 10:
+            self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
+        else:
+            self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
+        self.text_areas[22].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chB_index])
+        self.text_areas[23].text = "{}".format(chB_counts)
+        chB_pdr = 100*chB_counts/self.max_counts
+        if chB_pdr < 10:
+            self.text_areas[24].text = "{}%".format(round(chB_pdr,1))
+        else:
+            self.text_areas[24].text = "{}%".format(int(round(chB_pdr,0)))
+        if chB_counts>0:
+            ratio_ab = chA_counts/ chB_counts
+        else:
+            ratio_ab = 0
+        if ratio_ab < 10:
+            self.text_areas[25].text = "{}".format(round(ratio_ab,1))
+        else:
+            self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
 
     def action( self ):
         if self.selection == 13:
