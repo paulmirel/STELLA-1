@@ -216,10 +216,10 @@ class Lab_Spec_Page( Page ):
 
 
         line_y += line_spacing
-        line_names = ["ch", "ctr_wavelength", "value_counts", " DR%", "" ]
+        line_names = ["ch", "ctr_wavelength", "value_counts", "DR%", "" ]
         line_values = ["A:", " ---nm", " --", "--%", ""]
         line_selectable = [ False, True, False, False, False]
-        line_widths = [30, 90, 80, 54, 50]
+        line_widths = [30, 90, 76, 60, 50]
         x = start_x
         for index in range(0, len(line_names)):
             #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
@@ -257,7 +257,7 @@ class Lab_Spec_Page( Page ):
         line_names = ["ch", "ctr_wavelength", "value_counts", " DR%", "A/B" ]
         line_values = ["B:", " ---nm", " --", "--%", " -- "]
         line_selectable = [ False, True, False, False, False]
-        line_widths = [30, 90, 80, 56, 68]
+        line_widths = [30, 90, 76, 60, 68]
         x = start_x
         for index in range(0, len(line_names)):
             #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
@@ -385,14 +385,14 @@ class Lab_Spec_Page( Page ):
         self.text_areas[17].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chA_index])
         chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
         chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
-        self.text_areas[18].text = "{}".format(chA_counts)
+        self.text_areas[18].text = "{:05}".format(chA_counts)
         chA_pdr = 100*chA_counts/self.max_counts
         if chA_pdr < 10:
             self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
         else:
             self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
         self.text_areas[22].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chB_index])
-        self.text_areas[23].text = "{}".format(chB_counts)
+        self.text_areas[23].text = "{:05}".format(chB_counts)
         chB_pdr = 100*chB_counts/self.max_counts
         if chB_pdr < 10:
             self.text_areas[24].text = "{}%".format(round(chB_pdr,1))
