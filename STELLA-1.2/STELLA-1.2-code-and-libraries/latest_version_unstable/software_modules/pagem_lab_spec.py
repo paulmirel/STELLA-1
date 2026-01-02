@@ -38,12 +38,17 @@ class Lab_Spec_Page( Page ):
         self.status_index = 0
         self.status_list = [" OK", "busy", "fail", "noSD", "LowB"]
         self.adc_sensor = False
+        self.supply_5V = False
+        self.supply_5V_on = False
         for sensor in self.instrument.sensors_present:
             if sensor.pn == "ads1015":
                 self.adc_sensor = sensor
+            if sensor.name == "supply_5V":
+                self.supply_5V = sensor
         if self.adc_sensor:
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
+
     def make_group( self ):
         self.group = displayio.Group()
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
@@ -363,12 +368,20 @@ class Lab_Spec_Page( Page ):
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[3].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
         self.text_areas[4].text = "{}".format(self.instrument.batch_number)
-
+        if self.supply_5V_on:
+            self.text_areas[9].text = "ON"
+            self.value_areas[4].color_index = 4
+        else:
+            self.text_areas[9].text = "OFF"
+            self.value_areas[4].color_index = 9
         if self.adc_sensor:
             self.adc_sensor.read()
             lamp_currrent_voltage = self.adc_sensor.voltage[0]
         else:
             lamp_currrent_voltage = 0
+        self.text_areas[12].text = "{}mA".format(int(round(lamp_currrent_voltage*1000,1)))
+        self.text_areas[13].text = self.status_list[ self.status_index ]
+        self.text_areas[15].text = "M{:03}".format( self.mmt_number )
         if len(self.spectral_sensors) >0:
             self.spectral_sensors[self.active_sensor_index].read_counts_all()
             gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
@@ -379,33 +392,33 @@ class Lab_Spec_Page( Page ):
             else:
                 self.text_areas[11].text = "{}s".format(round(integration_time_ms/1000,1))
 
-        self.text_areas[12].text = "{}mA".format(int(round(lamp_currrent_voltage*1000,1)))
-        self.text_areas[13].text = self.status_list[ self.status_index ]
-        self.text_areas[15].text = "M{:03}".format( self.mmt_number )
-        self.text_areas[17].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chA_index])
-        chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
-        chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
-        self.text_areas[18].text = "{:05}".format(chA_counts)
-        chA_pdr = 100*chA_counts/self.max_counts
-        if chA_pdr < 10:
-            self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
-        else:
-            self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
-        self.text_areas[22].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chB_index])
-        self.text_areas[23].text = "{:05}".format(chB_counts)
-        chB_pdr = 100*chB_counts/self.max_counts
-        if chB_pdr < 10:
-            self.text_areas[24].text = "{}%".format(round(chB_pdr,1))
-        else:
-            self.text_areas[24].text = "{}%".format(int(round(chB_pdr,0)))
-        if chB_counts>0:
-            ratio_ab = chA_counts/ chB_counts
-        else:
-            ratio_ab = 0
-        if ratio_ab < 10:
-            self.text_areas[25].text = "{}".format(round(ratio_ab,1))
-        else:
-            self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
+            self.text_areas[17].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chA_index])
+            chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
+            chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
+            self.text_areas[18].text = "{:05}".format(chA_counts)
+            chA_pdr = 100*chA_counts/self.max_counts
+            if chA_pdr < 10:
+                self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
+            else:
+                self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
+            self.text_areas[22].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chB_index])
+            self.text_areas[23].text = "{:05}".format(chB_counts)
+            chB_pdr = 100*chB_counts/self.max_counts
+            if chB_pdr < 10:
+                self.text_areas[24].text = "{}%".format(round(chB_pdr,1))
+            else:
+                self.text_areas[24].text = "{}%".format(int(round(chB_pdr,0)))
+            if chB_counts>0:
+                ratio_ab = chA_counts/ chB_counts
+            else:
+                ratio_ab = 0
+            if ratio_ab < 10:
+                self.text_areas[25].text = "{}".format(round(ratio_ab,1))
+            else:
+                self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
+
+
+
 
     def action( self ):
         if self.selection == 13:
@@ -419,7 +432,12 @@ class Lab_Spec_Page( Page ):
         if self.selection == 3:
             print( "enter to set desired current" )
         if self.selection == 4:
-            print( "toggle lamp on/off" )
+            self.supply_5V_on = not self.supply_5V_on
+            if self.supply_5V_on:
+                self.supply_5V.enable()
+            else:
+                self.supply_5V.disable()
+
         if self.selection == 5:
             print( "enter to set gain" )
             self.gain_index[self.active_sensor_index] = (

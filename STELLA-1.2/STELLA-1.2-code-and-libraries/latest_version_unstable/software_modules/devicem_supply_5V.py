@@ -23,7 +23,7 @@ class Supply_5V( Device ):
         super().__init__(name = "supply_5V", pn = "tps61023")
         self.enable_5V = digitalio.DigitalInOut( board.D10 )
         self.enable_5V.direction = digitalio.Direction.OUTPUT
-        self.enable_5V.value = True
+        self.enable_5V.value = False
         self.voltage = 0
         self.pin = AnalogIn(board.A1)
     def read(self):

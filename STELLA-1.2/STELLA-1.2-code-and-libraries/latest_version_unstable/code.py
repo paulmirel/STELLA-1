@@ -112,19 +112,6 @@ def main():
 
     supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
 
-    while True:
-        print()
-        supply_5V.enable()
-        time.sleep(6)
-        supply_5V.read()
-        print( supply_5V.counts )
-        print( supply_5V.voltage )
-        supply_5V.disable()
-        time.sleep(8)
-        supply_5V.read()
-        print( supply_5V.counts )
-        print( supply_5V.voltage )
-
 
 
 
