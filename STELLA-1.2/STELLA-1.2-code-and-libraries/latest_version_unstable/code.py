@@ -67,6 +67,7 @@ print( devices_present_hex )
 # 0x5a mlx90614 Thermal infrared remote surface thermometer
 # 0x61 scd30    CO2 sensor, NDIR: nondispersive infrared absorption, with temperature and humidity sensors
 # 0x62 scd4x    CO2 sensor, thermo-acoustic: pulsed infrared resonant heating and microphone, with temperature and humidity sensors
+# 0x64 mcp4728  quad DAC, 12 bits, command with 16 bit numbers (0-65535)
 # 0x6a lis3mdl  Magnetic field sensor
 # 0x74 as7331   Ultraviolet spectral sensor
 # 0x77 bme280   Barometric pressure sensor, with temperature and humidity sensors
@@ -82,7 +83,7 @@ from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
 from software_modules import pagem_settings, pagem_sensors, pagem_lab_spec
 from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air, pagem_time_place
-from software_modules import devicem_supply_5V
+from software_modules import devicem_supply_5V, devicem_mcp4728
 
 def main():
 
@@ -170,6 +171,8 @@ def main():
     if ('0x53') in devices_present_hex:
         from software_modules import devicem_ltr390
         ltr390_uva_sensor = devicem_ltr390.initialize_ltr390_uva_sensor( instrument )
+    if ('0x64') in devices_present_hex:
+        mcp4728_quad_dac = devicem_mcp4728.initialize_mcp4728_quad_dac( instrument )
     if ('0x1f') in devices_present_hex:
         from software_modules import devicem_mcp9808  ### close a0, a1, a2 address jumpers on board
         mcp9808_air_thermometer = devicem_mcp9808.initialize_mcp9808_air_thermometer( instrument )
@@ -237,7 +240,7 @@ def main():
     lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument )
     start = time.monotonic()
 
-    if False: #instrument.spectral_sensors_detected:
+    if False:#instrument.spectral_sensors_detected:
         light_page = pagem_light.make_light_page( instrument )
         exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:

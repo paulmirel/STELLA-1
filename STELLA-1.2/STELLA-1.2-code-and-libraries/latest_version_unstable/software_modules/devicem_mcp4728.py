@@ -1,49 +1,43 @@
-# pcf8591 module
+# mcp4728 module
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
-import adafruit_pcf8591.pcf8591 as PCF8591
-from adafruit_pcf8591.analog_in import AnalogIn as PCF8591_AnalogIn
-from adafruit_pcf8591.analog_out import AnalogOut as PCF8591_AnalogOut
+import adafruit_mcp4728
 from .classm_device import Device
 
-def initialize_pcf8591_8_bit_adc_dac( instrument ):
-    pcf8591_8_bit_adc_dac = Null_pcf8591_8_Bit_ADC_DAC()
+MCP4728_DEFAULT_ADDRESS = 0x60
+MCP4728A4_DEFAULT_ADDRESS = 0x64
+
+def initialize_mcp4728_quad_dac( instrument ):
+    mcp4728_quad_dac = Null_MCP4728_Quad_DAC()
     try:
-        pcf8591_8_bit_adc_dac = pcf8591_8_Bit_ADC_DAC( instrument.i2c_bus )
-        instrument.welcome_page.announce( "initialize_pcf8591_8_bit_adc_dac" )
-        instrument.sensors_present.append( pcf8591_8_bit_adc_dac )
+        mcp4728_quad_dac = MCP4728_Quad_DAC( instrument )
+        instrument.welcome_page.announce( "initialize_mcp4728_quad_dac" )
+        instrument.sensors_present.append( mcp4728_quad_dac )
     except Exception as err:
         pass
-    return pcf8591_8_bit_adc_dac
+    return mcp4728_quad_dac
 
-class pcf8591_8_Bit_ADC_DAC( Device ):
-    def __init__( self, com_bus ):
-        super().__init__(name = "adc_dac_8_bits", pn = "pcf8591", address = 0x4f, swob = PCF8591.PCF8591( com_bus, address = 0x4f ))
-        self.raw_0 = None
-        self.raw_1 = None
-        self.raw_2 = None
-        self.raw_3 = None
-        self.voltage_0 = None
-        self.voltage_1 = None
-        self.voltage_2 = None
-        self.voltage_3 = None
-        self.output_value = 0
-        self.parameters = [ "output_counts", "ch0_counts", "ch0_volts", "ch1_counts", "ch1_volts","ch2_counts", "ch2_volts","ch3_counts", "ch3_volts"]
-        self.values = [0,0,0,0,0,0,0,0,0]
+class MCP4728_Quad_DAC( Device ):
+    def __init__( self, instrument ):
+        super().__init__(name = "quad_dac_12_bits", pn = "mcp4728", address = 0x64, swob = adafruit_mcp4728.MCP4728(instrument.i2c_bus, adafruit_mcp4728.MCP4728A4_DEFAULT_ADDRESS))
+        self.instrument = instrument
+        self.swob.channel_a.value = 0
+        self.swob.channel_b.value = 0
+        self.swob.channel_c.value = 0
+        self.swob.channel_d.value = 0
     def read(self):
-        self.raw_0 = PCF8591_AnalogIn(self.swob, PCF8591.A0).value >> 8
-        self.raw_1 = PCF8591_AnalogIn(self.swob, PCF8591.A1).value >> 8
-        self.raw_2 = PCF8591_AnalogIn(self.swob, PCF8591.A2).value >> 8
-        self.raw_3 = PCF8591_AnalogIn(self.swob, PCF8591.A3).value >> 8
-        self.voltage_0 = round((self.raw_0/ 256) * 3.3,2)
-        self.voltage_1 = round((self.raw_1/ 256) * 3.3,2)
-        self.voltage_2 = round((self.raw_2/ 256) * 3.3,2)
-        self.voltage_3 = round((self.raw_3/ 256) * 3.3,2)
-        self.values = [ self.output_value, self.raw_0, self.voltage_0, self.raw_1, self.voltage_1, self.raw_2, self.voltage_2, self.raw_3, self.voltage_3 ]
-    def set(self, output_value):
-        self.output_value = output_value
-        PCF8591_AnalogOut(self.swob, PCF8591.OUT).value = self.output_value #32767 max
+        pass
+    def set(self, channel, output_value):
+        if channel == "a":
+            self.swob.channel_a.value = output_value
+        if channel == "b":
+            self.swob.channel_b.value = output_value
+        if channel == "c":
+            self.swob.channel_c.value = output_value
+        if channel == "d":
+            self.swob.channel_d.value = output_value
+
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
@@ -52,7 +46,7 @@ class pcf8591_8_Bit_ADC_DAC( Device ):
     def printlog(self):
         print( self.log())
 
-class Null_pcf8591_8_Bit_ADC_DAC(Device):
+class Null_MCP4728_Quad_DAC(Device):
     def __init__( self ):
         super().__init__(name = None, swob = None)
     def read(self):

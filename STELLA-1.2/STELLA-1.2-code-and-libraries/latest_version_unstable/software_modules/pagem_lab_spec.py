@@ -40,14 +40,19 @@ class Lab_Spec_Page( Page ):
         self.adc_sensor = False
         self.supply_5V = False
         self.supply_5V_on = False
+        self.dac = False
         for sensor in self.instrument.sensors_present:
             if sensor.pn == "ads1015":
                 self.adc_sensor = sensor
             if sensor.name == "supply_5V":
                 self.supply_5V = sensor
+            if sensor.pn == "mcp4728":
+                self.dac = sensor
         if self.adc_sensor:
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
+        self.dac_values = [0,0,0,0]
+
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -417,8 +422,24 @@ class Lab_Spec_Page( Page ):
             else:
                 self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
 
-
-
+            if False:
+                self.supply_5V.enable()
+                #print("enter a DAC setting from 0 to 65535:")
+                print("enter a desired current setting from 0 to 600 mA:")
+                input_string = False
+                while input_string == False:
+                    input_string = input().strip()
+                if input_string is not None:
+                    desired_current_mA = int( input_string )
+                    xdc = desired_current_mA
+                    #set_value = int((desired_current_mA + 263)/0.0209)
+                    A = 0.0002
+                    B = -0.0944
+                    C = 47.24
+                    D = 13179
+                    set_value = int( A*xdc**3 + B*xdc**2 + C*xdc + D)
+                    print(set_value, desired_current_mA)
+                    self.dac.set("a", set_value)
 
     def action( self ):
         if self.selection == 13:
