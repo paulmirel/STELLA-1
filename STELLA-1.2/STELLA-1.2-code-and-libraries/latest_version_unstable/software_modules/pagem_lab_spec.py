@@ -153,7 +153,6 @@ class Lab_Spec_Page( Page ):
                 if self.selection == 3:
                     self.lamp_current_index = ( self.lamp_current_index + self.instrument.encoder_increment) % len(self.lamp_current_options)
                 if self.selection == 5:
-                    print("select gain")
                     self.gain_index[self.active_sensor_index] = (
                                                                 self.gain_index[self.active_sensor_index] +
                                                                 self.instrument.encoder_increment ) % len(
@@ -161,7 +160,13 @@ class Lab_Spec_Page( Page ):
                                                                 )
                     self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
                 if self.selection == 6:
-                    print("select integration time")
+                    self.integration_time_index[self.active_sensor_index] = (
+                                                                self.integration_time_index[self.active_sensor_index] +
+                                                                self.instrument.encoder_increment ) % len(
+                                                                self.spectral_sensors[self.active_sensor_index].integration_time_ms_list
+                                                                            )
+                    self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
+
                 if self.selection == 8:
                     self.chA_index = ( self.chA_index + self.instrument.encoder_increment) % self.number_of_channels
                 if self.selection == 9:
