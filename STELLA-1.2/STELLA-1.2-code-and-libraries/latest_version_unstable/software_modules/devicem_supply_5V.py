@@ -27,8 +27,8 @@ class Supply_5V( Device ):
         self.voltage = 0
         self.pin = AnalogIn(board.A1)
     def read(self):
-        field_cal_slope = 0.8167
-        field_cal_offset = 0.0065
+        field_cal_slope = 1
+        field_cal_offset = 0.000
         self.counts = self.pin.value
         self.voltage = round((2 * (self.counts * 3.3) / 65536)*field_cal_slope-field_cal_offset,2)
     def enable(self):
