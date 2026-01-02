@@ -21,8 +21,11 @@ class Lab_Spec_Page( Page ):
         self.selection_count = 0
         self.selection_rectangles = []
         self.field_selected = False
+        self.field_selected_color_index = 5
+        self.field_not_selected_color_index = 9
         self.chA_index = 3
         self.chB_index = 2
+        self.number_of_channels = 8 #TBD len( self.adc_sensor.wavelength_bands_nm ) for active sensor
         self.spectral_sensors = self.instrument.spectral_sensors_present
         self.active_sensor_index = 0
         self.max_counts = 65535
@@ -52,7 +55,205 @@ class Lab_Spec_Page( Page ):
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
         self.dac_values = [0,0,0,0]
+        self.lamp_current_index = 0
+        self.lamp_current_options = [0,1,3,5,7,9,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,150,200,250,300,350,400,450,500,550,600]
 
+
+    def update_values( self ):
+        timenow = self.instrument.hardware_clock.read()
+        self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
+        self.text_areas[3].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
+        self.text_areas[4].text = "{}".format(self.instrument.batch_number)
+        if self.supply_5V_on:
+            self.text_areas[9].text = "ON"
+            self.value_areas[4].color_index = 4
+        else:
+            self.text_areas[9].text = "OFF"
+            self.value_areas[4].color_index = 9
+        if self.adc_sensor:
+            self.adc_sensor.read()
+            lamp_currrent_voltage = self.adc_sensor.voltage[0]
+        else:
+            lamp_currrent_voltage = 0
+        self.text_areas[12].text = "{}mA".format(int(round(lamp_currrent_voltage*1000,1)))
+        self.text_areas[13].text = self.status_list[ self.status_index ]
+        self.text_areas[15].text = "M{:03}".format( self.mmt_number )
+        if len(self.spectral_sensors) >0:
+            self.spectral_sensors[self.active_sensor_index].read_counts_all()
+            gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
+            self.text_areas[10].text = "{}".format(gain)
+            integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
+            if integration_time_ms < 1000:
+                self.text_areas[11].text = "{}ms".format(integration_time_ms)
+            else:
+                self.text_areas[11].text = "{}s".format(round(integration_time_ms/1000,1))
+
+            self.text_areas[17].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chA_index])
+            chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
+            chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
+            self.text_areas[18].text = "{:05}".format(chA_counts)
+            chA_pdr = 100*chA_counts/self.max_counts
+            if chA_pdr < 10:
+                self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
+            else:
+                self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
+            self.text_areas[22].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chB_index])
+            self.text_areas[23].text = "{:05}".format(chB_counts)
+            chB_pdr = 100*chB_counts/self.max_counts
+            if chB_pdr < 10:
+                self.text_areas[24].text = "{}%".format(round(chB_pdr,1))
+            else:
+                self.text_areas[24].text = "{}%".format(int(round(chB_pdr,0)))
+            if chB_counts>0:
+                ratio_ab = chA_counts/ chB_counts
+            else:
+                ratio_ab = 0
+            if ratio_ab < 10:
+                self.text_areas[25].text = "{}".format(round(ratio_ab,1))
+            else:
+                self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
+
+            if False:
+                self.supply_5V.enable()
+                #print("enter a DAC setting from 0 to 65535:")
+                print("enter a desired current setting from 0 to 600 mA:")
+                input_string = False
+                while input_string == False:
+                    input_string = input().strip()
+                if input_string is not None:
+                    desired_current_mA = int( input_string )
+                    xdc = desired_current_mA
+                    #set_value = int((desired_current_mA + 263)/0.0209)
+                    A = 0.0002
+                    B = -0.0944
+                    C = 47.24
+                    D = 13179
+                    set_value = int( A*xdc**3 + B*xdc**2 + C*xdc + D)
+                    print(set_value, desired_current_mA)
+                    self.dac.set("a", set_value)
+
+            xdc = self.lamp_current_options[ self.lamp_current_index ]
+            A = 0.0002
+            B = -0.0944
+            C = 47.24
+            D = 13179
+            set_value = int( A*xdc**3 + B*xdc**2 + C*xdc + D)
+            self.dac.set("a", set_value)
+            self.text_areas[8].text = "~{}mA".format(xdc)
+
+
+
+    def action( self ):
+        if self.instrument.encoder_increment != 0:
+            if self.field_selected:
+                if self.selection == 1:
+                    print("choose from lamp positions")
+                if self.selection == 2:
+                    print("choose lamp by wavelength")
+                if self.selection == 3:
+                    self.lamp_current_index = ( self.lamp_current_index + self.instrument.encoder_increment) % len(self.lamp_current_options)
+                if self.selection == 5:
+                    print("select gain")
+                    self.gain_index[self.active_sensor_index] = (
+                                                                self.gain_index[self.active_sensor_index] +
+                                                                self.instrument.encoder_increment ) % len(
+                                                                self.spectral_sensors[self.active_sensor_index].gain_list
+                                                                )
+                    self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+                if self.selection == 6:
+                    print("select integration time")
+                if self.selection == 8:
+                    self.chA_index = ( self.chA_index + self.instrument.encoder_increment) % self.number_of_channels
+                if self.selection == 9:
+                    self.chB_index = ( self.chB_index + self.instrument.encoder_increment) % self.number_of_channels
+                if self.selection == 11:
+                    print("select instruction from list")
+                    #self.spectral_register.scale_index = (self.spectral_register.scale_index + self.instrument.encoder_increment) % len(self.spectral_register.scale_choices)
+
+            self.instrument.encoder_increment = 0
+            self.update_values()
+
+
+        if self.instrument.button_pressed:
+            if self.selection == 13:
+                self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+            elif self.selection == 0:
+                self.instrument.update_batch()
+            elif self.selection == 4:
+                self.supply_5V_on = not self.supply_5V_on
+                if self.supply_5V_on:
+                    self.supply_5V.enable()
+                else:
+                    self.supply_5V.disable()
+            elif self.selection == 11:
+                print( "execute measurement sequence" )
+            elif self.selection == 12:
+                print( "advance to the next instruction" )
+            elif self.selection == 7:
+                    print( "write current values to file" )
+            else:
+                self.field_selected = not self.field_selected
+                if self.selection == 1:
+                    if self.field_selected:
+                        self.value_areas[1].color_index = self.field_selected_color_index
+                        print( "enter to select from available lamps by position" )
+                    else:
+                        self.value_areas[1].color_index = self.field_not_selected_color_index
+                if self.selection == 2:
+                    print( "enter to select from available lamps by wavelength" )
+                    if self.field_selected:
+                        self.value_areas[2].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[2].color_index = self.field_not_selected_color_index
+
+                if self.selection == 3:
+                    print( "enter to set desired current" )
+                    if self.field_selected:
+                        self.value_areas[3].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[3].color_index = self.field_not_selected_color_index
+
+
+                if self.selection == 5:
+                    print( "enter to set gain" )
+                    if self.field_selected:
+                        self.value_areas[5].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[5].color_index = self.field_not_selected_color_index
+                    if False:
+                        self.gain_index[self.active_sensor_index] = (
+                                            self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
+                                            self.spectral_sensors[self.active_sensor_index].gain_list )
+                        self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+                if self.selection == 6:
+                    print( "enter to select integration time" )
+                    if self.field_selected:
+                        self.value_areas[6].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[6].color_index = self.field_not_selected_color_index
+
+                if self.selection == 8:
+                    print( "enter to select channel A" )
+                    if self.field_selected:
+                        self.value_areas[9].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[9].color_index = self.field_not_selected_color_index
+
+                if self.selection == 9:
+                    print( "enter to select channel B" )
+                    if self.field_selected:
+                        self.value_areas[10].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[10].color_index = self.field_not_selected_color_index
+
+                if self.selection == 10:
+                    print( "enter to select instruction" )
+                    if self.field_selected:
+                        self.value_areas[11].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[11].color_index = self.field_not_selected_color_index
+            self.instrument.button_pressed = False
+            self.update_values()
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -368,117 +569,9 @@ class Lab_Spec_Page( Page ):
                 item.hidden = True
 
 
-    def update_values( self ):
-        timenow = self.instrument.hardware_clock.read()
-        self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
-        self.text_areas[3].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
-        self.text_areas[4].text = "{}".format(self.instrument.batch_number)
-        if self.supply_5V_on:
-            self.text_areas[9].text = "ON"
-            self.value_areas[4].color_index = 4
-        else:
-            self.text_areas[9].text = "OFF"
-            self.value_areas[4].color_index = 9
-        if self.adc_sensor:
-            self.adc_sensor.read()
-            lamp_currrent_voltage = self.adc_sensor.voltage[0]
-        else:
-            lamp_currrent_voltage = 0
-        self.text_areas[12].text = "{}mA".format(int(round(lamp_currrent_voltage*1000,1)))
-        self.text_areas[13].text = self.status_list[ self.status_index ]
-        self.text_areas[15].text = "M{:03}".format( self.mmt_number )
-        if len(self.spectral_sensors) >0:
-            self.spectral_sensors[self.active_sensor_index].read_counts_all()
-            gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
-            self.text_areas[10].text = "{}".format(gain)
-            integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
-            if integration_time_ms < 1000:
-                self.text_areas[11].text = "{}ms".format(integration_time_ms)
-            else:
-                self.text_areas[11].text = "{}s".format(round(integration_time_ms/1000,1))
 
-            self.text_areas[17].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chA_index])
-            chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
-            chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
-            self.text_areas[18].text = "{:05}".format(chA_counts)
-            chA_pdr = 100*chA_counts/self.max_counts
-            if chA_pdr < 10:
-                self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
-            else:
-                self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
-            self.text_areas[22].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chB_index])
-            self.text_areas[23].text = "{:05}".format(chB_counts)
-            chB_pdr = 100*chB_counts/self.max_counts
-            if chB_pdr < 10:
-                self.text_areas[24].text = "{}%".format(round(chB_pdr,1))
-            else:
-                self.text_areas[24].text = "{}%".format(int(round(chB_pdr,0)))
-            if chB_counts>0:
-                ratio_ab = chA_counts/ chB_counts
-            else:
-                ratio_ab = 0
-            if ratio_ab < 10:
-                self.text_areas[25].text = "{}".format(round(ratio_ab,1))
-            else:
-                self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
 
-            if False:
-                self.supply_5V.enable()
-                #print("enter a DAC setting from 0 to 65535:")
-                print("enter a desired current setting from 0 to 600 mA:")
-                input_string = False
-                while input_string == False:
-                    input_string = input().strip()
-                if input_string is not None:
-                    desired_current_mA = int( input_string )
-                    xdc = desired_current_mA
-                    #set_value = int((desired_current_mA + 263)/0.0209)
-                    A = 0.0002
-                    B = -0.0944
-                    C = 47.24
-                    D = 13179
-                    set_value = int( A*xdc**3 + B*xdc**2 + C*xdc + D)
-                    print(set_value, desired_current_mA)
-                    self.dac.set("a", set_value)
 
-    def action( self ):
-        if self.selection == 13:
-            self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-        if self.selection == 0:
-            self.instrument.update_batch()
-        if self.selection == 1:
-            print( "enter to select from available lamps by position" )
-        if self.selection == 2:
-            print( "enter to select from available lamps by wavelength" )
-        if self.selection == 3:
-            print( "enter to set desired current" )
-        if self.selection == 4:
-            self.supply_5V_on = not self.supply_5V_on
-            if self.supply_5V_on:
-                self.supply_5V.enable()
-            else:
-                self.supply_5V.disable()
-
-        if self.selection == 5:
-            print( "enter to set gain" )
-            self.gain_index[self.active_sensor_index] = (
-                                self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
-                                self.spectral_sensors[self.active_sensor_index].gain_list )
-            self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
-        if self.selection == 6:
-            print( "enter to select integration time" )
-        if self.selection == 7:
-            print( "write current values to file" )
-        if self.selection == 8:
-            print( "enter to select channel A" )
-        if self.selection == 9:
-            print( "enter to select channel B" )
-        if self.selection == 10:
-            print( "enter to select instruction" )
-        if self.selection == 11:
-            print( "execute measurement sequence" )
-        if self.selection == 12:
-            print( "advance to the next instruction" )
 
 
 
