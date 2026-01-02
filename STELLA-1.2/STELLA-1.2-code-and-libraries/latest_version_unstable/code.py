@@ -82,7 +82,7 @@ from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
 from software_modules import pagem_settings, pagem_sensors, pagem_lab_spec
 from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air, pagem_time_place
-
+from software_modules import devicem_supply_5V
 
 def main():
 
@@ -109,6 +109,24 @@ def main():
     instrument = create_instrument( i2c_bus, spi_bus, gps_uart_bus, UID, buzzer )
     instrument.vfs = vfs
     instrument.welcome_page.show()
+
+    supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
+
+    while True:
+        print()
+        supply_5V.enable()
+        time.sleep(6)
+        supply_5V.read()
+        print( supply_5V.counts )
+        print( supply_5V.voltage )
+        supply_5V.disable()
+        time.sleep(8)
+        supply_5V.read()
+        print( supply_5V.counts )
+        print( supply_5V.voltage )
+
+
+
 
 
     instrument.spectral_sensors_detected = False
@@ -205,20 +223,13 @@ def main():
         sensor.make_spectral_channels()
     instrument.make_wavelength_bands_list()
 
-    disable_5V = digitalio.DigitalInOut( board.D10 )
-    disable_5V.direction = digitalio.Direction.OUTPUT
-    disable_5V.value = True
 
     '''
-    sense_5V = AnalogIn(board.A1)
     analog_in_0 = AnalogIn(board.A0)
     if mlx90614_surface_thermometer.pn and as7265x_spectrometer.pn:
         lv_ez_mb1013_rangefinder = initialize_lv_ez_mb1013_rangefinder( instrument, analog_in_0, sense_5V )
     else:
         lv_ez_mb1013_rangefinder = False
-    #plus_5v_supply = False #TBD make a device object with digital out and analog in, check it for rising and falling
-
-    # plus_5v_supply.enable(), .read(), .log(), .disable()
     '''
     gc.collect()
     mem_free_after_devices = gc.mem_free()
@@ -643,9 +654,6 @@ def initialize_uart( txpin, rxpin ):
 
 def read_analog_in( pin ):
     ain_counts = pin.value
-
-def read_5V_supply( pin ):
-    voltage = 2 * (pin.value * 3.3) / 65536
 
 def flash_indicator( lamp ):
     flash_count = 4
