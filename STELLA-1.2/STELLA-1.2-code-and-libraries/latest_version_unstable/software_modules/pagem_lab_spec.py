@@ -39,7 +39,7 @@ class Lab_Spec_Page( Page ):
         for sensor_index in range (0, self.number_of_sensors):
             self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
         self.status_index = 0
-        self.status_list = [" OK", "busy", "fail", "noSD", "LowB"]
+        self.status_list = [" OK", "busy", "FAIL", "NoSD", "LowB"]
         self.adc_sensor = False
         self.supply_5V = False
         self.supply_5V_on = False
@@ -55,9 +55,12 @@ class Lab_Spec_Page( Page ):
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
         self.dac_values = [0,0,0,0]
-        self.lamp_current_index = 0
+        self.lamp_current_index = 10
         self.lamp_current_options = [0,1,3,5,7,9,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,150,200,250,300,350,400,450,500,550,600]
-
+        self.file_write_request = False
+        self.parameters = ["measurement_number"]
+        self.values = ["M000"]
+        self.log = []
 
     def update_values( self ):
         timenow = self.instrument.hardware_clock.read()
@@ -140,7 +143,11 @@ class Lab_Spec_Page( Page ):
             set_value = int( A*xdc**3 + B*xdc**2 + C*xdc + D)
             self.dac.set("a", set_value)
             self.text_areas[8].text = "~{}mA".format(xdc)
-
+            self.log = []
+            self.log.append ("lab_spec")
+            for index in range (0, len(self.parameters)):
+                self.log.append(self.parameters[index])
+                self.log.append(self.values[index])
 
 
     def action( self ):
@@ -195,7 +202,11 @@ class Lab_Spec_Page( Page ):
             elif self.selection == 12:
                 print( "advance to the next instruction" )
             elif self.selection == 7:
-                    print( "write current values to file" )
+                print( "write current values to file" )
+                self.mmt_number += 1
+                self.values[0] = "M{:03}".format(self.mmt_number)
+                self.file_write_request = True
+
             else:
                 self.field_selected = not self.field_selected
                 if self.selection == 1:

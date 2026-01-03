@@ -295,6 +295,7 @@ def main():
             functionm_file.update_filename( instrument )
         else:
             onboard_neopixel.fill(devicem_neopixel.RED)
+            lab_spec_page.status_index = 3
         instrument.check_inputs()
         while operational:
             loop_start = time.monotonic()
@@ -306,6 +307,20 @@ def main():
             if instrument.active_page_number == instrument.pages_dict["Lab_Spec"]:
                 instrument.handle_inputs()
                 instrument.update_active_page()
+                if lab_spec_page.file_write_request:
+                    if instrument.vfs:
+                        print("if labspec page requests, write file w additional info from labspec")
+                        onboard_neopixel.fill(devicem_neopixel.GREEN)
+                        functionm_file.write_line( instrument, system_log, lab_spec_page.log )
+                        for sensor in instrument.sensors_present:
+                            functionm_file.write_line( instrument, system_log, sensor.log() )
+                            instrument.handle_inputs()
+                            onboard_neopixel.fill(devicem_neopixel.OFF)
+                            instrument.measurement_counter += 1
+                    else:
+                        lab_spec_page.status_index = 3
+                        print("failed to write to file")
+                    lab_spec_page.file_write_request = False
             elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
                 sensor = instrument.sensors_present[sensors_page.sensor_choice]
                 sensor.read()

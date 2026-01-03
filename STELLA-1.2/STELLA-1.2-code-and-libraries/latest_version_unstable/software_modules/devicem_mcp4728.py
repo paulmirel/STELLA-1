@@ -26,17 +26,23 @@ class MCP4728_Quad_DAC( Device ):
         self.swob.channel_b.value = 0
         self.swob.channel_c.value = 0
         self.swob.channel_d.value = 0
+        self.parameters = ["chA_setting", "chB_setting", "chC_setting", "chD_setting"]
+        self.values = [0,0,0,0]
     def read(self):
         pass
     def set(self, channel, output_value):
         if channel == "a":
             self.swob.channel_a.value = output_value
+            self.values[0] = output_value
         if channel == "b":
             self.swob.channel_b.value = output_value
+            self.values[1] = output_value
         if channel == "c":
             self.swob.channel_c.value = output_value
+            self.values[2] = output_value
         if channel == "d":
             self.swob.channel_d.value = output_value
+            self.values[3] = output_value
 
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
