@@ -1,12 +1,57 @@
-SOFTWARE_VERSION_NUMBER = "0.0.1"
+SOFTWARE_VERSION_NUMBER = "0.0.2"
 DEVICE_TYPE = "STELLA-Appetizer"
-# NASA open source software license
+# copyright NASA under MIT open source software license
+# author Paul Mirel
 
+# hardware:
+# Adafruit QTpy RP2040
+# SparkFun Qwiic LED stick
+# Adafruit Gamepad
+# 2x qwiic/stemma-qt cables
+
+# import libraries needed for the program to interact with the hardware
 import board
 import time
 import qwiic_led_stick
 from micropython import const
 from adafruit_seesaw.seesaw import Seesaw
+
+# Define the main function in the software
+def main():
+    time.sleep(0.1)
+# Set up the software resources
+
+# Set up the LED stick
+
+# Run a test pattern on the LED stick to demonstrate that the LEDs are working
+
+# Set up the gamepad buttons
+
+# Start a program loop
+
+# Check for button presses
+
+# Check for joystick movements
+
+# Decide what to do given the button presses and joystick movements
+
+# Make changes to the color and brightness of the LEDs according to the decisions
+
+# Wait for a short amount of time so that the program can be stopped by a ctrl-c in the REPL dialogue. (Read, Evaluate, Print Loop)
+
+# Below here, define all the other functions we need to make the main function simpler and easier to read and understand
+
+# After all the function definitions, we can run the main function
+main()
+
+
+
+'''
+
+
+
+
+
 
 i2c_bus = board.STEMMA_I2C()
 
@@ -110,3 +155,4 @@ def led_stick_self_test( stick ):
 
 main()
 
+'''
