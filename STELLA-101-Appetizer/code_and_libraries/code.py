@@ -32,11 +32,80 @@ def main():
 
     i2c_bus = board.STEMMA_I2C()
 
+    # 2. Tell the software that the LED stick is likely to be connected, and complain if the software doesn't find it on the bus.
+    try:
+        led_stick = qwiic_led_stick.QwiicLEDStick()
+        led_stick.begin()
+        print( "led_stick found and started up" )
+    except Exception as error:
+        led_stick = False
+        print( "Can't find the led_stick, because: {}".format( error ))
 
 
-    # Set up the LED stick
+    # 3. If the led_stick is on the bus, do some actions:
+    if led_stick:
+        # make a note for us of how many lamp positions there are on the stick
+        number_of_lamps = 10
+        # set the brightness to half of maximum, because it's super bright, and because if you set all the leds to maximum brightness,
+        # the led_stick trys to draw more current than the bus can supply, causing the bus voltage to drop, resulting in poor or
+        # non-functional communications between the microcontroller and the led_stick
+        led_stick.set_all_LED_brightness(15) # minimum brightness of 0 (off), maximum of 31 (draws too much current).
 
-    # Run a basic manual test pattern on the LED stick to demonstrate that the LEDs are working
+        # Turn all the lamps off, if they were somehow left on by the last run of some software.
+        led_stick.LED_off()
+        # wait a tenth of a second for the led_stick to consider the command to turn all the lamps off
+        time.sleep(0.1)
+        # then send "all-lamps-off" command a second time, because when the led_stick first starts up, it can sometimes be a bit confused.
+        led_stick.LED_off()
+
+        # Flash all the lamps to clear the led_stick internal communications from its chip to the lamp units.
+        for count in range (0, 3):
+            print( "flash count {}".format(count))
+            led_stick.set_all_LED_color(10, 10, 10)
+            time.sleep(1)
+            led_stick.LED_off()
+            time.sleep(1)
+        print()
+
+        # Run a basic test pattern on the LED stick to demonstrate that the three LEDs in each lamp unit are working.
+        wait_seconds = 0.25
+        # test the red led in each lamp
+        for lamp_index in range (0, number_of_lamps):
+            print( "testing red for lamp number: {}".format( lamp_index ))
+            # set the color of a single lamp unit. The format for this command is ( lamp_number, red_value, green_value, blue_value )
+            # the value minimum is 0, off, and the value maximum is 255 (much too bright, even at a half_brightness setting overall
+            led_stick.set_single_LED_color( lamp_index, 25, 0, 0 )
+            time.sleep( wait_seconds )
+        # turn them all off, one at a time
+        for lamp_index in range (0, number_of_lamps):
+            led_stick.set_single_LED_color( lamp_index, 0, 0, 0 )
+            time.sleep( wait_seconds )
+        print()
+
+        # test the green led in each lamp
+        for lamp_index in range (0, number_of_lamps):
+            print( "testing green for lamp number: {}".format( lamp_index ))
+            led_stick.set_single_LED_color( lamp_index, 0, 25, 0 )
+            time.sleep( wait_seconds )
+        # turn them all off, one at a time, in reverse order
+        for lamp_index in range (0, number_of_lamps):
+            temporary_index = number_of_lamps - lamp_index - 1
+            led_stick.set_single_LED_color( temporary_index, 0, 0, 0 )
+            time.sleep( wait_seconds )
+        print()
+
+        # test the blue led in each lamp
+        for lamp_index in range (0, number_of_lamps):
+            print( "testing blue for lamp number: {}".format( lamp_index ))
+            led_stick.set_single_LED_color( lamp_index, 0, 0, 25 )
+            time.sleep( wait_seconds )
+        # turn them all off, one at a time, starting with the middle lamp
+        for lamp_index in range (0, number_of_lamps):
+            temporary_index = ( 5 + lamp_index ) % number_of_lamps  # the % symbol acts as the modulo operator. Learn more here:
+                                                                    # https://www.geeksforgeeks.org/python/what-is-a-modulo-operator-in-python/
+            led_stick.set_single_LED_color( temporary_index, 0, 0, 0 )
+            time.sleep( wait_seconds )
+        print()
 
     # Run a custom test pattern in which you can set the colors and timing and number of repetitions
     for repetition in range ( 0, 10 ):
@@ -91,14 +160,7 @@ button_mask = const(
 gamepad = Seesaw(i2c_bus, addr=0x50)
 gamepad.pin_mode_bulk(button_mask, gamepad.INPUT_PULLUP)
 
-length = 10
-stick = qwiic_led_stick
-stick.change_length(length)
-stick.set_LED_color(0,0,0)
-time.sleep(0.1)
-stick.set_LED_color(0,0,0) # run the first command a second time, the first received command is incomplete
-time.sleep(0.1)
-print( "initialized" )
+
 
 # Probably too bright
 stick.set_LED_brightness(5) # all
