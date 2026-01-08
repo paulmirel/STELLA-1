@@ -3,6 +3,9 @@ DEVICE_TYPE = "STELLA-Appetizer"
 # copyright NASA under MIT open source software license
 # author Paul Mirel
 
+## link to STELLA project webpage:
+## https://science.gsfc.nasa.gov/stella/
+
 # hardware:
 # Adafruit QTpy RP2040
 # SparkFun Qwiic LED stick
@@ -16,28 +19,43 @@ import qwiic_led_stick
 from micropython import const
 from adafruit_seesaw.seesaw import Seesaw
 
-# Define the main function in the software
+# Define the main function of the software
 def main():
-    time.sleep(0.1)
-# Set up the software resources
+    # Set up the software resources:
 
-# Set up the LED stick
+    # 1. Start the Integrated circuit to Integrated circuit Communications system, the IIC bus, to allow the three devices
+    # (the QTpy microcontroller, the gamepad buttons, and the LED stick) to talk to each other over the four-wire cables.
+    # IIC is also called I squared C because I * I is I squared, and because "eye-squared-see" is easier to say than "eye-eye-see".
+    # We write it as I2C because writing "squared" in symbols confuses the CircuitPython interpreter.
+    # (i**2 gives the value of i squared, and i^2 gives the "bitwise exlusive or" of the value of i and the value 2.)
+    # Learn more about the i2c bus and how it works, here: https://www.ti.com/lit/an/sbaa565/sbaa565.pdf
 
-# Run a test pattern on the LED stick to demonstrate that the LEDs are working
+    i2c_bus = board.STEMMA_I2C()
 
-# Set up the gamepad buttons
 
-# Start a program loop
 
-# Check for button presses
+    # Set up the LED stick
 
-# Check for joystick movements
+    # Run a basic manual test pattern on the LED stick to demonstrate that the LEDs are working
 
-# Decide what to do given the button presses and joystick movements
+    # Run a custom test pattern in which you can set the colors and timing and number of repetitions
+    for repetition in range ( 0, 10 ):
+        print( "repetition number {}".format( repetition ))
+        time.sleep(0.5)
 
-# Make changes to the color and brightness of the LEDs according to the decisions
+    # Set up the gamepad buttons
 
-# Wait for a short amount of time so that the program can be stopped by a ctrl-c in the REPL dialogue. (Read, Evaluate, Print Loop)
+    # Start a program loop
+
+    # Check for button presses
+
+    # Check for joystick movements
+
+    # Decide what to do given the button presses and joystick movements
+
+    # Make changes to the color and brightness of the LEDs according to the decisions
+
+    # Wait for a short amount of time so that the program can be stopped by a ctrl-c in the REPL dialogue. (Read, Evaluate, Print Loop)
 
 # Below here, define all the other functions we need to make the main function simpler and easier to read and understand
 
@@ -53,7 +71,7 @@ main()
 
 
 
-i2c_bus = board.STEMMA_I2C()
+
 
 BUTTON_X = const(6)
 BUTTON_Y = const(2)
