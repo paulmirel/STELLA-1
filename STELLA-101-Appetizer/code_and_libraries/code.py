@@ -40,7 +40,6 @@ def main():
     # We write it as I2C because writing "squared" in symbols confuses the CircuitPython interpreter.
     # (i**2 gives the value of i squared, and i^2 gives the "bitwise exlusive or" of the value of i and the value 2.)
     # Learn more about the i2c bus and how it works, here: https://www.ti.com/lit/an/sbaa565/sbaa565.pdf
-
     i2c_bus = board.STEMMA_I2C()
 
     # 2. Tell the software that the LED stick is likely to be connected, and complain if the software doesn't find it on the bus.
@@ -141,9 +140,55 @@ def main():
 
     # Start a program loop
     buttons_last_pressed = [ False, False, False, False, False, False ]
+    button_x_event = False
+    button_y_event = False
+    button_a_event = False
+    button_b_event = False
+    button_select_event = False
+    button_start_event = False
+    brightness_limit = 20
+    newly_selected_lamp = []
+    red_value = []
+    green_value = []
+    blue_value = []
+    brightness = []
+    for lamp_index in range (0, number_of_lamps):
+        newly_selected_lamp.append(True)
+        red_value.append( 0 )
+        green_value.append( 0 )
+        blue_value.append( 0 )
+        brightness.append( 15 )
+    active_lamp_index = 0
+    active_lamp_on = True
+    newly_selected_lamp_color_value = 4
+    flash_interval_seconds = 0.5
+    interval_start_time = time.monotonic()
     operational = True
     while operational:
-        # Check for button presses
+        # if we haven't set this lamp before:
+        if newly_selected_lamp[ active_lamp_index ]:
+            red_value[active_lamp_index] = newly_selected_lamp_color_value
+            green_value[active_lamp_index] = newly_selected_lamp_color_value
+            blue_value[active_lamp_index] = newly_selected_lamp_color_value
+            newly_selected_lamp[ active_lamp_index ] = False
+        # if the lamp values are all 0:
+        elif False: #red_value[active_lamp_index] < 1 and green_value[active_lamp_index] < 1 and blue_value[active_lamp_index] < 1:
+            red_value[active_lamp_index] = newly_selected_lamp_color_value
+            green_value[active_lamp_index] = newly_selected_lamp_color_value
+            blue_value[active_lamp_index] = newly_selected_lamp_color_value
+
+        led_stick.set_single_LED_color( active_lamp_index, red_value[active_lamp_index], green_value[active_lamp_index], blue_value[active_lamp_index])
+
+        if active_lamp_on:
+            led_stick.set_single_LED_brightness( active_lamp_index, brightness[ active_lamp_index ] )
+        else:
+            led_stick.set_single_LED_brightness( active_lamp_index, 0 )
+
+        if time.monotonic() > interval_start_time + flash_interval_seconds:
+            active_lamp_on = not active_lamp_on
+            interval_start_time = time.monotonic()
+
+        # Check for button events (a button pressed when it wasn't already being pressed is an event)
         buttons_pressed = check_buttons( gamepad )
         if buttons_pressed[0] and not buttons_last_pressed[ 0 ]:
             button_x_event = True
@@ -163,12 +208,34 @@ def main():
         if buttons_pressed[5] and not buttons_last_pressed[ 5 ]:
             button_start_event = True
             print( "button start event" )
-
         buttons_last_pressed = buttons_pressed
 
         # Check for joystick movements
 
-        # Decide what to do given the button presses and joystick movements
+        # Decide what to do given the button presses and joystick movements, then clear the event flags
+        if button_x_event:
+            print("do the x thing, make the active lamp brighter")
+            brightness[ active_lamp_index ] = ( brightness[ active_lamp_index ] + 1) % brightness_limit
+            button_x_event = False
+        if button_b_event:
+            print("do the b thing, make the active lamp less bright")
+            brightness[ active_lamp_index ] = ( brightness[ active_lamp_index ] - 1) % brightness_limit
+            button_b_event = False
+        if button_a_event:
+            print("do the a thing, add one to the active lamp index")
+            active_lamp_index = (active_lamp_index + 1) % number_of_lamps
+            button_a_event = False
+        if button_y_event:
+            print("do the y thing, subtract one from the active lamp index")
+            active_lamp_index = (active_lamp_index - 1) % number_of_lamps
+            button_y_event = False
+        if button_select_event:
+            print("do the select thing")
+            button_select_event = False
+        if button_start_event:
+            print("do the start thing")
+            button_start_event = False
+
 
         # Make changes to the color and brightness of the LEDs according to the decisions
 

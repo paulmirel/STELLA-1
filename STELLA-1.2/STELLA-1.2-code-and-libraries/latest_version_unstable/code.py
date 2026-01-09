@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.8.3"
+SOFTWARE_VERSION_NUMBER = "0.8.4"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -228,6 +228,21 @@ def main():
     print( "memory usage by device objects = {} kB = {} %".format(( mem_free_after_imports - mem_free_after_devices)/1000,
                                 round(100 * ( mem_free_after_imports - mem_free_after_devices)/1000/start_mem_free_kB, 1)))
 
+    remote_sensing_spectral = False
+    if instrument.spectral_sensors_detected:
+        remote_sensing_spectral = True
+
+    remote_sensing_thermal = False
+    lab_spec_dac = False
+    lab_spec_vis = False
+    for sensor in instrument.sensors_present:
+        if sensor.pn == "mlx90614":
+            remote_sensing_thermal = True
+        if sensor.pn == "as7341":
+            lab_spec_vis = True
+        if sensor.pn == "mcp4728":
+            lab_spec_dac = True
+
 
     controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
@@ -240,7 +255,7 @@ def main():
     lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument )
     start = time.monotonic()
 
-    if False:#instrument.spectral_sensors_detected:
+    if instrument.spectral_sensors_detected:
         light_page = pagem_light.make_light_page( instrument )
         exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:
@@ -277,16 +292,16 @@ def main():
     accumulator_cycles = 5
     loop_times = []
 
-    if True: #False: #non-menu startup page
-        if True: #False: #go to startup page
-            instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
-        if False: #go to startup page
-            instrument.active_page_number = instrument.pages_dict["Sensors"]
-            sensors_page.choose_sensor( instrument.sensors_present[1] )
-        if False:
-            instrument.active_page_number = instrument.pages_dict["Heat"]
-        if False: #instrument.spectral_sensors_detected:
-            instrument.active_page_number = instrument.pages_dict["Light"]
+    if remote_sensing_spectral and remote_sensing_thermal:
+        instrument.active_page_number = instrument.pages_dict["Light"]
+    if lab_spec_dac and lab_spec_vis:
+        instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
+    if False: #go to startup page
+        instrument.active_page_number = instrument.pages_dict["Sensors"]
+        sensors_page.choose_sensor( instrument.sensors_present[1] )
+    if False:
+        instrument.active_page_number = instrument.pages_dict["Heat"]
+
 
     try:
         if buzzer: buzzer.beep()
