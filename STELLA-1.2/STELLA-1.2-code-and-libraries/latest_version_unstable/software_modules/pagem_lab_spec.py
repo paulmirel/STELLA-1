@@ -168,41 +168,12 @@ class Lab_Spec_Page( Page ):
             x += line_widths[index]
         self.value_areas[-2].color_index = 12
         self.value_areas[-1].color_index = 5
-        '''
-        self.value_areas[-1].color_index = 5
-        #measurement number
-        mline_y = line_y + height_2 - 2
-        mline_x = 258
-        mwidth = 62
-        if False:
-            selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
-                                                                    height=height_2, x=mline_x, y=mline_y+height_1)
-            selection_rectangle.hidden = True
-            self.group.append(selection_rectangle)
-            self.selection_rectangles.append(selection_rectangle)
-
-            border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=mwidth-2*(select_width-border_width),
-                                                            height=height_2-2*(select_width-border_width), x=mline_x+select_width-border_width, y=mline_y+height_1+select_width-border_width)
-            self.group.append(border_rectangle)
-
-        self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=5, width=mwidth-2*select_width,
-                                                    height=height_2-2*select_width, x=mline_x+select_width, y=mline_y+height_1+select_width)
-        self.group.append(self.area_rectangle)
-        self.value_areas.append(self.area_rectangle)
-
-        text_group = displayio.Group(scale=2, x=mline_x+offset_2+2, y=mline_y+height_1 +int(height_2/2))
-        self.text_area = label.Label(terminalio.FONT, text="M---", color=self.palette[0])
-        self.text_areas.append(self.text_area)
-        text_group.append(self.text_area)
-        self.group.append(text_group)
-
-
 
         line_y += line_spacing
-        line_names = ["ch", "ctr_wavelength", "value_counts", "DR%", "" ]
-        line_values = ["A:", " ---nm", " --", "--%", ""]
-        line_selectable = [ False, True, False, False, False]
-        line_widths = [30, 90, 76, 60, 50]
+        line_names = ["gain", "mmt#", "A value", "B value", "A/B", "%DR" ]
+        line_values = ["265", "", "", "", "", ""]
+        line_selectable = [ True, False, False, False, False, False, False]
+        line_widths = [74, 46, 66, 66, 38, 30 ]
         x = start_x
         for index in range(0, len(line_names)):
             #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
@@ -228,7 +199,7 @@ class Lab_Spec_Page( Page ):
                 self.group.append(self.area_rectangle)
                 self.value_areas.append(self.area_rectangle)
 
-            text_group = displayio.Group(scale=2, x=x+offset_1, y=line_y+height_1 +int(height_2/2))
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+height_1 +int(height_2/2))
             self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
@@ -236,20 +207,20 @@ class Lab_Spec_Page( Page ):
 
             x += line_widths[index]
 
-        line_y += line_spacing - 18
-        line_names = ["ch", "ctr_wavelength", "value_counts", " DR%", "A/B" ]
-        line_values = ["B:", " ---nm", " --", "--%", " -- "]
-        line_selectable = [ False, True, False, False, False]
-        line_widths = [30, 90, 76, 60, 68]
+        line_y += line_spacing
+        line_names = ["integration" ]
+        line_values = ["800ms"]
+        line_selectable = [ True]
+        line_widths = [74]
         x = start_x
         for index in range(0, len(line_names)):
             #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
             #                                    height=height_1, x=x, y=line1_y)
             #self.group.append(area_rectangle)
-            #text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
-            #text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
-            #text_group.append(text_area)
-            #self.group.append(text_group)
+            text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
             if line_selectable[index]:
                 selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
                                                                     height=height_2, x=x, y=line_y+height_1)
@@ -266,7 +237,7 @@ class Lab_Spec_Page( Page ):
                 self.group.append(self.area_rectangle)
                 self.value_areas.append(self.area_rectangle)
 
-            text_group = displayio.Group(scale=2, x=x+offset_1, y=line_y+height_1 +int(height_2/2))
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+height_1 +int(height_2/2))
             self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
@@ -275,11 +246,11 @@ class Lab_Spec_Page( Page ):
             x += line_widths[index]
 
 
-        line_y += line_spacing
-        line_names = ["instruction", "do/rep", "next_step", "main" ]
-        line_values = ["*instruction", "DO", "NEXT", "MM"]
+        line_y += line_spacing - 10
+        line_names = ["", "", "", "" ]
+        line_values = ["*instruction", "<", "DO", ">"]
         line_selectable = [ True, True, True, True ]
-        line_widths = [186, 40, 58, 34]
+        line_widths = [232, 24, 38, 24]
         x = start_x
         for index in range(0, len(line_names)):
             #area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=index+1, width=line1_widths[index],
@@ -319,16 +290,60 @@ class Lab_Spec_Page( Page ):
         self.value_areas[-1].color_index = 15
         #self.text_areas[-1].color = self.palette[9]
 
-        if True:
-            ratio_y = 164
-            ratio_text = "A/B"
-            ratio_x = 266
-            text_group = displayio.Group(scale=1, x=ratio_x, y=ratio_y)
-            self.text_area = label.Label(terminalio.FONT, text=ratio_text, color=self.palette[0])
+        # measured values
+        line_y = 128
+        #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
+        line_values = ["M03", "65535", "65535", "1.0", "20"]
+        line_widths = [42, 66, 66, 42, 30 ]
+        x = 78
+        for index in range(0, len(line_values)):
+
+            text_group = displayio.Group(scale=2, x=x, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
             self.group.append(text_group)
-        '''
+
+            x += line_widths[index]
+
+        line_y += 24
+        #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
+        line_values = ["M02", "65535", "65535", "1.0", "20"]
+        line_widths = [42, 66, 66, 42, 30 ]
+        x = 78
+        for index in range(0, len(line_values)):
+
+            text_group = displayio.Group(scale=2, x=x, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+
+            x += line_widths[index]
+
+        line_y += 24
+        #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
+        line_values = ["M01", "65535", "65535", "1.0", "20"]
+        line_widths = [42, 66, 66, 42, 30 ]
+        x = 78
+        for index in range(0, len(line_values)):
+
+            text_group = displayio.Group(scale=2, x=x, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+
+            x += line_widths[index]
+
+
+
+
+
+
+
+
+
         self.selection_count = len( self.selection_rectangles )
         return self.group
 
