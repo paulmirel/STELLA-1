@@ -69,6 +69,10 @@ class pcf8523_Hardware_Clock( Device ):
         return " "
     def printlog(self):
         print( self.log())
+
+    def sync_to_struct(timestruct):
+        self.swob.datetime = timestruct
+
     def set_time(self):
         timenow = self.swob.datetime
         print()
