@@ -36,7 +36,7 @@ class Lab_Spec_Page( Page ):
         for sensor_index in range (0, self.number_of_sensors):
             self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
         self.status_index = 0
-        self.status_list = [" OK", "busy", "fail", "noSD", "LowB"]
+        self.status_list = ["OK", "BUSY", "FAIL", "LOWB", "NOSD"]
         self.adc_sensor = False
         self.supply_5V = False
         self.supply_5V_on = False
@@ -96,7 +96,7 @@ class Lab_Spec_Page( Page ):
 
             x += line_widths[index]
 
-        #self.selection_rectangles[-1].hidden = False
+        self.selection_rectangles[-1].hidden = False
 
         line_y += line_spacing - height_1
         line_names = ["excitation", "position", "inspect A", "inspect B" ]
@@ -133,7 +133,7 @@ class Lab_Spec_Page( Page ):
         batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=12, width=48-2*select_width,
                                                             height=height_2-2*select_width, x=138, y=line_y+height_1+select_width)
         self.group.append(batch_highlight)
-        line_names = ["set current", "status", "batch", "+=1", "measure & log" ]
+        line_names = ["last current", "status", "batch", "+=1", "measure & log" ]
         line_values = ["800mA", "OK", "265", "B+", "MEASURE"]
         line_selectable = [ True, False, False, True, True ]
         line_widths = [78, 54, 48, 38, 100]

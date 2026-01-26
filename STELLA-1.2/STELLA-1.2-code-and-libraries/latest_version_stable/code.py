@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.8.4"
+SOFTWARE_VERSION_NUMBER = "0.9.0"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -67,7 +67,6 @@ print( devices_present_hex )
 # 0x5a mlx90614 Thermal infrared remote surface thermometer
 # 0x61 scd30    CO2 sensor, NDIR: nondispersive infrared absorption, with temperature and humidity sensors
 # 0x62 scd4x    CO2 sensor, thermo-acoustic: pulsed infrared resonant heating and microphone, with temperature and humidity sensors
-# 0x64 mcp4728  quad DAC, 12 bits, command with 16 bit numbers (0-65535)
 # 0x6a lis3mdl  Magnetic field sensor
 # 0x74 as7331   Ultraviolet spectral sensor
 # 0x77 bme280   Barometric pressure sensor, with temperature and humidity sensors
@@ -83,7 +82,7 @@ from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
 from software_modules import pagem_settings, pagem_sensors, pagem_lab_spec
 from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air, pagem_time_place
-from software_modules import devicem_supply_5V, devicem_mcp4728
+from software_modules import devicem_supply_5V
 
 def main():
 
@@ -112,10 +111,6 @@ def main():
     instrument.welcome_page.show()
 
     supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
-
-
-
-
 
     instrument.spectral_sensors_detected = False
     # initialize spectral sensors
@@ -171,8 +166,6 @@ def main():
     if ('0x53') in devices_present_hex:
         from software_modules import devicem_ltr390
         ltr390_uva_sensor = devicem_ltr390.initialize_ltr390_uva_sensor( instrument )
-    if ('0x64') in devices_present_hex:
-        mcp4728_quad_dac = devicem_mcp4728.initialize_mcp4728_quad_dac( instrument )
     if ('0x1f') in devices_present_hex:
         from software_modules import devicem_mcp9808  ### close a0, a1, a2 address jumpers on board
         mcp9808_air_thermometer = devicem_mcp9808.initialize_mcp9808_air_thermometer( instrument )
@@ -228,21 +221,6 @@ def main():
     print( "memory usage by device objects = {} kB = {} %".format(( mem_free_after_imports - mem_free_after_devices)/1000,
                                 round(100 * ( mem_free_after_imports - mem_free_after_devices)/1000/start_mem_free_kB, 1)))
 
-    remote_sensing_spectral = False
-    if instrument.spectral_sensors_detected:
-        remote_sensing_spectral = True
-
-    remote_sensing_thermal = False
-    lab_spec_dac = False
-    lab_spec_vis = False
-    for sensor in instrument.sensors_present:
-        if sensor.pn == "mlx90614":
-            remote_sensing_thermal = True
-        if sensor.pn == "as7341":
-            lab_spec_vis = True
-        if sensor.pn == "mcp4728":
-            lab_spec_dac = True
-
 
     controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
@@ -265,9 +243,8 @@ def main():
         for page in instrument.pages_list:
             print( page.page_name )
     instrument.make_pages_dictionary()
-
     #print( instrument.pages_dict )
-    #stall()
+
 
     gc.collect()
     mem_free_after_pages = gc.mem_free()
@@ -292,16 +269,16 @@ def main():
     accumulator_cycles = 5
     loop_times = []
 
-    if remote_sensing_spectral and remote_sensing_thermal:
-        instrument.active_page_number = instrument.pages_dict["Light"]
-    if lab_spec_dac and lab_spec_vis:
-        instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
-    if False: #go to startup page
-        instrument.active_page_number = instrument.pages_dict["Sensors"]
-        sensors_page.choose_sensor( instrument.sensors_present[1] )
-    if False:
-        instrument.active_page_number = instrument.pages_dict["Heat"]
-
+    if True: #False: #non-menu startup page
+        if False: #go to startup page
+            instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
+        if False: #go to startup page
+            instrument.active_page_number = instrument.pages_dict["Sensors"]
+            sensors_page.choose_sensor( instrument.sensors_present[1] )
+        if False:
+            instrument.active_page_number = instrument.pages_dict["Heat"]
+        if instrument.spectral_sensors_detected:
+            instrument.active_page_number = instrument.pages_dict["Light"]
 
     try:
         if buzzer: buzzer.beep()
@@ -310,7 +287,6 @@ def main():
             functionm_file.update_filename( instrument )
         else:
             onboard_neopixel.fill(devicem_neopixel.RED)
-            lab_spec_page.status_index = 3
         instrument.check_inputs()
         while operational:
             loop_start = time.monotonic()
@@ -322,20 +298,6 @@ def main():
             if instrument.active_page_number == instrument.pages_dict["Lab_Spec"]:
                 instrument.handle_inputs()
                 instrument.update_active_page()
-                if lab_spec_page.file_write_request:
-                    if instrument.vfs:
-                        print("if labspec page requests, write file w additional info from labspec")
-                        onboard_neopixel.fill(devicem_neopixel.GREEN)
-                        functionm_file.write_line( instrument, system_log, lab_spec_page.log )
-                        for sensor in instrument.sensors_present:
-                            functionm_file.write_line( instrument, system_log, sensor.log() )
-                            instrument.handle_inputs()
-                            onboard_neopixel.fill(devicem_neopixel.OFF)
-                            instrument.measurement_counter += 1
-                    else:
-                        lab_spec_page.status_index = 3
-                        print("failed to write to file")
-                    lab_spec_page.file_write_request = False
             elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
                 sensor = instrument.sensors_present[sensors_page.sensor_choice]
                 sensor.read()
