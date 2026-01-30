@@ -227,8 +227,8 @@ class Controls_Page( Page ):
             self.batch_value_group.x = self.batch_text_x-3
 
     def action( self ):
-        if False:#self.selection == 0:
-            self.instrument.active_page_number = self.instrument.pages_dict["Time"] #TBD send to page when it exists
+        if self.selection == 0:
+            self.instrument.active_page_number = self.instrument.pages_dict["Time"]
         if self.selection == 1:
             self.instrument.update_batch()
         if self.selection == 2:

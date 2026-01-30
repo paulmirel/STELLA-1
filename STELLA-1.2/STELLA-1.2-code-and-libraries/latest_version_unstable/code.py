@@ -227,7 +227,7 @@ def main():
     status_page = pagem_status.make_status_page( instrument )
     settings_page = pagem_settings.make_settings_page( instrument )
     sensors_page = pagem_sensors.make_sensors_page( instrument )
-    #time_place_page = pagem_time_place.make_time_place_page( instrument )
+    time_place_page = pagem_time_place.make_time_place_page( instrument )
     #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
     lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument )
@@ -244,6 +244,7 @@ def main():
             print( page.page_name )
     instrument.make_pages_dictionary()
     #print( instrument.pages_dict )
+
 
 
     gc.collect()
@@ -321,6 +322,7 @@ def main():
                 sample_stop_time = time.monotonic()
                 sample_time = sample_stop_time - sample_start_time
                 #print( "sample_time, all sensors, s = ", round(sample_time,3))
+                #print("call to update active page from line 325, page number",instrument.active_page_number, instrument.combined)
                 instrument.update_active_page()
                 if instrument.active_page_number == instrument.pages_dict["Light"]:
                     light_page.update_plot()
@@ -429,6 +431,7 @@ class Instrument:
         self.vfs = False
         self.make_header()
         self.combined = False
+        self.rtc_syncd_to_gps = False
 
     def show_active_page( self ):
         if self.active_page_number != self.last_active_page_number:
@@ -459,6 +462,7 @@ class Instrument:
 
     def handle_inputs( self ):
         self.check_inputs()
+        self.combined = False
         if self.input_flag:
             active_page = self.pages_list[ self.last_active_page_number ]
             controls_page = self.pages_list[ self.pages_dict["Controls"] ]
@@ -468,8 +472,6 @@ class Instrument:
             else:
                 if active_page.page_name == "Main" or active_page.page_name == "Light" or active_page.page_name == "Heat":
                     self.combined = True
-                else:
-                    self.combined = False
                 if self.encoder_increment != 0:
                     #TBD lab_spec_page selection combined with light_page
                     #print( "track the selection and hand off between both controls and the active page" )
@@ -541,9 +543,11 @@ class Instrument:
                 controls_page.hide_all_selections()
                 active_page.update_selection()
         else:
-            self.pages_list[ self.active_page_number ].update_values()
-        #except Exception as err:
-        #    print("values update failed: ", err)
+            try:
+                self.pages_list[ self.active_page_number ].update_values()
+                #print("update active page")
+            except Exception as err:
+                print("values update failed: ", err)
 
 
     def update_batch(self):
@@ -567,7 +571,7 @@ class Instrument:
 
     def sync_rtc_to_gps_time(self,timestruct):
         if timestruct is not None:
-            self.hardware_clock.sync_to_struct(timestruct)
+            self.rtc_syncd_to_gps = self.hardware_clock.sync_to_struct(timestruct)
 
     def make_pages_dictionary( self ):
         self.pages_dict = {}

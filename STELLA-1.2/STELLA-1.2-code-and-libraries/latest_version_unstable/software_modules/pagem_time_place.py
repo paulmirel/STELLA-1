@@ -19,44 +19,52 @@ class Time_Place_Page( Page ):
 
     def make_group( self ):
         self.group = displayio.Group()
-        status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
-        self.group.append( status_background )
-        text_spacing_y = 28
-        status_title_group = displayio.Group(scale=2, x=10, y=18)
-        status_title_text = "Time / Place: TBD"
-        status_title_text_area = label.Label(terminalio.FONT, text=status_title_text, color=self.palette[0])
-        status_title_group.append(status_title_text_area)
-        self.group.append(status_title_group)
+        background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
+        self.group.append( background )
 
-        text_group = displayio.Group(scale=2, x=10, y=18+text_spacing_y)
-        text = "clock time, settable"
-        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
+        line_spacing = 43
+        start_x = 1
+        line_y = 2
+        select_width = 4
+        border_width = 2
+        height_1 = 10
+        offset_1 = 6
+        height_2 = 32
+        offset_2 = 9
+        self.selection_rectangles = []
+        self.value_areas = []
+        self.text_areas = []
 
-        text_group = displayio.Group(scale=2, x=10, y=18+2*text_spacing_y)
-        text = "gps time if available"
-        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
+        line_values = ["YYYY-MM-DD", "HH:MM:SS", "Main"]
+        line_selectable = [ False, False, True ]
+        line_widths = [134,115,68]
+        x = start_x
+        for index in range(0, len(line_values)):
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=line_y)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
 
-        text_group = displayio.Group(scale=2, x=10, y=18+3*text_spacing_y)
-        text = "> sync clock to gps"
-        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+select_width-border_width)
+                self.group.append(border_rectangle)
 
-        text_group = displayio.Group(scale=2, x=10, y=18+4*text_spacing_y)
-        text = "gps position, alt"
-        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line_y+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
 
-        text_group = displayio.Group(scale=2, x=10, y=18+5*text_spacing_y)
-        text = "gps satellites visible"
-        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+
+            x += line_widths[index]
+
+        self.selection_rectangles[-1].hidden = False
 
 
         # RETURN
@@ -88,8 +96,20 @@ class Time_Place_Page( Page ):
     def action( self ):
         self.instrument.active_page_number = self.instrument.pages_dict["Main"]
 
+    def update_values( self ):
+        timenow = self.instrument.hardware_clock.read()
+        self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
+        self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour,timenow.tm_min,timenow.tm_sec)
+
     def update_selection(self):
         pass
+
+    def hide_all_selections( self ):
+        for item in self.selection_rectangles:
+            if item.hidden == False:
+                item.hidden = True
+
+
 
 
 
