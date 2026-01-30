@@ -35,8 +35,8 @@ class Time_Place_Page( Page ):
         self.value_areas = []
         self.text_areas = []
 
-        line_values = ["YYYY-MM-DD", "HH:MM:SS", "Main"]
-        line_selectable = [ False, False, True ]
+        line_values = ["YYYY-MM-DD", "HH:MM:SS", "UTC"]
+        line_selectable = [ False, False, False ]
         line_widths = [134,115,68]
         x = start_x
         for index in range(0, len(line_values)):
@@ -64,7 +64,7 @@ class Time_Place_Page( Page ):
 
             x += line_widths[index]
 
-        self.selection_rectangles[-1].hidden = False
+
 
 
         # RETURN
