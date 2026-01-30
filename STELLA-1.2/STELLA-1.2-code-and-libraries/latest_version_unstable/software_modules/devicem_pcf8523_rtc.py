@@ -70,8 +70,9 @@ class pcf8523_Hardware_Clock( Device ):
     def printlog(self):
         print( self.log())
 
-    def sync_to_struct(timestruct):
-        self.swob.datetime = timestruct
+    def sync_to_struct(self, timestruct):
+        if timestruct.tm_year > 2025 and timestruct.tm_year < 2060:
+            self.swob.datetime = timestruct
 
     def set_time(self):
         timenow = self.swob.datetime

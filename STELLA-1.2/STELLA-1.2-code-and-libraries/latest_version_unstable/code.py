@@ -255,8 +255,7 @@ def main():
 
 
     system_update_period_start = time.monotonic()
-    system_update_period_s = 4
-
+    system_update_period_s = 60
     operational = True
     first_sample_time = time.monotonic()
     last_sample_time = time.monotonic() - instrument.sample_interval_s
@@ -362,7 +361,7 @@ def main():
                     flash_indicator( battery_indicator )
                 if time.monotonic() > system_update_period_start + system_update_period_s:
                     instrument.check_calendar_day()
-                    instrument.sync_rtc_to_gps_time(gps)
+                    instrument.sync_rtc_to_gps_time(gps.timestruct)
                     system_update_period_start = time.monotonic()
             loop_stop = time.monotonic()
             loop_time = loop_stop - loop_start
@@ -566,13 +565,9 @@ class Instrument:
             self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
             self.measurement_counter = 0
 
-    def sync_rtc_to_gps_time(self, gps):
-        if gps.timestruct is not None:
-            #self.hardware_clock.sync_to_struct(timestruct)
-            #print("sync'd to gps")
-            print("attempt sync to gps")
-        else:
-            print("no time data")
+    def sync_rtc_to_gps_time(self,timestruct):
+        if timestruct is not None:
+            self.hardware_clock.sync_to_struct(timestruct)
 
     def make_pages_dictionary( self ):
         self.pages_dict = {}
