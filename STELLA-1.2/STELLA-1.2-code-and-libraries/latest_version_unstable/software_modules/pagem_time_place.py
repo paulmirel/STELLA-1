@@ -14,15 +14,16 @@ class Time_Place_Page( Page ):
         self.instrument = instrument
         self.palette = instrument.palette
         self.selection = 0
-        self.selection_count = 0
+        self.last_selection = 0
         self.field_selected = False
+        self.selection_count = 0
 
     def make_group( self ):
         self.group = displayio.Group()
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
         self.group.append( background )
 
-        line_spacing = 43
+        line_spacing = 30
         start_x = 1
         line_y = 2
         select_width = 4
@@ -35,6 +36,18 @@ class Time_Place_Page( Page ):
         self.value_areas = []
         self.text_areas = []
 
+        line_values = ["Time and Place", "rtc!=gps"]
+        line_widths = [198,115]
+        x = start_x
+        for index in range(0, len(line_values)):
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            text_group.append(self.text_area)
+            self.text_areas.append(self.text_area)
+            self.group.append(text_group)
+            x += line_widths[index]
+
+        line_y = line_y + line_spacing
         line_values = ["YYYY-MM-DD", "HH:MM:SS", "UTC"]
         line_selectable = [ False, False, False ]
         line_widths = [134,115,68]
@@ -61,9 +74,36 @@ class Time_Place_Page( Page ):
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
             self.group.append(text_group)
-
             x += line_widths[index]
 
+        line_y = line_y + line_spacing
+        line_values = ["Set clock on serial link"]
+        line_selectable = [True ]
+        line_widths = [310]
+        x = start_x
+        for index in range(0, len(line_values)):
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=line_y)
+                selection_rectangle.hidden = False#True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
+
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+select_width-border_width)
+                self.group.append(border_rectangle)
+
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line_y+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+            x += line_widths[index]
 
 
 
@@ -79,8 +119,9 @@ class Time_Place_Page( Page ):
         return_x = return_select_x + select_width
         self.return_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=return_select_width, height=return_select_height, x=return_select_x, y=return_select_y)
         self.group.append( self.return_select )
+        self.selection_rectangles.append(self.return_select)
         self.selection_count += 1
-        #self.return_select.hidden = True
+        self.return_select.hidden = True
         return_control_width = return_select_width - 2 * select_width
         self.return_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=return_control_width, height=return_height, x=return_x, y=return_y)
         self.group.append( self.return_color )
@@ -91,18 +132,27 @@ class Time_Place_Page( Page ):
         return_group.append(self.return_text_area)
         self.group.append(return_group)
 
+        self.selection_count = len( self.selection_rectangles )
         return self.group
 
     def action( self ):
-        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+        if self.selection == 0:
+            print("start time set dialogue")
+        if self.selection == 1:
+            self.instrument.active_page_number = self.instrument.pages_dict["Main"]
 
     def update_values( self ):
         timenow = self.instrument.hardware_clock.read()
-        self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
-        self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour,timenow.tm_min,timenow.tm_sec)
+        if self.instrument.rtc_syncd_to_gps:
+            self.text_areas[1].text = "rtc==gps"
+        else:
+            self.text_areas[1].text = "rtc!=gps"
+        self.text_areas[2].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
+        self.text_areas[3].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour,timenow.tm_min,timenow.tm_sec)
 
     def update_selection(self):
-        pass
+        self.selection_rectangles[self.last_selection].hidden = True
+        self.selection_rectangles[self.selection].hidden = False
 
     def hide_all_selections( self ):
         for item in self.selection_rectangles:
