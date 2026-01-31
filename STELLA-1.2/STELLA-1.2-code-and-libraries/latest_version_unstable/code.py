@@ -572,6 +572,8 @@ class Instrument:
     def sync_rtc_to_gps_time(self,timestruct):
         if timestruct is not None:
             self.rtc_syncd_to_gps = self.hardware_clock.sync_to_struct(timestruct)
+        else:
+            self.rtc_syncd_to_gps = False
 
     def make_pages_dictionary( self ):
         self.pages_dict = {}

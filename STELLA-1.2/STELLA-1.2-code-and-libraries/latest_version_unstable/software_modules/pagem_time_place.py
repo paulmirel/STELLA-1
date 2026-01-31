@@ -17,6 +17,9 @@ class Time_Place_Page( Page ):
         self.last_selection = 0
         self.field_selected = False
         self.selection_count = 0
+        for sensor in instrument.sensors_present:
+            if sensor.name == "gps":
+                self.gps = sensor
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -105,6 +108,53 @@ class Time_Place_Page( Page ):
             self.group.append(text_group)
             x += line_widths[index]
 
+        line_y = line_y + line_spacing
+        line_values = ["GPS fix:", "--", "#Sats:", "--"]
+        line_widths = [100,84,74,30]
+        x = start_x
+        for index in range(0, len(line_values)):
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+            x += line_widths[index]
+
+        line_y = line_y + line_spacing
+        line_values = ["latitude:", "--"]
+        line_widths = [124, 100]
+        x = start_x
+        for index in range(0, len(line_values)):
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+            x += line_widths[index]
+
+        line_y = line_y + line_spacing
+        line_values = ["longitude:", "--"]
+        line_widths = [124, 100]
+        x = start_x
+        for index in range(0, len(line_values)):
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+            x += line_widths[index]
+
+        line_y = line_y + line_spacing
+        line_values = ["altitude:", "--"]
+        line_widths = [124, 100]
+        x = start_x
+        for index in range(0, len(line_values)):
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+            x += line_widths[index]
 
 
         # RETURN
@@ -138,6 +188,7 @@ class Time_Place_Page( Page ):
     def action( self ):
         if self.selection == 0:
             print("start time set dialogue")
+            self.instrument.hardware_clock.set_time()
         if self.selection == 1:
             self.instrument.active_page_number = self.instrument.pages_dict["Main"]
 
@@ -149,6 +200,11 @@ class Time_Place_Page( Page ):
             self.text_areas[1].text = "rtc!=gps"
         self.text_areas[2].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[3].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour,timenow.tm_min,timenow.tm_sec)
+        self.text_areas[7].text = "{}".format(self.gps.has_fix)
+        self.text_areas[9].text = "{}".format(self.gps.satellites)
+        self.text_areas[11].text = "{} deg".format(self.gps.latitude)
+        self.text_areas[13].text = "{} deg".format(self.gps.longitude)
+        self.text_areas[15].text = "{} m".format(self.gps.altitude)
 
     def update_selection(self):
         self.selection_rectangles[self.last_selection].hidden = True
