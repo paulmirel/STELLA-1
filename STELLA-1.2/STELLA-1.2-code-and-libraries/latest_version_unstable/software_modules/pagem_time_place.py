@@ -6,6 +6,7 @@ from adafruit_display_text import label
 import vectorio
 import terminalio
 from .classm_page import Page
+import time
 
 class Time_Place_Page( Page ):
     def __init__( self, instrument ):
@@ -13,10 +14,11 @@ class Time_Place_Page( Page ):
         self.page_name = "Time"
         self.instrument = instrument
         self.palette = instrument.palette
-        self.selection = 0
+        self.selection = 1
         self.last_selection = 0
         self.field_selected = False
         self.selection_count = 0
+        self.serial_set_engaged = False
         for sensor in instrument.sensors_present:
             if sensor.name == "gps":
                 self.gps = sensor
@@ -88,7 +90,7 @@ class Time_Place_Page( Page ):
             if line_selectable[index]:
                 selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
                                                                     height=height_2, x=x, y=line_y)
-                selection_rectangle.hidden = False#True
+                selection_rectangle.hidden = True
                 self.group.append(selection_rectangle)
                 self.selection_rectangles.append(selection_rectangle)
 
@@ -171,7 +173,7 @@ class Time_Place_Page( Page ):
         self.group.append( self.return_select )
         self.selection_rectangles.append(self.return_select)
         self.selection_count += 1
-        self.return_select.hidden = True
+        #self.return_select.hidden = True
         return_control_width = return_select_width - 2 * select_width
         self.return_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=return_control_width, height=return_height, x=return_x, y=return_y)
         self.group.append( self.return_color )
@@ -187,8 +189,15 @@ class Time_Place_Page( Page ):
 
     def action( self ):
         if self.selection == 0:
-            print("start time set dialogue")
-            self.instrument.hardware_clock.set_time()
+            if self.instrument.rtc_syncd_to_gps:
+                self.text_areas[5].text = "rtc sync'd to gps"
+                time.sleep(2)
+            else:
+                print("start time set dialogue")
+                self.serial_set_engaged = True
+                self.text_areas[5].text = "serial input or reboot"
+                self.instrument.hardware_clock.set_time()
+                self.serial_set_engaged = False
         if self.selection == 1:
             self.instrument.active_page_number = self.instrument.pages_dict["Main"]
 
@@ -200,6 +209,10 @@ class Time_Place_Page( Page ):
             self.text_areas[1].text = "rtc!=gps"
         self.text_areas[2].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[3].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour,timenow.tm_min,timenow.tm_sec)
+        if self.serial_set_engaged:
+            self.text_areas[5].text = "serial input or reboot"
+        else:
+            self.text_areas[5].text = "Set clock on serial link"
         self.text_areas[7].text = "{}".format(self.gps.has_fix)
         self.text_areas[9].text = "{}".format(self.gps.satellites)
         self.text_areas[11].text = "{} deg".format(self.gps.latitude)

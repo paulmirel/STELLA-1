@@ -100,122 +100,133 @@ class pcf8523_Hardware_Clock( Device ):
         except IndexError as err:
             print( "The clock has not been set, and the values are out of range." )
 
-        print()
-        print( "Current year is {}. Enter a new year and press return, or press return to skip.".format(timenow.tm_year))
-        print(">", end = ' ')
-        input_string = False
-        while input_string == False:
+        if False:
+            print( "Set time here? press Return to begin.")
+            start = time.monotonic()
+            wait = 30
+            input_string = False
+            while input_string == False and time.monotonic() < start + wait:
+                print( "waiting for ", int(time.monotonic() - start + wait), "s", end = '\r')
+                input_string = input().strip()
+                time.sleep(0.5)
+
+        if True: #time.monotonic() < start + wait:
+            print()
+            print( "Current year is {}. Enter a new year and press return, or press return to skip.".format(timenow.tm_year))
+            print(">", end = ' ')
+            input_string = False
+            while input_string == False:
+                input_string = input().strip()
+            try:
+                input_integer = int( input_string )
+            except ValueError:
+                input_integer = 2000
+            if input_integer in range (2010, 2100):
+                year = input_integer
+                t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
+                self.swob.datetime = t
+
+            print()
+            print( "Current month is {}. Enter a new month and press return, or press return to skip.".format(timenow.tm_mon))
+            print(">", end = ' ')
+            input_string = False
+            while input_string == False:
+                input_string = input().strip()
+            try:
+                input_integer = int( input_string )
+            except ValueError:
+                pass
+            if input_integer in range (1, 12):
+                month = input_integer
+                t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
+                self.swob.datetime = t
+            print()
+            print( "Current day is {}. Enter a new day and press return, or press return to skip.".format(timenow.tm_mday))
+            print(">", end = ' ')
+            input_string = False
+            while input_string == False:
+                input_string = input().strip()
+            try:
+                input_integer = int( input_string )
+            except ValueError:
+                pass
+            if input_integer in range (1, 32):
+                day = input_integer
+                t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
+                self.swob.datetime = t
+
+            print()
+            print( "Current hour is {} UTC. Enter a new hour and press return, or press return to skip.".format(timenow.tm_hour))
+            print(">", end = ' ')
+            input_string = False
+            while input_string == False:
+                input_string = input().strip()
+            try:
+                input_integer = int( input_string )
+            except ValueError:
+                pass
+            if input_integer in range (0, 23):
+                hour = input_integer
+                t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
+                self.swob.datetime = t
+
+            print()
+            print( "Current minute is {}. Enter a new minute and press return, or press return to skip.".format(timenow.tm_min))
+            print(">", end = ' ')
+            input_string = False
+            while input_string == False:
+                input_string = input().strip()
+            try:
+                input_integer = int( input_string )
+            except ValueError:
+                pass
+            if input_integer in range (0, 59):
+                minute = input_integer
+                t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
+                self.swob.datetime = t
+
+            print()
+            print( "Current second is {}. Enter a new second and press return, or press return to skip.".format(timenow.tm_sec))
+            print(">", end = ' ')
+            input_string = False
+            while input_string == False:
+                input_string = input().strip()
+            try:
+                input_integer = int( input_string )
+            except ValueError:
+                pass
+            if input_integer in range (0, 59):
+                second = input_integer
+                t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
+                self.swob.datetime = t
+
+            print()
+            print( "Current weekday is {}. Enter a new weekday and press return, or press return to skip.".format(self.DAYS[timenow.tm_wday]))
+            print( "Enter: sun, mon, tue, wed, thu, fri, sat" )
+            print(">", end = ' ')
+            input_string = False
+
             input_string = input().strip()
-        try:
-            input_integer = int( input_string )
-        except ValueError:
-            input_integer = 2000
-        if input_integer in range (2010, 2100):
-            year = input_integer
+            print(input_string)
+            if input_string == "mon":
+                weekday = 1
+            elif input_string == "tue":
+                weekday = 2
+            elif input_string == "wed":
+                weekday = 3
+            elif input_string == "thu":
+                weekday = 4
+            elif input_string == "fri":
+                weekday = 5
+            elif input_string == "sat":
+                weekday = 6
+            elif input_string == "sun":
+                weekday = 0
+            else:
+                pass
+            print("weekday = {}".format(weekday))
             t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
             self.swob.datetime = t
-
-        print()
-        print( "Current month is {}. Enter a new month and press return, or press return to skip.".format(timenow.tm_mon))
-        print(">", end = ' ')
-        input_string = False
-        while input_string == False:
-            input_string = input().strip()
-        try:
-            input_integer = int( input_string )
-        except ValueError:
-            pass
-        if input_integer in range (1, 12):
-            month = input_integer
-            t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
-            self.swob.datetime = t
-        print()
-        print( "Current day is {}. Enter a new day and press return, or press return to skip.".format(timenow.tm_mday))
-        print(">", end = ' ')
-        input_string = False
-        while input_string == False:
-            input_string = input().strip()
-        try:
-            input_integer = int( input_string )
-        except ValueError:
-            pass
-        if input_integer in range (1, 32):
-            day = input_integer
-            t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
-            self.swob.datetime = t
-
-        print()
-        print( "Current hour is {} UTC. Enter a new hour and press return, or press return to skip.".format(timenow.tm_hour))
-        print(">", end = ' ')
-        input_string = False
-        while input_string == False:
-            input_string = input().strip()
-        try:
-            input_integer = int( input_string )
-        except ValueError:
-            pass
-        if input_integer in range (0, 23):
-            hour = input_integer
-            t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
-            self.swob.datetime = t
-
-        print()
-        print( "Current minute is {}. Enter a new minute and press return, or press return to skip.".format(timenow.tm_min))
-        print(">", end = ' ')
-        input_string = False
-        while input_string == False:
-            input_string = input().strip()
-        try:
-            input_integer = int( input_string )
-        except ValueError:
-            pass
-        if input_integer in range (0, 59):
-            minute = input_integer
-            t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
-            self.swob.datetime = t
-
-        print()
-        print( "Current second is {}. Enter a new second and press return, or press return to skip.".format(timenow.tm_sec))
-        print(">", end = ' ')
-        input_string = False
-        while input_string == False:
-            input_string = input().strip()
-        try:
-            input_integer = int( input_string )
-        except ValueError:
-            pass
-        if input_integer in range (0, 59):
-            second = input_integer
-            t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
-            self.swob.datetime = t
-
-        print()
-        print( "Current weekday is {}. Enter a new weekday and press return, or press return to skip.".format(self.DAYS[timenow.tm_wday]))
-        print( "Enter: sun, mon, tue, wed, thu, fri, sat" )
-        print(">", end = ' ')
-        input_string = False
-
-        input_string = input().strip()
-        print(input_string)
-        if input_string == "mon":
-            weekday = 1
-        elif input_string == "tue":
-            weekday = 2
-        elif input_string == "wed":
-            weekday = 3
-        elif input_string == "thu":
-            weekday = 4
-        elif input_string == "fri":
-            weekday = 5
-        elif input_string == "sat":
-            weekday = 6
-        elif input_string == "sun":
-            weekday = 0
-        else:
-            pass
-        print("weekday = {}".format(weekday))
-        t = time.struct_time(( year,  month,   day,   hour,  minute,  second,   weekday,   -1,    -1 ))
-        self.swob.datetime = t
         print( "returning to status page" )
 
 class Null_Hardware_Clock():

@@ -255,8 +255,9 @@ def main():
                                             int( 100 * ( mem_free_after_devices - mem_free_after_pages)/1000/start_mem_free_kB)))
 
 
-    system_update_period_start = time.monotonic()
+
     system_update_period_s = 60
+    system_update_period_start = time.monotonic() - system_update_period_s + 10
     operational = True
     first_sample_time = time.monotonic()
     last_sample_time = time.monotonic() - instrument.sample_interval_s
