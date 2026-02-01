@@ -20,6 +20,17 @@ class Status_Page( Page ):
         self.field_selected = False
         self.battery_monitor = battery_monitor
 
+        sdcard_status = os.statvfs("/sd")
+        sdf_block_size = sdcard_status[0]
+        sdf_blocks_avail = sdcard_status[4]
+        sd_bytes_avail_B = sdf_blocks_avail * sdf_block_size
+        self.sd_bytes_avail_MB = round(sd_bytes_avail_B/ 1000000,1)
+        self.sd_bytes_avail_GB = round(self.sd_bytes_avail_MB/ 1000,1)
+        sdfssize = sdcard_status[2]
+        self.sdbytessize_MB = int (round(( sdfssize * sdf_block_size/ 1000000 ), 0))
+        self.sdbytessize_GB = int( round( self.sdbytessize_MB /1000, 0 ))
+        self.sdavail_percent = int( self.sd_bytes_avail_MB/ self.sdbytessize_MB * 100)
+
     def make_group( self ):
         self.group = displayio.Group()
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
@@ -133,26 +144,15 @@ class Status_Page( Page ):
         else:
             self.text_areas[4].text = "LOW"
 
-        sdcard_status = os.statvfs("/sd")
-        sdf_block_size = sdcard_status[0]
-        sdf_blocks_avail = sdcard_status[4]
-        storage_free_percent = sdf_blocks_avail/sdf_block_size *100
-        sd_bytes_avail_B = sdf_blocks_avail * sdf_block_size
-        sd_bytes_avail_MB = round(sd_bytes_avail_B/ 1000000,1)
-        sd_bytes_avail_GB = round(sd_bytes_avail_MB/ 1000,1)
-        sdfssize = sdcard_status[2]
-        sdbytessize_MB = int (round(( sdfssize * sdf_block_size/ 1000000 ), 0))
-        sdbytessize_GB = int( round( sdbytessize_MB /1000, 0 ))
-        sdavail_percent = int( sd_bytes_avail_MB/ sdbytessize_MB * 100)
-        if sdbytessize_MB < 1000:
-            self.text_areas[6].text = "{} MB".format(sdbytessize_MB)
+        if self.sdbytessize_MB < 1000:
+            self.text_areas[6].text = "{} MB".format(self.sdbytessize_MB)
         else:
-            self.text_areas[6].text = "{} GB".format(sdbytessize_GB)
-        if sd_bytes_avail_MB < 1000:
-            self.text_areas[7].text = "{} MB free =".format(sd_bytes_avail_MB)
+            self.text_areas[6].text = "{} GB".format(self.sdbytessize_GB)
+        if self.sd_bytes_avail_MB < 1000:
+            self.text_areas[7].text = "{} MB free =".format(self.sd_bytes_avail_MB)
         else:
-            self.text_areas[7].text = "{} GB free =".format(sd_bytes_avail_GB)
-        self.text_areas[8].text = "{}% free".format(sdavail_percent)
+            self.text_areas[7].text = "{} GB free =".format(self.sd_bytes_avail_GB)
+        self.text_areas[8].text = "{}% free".format(self.sdavail_percent)
 
 
     def update_selection(self):
