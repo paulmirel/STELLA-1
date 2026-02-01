@@ -137,7 +137,7 @@ class Controls_Page( Page ):
         self.group.append( settings_color )
         settings_text_x = settings_color_x + 3
         settings_group = displayio.Group(scale=1, x=settings_text_x, y=text_y1)
-        settings_text = "*system"
+        settings_text = "system"
         settings_text_area = label.Label(terminalio.FONT, text=settings_text, color=self.palette[9])
         settings_group.append(settings_text_area)
         self.group.append(settings_group)
@@ -241,7 +241,7 @@ class Controls_Page( Page ):
             self.burst_color.color_index = 16
             self.instrument.take_burst = False
         if self.selection == 4:
-            pass#self.instrument.active_page_number = self.instrument.pages_dict["Settings"]
+            self.instrument.active_page_number = self.instrument.pages_dict["Settings"]
         if self.selection == 5:
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]
 
