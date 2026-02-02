@@ -199,7 +199,10 @@ class Light_Page( Page ):
 
                 slopes_delta_y_per_point = []
                 for index in range ( 0, len(indicies_of_active_points)-1):
-                    slopes_delta_y_per_point.append( (spectral_graph_y_values[index+1]-spectral_graph_y_values[index])/(indicies_of_active_points[index+1]-indicies_of_active_points[index]) )
+                    index_span = indicies_of_active_points[index+1]-indicies_of_active_points[index]
+                    if index_span == 0:
+                        index_span = 1
+                    slopes_delta_y_per_point.append( (spectral_graph_y_values[index+1]-spectral_graph_y_values[index])/ index_span)
 
                 y_value_index = -1
                 last_index = 0
