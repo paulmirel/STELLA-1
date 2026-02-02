@@ -1,4 +1,3 @@
-
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
@@ -14,7 +13,6 @@ class Exposure_Page( Page ):
         super().__init__()
         self.instrument = instrument
         self.palette = self.instrument.palette
-        #self.spectral_register = self.instrument.pages_list[
         self.page_name = "Exposure"
         self.selection_color_index = 6
         self.field_selected_color_index = 5
@@ -91,24 +89,31 @@ class Exposure_Page( Page ):
                     self.scale_choice = ( self.scale_choice + self.instrument.encoder_increment ) % len( self.scale_choices )
                 elif self.selection == 4:
                     if self.setting_mode == 0:
-                        self.gain_index[self.active_sensor_index] = (
-                                self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
-                                self.spectral_sensors[self.active_sensor_index].gain_list )
+                        self.gain_index[self.active_sensor_index] = (self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment )
+                        if self.gain_index[self.active_sensor_index] < 0:
+                            self.gain_index[self.active_sensor_index] = 0
+                        if self.gain_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1:
+                            self.gain_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1
                         self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
                 elif self.selection == 5:
                     if self.setting_mode == 0:
-                        self.integration_time_index[self.active_sensor_index] = (
-                                self.integration_time_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
-                                self.spectral_sensors[self.active_sensor_index].integration_time_ms_list )
+                        self.integration_time_index[self.active_sensor_index] = (self.integration_time_index[self.active_sensor_index] + self.instrument.encoder_increment )
+                        if self.integration_time_index[self.active_sensor_index] < 0 :
+                            self.integration_time_index[self.active_sensor_index] = 0
+                        if self.integration_time_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list ) -1:
+                            self.integration_time_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list ) -1
                         self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
                 elif self.selection == 6:
-
                     try:
                         if len( self.spectral_sensors[self.active_sensor_index].lamp_selection_list ) < 2:
                             number_of_current_states = len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list )
                         else:
                             number_of_current_states = len( self.spectral_sensors[self.active_sensor_index].lamp_current_mA_list[ self.lamp_selection_index ])
-                        self.lamp_current_mA_index[self.active_sensor_index] = ( self.lamp_current_mA_index[self.active_sensor_index] + self.instrument.encoder_increment ) % number_of_current_states
+                        self.lamp_current_mA_index[self.active_sensor_index] = ( self.lamp_current_mA_index[self.active_sensor_index] + self.instrument.encoder_increment )
+                        if self.lamp_current_mA_index[self.active_sensor_index] < 0:
+                            self.lamp_current_mA_index[self.active_sensor_index] = 0
+                        if self.lamp_current_mA_index[self.active_sensor_index] > number_of_current_states - 1:
+                            self.lamp_current_mA_index[self.active_sensor_index] = number_of_current_states - 1
                         self.spectral_sensors[self.active_sensor_index].set_lamp_current_mA( self.lamp_current_mA_index[self.active_sensor_index], self.lamp_selection_index )
                         hide_limit = True
 
@@ -208,7 +213,6 @@ class Exposure_Page( Page ):
         else:
             self.slider_scale_area.hidden = True
 
-        ## update interface text
         self.sensor_choice_text_area.text = self.spectral_sensors[self.active_sensor_index].choice_label
         self.setting_text_area.text = self.setting_modes[self.setting_mode]
         self.slider_scale_text_area.text = self.scale_choices[ self.scale_choice ]
@@ -226,9 +230,8 @@ class Exposure_Page( Page ):
                     self.gain_area.color_index = 9
                 if not self.field_selected_list[5]:
                     self.integration_time_area.color_index = 9
-
         ## get exposure and drive slider, value, label, brackets
-        self.spectral_sensors[self.active_sensor_index].read_counts_all()
+        #self.spectral_sensors[self.active_sensor_index].read_counts_all()
         exposure_high, exposure_low = self.spectral_sensors[self.active_sensor_index].get_max_min_counts()
         gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
         max_gain = max(self.spectral_sensors[self.active_sensor_index].gain_list)
@@ -275,6 +278,11 @@ class Exposure_Page( Page ):
                     self.integration_time_index[self.active_sensor_index] = len( self.spectral_sensors[self.active_sensor_index].integration_time_ms_list ) -1
                 self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
 
+
+        dr_percentage = round(100*exposure_high/self.exposure_max_value,1)
+        if dr_percentage >9.9:
+            dr_percentage = int(dr_percentage)
+        self.dr_text_area.text = "{}% DR".format(dr_percentage)
 
         exposure_value_span = self.exposure_max_value
         if exposure_high < self.exposure_max_value:
@@ -599,7 +607,7 @@ class Exposure_Page( Page ):
         self.return_select = vectorio.Rectangle( pixel_shader=self.palette, color_index = self.selection_color_index, width=return_select_width,
                                                     height=return_select_height, x=return_select_x, y=return_select_y )
         self.group.append( self.return_select )
-        self.return_select.hidden = True
+        self.return_select.hidden = False#True
         self.selection_rectangles.append( self.return_select)
 
         return_border_width = return_select_width - 2*select_width
@@ -896,12 +904,19 @@ class Exposure_Page( Page ):
         self.group.append(value_label_text_group)
 
         value_label_text_x = 80
-        value_label_text_y = gain_area_y - 10
         value_label_text_group = displayio.Group(scale=1, x=value_label_text_x, y=value_label_text_y)
         value_label_text = "Integ time ms"
         value_label_text_area = label.Label(terminalio.FONT, text=value_label_text, color=self.palette[0])
         value_label_text_group.append(value_label_text_area)
         self.group.append(value_label_text_group)
+
+        dr_text_x = 250
+        dr_text_group = displayio.Group(scale=1, x=dr_text_x, y=value_label_text_y)
+        dr_text = "--% DR"
+        self.dr_text_area = label.Label(terminalio.FONT, text=dr_text, color=self.palette[0])
+        dr_text_group.append(self.dr_text_area)
+        self.group.append(dr_text_group)
+
 
         ## Lamp select area
         lamp_choice_select_x = 162
