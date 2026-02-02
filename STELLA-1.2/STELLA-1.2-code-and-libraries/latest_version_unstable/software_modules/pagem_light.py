@@ -181,8 +181,8 @@ class Light_Page( Page ):
             #print(spectral_bandwidths_nm)
 
             if spectral_graph_y_values:
-                #print( spectral_graph_x_values_nm[0], spectral_graph_x_values_nm[-1])
-                wavelength_nm_per_point = (spectral_graph_x_values_nm[-1] - spectral_graph_x_values_nm[0])/(self.number_of_points - 1 )
+                wavelength_nm_per_point = (self.spectral_register.wl_max  - self.spectral_register.wl_min)/(self.number_of_points - 1 )
+                #wavelength_nm_per_point = (spectral_graph_x_values_nm[-1] - spectral_graph_x_values_nm[0])/(self.number_of_points - 1 )
                 #print( wavelength_nm_per_point )
 
                 inactive_point_color = 19
@@ -251,12 +251,13 @@ class Light_Page( Page ):
                         point_y_values.append( spectral_graph_y_values[ y_value_index ] )
                         last_index = index
                     else:
-                        point_active.append( False )
-                        self.points[index].color_index = 19
-                        self.points[index].width = self.pixels_per_point
-                        self.points[index].height = self.point_height
-                        self.points[index].x=self.graph_pix_x0 + index*self.pixels_per_point
-                        point_y_values.append( (index-last_index)*slopes_delta_y_per_point[y_value_index] + spectral_graph_y_values[ y_value_index ] )
+                        if y_value_index < len( slopes_delta_y_per_point ) and  y_value_index < len( spectral_graph_y_values ) :
+                            point_active.append( False )
+                            self.points[index].color_index = 19
+                            self.points[index].width = self.pixels_per_point
+                            self.points[index].height = self.point_height
+                            self.points[index].x=self.graph_pix_x0 + index*self.pixels_per_point
+                            point_y_values.append( (index-last_index)*slopes_delta_y_per_point[y_value_index] + spectral_graph_y_values[ y_value_index ] )
 
                 y_pixel_span = self.graph_pix_y0 - self.graph_pix_yn
                 y_value_span = max( point_y_values ) -  min( point_y_values )
@@ -273,7 +274,8 @@ class Light_Page( Page ):
                 for index in range (0, self.number_of_points):
                     self.instrument.handle_inputs()
                     #print( index, y_pix_coords[index] )
-                    self.points[index].y = y_pix_coords[index]
+                    if index < len(y_pix_coords):
+                        self.points[index].y = y_pix_coords[index]
         else:
             pass
 
