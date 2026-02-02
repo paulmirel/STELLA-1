@@ -92,6 +92,7 @@ class as7341_Spectrometer( Device ):
         #self.tsis_cal_counts_per_irradiance = 1405.9, 2079.6, 2631.6, 3556.8, 4246.0, 5060.6, 6888.9, 9130.9
         # first principles calibration by Sten Odenwald of NASA Heliophysics
         # TBD print( "as7341 Sten O cal counts per irradiance at what gain?  TBD " )
+        # WHAT UNITS? Need calibration.
         self.steno_cal_counts_per_irradiance = 4398.0, 6104.0, 7583.0, 9972.0, 11536.0, 13374.0, 17115.0, 20916.0
         self.calibration_error = 0.6
         self.irradiance = [0,0,0,0,0,0,0,0]

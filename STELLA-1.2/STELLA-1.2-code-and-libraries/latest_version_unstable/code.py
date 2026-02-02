@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.9.1"
+SOFTWARE_VERSION_NUMBER = "0.9.9"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -200,6 +200,14 @@ def main():
         from software_modules import devicem_vl53l1x
         vl53l1x_4m_range_sensor = devicem_vl53l1x.initialize_vl53l1x_4m_range_sensor( instrument )
 
+    analog_in_0 = AnalogIn(board.A0)
+    if mlx90614_surface_thermometer.pn and as7265x_spectrometer.pn:
+        from software_modules import devicem_lv_ez_rangefinder
+        lv_ez_rangefinder = devicem_lv_ez_rangefinder.initialize( instrument, analog_in_0, supply_5V )
+        supply_5V.enable()
+    else:
+        lv_ez_rangefinder = False
+
     instrument.welcome_page.announce( "Found {} sensors".format( len(instrument.sensors_present) + len(instrument.spectral_sensors_present)))
 
     for sensor in instrument.spectral_sensors_present:
@@ -207,13 +215,7 @@ def main():
     instrument.make_wavelength_bands_list()
 
 
-    '''
-    analog_in_0 = AnalogIn(board.A0)
-    if mlx90614_surface_thermometer.pn and as7265x_spectrometer.pn:
-        lv_ez_mb1013_rangefinder = initialize_lv_ez_mb1013_rangefinder( instrument, analog_in_0, sense_5V )
-    else:
-        lv_ez_mb1013_rangefinder = False
-    '''
+
     gc.collect()
     mem_free_after_devices = gc.mem_free()
     print( "memory free after device object creations = {} kB, {} %".format(int(gc.mem_free()/1000),

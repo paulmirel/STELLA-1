@@ -1,4 +1,5 @@
 # light page module
+# version 1.0
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
@@ -27,6 +28,7 @@ class Spectral_Register:
                 self.near_infrared_present = True
             if sensor.pn == "as7341":
                 self.visible_present = True
+
         self.spectrum_choices = []
         self.wavelength_ranges = []
         if self.ultraviolet_present and self.visible_present and self.near_infrared_present:
@@ -35,18 +37,19 @@ class Spectral_Register:
         if self.visible_present and self.near_infrared_present:
             self.spectrum_choices.append("vis + nir")
             self.wavelength_ranges.append((400,1000))
-        if self.visible_present:
-            self.spectrum_choices.append("visible")
-            self.wavelength_ranges.append((400,700))
-        if self.near_infrared_present:
-            self.spectrum_choices.append("near infrared")
-            self.wavelength_ranges.append((700,1000))
         if self.ultraviolet_present and self.visible_present:
             self.spectrum_choices.append("uv + vis")
             self.wavelength_ranges.append((200,700))
         if self.ultraviolet_present:
             self.spectrum_choices.append("ultraviolet")
             self.wavelength_ranges.append((200,400))
+        if self.visible_present:
+            self.spectrum_choices.append("visible")
+            self.wavelength_ranges.append((400,700))
+        if self.near_infrared_present:
+            self.spectrum_choices.append("near infrared")
+            self.wavelength_ranges.append((700,1000))
+
         self.spectrum_index = 0
         self.data_source_choices = ["sensors", "*future"]#"reference"]
         self.data_source_index = 0
@@ -100,6 +103,9 @@ class Light_Page( Page ):
         self.field_not_selected_color_index = 9
         self.field_selected = False
         self.points =[]
+        for sensor in self.instrument.sensors_present:
+            if sensor.pn == "lv_ez_mb1013":
+                self.rangefinder = sensor
 
     def create_plot( self ):
         graph_x = 44#14
@@ -253,6 +259,8 @@ class Light_Page( Page ):
                         last_index = index
                     elif index < indicies_of_active_points[0] or index > indicies_of_active_points[-1]: #elif points outside of active_min and active_max
                         point_y_values.append(0) #exile the point to the bottom of the graph
+                        self.points[index].height = 1
+                        self.points[index].color_index = 0
                     else:
                         if y_value_index < len( slopes_delta_y_per_point ) and  y_value_index < len( spectral_graph_y_values ) :
                             point_active.append( False )
@@ -282,8 +290,7 @@ class Light_Page( Page ):
             pass
 
     def update_values( self ):
-        #if self.instrument.active_page == self.pages_list[ self.pages_dict["Fluorescence"] ]:
-        #    self.spectral_register.spectrum_index = 3 #show only vis
+
         self.scale_text_area.text = self.spectral_register.scale_choices[ self.spectral_register.scale_index ]
         self.units_y_text_area.text = self.spectral_register.units_y_choices[ self.spectral_register.units_y_index ]
         self.spectrum_text_area.text = self.spectral_register.spectrum_choices[ self.spectral_register.spectrum_index ]
@@ -291,7 +298,7 @@ class Light_Page( Page ):
         self.units_x_text_area.text = self.spectral_register.units_x_choices[ self.spectral_register.units_x_index ]
         if self.spectral_register.distance_popup:
             self.distance_text_area.scale = 2
-            self.distance_text_area.text = "-- m"
+            self.distance_text_area.text = self.rangefinder.range_text
         else:
             self.distance_text_area.scale = 1
             self.distance_text_area.text = "standoff"
@@ -589,8 +596,8 @@ class Light_Page( Page ):
         self.group.append(units_x_group)
 
         # distance
-        distance_select_x = 164
-        distance_select_width = 60
+        distance_select_x = 160
+        distance_select_width = 70
 
         distance_color_x = distance_select_x + select_width
         self.distance_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=distance_select_width, height=lower_select_height, x=distance_select_x, y=lower_select_y)

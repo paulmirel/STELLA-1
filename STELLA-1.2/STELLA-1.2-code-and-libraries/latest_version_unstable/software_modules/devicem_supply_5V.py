@@ -48,19 +48,6 @@ class Supply_5V( Device ):
         print( self.log())
 
 
-
-    '''
-    sense_5V = AnalogIn(board.A1)
-    analog_in_0 = AnalogIn(board.A0)
-    if mlx90614_surface_thermometer.pn and as7265x_spectrometer.pn:
-        lv_ez_mb1013_rangefinder = initialize_lv_ez_mb1013_rangefinder( instrument, analog_in_0, sense_5V )
-    else:
-        lv_ez_mb1013_rangefinder = False
-    #plus_5v_supply = False #TBD make a device object with digital out and analog in, check it for rising and falling
-
-    # plus_5v_supply.enable(), .read(), .log(), .enable()
-    '''
-
 class Null_Supply_5V(Device):
     def __init__( self ):
         super().__init__(name = None, pn = None)
