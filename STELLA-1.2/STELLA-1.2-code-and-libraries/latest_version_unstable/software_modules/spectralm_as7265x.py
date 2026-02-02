@@ -52,6 +52,7 @@ class Spectral_Channel( Device ):
 
     def get_wavelength( self ):
         return self.wavelength_nm
+
     def get_plot_values( self ):
         return (self.values[3],self.values[4],self.values[5],self.values[6])
 
@@ -143,6 +144,7 @@ class as7265x_Spectrometer( Device ):
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
         self.chip_temperatures = [ 0,0,0,0 ]
+
     def make_spectral_channels( self ):
         index = 0
         for item in self.wavelength_bands_nm:

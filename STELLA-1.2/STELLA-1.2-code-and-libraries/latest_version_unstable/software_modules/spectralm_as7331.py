@@ -34,7 +34,7 @@ class Spectral_Channel( Device ):
         super().__init__(name = name, pn = "as7331", address = 0x74, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s_nm", "irradiance", "conv_value", "bandwidth_nm"]
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s_nm", "irradiance", "bandwidth_nm", "conv_value" ]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
@@ -50,11 +50,13 @@ class Spectral_Channel( Device ):
                         raw,
                         normal_ct_per_s_nm,
                         irradiance,
-                        conv_value,
-                        bandwidth_nm]
+                        bandwidth_nm,
+                        conv_value
+                        ]
 
     def get_wavelength( self ):
         return self.wavelength_nm
+
     def get_plot_values( self ):
         return (self.values[3],self.values[4],0,self.values[6])
 
@@ -80,8 +82,9 @@ class Spectral_Channel( Device ):
                         raw,
                         normal_ct_per_s_nm,
                         irradiance,
-                        conv_value,
-                        self.bandwidth_nm]
+                        self.bandwidth_nm,
+                        conv_value
+                        ]
 
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
@@ -160,59 +163,7 @@ class as7331_Spectrometer( Device ):
         self.max_counts = max(self.data_counts)
         self.min_counts = min(self.data_counts)
         return self.max_counts, self.min_counts
-    '''
-    def read_chip_temperatures(self):
-        pass
 
-    def lamps_on(self):
-        pass
-    def lamps_off(self):
-        pass
-    def read(self):
-        self.UVA_counts, self.UVB_counts, self.UVC_counts, self.chip_temp_c_counts = self.swob.raw_values
-        self.dict_counts = {360:self.UVA_counts, 300:self.UVB_counts, 260:self.UVC_counts}
-        self.UVA, self.UVB, self.UVC, self.chip_temp_c = self.swob.values
-        self.dict_fcal = {360:self.UVA, 300:self.UVB, 260:self.UVC}
-        self.data_counts = [ self.UVC_counts, self.UVB_counts, self.UVA_counts]
-    def read_counts(self):
-        self.UVA_counts, self.UVB_counts, self.UVC_counts, self.chip_temp_c_counts = self.swob.raw_values
-        self.dict_counts = {360:self.UVA_counts, 300:self.UVB_counts, 260:self.UVC_counts}
-        self.data_counts = [ self.UVC_counts, self.UVB_counts, self.UVA_counts]
-    def read_fcal(self):
-        self.UVA, self.UVB, self.UVC, self.chip_temp_c = self.swob.values
-        self.dict_fcal = {360:self.UVA, 300:self.UVB, 260:self.UVC}
-
-    def header(self):
-        return "sensorPN, Wl.nm, raw_counts, irrad.stella.cal, irrad.stella.uncty, irrad_factory.cal, irrad_factory.uncty, gain, integration_time_ms, chip_temp_C"
-        #return "UVC.WL.nm, UVC_uncal, UVB.WL.nm, UVB_uncal, UVA.WL.nm, UVA_uncal, UVS.temp.C"
-    def log( self, wavelength):
-        if wavelength in self.bands:
-            logline = "{}".format( self.pn )
-            logline += ", {}".format( wavelength )
-            logline += ", {}".format( self.dict_bandwidths[wavelength] )
-            logline += ", {}".format( self.dict_counts[wavelength] )
-            logline += ", {}".format( self.dict_fcal[wavelength] )
-            logline += ", {}".format( " - " )
-            logline += ", {}".format( self.gain_ratio )#gain
-            logline += ", {}".format( self.intg_time_ms )#integration time
-            logline += ", {}".format( self.dict_chip_n[wavelength] )#chip number
-            logline += ", {}".format( " - " )#self.chip_temp_c[self.dict_chip_n[wavelength]] )#chip temperature
-            return logline
-    def serial_log(self, wavelength):
-        if wavelength in self.bands:
-            loglist = "pn: {}".format( self.pn )
-            loglist += ", WL-!-nm: {}".format( wavelength )
-            loglist += ", BW-!-nm: {}".format( self.dict_bandwidths[wavelength] )
-            loglist += ", raw-!-counts: {}".format( self.dict_counts[wavelength] )
-            loglist += ", irrad-!-uW_per_cm_sq: {}".format( self.dict_fcal[wavelength] )
-            loglist += ", gain-!-: {}".format( self.gain_ratio )
-            loglist += ", intg-!-ms: {}".format( self.intg_time_ms )
-            return loglist
-    def get_bandwidth(self, wavelength):
-        return self.dict_bandwidths[wavelength]
-    def printlog(self):
-        print( self.log())
-    '''
 
 class Null_as7331_Spectrometer(Device):
     def __init__( self ):

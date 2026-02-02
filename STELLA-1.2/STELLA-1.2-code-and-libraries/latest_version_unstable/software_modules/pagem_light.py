@@ -34,10 +34,10 @@ class Spectral_Register:
             self.wavelength_ranges.append((200,1000))
         if self.visible_present and self.near_infrared_present:
             self.spectrum_choices.append("vis + nir")
-            self.wavelength_ranges.append((410,1000))
+            self.wavelength_ranges.append((400,1000))
         if self.visible_present:
             self.spectrum_choices.append("visible")
-            self.wavelength_ranges.append((410,700))
+            self.wavelength_ranges.append((400,700))
         if self.near_infrared_present:
             self.spectrum_choices.append("near infrared")
             self.wavelength_ranges.append((700,1000))
@@ -107,7 +107,7 @@ class Light_Page( Page ):
         graph_height = 240-124
         message_height = int( graph_height/4 )
         message_offset = 10
-        graph_y = 80
+        graph_y = 80 +4
         self.graph_pix_y0 = graph_y + graph_height
         self.graph_pix_x0 = graph_x
         self.graph_pix_xn = self.graph_pix_x0 + graph_width
@@ -195,7 +195,7 @@ class Light_Page( Page ):
                 point_y_location = []   # display position in y pixels for each point: plot this value
 
                 for value in spectral_graph_x_values_nm:
-                    indicies_of_active_points.append(int( round((value - spectral_graph_x_values_nm[0]) / wavelength_nm_per_point,0)))
+                    indicies_of_active_points.append(int( round((value - self.spectral_register.wl_min) / wavelength_nm_per_point,0)))
 
                 slopes_delta_y_per_point = []
                 for index in range ( 0, len(indicies_of_active_points)-1):
@@ -209,6 +209,7 @@ class Light_Page( Page ):
                 for index in range (0, self.number_of_points):
                     self.instrument.handle_inputs()
                     point_wavelengths_nm.append( spectral_graph_x_values_nm[0] + index * wavelength_nm_per_point)
+                    #point_wavelengths_nm.append( self.spectral_register.wl_min + index * wavelength_nm_per_point)
                     if index in indicies_of_active_points:
                         y_value_index += 1
                         point_active.append( True )
@@ -250,6 +251,8 @@ class Light_Page( Page ):
                         self.points[index].height = self.point_height *3
                         point_y_values.append( spectral_graph_y_values[ y_value_index ] )
                         last_index = index
+                    elif index < indicies_of_active_points[0] or index > indicies_of_active_points[-1]: #elif points outside of active_min and active_max
+                        point_y_values.append(0) #exile the point to the bottom of the graph
                     else:
                         if y_value_index < len( slopes_delta_y_per_point ) and  y_value_index < len( spectral_graph_y_values ) :
                             point_active.append( False )
@@ -258,7 +261,6 @@ class Light_Page( Page ):
                             self.points[index].height = self.point_height
                             self.points[index].x=self.graph_pix_x0 + index*self.pixels_per_point
                             point_y_values.append( (index-last_index)*slopes_delta_y_per_point[y_value_index] + spectral_graph_y_values[ y_value_index ] )
-
                 y_pixel_span = self.graph_pix_y0 - self.graph_pix_yn
                 y_value_span = max( point_y_values ) -  min( point_y_values )
                 if y_value_span > 0:
@@ -535,10 +537,10 @@ class Light_Page( Page ):
         origin_y = 198
         height_y = 124
 
-        y_axis_line = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=1, height= height_y, x=origin_x, y=origin_y - height_y )
+        y_axis_line = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=2, height= height_y, x=origin_x, y=origin_y - height_y )
         self.group.append( y_axis_line )
 
-        x_axis_line = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=280, height=1, x=origin_x, y=origin_y)
+        x_axis_line = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=280, height=2, x=origin_x, y=origin_y)
         self.group.append( x_axis_line )
 
 
