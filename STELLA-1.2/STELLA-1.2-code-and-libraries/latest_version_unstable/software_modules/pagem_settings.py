@@ -17,6 +17,9 @@ class Settings_Page( Page ):
         self.selection = 0
         self.selection_count = 0
         self.last_selection = 0
+        self.selection_color_index = 6
+        self.field_selected_color_index = 5
+        self.field_not_selected_color_index = 9
         self.field_selected = False
 
     def make_group( self ):
@@ -229,6 +232,51 @@ class Settings_Page( Page ):
             print("set serial interval")
         if self.selection == 4:
             self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+        if self.instrument.encoder_increment != 0:
+            if self.field_selected:
+                if self.selection == 0:
+                    print("increment sample interval")
+                if self.selection == 1:
+                    print("increment burst count")
+                if self.selection == 2:
+                    print("toggle serial output")
+                if self.selection == 3:
+                    print("increment serial interval")
+            self.instrument.encoder_increment = 0
+            self.update_values()
+
+        if self.instrument.button_pressed:
+            if self.selection == 4:
+                self.instrument.active_page_number = self.instrument.last_active_page_number #pages_dict["Main"]
+            else:
+                self.field_selected = not self.field_selected
+                if self.selection == 0:
+                    if self.field_selected:
+                        self.value_areas[0].color_index = self.field_selected_color_index
+                        print( "sample interval" )
+                    else:
+                        self.value_areas[0].color_index = self.field_not_selected_color_index
+                if self.selection == 1:
+                    if self.field_selected:
+                        self.value_areas[1].color_index = self.field_selected_color_index
+                        print( "burst_count" )
+                    else:
+                        self.value_areas[1].color_index = self.field_not_selected_color_index
+                if self.selection == 2:
+                    if self.field_selected:
+                        self.value_areas[2].color_index = self.field_selected_color_index
+                        print( "toggle" )
+                    else:
+                        self.value_areas[2].color_index = self.field_not_selected_color_index
+                if self.selection == 3:
+                    if self.field_selected:
+                        self.value_areas[3].color_index = self.field_selected_color_index
+                        print( "serial interval" )
+                    else:
+                        self.value_areas[3].color_index = self.field_not_selected_color_indexdex
+
+            self.instrument.button_pressed = False
+            self.update_values()
 
     def update_values( self ):
         self.text_areas[2].text = self.interval_units( self.instrument.sample_interval_s )

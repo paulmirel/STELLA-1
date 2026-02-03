@@ -1,4 +1,5 @@
-# controls page
+# Lab_Spec page
+# version 2.0
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
@@ -418,6 +419,7 @@ class Lab_Spec_Page( Page ):
 
 
     def action( self ):
+        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
         if self.selection == 13:
             self.instrument.active_page_number = self.instrument.pages_dict["Main"]
         if self.selection == 0:
