@@ -1,4 +1,5 @@
 # settings page
+# version 1.0
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
@@ -17,8 +18,13 @@ class Settings_Page( Page ):
         self.selection = 0
         self.selection_count = 0
         self.last_selection = 0
+        self.selection_color_index = 6
+        self.field_selected_color_index = 5
+        self.field_not_selected_color_index = 9
         self.field_selected = False
-
+        self.intervals = [1,2,3,4,5,6,7,8,9,10,15,20,25,30,45,60,2*60,3*60,4*60,5*60,10*60,15*60,20*60,30*60,45*60,3600,2*3600,3*3600,4*3600,5*3600,10*3600]
+        self.sample_interval_index = 1
+        self.serial_interval_index = 1
     def make_group( self ):
         self.group = displayio.Group()
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
@@ -219,16 +225,64 @@ class Settings_Page( Page ):
         return self.group
 
     def action( self ):
-        if self.selection == 0:
-            print("set sample interval")
-        if self.selection == 1:
-            print("set burst count")
-        if self.selection == 2:
-            print("set serial output")
-        if self.selection == 3:
-            print("set serial interval")
-        if self.selection == 4:
-            self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+        if self.instrument.encoder_increment != 0:
+            if self.field_selected:
+                if self.selection == 0:
+                    self.sample_interval_index += self.instrument.encoder_increment
+                    if self.sample_interval_index < 0:
+                        self.sample_interval_index = 0
+                    if self.sample_interval_index > len(self.intervals) -1:
+                        self.sample_interval_index = len(self.intervals) -1
+                    self.instrument.sample_interval_s = self.intervals[self.sample_interval_index]
+                if self.selection == 1:
+                    set_burst_count = self.instrument.burst_count + self.instrument.encoder_increment
+                    if set_burst_count < 1:
+                        set_burst_count = 1
+                    if set_burst_count > 20:
+                        set_burst_count = 20
+                    self.instrument.burst_count = set_burst_count
+                if self.selection == 2:
+                    self.instrument.serial_out = not self.instrument.serial_out
+                if self.selection == 3:
+                    self.serial_interval_index += self.instrument.encoder_increment
+                    if self.serial_interval_index < 0:
+                        self.serial_interval_index = 0
+                    if self.serial_interval_index > len(self.intervals) -1:
+                        self.serial_interval_index = len(self.intervals) -1
+                    self.instrument.serial_interval_s = self.intervals[self.serial_interval_index]
+                if self.selection == 4:
+                    self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+            self.instrument.encoder_increment = 0
+            self.update_values()
+
+        if self.instrument.button_pressed:
+            if self.selection == 4:
+                self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+            else:
+                self.field_selected = not self.field_selected
+                if self.selection == 0:
+                    if self.field_selected:
+                        self.value_areas[0].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[0].color_index = self.field_not_selected_color_index
+                if self.selection == 1:
+                    if self.field_selected:
+                        self.value_areas[1].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[1].color_index = self.field_not_selected_color_index
+                if self.selection == 2:
+                    if self.field_selected:
+                        self.value_areas[2].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[2].color_index = self.field_not_selected_color_index
+                if self.selection == 3:
+                    if self.field_selected:
+                        self.value_areas[3].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[3].color_index = self.field_not_selected_color_index
+
+            self.instrument.button_pressed = False
+            self.update_values()
 
     def update_values( self ):
         self.text_areas[2].text = self.interval_units( self.instrument.sample_interval_s )
