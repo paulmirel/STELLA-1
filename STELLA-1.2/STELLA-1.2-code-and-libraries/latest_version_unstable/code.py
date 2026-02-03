@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "0.9.9"
+SOFTWARE_VERSION_NUMBER = "1.0.0"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
