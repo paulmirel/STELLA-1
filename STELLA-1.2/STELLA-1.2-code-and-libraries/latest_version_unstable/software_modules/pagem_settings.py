@@ -222,26 +222,28 @@ class Settings_Page( Page ):
         return self.group
 
     def action( self ):
-        if self.selection == 0:
-            print("set sample interval")
-        if self.selection == 1:
-            print("set burst count")
-        if self.selection == 2:
-            print("set serial output")
-        if self.selection == 3:
-            print("set serial interval")
-        if self.selection == 4:
-            self.instrument.active_page_number = self.instrument.pages_dict["Main"]
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
                 if self.selection == 0:
-                    print("increment sample interval")
+                    print("set sample interval")
                 if self.selection == 1:
-                    print("increment burst count")
+                    print("set burst count")
                 if self.selection == 2:
-                    print("toggle serial output")
+                    self.instrument.serial_out = not self.instrument.serial_out
                 if self.selection == 3:
-                    print("increment serial interval")
+                    print("set serial interval")
+                if self.selection == 4:
+                    self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+                if self.instrument.encoder_increment != 0:
+                    if self.field_selected:
+                        if self.selection == 0:
+                            print("increment sample interval")
+                        if self.selection == 1:
+                            print("increment burst count")
+                        if False: #self.selection == 2:
+                            print("toggle serial output")
+                        if self.selection == 3:
+                            print("increment serial interval")
             self.instrument.encoder_increment = 0
             self.update_values()
 
@@ -265,7 +267,6 @@ class Settings_Page( Page ):
                 if self.selection == 2:
                     if self.field_selected:
                         self.value_areas[2].color_index = self.field_selected_color_index
-                        print( "toggle" )
                     else:
                         self.value_areas[2].color_index = self.field_not_selected_color_index
                 if self.selection == 3:
