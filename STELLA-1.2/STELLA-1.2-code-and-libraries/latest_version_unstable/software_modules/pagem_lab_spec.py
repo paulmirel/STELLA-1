@@ -52,6 +52,7 @@ class Lab_Spec_Page( Page ):
         if self.adc_sensor:
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
+        self.measuring = False
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -145,8 +146,12 @@ class Lab_Spec_Page( Page ):
         x = start_x
         for index in range(0, len(line_names)):
             text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
-            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
-            text_group.append(text_area)
+            if index == 0:
+                self.set_current_text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
+                text_group.append(self.set_current_text_area)
+            else:
+                text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
+                text_group.append(text_area)
             self.group.append(text_group)
             if line_selectable[index]:
                 selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
@@ -406,6 +411,15 @@ class Lab_Spec_Page( Page ):
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
         self.text_areas[11].text = "{}".format(self.instrument.batch_number)
+        if self.instrument.vfs:
+            if self.measuring:
+                self.status_index = 1
+            else:
+                self.status_index = 0
+        else:
+            self.status_index = 4
+        self.text_areas[8].text = self.status_list[self.status_index]
+
         if len(self.spectral_sensors) >0:
             gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
             self.text_areas[9].text = "{}".format(gain)
@@ -495,6 +509,9 @@ class Lab_Spec_Page( Page ):
                         self.chB_index = self.number_of_channels -1
                     if self.chB_index < 0:
                         self.chB_index = 0
+                if self.selection == 5:
+                    pass
+
 
 
             self.instrument.encoder_increment = 0
@@ -517,6 +534,13 @@ class Lab_Spec_Page( Page ):
                         self.value_areas[4].color_index = self.field_selected_color_index
                     else:
                         self.value_areas[4].color_index = self.field_not_selected_color_index
+                if self.selection == 5:
+                    if self.field_selected:
+                        self.value_areas[5].color_index = self.field_selected_color_index
+                        self.set_current_text_area.text = "SET current"
+                    else:
+                        self.value_areas[5].color_index = self.field_not_selected_color_index
+                        self.set_current_text_area.text = "last current"
                 if self.selection == 6:
                     if self.field_selected:
                         self.value_areas[6].color_index = self.field_selected_color_index
