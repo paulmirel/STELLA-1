@@ -112,7 +112,7 @@ def main():
 
     supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
 
-    lab_spec_present = False
+    lab_spec_present = [False,False,False]
     instrument.spectral_sensors_detected = False
     # initialize spectral sensors
     if True:
@@ -124,7 +124,7 @@ def main():
             print("as7341 found")
             from software_modules import spectralm_as7341 #VIS
             as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
-            lab_spec_present = True
+            lab_spec_present[0] = True
         if ('0x49') in devices_present_hex:
             print("as7265x found ")
             from software_modules import spectralm_as7265x #VIS+NIR
@@ -138,7 +138,7 @@ def main():
     if ('0x48') in devices_present_hex:
         from software_modules import devicem_ads1015
         ads1015_12_bit_adc = devicem_ads1015.initialize_ads1015_12_bit_adc( instrument )
-        lab_spec_present = True
+        lab_spec_present[1] = True
     if ('0x4a') in devices_present_hex:
         from software_modules import devicem_ads1115
         ads1115_16_bit_adc = devicem_ads1115.initialize_ads1115_16_bit_adc( instrument ) ### connect ADDR to SDA to set address
@@ -194,9 +194,7 @@ def main():
     if ('0x64') in devices_present_hex:
         from software_modules import devicem_mcp4728
         mcp4728_quad_dac = devicem_mcp4728.initialize_mcp4728_quad_dac( instrument )
-        lab_spec_present = True
-    else:
-        lab_spec_present = False
+        lab_spec_present[2] = True
     if ('0x37') in devices_present_hex:
         pass
         #from adafruit_seesaw.seesaw import Seesaw
@@ -287,7 +285,7 @@ def main():
     if True: #False: #non-menu startup page
         if instrument.spectral_sensors_detected:
             instrument.active_page_number = instrument.pages_dict["Light"]
-        if lab_spec_present:
+        if all(lab_spec_present):
             instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
         if False:
             instrument.active_page_number = instrument.pages_dict["Heat"]
