@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "1.0.0"
+SOFTWARE_VERSION_NUMBER = "1.0.1"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -112,6 +112,7 @@ def main():
 
     supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
 
+    lab_spec_present = False
     instrument.spectral_sensors_detected = False
     # initialize spectral sensors
     if True:
@@ -123,6 +124,7 @@ def main():
             print("as7341 found")
             from software_modules import spectralm_as7341 #VIS
             as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
+            lab_spec_present = True
         if ('0x49') in devices_present_hex:
             print("as7265x found ")
             from software_modules import spectralm_as7265x #VIS+NIR
@@ -131,10 +133,12 @@ def main():
             instrument.spectral_sensors_detected = True
 
     # initialize sensors
+
     gps = devicem_gps.initialize_gps( instrument )
     if ('0x48') in devices_present_hex:
         from software_modules import devicem_ads1015
         ads1015_12_bit_adc = devicem_ads1015.initialize_ads1015_12_bit_adc( instrument )
+        lab_spec_present = True
     if ('0x4a') in devices_present_hex:
         from software_modules import devicem_ads1115
         ads1115_16_bit_adc = devicem_ads1115.initialize_ads1115_16_bit_adc( instrument ) ### connect ADDR to SDA to set address
@@ -187,6 +191,12 @@ def main():
     if ('0x62') in devices_present_hex:
         from software_modules import devicem_scd4x
         scd4x_co2_sensor = devicem_scd4x.initialize_scd4x_co2_sensor( instrument )
+    if ('0x64') in devices_present_hex:
+        from software_modules import devicem_mcp4728
+        mcp4728_quad_dac = devicem_mcp4728.initialize_mcp4728_quad_dac( instrument )
+        lab_spec_present = True
+    else:
+        lab_spec_present = False
     if ('0x37') in devices_present_hex:
         pass
         #from adafruit_seesaw.seesaw import Seesaw
@@ -275,15 +285,12 @@ def main():
     loop_times = []
 
     if True: #False: #non-menu startup page
-        if False: #go to startup page
-            instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
-        if False: #go to startup page
-            instrument.active_page_number = instrument.pages_dict["Sensors"]
-            sensors_page.choose_sensor( instrument.sensors_present[1] )
-        if False:
-            instrument.active_page_number = instrument.pages_dict["Heat"]
         if instrument.spectral_sensors_detected:
             instrument.active_page_number = instrument.pages_dict["Light"]
+        if lab_spec_present:
+            instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
+        if False:
+            instrument.active_page_number = instrument.pages_dict["Heat"]
 
     try:
         if buzzer: buzzer.beep()
