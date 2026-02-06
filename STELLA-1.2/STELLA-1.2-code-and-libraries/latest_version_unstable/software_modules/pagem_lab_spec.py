@@ -201,12 +201,12 @@ class Lab_Spec_Page( Page ):
                                                             height=height_2-2*select_width, x=x+select_width, y=line_y+height_1+select_width)
                 self.group.append(self.area_rectangle)
                 self.value_areas.append(self.area_rectangle)
-
-            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+height_1 +int(height_2/2))
-            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
-            self.text_areas.append(self.text_area)
-            text_group.append(self.text_area)
-            self.group.append(text_group)
+            if index == 0:
+                text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+height_1 +int(height_2/2))
+                self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+                self.text_areas.append(self.text_area)
+                text_group.append(self.text_area)
+                self.group.append(text_group)
 
             x += line_widths[index]
 
@@ -404,15 +404,15 @@ class Lab_Spec_Page( Page ):
         timenow = self.instrument.hardware_clock.read()
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
-        self.text_areas[16].text = "{}".format(self.instrument.batch_number)
+        self.text_areas[11].text = "{}".format(self.instrument.batch_number)
         if len(self.spectral_sensors) >0:
             gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
             self.text_areas[9].text = "{}".format(gain)
             integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
             if integration_time_ms < 1000:
-                self.text_areas[15].text = "{}ms".format(integration_time_ms)
+                self.text_areas[10].text = "{}ms".format(integration_time_ms)
             else:
-                self.text_areas[15].text = "{}s".format(round(integration_time_ms/1000,1))
+                self.text_areas[10].text = "{}s".format(round(integration_time_ms/1000,1))
 
         if False:
             if self.supply_5V_on:
