@@ -133,13 +133,14 @@ class Lab_Spec_Page( Page ):
             x += line_widths[index]
 
         line_y += line_spacing
+        batch_line_y = line_y
         batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=12, width=48-2*select_width,
                                                             height=height_2-2*select_width, x=138, y=line_y+height_1+select_width)
         self.group.append(batch_highlight)
-        line_names = ["last current", "status", "batch", "+=1", "measure & log" ]
-        line_values = [" -- ", " --", "--", "B+", "MEASURE"]
-        line_selectable = [ True, False, False, True, True ]
-        line_widths = [78, 54, 48, 38, 100]
+        line_names = ["last current", "status" ]
+        line_values = [" -- ", " --"]
+        line_selectable = [ True, False ]
+        line_widths = [78, 54]
         x = start_x
         for index in range(0, len(line_names)):
             text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
@@ -169,8 +170,7 @@ class Lab_Spec_Page( Page ):
             self.group.append(text_group)
 
             x += line_widths[index]
-        self.value_areas[-2].color_index = 12
-        self.value_areas[-1].color_index = 5
+
 
         line_y += line_spacing
         line_names = ["gain", "mmt#", "A value", "B value", "A/B", "%DR" ]
@@ -247,6 +247,46 @@ class Lab_Spec_Page( Page ):
             self.group.append(text_group)
 
             x += line_widths[index]
+
+
+        batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=12, width=48-2*select_width,
+                                                            height=height_2-2*select_width, x=138, y=batch_line_y+height_1+select_width)
+        self.group.append(batch_highlight)
+        line_names = ["batch", "+=1", "measure & log" ]
+        line_values = ["--", "B+", "MEASURE"]
+        line_selectable = [ False, True, True ]
+        line_widths = [48, 38, 100]
+        x = 78+ 54
+        for index in range(0, len(line_names)):
+            text_group = displayio.Group(scale=1, x=x+offset_1, y=batch_line_y+int(height_1/2))
+            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=batch_line_y+height_1)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
+
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=batch_line_y+height_1+select_width-border_width)
+                self.group.append(border_rectangle)
+
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=batch_line_y+height_1+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=batch_line_y+height_1 +int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+
+            x += line_widths[index]
+        self.value_areas[-2].color_index = 12
+        self.value_areas[-1].color_index = 5
 
 
         line_y += line_spacing - 10
@@ -364,10 +404,15 @@ class Lab_Spec_Page( Page ):
         timenow = self.instrument.hardware_clock.read()
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
-        self.text_areas[9].text = "{}".format(self.instrument.batch_number)
+        self.text_areas[16].text = "{}".format(self.instrument.batch_number)
         if len(self.spectral_sensors) >0:
             gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
-            self.text_areas[12].text = "{}".format(gain)
+            self.text_areas[9].text = "{}".format(gain)
+            integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
+            if integration_time_ms < 1000:
+                self.text_areas[15].text = "{}ms".format(integration_time_ms)
+            else:
+                self.text_areas[15].text = "{}s".format(round(integration_time_ms/1000,1))
 
         if False:
             if self.supply_5V_on:
@@ -422,28 +467,40 @@ class Lab_Spec_Page( Page ):
     def action( self ):
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
-                if self.selection == 8:
+                if self.selection == 6:
                     self.gain_index[self.active_sensor_index] = (self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment )
                     if self.gain_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1:
                         self.gain_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1
                     if self.gain_index[self.active_sensor_index] < 0:
                         self.gain_index[self.active_sensor_index] = 0
                     self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+                if self.selection == 7:
+                    self.integration_time_index[self.active_sensor_index] = (self.integration_time_index[self.active_sensor_index] + self.instrument.encoder_increment )
+                    if self.integration_time_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list) - 1:
+                        self.integration_time_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list) - 1
+                    if self.integration_time_index[self.active_sensor_index] < 0:
+                        self.integration_time_index[self.active_sensor_index] = 0
+                    self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
             self.instrument.encoder_increment = 0
             self.update_values()
 
         if self.instrument.button_pressed:
             if self.selection == 0:
                 self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-            elif self.selection == 6:
+            elif self.selection == 8:
                 self.instrument.update_batch()
             else:
                 self.field_selected = not self.field_selected
-                if self.selection == 8:
+                if self.selection == 6:
                     if self.field_selected:
-                        self.value_areas[8].color_index = self.field_selected_color_index
+                        self.value_areas[6].color_index = self.field_selected_color_index
                     else:
-                        self.value_areas[8].color_index = self.field_not_selected_color_index
+                        self.value_areas[6].color_index = self.field_not_selected_color_index
+                if self.selection == 7:
+                    if self.field_selected:
+                        self.value_areas[7].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[7].color_index = self.field_not_selected_color_index
             self.instrument.button_pressed = False
             self.update_values()
 
