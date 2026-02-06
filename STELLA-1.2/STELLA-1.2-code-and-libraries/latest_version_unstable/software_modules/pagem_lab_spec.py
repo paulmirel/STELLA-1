@@ -101,7 +101,7 @@ class Lab_Spec_Page( Page ):
 
         line_y += line_spacing - height_1
         line_names = ["excitation", "position", "inspect A", "inspect B" ]
-        line_values = ["488nm","below", "515nm", "480nm"]
+        line_values = ["488nm","below", " --", " --"]
         line_selectable = [ True, True, True, True ]
         line_widths = [78,86,77,77]
         x = start_x
@@ -135,7 +135,7 @@ class Lab_Spec_Page( Page ):
                                                             height=height_2-2*select_width, x=138, y=line_y+height_1+select_width)
         self.group.append(batch_highlight)
         line_names = ["last current", "status", "batch", "+=1", "measure & log" ]
-        line_values = ["800mA", "OK", "265", "B+", "MEASURE"]
+        line_values = [" -- ", " --", "--", "B+", "MEASURE"]
         line_selectable = [ True, False, False, True, True ]
         line_widths = [78, 54, 48, 38, 100]
         x = start_x
@@ -172,7 +172,7 @@ class Lab_Spec_Page( Page ):
 
         line_y += line_spacing
         line_names = ["gain", "mmt#", "A value", "B value", "A/B", "%DR" ]
-        line_values = ["265", "", "", "", "", ""]
+        line_values = [" --", "", "", "", "", ""]
         line_selectable = [ True, False, False, False, False, False, False]
         line_widths = [74, 46, 66, 66, 38, 30 ]
         x = start_x
@@ -210,7 +210,7 @@ class Lab_Spec_Page( Page ):
 
         line_y += line_spacing
         line_names = ["integration" ]
-        line_values = ["800ms"]
+        line_values = [" -- "]
         line_selectable = [ True]
         line_widths = [74]
         x = start_x
@@ -294,7 +294,7 @@ class Lab_Spec_Page( Page ):
         # measured values
         line_y = 128
         #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
-        line_values = ["M03", "65535", "65535", "1.0", "20"]
+        line_values = ["", "", "", "", ""]
         line_widths = [42, 66, 66, 42, 30 ]
         x = 78
         for index in range(0, len(line_values)):
@@ -309,7 +309,7 @@ class Lab_Spec_Page( Page ):
 
         line_y += 24
         #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
-        line_values = ["M02", "65535", "65535", "1.0", "20"]
+        line_values = ["", "", "", "", ""]
         line_widths = [42, 66, 66, 42, 30 ]
         x = 78
         for index in range(0, len(line_values)):
@@ -324,7 +324,7 @@ class Lab_Spec_Page( Page ):
 
         line_y += 24
         #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
-        line_values = ["M01", "65535", "65535", "1.0", "20"]
+        line_values = ["", "", "", "", ""]
         line_widths = [42, 66, 66, 42, 30 ]
         x = 78
         for index in range(0, len(line_values)):
@@ -362,10 +362,11 @@ class Lab_Spec_Page( Page ):
         timenow = self.instrument.hardware_clock.read()
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
+        self.text_areas[9].text = "{}".format(self.instrument.batch_number)
 
         if False:
 
-            self.text_areas[4].text = "{}".format(self.instrument.batch_number)
+
             if self.supply_5V_on:
                 self.text_areas[9].text = "ON"
                 self.value_areas[4].color_index = 4
@@ -419,44 +420,46 @@ class Lab_Spec_Page( Page ):
 
 
     def action( self ):
-        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-        if self.selection == 13:
-            self.instrument.active_page_number = self.instrument.pages_dict["Main"]
         if self.selection == 0:
-            self.instrument.update_batch()
-        if self.selection == 1:
-            print( "enter to select from available lamps by position" )
-        if self.selection == 2:
-            print( "enter to select from available lamps by wavelength" )
-        if self.selection == 3:
-            print( "enter to set desired current" )
-        if self.selection == 4:
-            self.supply_5V_on = not self.supply_5V_on
-            if self.supply_5V_on:
-                self.supply_5V.enable()
-            else:
-                self.supply_5V.disable()
-
-        if self.selection == 5:
-            print( "enter to set gain" )
-            self.gain_index[self.active_sensor_index] = (
-                                self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
-                                self.spectral_sensors[self.active_sensor_index].gain_list )
-            self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+            self.instrument.active_page_number = self.instrument.pages_dict["Main"]
         if self.selection == 6:
-            print( "enter to select integration time" )
-        if self.selection == 7:
-            print( "write current values to file" )
-        if self.selection == 8:
-            print( "enter to select channel A" )
-        if self.selection == 9:
-            print( "enter to select channel B" )
-        if self.selection == 10:
-            print( "enter to select instruction" )
-        if self.selection == 11:
-            print( "execute measurement sequence" )
-        if self.selection == 12:
-            print( "advance to the next instruction" )
+            self.instrument.update_batch()
+
+
+        if False:
+            if self.selection == 1:
+                print( "enter to select from available lamps by position" )
+            if self.selection == 2:
+                print( "enter to select from available lamps by wavelength" )
+            if self.selection == 3:
+                print( "enter to set desired current" )
+            if self.selection == 4:
+                self.supply_5V_on = not self.supply_5V_on
+                if self.supply_5V_on:
+                    self.supply_5V.enable()
+                else:
+                    self.supply_5V.disable()
+
+            if self.selection == 5:
+                print( "enter to set gain" )
+                self.gain_index[self.active_sensor_index] = (
+                                    self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment ) % len(
+                                    self.spectral_sensors[self.active_sensor_index].gain_list )
+                self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+            if self.selection == 6:
+                print( "enter to select integration time" )
+            if self.selection == 7:
+                print( "write current values to file" )
+            if self.selection == 8:
+                print( "enter to select channel A" )
+            if self.selection == 9:
+                print( "enter to select channel B" )
+            if self.selection == 10:
+                print( "enter to select instruction" )
+            if self.selection == 11:
+                print( "execute measurement sequence" )
+            if self.selection == 12:
+                print( "advance to the next instruction" )
 
 
 
