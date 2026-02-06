@@ -26,6 +26,7 @@ class Lab_Spec_Page( Page ):
         self.field_not_selected_color_index = 9
         self.chA_index = 3
         self.chB_index = 2
+        self.number_of_channels = 8 #TBD for alternate sensors
         self.spectral_sensors = self.instrument.spectral_sensors_present
         self.active_sensor_index = 0
         self.max_counts = 65535
@@ -413,14 +414,20 @@ class Lab_Spec_Page( Page ):
                 self.text_areas[10].text = "{}ms".format(integration_time_ms)
             else:
                 self.text_areas[10].text = "{}s".format(round(integration_time_ms/1000,1))
+            self.text_areas[5].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chA_index])
+            self.text_areas[6].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chB_index])
+            if self.chA_index == self.chB_index:
+                if self.selection == 3:
+                    self.value_areas[4].color_index = 4
+                if self.selection == 4:
+                    self.value_areas[3].color_index = 4
+            else:
+                if self.selection == 3:
+                    self.value_areas[4].color_index = 9
+                if self.selection == 4:
+                    self.value_areas[3].color_index = 9
 
         if False:
-            if self.supply_5V_on:
-                self.text_areas[9].text = "ON"
-                self.value_areas[4].color_index = 4
-            else:
-                self.text_areas[9].text = "OFF"
-                self.value_areas[4].color_index = 9
             if self.adc_sensor:
                 self.adc_sensor.read()
                 lamp_currrent_voltage = self.adc_sensor.voltage[0]
@@ -430,13 +437,8 @@ class Lab_Spec_Page( Page ):
             self.text_areas[13].text = self.status_list[ self.status_index ]
             self.text_areas[15].text = "M{:03}".format( self.mmt_number )
 
-            integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
-            if integration_time_ms < 1000:
-                self.text_areas[11].text = "{}ms".format(integration_time_ms)
-            else:
-                self.text_areas[11].text = "{}s".format(round(integration_time_ms/1000,1))
 
-            self.text_areas[17].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chA_index])
+
             chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
             chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
             self.text_areas[18].text = "{:05}".format(chA_counts)
@@ -445,7 +447,7 @@ class Lab_Spec_Page( Page ):
                 self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
             else:
                 self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
-            self.text_areas[22].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chB_index])
+
             self.text_areas[23].text = "{:05}".format(chB_counts)
             chB_pdr = 100*chB_counts/self.max_counts
             if chB_pdr < 10:
@@ -481,6 +483,20 @@ class Lab_Spec_Page( Page ):
                     if self.integration_time_index[self.active_sensor_index] < 0:
                         self.integration_time_index[self.active_sensor_index] = 0
                     self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
+                if self.selection == 3:
+                    self.chA_index = ( self.chA_index + self.instrument.encoder_increment)
+                    if self.chA_index > self.number_of_channels -1 :
+                        self.chA_index = self.number_of_channels -1
+                    if self.chA_index < 0:
+                        self.chA_index = 0
+                if self.selection == 4:
+                    self.chB_index = ( self.chB_index + self.instrument.encoder_increment)
+                    if self.chB_index > self.number_of_channels -1 :
+                        self.chB_index = self.number_of_channels -1
+                    if self.chB_index < 0:
+                        self.chB_index = 0
+
+
             self.instrument.encoder_increment = 0
             self.update_values()
 
@@ -491,6 +507,16 @@ class Lab_Spec_Page( Page ):
                 self.instrument.update_batch()
             else:
                 self.field_selected = not self.field_selected
+                if self.selection == 3:
+                    if self.field_selected:
+                        self.value_areas[3].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[3].color_index = self.field_not_selected_color_index
+                if self.selection == 4:
+                    if self.field_selected:
+                        self.value_areas[4].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[4].color_index = self.field_not_selected_color_index
                 if self.selection == 6:
                     if self.field_selected:
                         self.value_areas[6].color_index = self.field_selected_color_index
