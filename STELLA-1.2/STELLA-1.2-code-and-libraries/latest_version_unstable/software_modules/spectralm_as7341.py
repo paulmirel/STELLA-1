@@ -98,7 +98,7 @@ class as7341_Spectrometer( Device ):
         self.irradiance = [0,0,0,0,0,0,0,0]
         self.dict_stenocal = {}
         self.swob.led_current = 50
-        self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256 ]
+        self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
         self.gain_index = 5
         self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180]
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
