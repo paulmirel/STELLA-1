@@ -62,6 +62,9 @@ class Lab_Spec_Page( Page ):
         self.file_write_request = False
         self.mmt_number = 0
         self.measuring = False
+        self.mmt_sequence_start = 0
+        self.mmt_interval = 10
+
 
     def update_values( self ):
         timenow = self.instrument.hardware_clock.read()
@@ -71,11 +74,17 @@ class Lab_Spec_Page( Page ):
         if self.instrument.vfs:
             if self.measuring:
                 self.status_index = 1
+                self.status_highlight.color_index = 4
             else:
                 self.status_index = 0
+                self.status_highlight.color_index = 5
         else:
             self.status_index = 4
+            self.status_highlight.color_index = 2
         self.text_areas[8].text = self.status_list[self.status_index]
+
+        if time.monotonic() > self.mmt_sequence_start + self.mmt_interval:
+            self.measuring = False
 
         if len(self.spectral_sensors) >0:
             gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
@@ -143,20 +152,6 @@ class Lab_Spec_Page( Page ):
     def action( self ):
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
-                if self.selection == 6:
-                    self.gain_index[self.active_sensor_index] = (self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment )
-                    if self.gain_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1:
-                        self.gain_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1
-                    if self.gain_index[self.active_sensor_index] < 0:
-                        self.gain_index[self.active_sensor_index] = 0
-                    self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
-                if self.selection == 7:
-                    self.integration_time_index[self.active_sensor_index] = (self.integration_time_index[self.active_sensor_index] + self.instrument.encoder_increment )
-                    if self.integration_time_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list) - 1:
-                        self.integration_time_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list) - 1
-                    if self.integration_time_index[self.active_sensor_index] < 0:
-                        self.integration_time_index[self.active_sensor_index] = 0
-                    self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
                 if self.selection == 3:
                     self.chA_index = ( self.chA_index + self.instrument.encoder_increment)
                     if self.chA_index > self.number_of_channels -1 :
@@ -175,6 +170,21 @@ class Lab_Spec_Page( Page ):
                         self.lamp_current_index = len (self.lamp_current_options) -1
                     if self.lamp_current_index < 0:
                         self.lamp_current_index = 0
+                if self.selection == 6:
+                    self.gain_index[self.active_sensor_index] = (self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment )
+                    if self.gain_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1:
+                        self.gain_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1
+                    if self.gain_index[self.active_sensor_index] < 0:
+                        self.gain_index[self.active_sensor_index] = 0
+                    self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+                if self.selection == 7:
+                    self.integration_time_index[self.active_sensor_index] = (self.integration_time_index[self.active_sensor_index] + self.instrument.encoder_increment )
+                    if self.integration_time_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list) - 1:
+                        self.integration_time_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list) - 1
+                    if self.integration_time_index[self.active_sensor_index] < 0:
+                        self.integration_time_index[self.active_sensor_index] = 0
+                    self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
+
 
             self.instrument.encoder_increment = 0
             self.update_values()
@@ -184,6 +194,9 @@ class Lab_Spec_Page( Page ):
                 self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             elif self.selection == 8:
                 self.instrument.update_batch()
+            elif self.selection == 9:
+                self.mmt_sequence_start = time.monotonic()
+                self.measuring = True
             else:
                 self.field_selected = not self.field_selected
                 if self.selection == 3:
@@ -301,9 +314,15 @@ class Lab_Spec_Page( Page ):
 
         line_y += line_spacing
         batch_line_y = line_y
-        batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=12, width=48-2*select_width,
-                                                            height=height_2-2*select_width, x=138, y=line_y+height_1+select_width)
-        self.group.append(batch_highlight)
+        #batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=12, width=48-2*select_width,
+        #                                                    height=height_2-2*select_width, x=138, y=line_y+height_1+select_width)
+        #self.group.append(batch_highlight)
+
+
+        self.status_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=54-2*select_width+4,
+                                                            height=height_2-2*select_width, x=84, y=batch_line_y+height_1+select_width)
+        self.group.append(self.status_highlight)
+
         line_names = ["last current", "status" ]
         line_values = [" -- ", " --"]
         line_selectable = [ True, False ]
@@ -423,6 +442,8 @@ class Lab_Spec_Page( Page ):
         batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=12, width=48-2*select_width,
                                                             height=height_2-2*select_width, x=138, y=batch_line_y+height_1+select_width)
         self.group.append(batch_highlight)
+
+
         line_names = ["batch", "+=1", "measure & log" ]
         line_values = ["--", "B+", "MEASURE"]
         line_selectable = [ False, True, True ]
