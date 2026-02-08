@@ -70,6 +70,10 @@ class Lab_Spec_Page( Page ):
 
 
     def run_measurement_sequence(self):
+        # move previous data down one line on the display
+        self.mmt_number += 1
+        self.text_areas[18].text = "M{:02}".format(self.mmt_number)
+        self.text_areas[19].text = "..working.."
         dwell_s = 0.5
         self.lamp_on = False
         self.measuring = True
@@ -88,7 +92,10 @@ class Lab_Spec_Page( Page ):
         stop = time.monotonic()
         self.sequence_elapsed_s = stop - self.mmt_sequence_start
         print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
-
+        self.text_areas[19].text = "A..." #A value
+        self.text_areas[20].text = "B..." #B value
+        self.text_areas[21].text = "A/B" #A/B
+        self.text_areas[22].text = "NN" #%DR
     def measure(self):
         timeout_interval = 5
         timeout = False
