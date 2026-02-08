@@ -64,7 +64,60 @@ class Lab_Spec_Page( Page ):
         self.measuring = False
         self.mmt_sequence_start = 0
         self.mmt_interval = 10
+        self.repetitions = 3
+        self.measure_with_source_off = True
+        self.lamp_on = False
 
+
+    def run_measurement_sequence(self):
+        dwell_s = 0.5
+        self.lamp_on = False
+        self.measuring = True
+        self.update_values()
+        if self.measure_with_source_off:
+            print( "measuring with source off" )
+            self.measure()
+        for n in range (0, self.repetitions):
+            self.lamp_on = True
+            print( "measuring with source on, repetition {}".format(n) )
+            time.sleep(dwell_s)
+            self.measure()
+            time.sleep(dwell_s)
+            self.lamp_on = False
+        self.measuring = False
+        stop = time.monotonic()
+        self.sequence_elapsed_s = stop - self.mmt_sequence_start
+        print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
+
+    def measure(self):
+        timeout_interval = 5
+        timeout = False
+        data_ready = False
+        #as7341.start_low()
+        start = time.monotonic()
+        while not data_ready and not timeout:
+            #data_ready = as7341.data_ready
+            print(".", end = "")
+            self.update_values()
+            time.sleep(0.1)
+            if time.monotonic() > start + timeout_interval:
+                timeout = True
+        #if not timeout:
+        self.values_low = [19230, 25840, 28867, 30330]#as7341.read_values_low()
+        timeout = False
+        data_ready = False
+        #as7341.start_high()
+        start = time.monotonic()
+        while not data_ready and not timeout:
+            #data_ready = as7341.data_ready
+            print(".", end = "")
+            self.update_values()
+            time.sleep(0.1)
+            if time.monotonic() > start + timeout_interval:
+                timeout = True
+        print("\n")
+        #if not timeout:
+        self.values_high = [49230, 34840, 28867, 19330] #as7341.read_values_high()
 
     def update_values( self ):
         timenow = self.instrument.hardware_clock.read()
@@ -82,9 +135,6 @@ class Lab_Spec_Page( Page ):
             self.status_index = 4
             self.status_highlight.color_index = 2
         self.text_areas[8].text = self.status_list[self.status_index]
-
-        if time.monotonic() > self.mmt_sequence_start + self.mmt_interval:
-            self.measuring = False
 
         if len(self.spectral_sensors) >0:
             gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
@@ -196,7 +246,7 @@ class Lab_Spec_Page( Page ):
                 self.instrument.update_batch()
             elif self.selection == 9:
                 self.mmt_sequence_start = time.monotonic()
-                self.measuring = True
+                self.run_measurement_sequence()
             else:
                 self.field_selected = not self.field_selected
                 if self.selection == 3:
