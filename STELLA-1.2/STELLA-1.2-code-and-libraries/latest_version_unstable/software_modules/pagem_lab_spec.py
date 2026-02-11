@@ -67,13 +67,30 @@ class Lab_Spec_Page( Page ):
         self.repetitions = 3
         self.measure_with_source_off = True
         self.lamp_on = False
+        self.display_data = []
+        self.display_data.append(("M00", 63218, 13827, 3.2, 10))
+        self.display_data.insert(0,("M01", 43218, 19927, 2.2, 8))
+        self.display_data.insert(0,("M03", 21218, 00927, 4.4, 99))
 
+
+    def right_justify(self,value):
+        if value<10:
+            text = "    {}".format(value)
+        if value<100:
+            text = "   {}".format(value)
+        if value<1000:
+            text = "  {}".format(value)
+        if value<10000:
+            text = " {}".format(value)
+        else:
+            text = "{}".format(value)
+        return text
 
     def run_measurement_sequence(self):
         # move previous data down one line on the display
         self.mmt_number += 1
-        self.text_areas[18].text = "M{:02}".format(self.mmt_number)
-        self.text_areas[19].text = "..working.."
+        #self.text_areas[18].text = "M{:02}".format(self.mmt_number)
+        #self.text_areas[19].text = "..working.."
         dwell_s = 0.5
         self.lamp_on = False
         self.measuring = True
@@ -92,10 +109,9 @@ class Lab_Spec_Page( Page ):
         stop = time.monotonic()
         self.sequence_elapsed_s = stop - self.mmt_sequence_start
         print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
-        self.text_areas[19].text = "A..." #A value
-        self.text_areas[20].text = "B..." #B value
-        self.text_areas[21].text = "A/B" #A/B
-        self.text_areas[22].text = "NN" #%DR
+        self.display_data.insert(0,("M04", self.right_justify(218), 06927, 6.0, 87))
+        self.display_data = self.display_data[:3] # list slicing, keep only first three elements
+
     def measure(self):
         timeout_interval = 5
         timeout = False
@@ -127,6 +143,9 @@ class Lab_Spec_Page( Page ):
         self.values_high = [49230, 34840, 28867, 19330] #as7341.read_values_high()
 
     def update_values( self ):
+        # this is taking too long. Need to be selective about what we update and skip everything else
+        start = time.monotonic()
+        # always update these
         timenow = self.instrument.hardware_clock.read()
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
@@ -143,6 +162,7 @@ class Lab_Spec_Page( Page ):
             self.status_highlight.color_index = 2
         self.text_areas[8].text = self.status_list[self.status_index]
 
+        # update these if input changes values
         if len(self.spectral_sensors) >0:
             gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
             self.text_areas[9].text = "{}".format(gain)
@@ -168,8 +188,12 @@ class Lab_Spec_Page( Page ):
             else:
                 self.text_areas[7].text = "{}mA".format(self.last_lamp_current_mA)
 
-
-
+            #update these only on a new mmt having been made
+            location = 18
+            for y in range (0,3):
+                for x in range (0, 5):
+                    self.text_areas[location].text = "{}".format(self.display_data[y][x])
+                    location += 1
 
 
         if False:
@@ -202,7 +226,8 @@ class Lab_Spec_Page( Page ):
                 self.text_areas[25].text = "{}".format(round(ratio_ab,1))
             else:
                 self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
-
+        stop = time.monotonic()
+        print( "update values takes {}s".format(stop-start))
 
 
 
