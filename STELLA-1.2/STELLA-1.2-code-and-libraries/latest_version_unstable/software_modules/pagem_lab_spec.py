@@ -72,6 +72,10 @@ class Lab_Spec_Page( Page ):
         self.display_data.insert(0,("M01", 43218, 19927, 2.2, 8))
         self.display_data.insert(0,("M03", 21218, 00927, 4.4, 99))
 
+        self.supply_5V.enable()
+        self.dac.set("a", 20000)
+
+
 
     def right_justify(self,value):
         if value<10:
@@ -188,21 +192,34 @@ class Lab_Spec_Page( Page ):
             else:
                 self.text_areas[7].text = "{}mA".format(self.last_lamp_current_mA)
 
-            #update these only on a new mmt having been made
-            location = 18
-            for y in range (0,3):
-                for x in range (0, 5):
-                    self.text_areas[location].text = "{}".format(self.display_data[y][x])
-                    location += 1
+            if False:
+                #update these only on a new mmt having been made
+                location = 18
+                for y in range (0,3):
+                    for x in range (0, 5):
+                        self.text_areas[location].text = "{}".format(self.display_data[y][x])
+                        location += 1
 
-
-        if False:
+            # temporary live readings
             if self.adc_sensor:
                 self.adc_sensor.read()
                 lamp_currrent_voltage = self.adc_sensor.voltage[0]
             else:
                 lamp_currrent_voltage = 0
-            self.text_areas[12].text = "{}mA".format(int(round(lamp_currrent_voltage*1000,1)))
+            self.last_lamp_current_mA = int(round(lamp_currrent_voltage*1000,1))
+
+            #self.spectral_sensors[self.active_sensor_index].read_counts_all()
+            chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
+            chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
+            self.text_areas[19].text = "{}".format(self.right_justify(chA_counts))
+            self.text_areas[20].text = "{}".format(self.right_justify(chB_counts))
+            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
+            print(data_ready)
+            self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
+
+
+        if False:
+
             self.text_areas[15].text = "M{:03}".format( self.mmt_number )
             chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
             chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
@@ -227,7 +244,7 @@ class Lab_Spec_Page( Page ):
             else:
                 self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
         stop = time.monotonic()
-        print( "update values takes {}s".format(stop-start))
+        #print( "update values takes {}s".format(stop-start))
 
 
 
