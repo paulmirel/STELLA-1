@@ -97,7 +97,7 @@ class Lab_Spec_Page( Page ):
         self.mmt_number += 1
         #self.text_areas[18].text = "M{:02}".format(self.mmt_number)
         #self.text_areas[19].text = "..working.."
-        dwell_s = 1 ### REQUIRED to prevent interrupted measurements of unknowable properties
+        dwell_s = 0.5 ## to allow chemistry to respond to excitation and to separate measurements, both for consistency
 
         self.measuring = True
         self.update_values()
@@ -136,6 +136,8 @@ class Lab_Spec_Page( Page ):
                 timeout = True
         stop = time.monotonic()
         print( "f1-f4 elapsed time = {}s".format(stop-start))
+        values_f1_f4 = self.spectral_sensors[self.active_sensor_index].swob.read_channel_register
+        print(values_f1_f4)
 
         self.spectral_sensors[self.active_sensor_index].swob._configure_f5_f8()
         start = time.monotonic()
@@ -150,43 +152,9 @@ class Lab_Spec_Page( Page ):
         stop = time.monotonic()
         print( "f5-f8 elapsed time = {}s".format(stop-start))
         self.last_lamp_currents.append(self.get_lamp_current())
+        values_f5_f8 = self.spectral_sensors[self.active_sensor_index].swob.read_channel_register
+        print(values_f5_f8)
 
-
-
-        '''
-        timeout_interval = 5
-        timeout = False
-        data_ready = False
-        #as7341.start_low()
-        self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = True
-        start = time.monotonic()
-        while not data_ready and not timeout:
-            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
-            print(".", end = "")
-            self.update_values()
-            time.sleep(0.1)
-            if time.monotonic() > start + timeout_interval:
-                timeout = True
-        #if not timeout:
-        self.values_low = [19230, 25840, 28867, 30330]#as7341.read_values_low()
-        self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
-        timeout = False
-        data_ready = False
-        #as7341.start_high()
-        self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = True
-        start = time.monotonic()
-        while not data_ready and not timeout:
-            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
-            print(".", end = "")
-            self.update_values()
-            time.sleep(0.1)
-            if time.monotonic() > start + timeout_interval:
-                timeout = True
-        print("\n")
-        #if not timeout:
-        self.values_high = [49230, 34840, 28867, 19330] #as7341.read_values_high()
-        self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
-        '''
     def update_values( self ):
         # this is taking too long. Need to be selective about what we update and skip everything else
         start = time.monotonic()
