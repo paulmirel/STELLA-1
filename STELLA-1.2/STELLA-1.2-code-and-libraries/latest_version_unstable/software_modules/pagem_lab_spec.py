@@ -122,7 +122,6 @@ class Lab_Spec_Page( Page ):
 
     def measure(self):
         start = time.monotonic()
-
         self.last_lamp_currents.append(self.get_lamp_current())
 
 

@@ -3,8 +3,8 @@ DEVICE_TYPE = "as7341_spectral_sensor"
 # Copyright NASA 2025
 # Author Paul Mirel
 
-from adafruit_as7341 import AS7341
-from adafruit_as7341 import Gain as AS7341_Gain
+from adafruit_as7341_nonblocking import AS7341
+from adafruit_as7341_nonblocking import Gain as AS7341_Gain
 from .classm_device import Device
 
 
