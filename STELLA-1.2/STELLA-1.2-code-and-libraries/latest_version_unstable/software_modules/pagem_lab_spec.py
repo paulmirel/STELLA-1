@@ -97,7 +97,7 @@ class Lab_Spec_Page( Page ):
         self.mmt_number += 1
         #self.text_areas[18].text = "M{:02}".format(self.mmt_number)
         #self.text_areas[19].text = "..working.."
-        dwell_s = 0.5
+        dwell_s = 1 ### REQUIRED to prevent interrupted measurements of unknowable properties
 
         self.measuring = True
         self.update_values()
@@ -115,19 +115,41 @@ class Lab_Spec_Page( Page ):
         stop = time.monotonic()
         self.sequence_elapsed_s = stop - self.mmt_sequence_start
         print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
-        self.last_lamp_currents = self.last_lamp_currents[:self.repetitions]
+        self.last_lamp_currents = self.last_lamp_currents[:2*self.repetitions]
         self.last_lamp_current_mA = int(round(sum(self.last_lamp_currents)/len(self.last_lamp_currents),0))
         self.display_data.insert(0,("M04", self.right_justify(218), 06927, 6.0, 87))
         self.display_data = self.display_data[:3] # list slicing, keep only first three elements
 
     def measure(self):
-        start = time.monotonic()
+        timeout_interval = 5
+        timeout = False
+        data_ready = False
         self.last_lamp_currents.append(self.get_lamp_current())
-
-
-
+        self.spectral_sensors[self.active_sensor_index].swob._configure_f1_f4()
+        start = time.monotonic()
+        print("begin f1-f4 channel detect")
+        while not data_ready and not timeout:
+            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
+            print(".", end = "")
+            time.sleep(0.01)
+            if time.monotonic() > start + timeout_interval:
+                timeout = True
         stop = time.monotonic()
-        print( "elapsed time = {}s".format(stop-start))
+        print( "f1-f4 elapsed time = {}s".format(stop-start))
+
+        self.spectral_sensors[self.active_sensor_index].swob._configure_f5_f8()
+        start = time.monotonic()
+        print("begin f5-f8 channel detect")
+        data_ready = False
+        while not data_ready and not timeout:
+            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
+            print(".", end = "")
+            time.sleep(0.01)
+            if time.monotonic() > start + timeout_interval:
+                timeout = True
+        stop = time.monotonic()
+        print( "f5-f8 elapsed time = {}s".format(stop-start))
+        self.last_lamp_currents.append(self.get_lamp_current())
 
 
 
