@@ -72,8 +72,7 @@ class Lab_Spec_Page( Page ):
         self.display_data.insert(0,("M01", 43218, 19927, 2.2, 8))
         self.display_data.insert(0,("M03", 21218, 00927, 4.4, 99))
 
-        self.supply_5V.enable()
-        self.dac.set("a", 20000)
+        self.supply_5V.disable()
 
 
 
@@ -91,24 +90,26 @@ class Lab_Spec_Page( Page ):
         return text
 
     def run_measurement_sequence(self):
+        self.supply_5V.disable()
+        self.dac.set("a", 20000) #TBD set to REQ current
         # move previous data down one line on the display
         self.mmt_number += 1
         #self.text_areas[18].text = "M{:02}".format(self.mmt_number)
         #self.text_areas[19].text = "..working.."
         dwell_s = 0.5
-        self.lamp_on = False
+
         self.measuring = True
         self.update_values()
         if self.measure_with_source_off:
             print( "measuring with source off" )
             self.measure()
         for n in range (0, self.repetitions):
-            self.lamp_on = True
+            self.supply_5V.enable()
             print( "measuring with source on, repetition {}".format(n) )
             time.sleep(dwell_s)
             self.measure()
+            self.supply_5V.disable()
             time.sleep(dwell_s)
-            self.lamp_on = False
         self.measuring = False
         stop = time.monotonic()
         self.sequence_elapsed_s = stop - self.mmt_sequence_start
@@ -117,13 +118,31 @@ class Lab_Spec_Page( Page ):
         self.display_data = self.display_data[:3] # list slicing, keep only first three elements
 
     def measure(self):
+        start = time.monotonic()
+
+
+        if self.adc_sensor:
+            self.adc_sensor.read()
+            lamp_currrent_voltage = self.adc_sensor.voltage[0]
+        else:
+            lamp_currrent_voltage = 0
+        self.last_lamp_current_mA = int(round(lamp_currrent_voltage*1000,1))
+
+
+        stop = time.monotonic()
+        print( "elapsed time = {}s".format(stop-start))
+
+
+
+        '''
         timeout_interval = 5
         timeout = False
         data_ready = False
         #as7341.start_low()
+        self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = True
         start = time.monotonic()
         while not data_ready and not timeout:
-            #data_ready = as7341.data_ready
+            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
             print(".", end = "")
             self.update_values()
             time.sleep(0.1)
@@ -131,12 +150,14 @@ class Lab_Spec_Page( Page ):
                 timeout = True
         #if not timeout:
         self.values_low = [19230, 25840, 28867, 30330]#as7341.read_values_low()
+        self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
         timeout = False
         data_ready = False
         #as7341.start_high()
+        self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = True
         start = time.monotonic()
         while not data_ready and not timeout:
-            #data_ready = as7341.data_ready
+            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
             print(".", end = "")
             self.update_values()
             time.sleep(0.1)
@@ -145,7 +166,8 @@ class Lab_Spec_Page( Page ):
         print("\n")
         #if not timeout:
         self.values_high = [49230, 34840, 28867, 19330] #as7341.read_values_high()
-
+        self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
+        '''
     def update_values( self ):
         # this is taking too long. Need to be selective about what we update and skip everything else
         start = time.monotonic()
@@ -192,6 +214,8 @@ class Lab_Spec_Page( Page ):
             else:
                 self.text_areas[7].text = "{}mA".format(self.last_lamp_current_mA)
 
+
+
             if False:
                 #update these only on a new mmt having been made
                 location = 18
@@ -200,22 +224,19 @@ class Lab_Spec_Page( Page ):
                         self.text_areas[location].text = "{}".format(self.display_data[y][x])
                         location += 1
 
-            # temporary live readings
-            if self.adc_sensor:
-                self.adc_sensor.read()
-                lamp_currrent_voltage = self.adc_sensor.voltage[0]
-            else:
-                lamp_currrent_voltage = 0
-            self.last_lamp_current_mA = int(round(lamp_currrent_voltage*1000,1))
 
-            #self.spectral_sensors[self.active_sensor_index].read_counts_all()
-            chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
-            chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
-            self.text_areas[19].text = "{}".format(self.right_justify(chA_counts))
-            self.text_areas[20].text = "{}".format(self.right_justify(chB_counts))
-            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
-            print(data_ready)
-            self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
+            if False:
+                # temporary live readings
+
+
+                #self.spectral_sensors[self.active_sensor_index].read_counts_all()
+                chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
+                chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
+                self.text_areas[19].text = "{}".format(self.right_justify(chA_counts))
+                self.text_areas[20].text = "{}".format(self.right_justify(chB_counts))
+                data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
+                #print(data_ready)
+                self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
 
 
         if False:

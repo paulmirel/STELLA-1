@@ -100,7 +100,7 @@ class as7341_Spectrometer( Device ):
         self.swob.led_current = 50
         self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
         self.gain_index = 5
-        self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180]
+        self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180, 200,250,300,350,400,450,500,600,700,800,900,1000]
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
         self.integration_time_index = 8
         self.lamp_selection_list = ["Vis mA"]
@@ -159,7 +159,12 @@ class as7341_Spectrometer( Device ):
     def set_integration_time( self, index ):
         #library sets atime = 100, astep = 999, which is an unusable combination, ADC saturated at 101000.
         # (astep, atime)
-        integration_time_settings_list = [ (127,2),(127,27),(127,54),(127,82),(127,111),(127,140),(127,167),(127,196),(127,225),(127,252),(255,140),(255,154),(255,168),(255,182),(255,196),(255,210),(255,224),(255,238),(255,252) ]
+        integration_time_settings_list = [ (127,2),(127,27),(127,54),(127,82),(127,111),(127,140),
+                                            (127,167),(127,196),(127,225),(127,252),(255,140),(255,154),
+                                            (255,168),(255,182),(255,196),(255,210),(255,224),(255,238),(255,252),
+                                            (300,239),(376,239),(450,239),(525,239),(600,239),(675,239),(750,239),
+                                            (825,239),(900,239),(975,239),(1050,239),(1125,239),(1200,239),(1275,239),
+                                            (1350,239),(1425,239),(1500,239)]
         try:
             self.swob.astep = integration_time_settings_list[index][0]
             self.swob.atime = integration_time_settings_list[index][1]
