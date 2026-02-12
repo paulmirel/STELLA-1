@@ -73,6 +73,7 @@ class Lab_Spec_Page( Page ):
         self.display_data.insert(0,("M03", 21218, 00927, 4.4, 99))
 
         self.supply_5V.disable()
+        self.last_lamp_currents = []
 
 
 
@@ -114,19 +115,16 @@ class Lab_Spec_Page( Page ):
         stop = time.monotonic()
         self.sequence_elapsed_s = stop - self.mmt_sequence_start
         print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
+        self.last_lamp_currents = self.last_lamp_currents[:self.repetitions]
+        self.last_lamp_current_mA = int(round(sum(self.last_lamp_currents)/len(self.last_lamp_currents),0))
         self.display_data.insert(0,("M04", self.right_justify(218), 06927, 6.0, 87))
         self.display_data = self.display_data[:3] # list slicing, keep only first three elements
 
     def measure(self):
         start = time.monotonic()
 
+        self.last_lamp_currents.append(self.get_lamp_current())
 
-        if self.adc_sensor:
-            self.adc_sensor.read()
-            lamp_currrent_voltage = self.adc_sensor.voltage[0]
-        else:
-            lamp_currrent_voltage = 0
-        self.last_lamp_current_mA = int(round(lamp_currrent_voltage*1000,1))
 
 
         stop = time.monotonic()
@@ -350,7 +348,14 @@ class Lab_Spec_Page( Page ):
             self.update_values()
 
 
-
+    def get_lamp_current(self):
+        if self.adc_sensor:
+            self.adc_sensor.read()
+            lamp_currrent_voltage = self.adc_sensor.voltage[0]
+        else:
+            lamp_currrent_voltage = 0
+        self.last_lamp_current_mA = int(round(lamp_currrent_voltage*1000,1))
+        return self.last_lamp_current_mA
 
     def make_group( self ):
         self.group = displayio.Group()
