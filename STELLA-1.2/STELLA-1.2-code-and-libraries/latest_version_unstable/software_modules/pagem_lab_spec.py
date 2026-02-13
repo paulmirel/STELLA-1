@@ -9,6 +9,7 @@ import vectorio
 import terminalio
 from .classm_page import Page
 import time
+import gc
 
 
 class Lab_Spec_Page( Page ):
@@ -98,7 +99,8 @@ class Lab_Spec_Page( Page ):
 
     def run_measurement_sequence(self):
         self.mmt_number += 1
-
+        gc.collect()
+        measure_start_free = gc.mem_free()
         uid = self.instrument.uid
         mmt_time = self.instrument.iso_time
         dec_time = self.instrument.decimal_time
@@ -109,61 +111,17 @@ class Lab_Spec_Page( Page ):
         lamp_loc = "bottom"
         gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
         int_time = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
-        uid_static = []
-        iso_static = []
-        dec_static = []
-        note_static = []
-        instruction_static = []
-        lamp_wl_static = []
-        lamp_pn_static = []
-        lamp_loc_static = []
-        batch_static =[]
-        mmt_static = []
-        line_static = []
-        avg = []
-        dr = []
-        gain_static = []
-        int_time_static = []
-        bw = []
-        norm_ct = []
-        lamp_current_avg = []
-        norm_ct_per_a = []
         self.gps.read()
-        gps_lat = self.gps.latitude
-        gps_long = self.gps.longitude
-        gps_alt = self.gps.altitude
-        for index in range (0, self.lines_per_block):
-            #load the static information on each line
-            uid_static.append(uid)
-            iso_static.append(mmt_time)
-            dec_static.append(dec_time)
-            note_static.append(note)
-            instruction_static.append(instruction)
-            lamp_wl_static.append(lamp_wl)
-            lamp_pn_static.append(lamp_pn)
-            lamp_loc_static.append(lamp_loc)
-            batch_static.append(self.instrument.batch_number)
-            mmt_static.append(self.mmt_number)
-            line_static.append("B{:02}_M{:02}_{:02}".format(self.instrument.batch_number, self.mmt_number, index))
-        parameter_static = ["lamp current mA before", 415, 445, 480, 515, 555, 590, 630, 682, "lamp current mA after"]
-        self.measurement_lists.append(uid_static)
-        self.measurement_lists.append(iso_static)
-        self.measurement_lists.append(dec_static)
-        self.measurement_lists.append(note_static)
-        self.measurement_lists.append(instruction_static)
-        self.measurement_lists.append(lamp_wl_static)
-        self.measurement_lists.append(lamp_loc_static)
-        self.measurement_lists.append(batch_static)
-        self.measurement_lists.append(mmt_static)
-        self.measurement_lists.append(line_static)
-        self.measurement_lists.append(parameter_static)
+        parameters = ["lamp mA before", 415, 445, 480, 515, 555, 590, 630, 682, "lamp mA after"]
         self.supply_5V.disable()
         self.dac.set("a", 14000) # set to REQ current here
         #self.dac.set("a", 0) # turn off the DAC output so that the base current doesn't show
         # move previous data down one line on the display
-
-        #self.text_areas[18].text = "M{:02}".format(self.mmt_number)
-        #self.text_areas[19].text = "..working.."
+        tag_column = []
+        for row in range (0,self.lines_per_block):
+            tag_column.append("B{:02}_M{:02}_{:02}".format(self.instrument.batch_number, self.mmt_number, row))
+        self.measurement_lists.append(tag_column)
+        del tag_column
         dwell_s = 0.5 ## to allow chemistry to respond to excitation and to separate measurements, both for consistency
         self.measuring = True
         self.update_values() #to show the current mmt number
@@ -171,84 +129,55 @@ class Lab_Spec_Page( Page ):
         for n in range (0, self.repetitions):
             if n > 0:
                 self.supply_5V.enable()
-                #self.dac.set("a", 20000)
             time.sleep(dwell_s)
             data_column = self.measure()
             data.append(data_column)
             self.measurement_lists.append(data_column)
+            del data_column
             self.supply_5V.disable()
             time.sleep(dwell_s)
         self.measuring = False
         stop = time.monotonic()
         self.sequence_elapsed_s = stop - self.mmt_sequence_start
         print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
-
-
         avg_column = []
         for row in range (0,self.lines_per_block):
             avg_column.append(int(round(((data[1][row] + data[2][row] + data[3][row])/3)-data[0][row],0)))
         self.measurement_lists.append(avg_column)
         dr_column = []
         dr_column.append(" ")
-        gain_static.append(" ")
-        int_time_static.append(" ")
         bw_column = []
         bw_column.append(" ")
         for row in range (1,self.lines_per_block-1):
             dr_column.append(round(100*avg_column[row]/65535,1))
-            gain_static.append(gain)
-            int_time_static.append(int_time)
             bw_column.append(self.spectral_sensors[self.active_sensor_index].bandwidths_nm[row-1])
         dr_column.append(" ")
-        gain_static.append(" ")
-        int_time_static.append(" ")
         bw_column.append(" ")
         self.measurement_lists.append(dr_column)
-        self.measurement_lists.append(gain_static)
-        self.measurement_lists.append(int_time_static)
         self.measurement_lists.append(bw_column)
         norm_ct_column =[]
         norm_ct_column.append(" ")
         for row in range (1,self.lines_per_block-1):
-            norm_ct_column.append( avg_column[row] / bw_column[row] /  gain_static[row] /  int_time_static[row] )
+            norm_ct_column.append( avg_column[row] / bw_column[row] /  gain /  int_time )
         norm_ct_column.append(" ")
         self.measurement_lists.append(norm_ct_column)
         current_before_after_average = round((avg_column[0]+avg_column[self.lines_per_block-1])/2,1)
-        current_column = []
         norm_ct_per_a =[]
         norm_ct_per_a.append(" ")
-        current_column.append(" ")
         for row in range (1,self.lines_per_block-1):
-            current_column.append(current_before_after_average)
-            norm_ct_per_a.append(1000*1000*avg_column/current_before_after_average)
-        current_column.append(" ")
+            norm_ct_per_a.append(1000*1000*norm_ct_column[row]/current_before_after_average)
         norm_ct_per_a.append(" ")
-        self.measurement_lists.append(current_column)
         self.measurement_lists.append(norm_ct_per_a)
         self.supply_5V.read()
         self.bat.read()
-        supply_v = self.supply_5V.voltage
-        bat_v = self.bat.voltage
-        bat_per =self.bat.percentage
-        supply_v_column=[]
-        bat_v_column=[]
-        bat_per_column=[]
-        lat_column=[]
-        long_column=[]
-        alt_column=[]
-        for row in range (0,self.lines_per_block):
-            supply_v_column.append(supply_v)
-            bat_v_column.append(bat_v)
-            bat_per_column.append(bat_per)
-            lat_column.append(gps_lat)
-            long_column.append(gps_long)
-            alt_column.append(gps_alt)
-        self.measurement_lists.append(supply_v_column)
-        self.measurement_lists.append(bat_v_column)
-        self.measurement_lists.append(bat_per_column)
-        self.measurement_lists.append(lat_column)
-        self.measurement_lists.append(long_column)
-        self.measurement_lists.append(alt_column)
+
+        #self.supply_5V.voltage
+        #self.bat.voltage
+        #self.bat.percentage
+        #self.gps.latitude
+        #self.gps.longitude
+        #self.gps.altitude
+
 
 
         #self.last_lamp_currents = self.last_lamp_currents[:2*self.repetitions]
@@ -258,13 +187,14 @@ class Lab_Spec_Page( Page ):
         #post processing: append calculations, auxilliary information
         if True:
             for row in range (0,self.lines_per_block):
-                for col in range (7,len(self.measurement_lists)):
+                for col in range (0,len(self.measurement_lists)):
                     print( self.measurement_lists[col][row], end=", " )
                 print()
         # save data out to display register and to file_write_request
         # use the same file, but write a header line before every block
         # then clear the measurement_lists
         self.measurement_lists = []
+        measure_stop_free = gc.mem_free()
 
 
     def measure(self):
@@ -282,9 +212,10 @@ class Lab_Spec_Page( Page ):
             if time.monotonic() > start + timeout_interval:
                 timeout = True
         stop = time.monotonic()
+        print()
         print( "f1-f4 elapsed time = {}s".format(stop-start))
         f1,f2,f3,f4 = self.spectral_sensors[self.active_sensor_index].swob.read_channel_register
-        print(f1,f2,f3,f4)
+        #print(f1,f2,f3,f4)
 
         self.spectral_sensors[self.active_sensor_index].swob._configure_f5_f8()
         start = time.monotonic()
@@ -297,10 +228,11 @@ class Lab_Spec_Page( Page ):
             if time.monotonic() > start + timeout_interval:
                 timeout = True
         stop = time.monotonic()
+        print()
         print( "f5-f8 elapsed time = {}s".format(stop-start))
         current_after = self.get_lamp_current()
         f5,f6,f7,f8 = self.spectral_sensors[self.active_sensor_index].swob.read_channel_register
-        print(f5,f6,f7,f8)
+        #print(f5,f6,f7,f8)
         return (current_before,f1,f2,f3,f4,f5,f6,f7,f8,current_after)
 
     def update_values( self ):
