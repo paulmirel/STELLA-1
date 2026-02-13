@@ -8,6 +8,7 @@ from adafruit_display_text import label
 import vectorio
 import terminalio
 from .classm_page import Page
+from software_modules import functionm_file
 import time
 import gc
 
@@ -81,6 +82,8 @@ class Lab_Spec_Page( Page ):
         self.last_lamp_currents = []
         self.measurement_lists = []
         self.lines_per_block = 10
+        self.request_write = False
+        self.line_to_write = ""
 
 
 
@@ -171,6 +174,21 @@ class Lab_Spec_Page( Page ):
         self.supply_5V.read()
         self.bat.read()
 
+        header_line = "UID,iso8601,time hh.hh,note,instruction,lamp wavelength nm,lamp pn,lamp location"
+        header_line += ",batch,tag,parameter/band,rep 0,rep 1,rep 2,rep 3,average,DR_pct,gain,int_time ms"
+        header_line += ",bandwidth nm,ct/nm/[gain]/s,avg current mA,cts/nm/s/A,5V supply V,bat V,bat pct"
+        header_line += ",gps lat,gps long,gps alt"
+
+
+        #put this in a separate function
+        timeout_interval = 5
+        timeout = False
+        start_interval = time.monotonic()
+        self.line_to_write = header_line
+        self.request_write = True
+
+        print()
+        #functionm_file.write_nonsystem_line( self.instrument, header_line )
         #self.supply_5V.voltage
         #self.bat.voltage
         #self.bat.percentage

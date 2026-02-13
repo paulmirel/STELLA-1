@@ -243,7 +243,8 @@ def main():
     lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument )
     start = time.monotonic()
 
-    if instrument.spectral_sensors_detected:
+    if False:
+        #if instrument.spectral_sensors_detected:
         light_page = pagem_light.make_light_page( instrument )
         exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:
@@ -308,6 +309,11 @@ def main():
             if instrument.active_page_number == instrument.pages_dict["Lab_Spec"]:
                 instrument.handle_inputs()
                 instrument.update_active_page()
+                if vfs and lab_spec_page.request_write:
+                    onboard_neopixel.fill(devicem_neopixel.GREEN)
+                    functionm_file.write_nonsystem_line( instrument, lab_spec_page.line_to_write )
+                    onboard_neopixel.fill(devicem_neopixel.OFF)
+                    lab_spec_page.request_write = False
             elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
                 sensor = instrument.sensors_present[sensors_page.sensor_choice]
                 sensor.read()
