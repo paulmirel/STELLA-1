@@ -191,16 +191,21 @@ class Lab_Spec_Page( Page ):
         dr_column.append(" ")
         gain_static.append(" ")
         int_time_static.append(" ")
+        bw_column = []
+        bw_column.append(" ")
         for row in range (1,self.lines_per_block-1):
             dr_column.append(round(100*avg_column[row]/65535,1))
             gain_static.append(gain)
             int_time_static.append(int_time)
+            bw_column.append(self.spectral_sensors[self.active_sensor_index].bandwidths_nm[row-1])
         dr_column.append(" ")
         gain_static.append(" ")
         int_time_static.append(" ")
+        bw_column.append(" ")
         self.measurement_lists.append(dr_column)
         self.measurement_lists.append(gain_static)
         self.measurement_lists.append(int_time_static)
+        self.measurement_lists.append(bw_column)
 
 
 
