@@ -52,6 +52,11 @@ class Lab_Spec_Page( Page ):
                 self.supply_5V = sensor
             if sensor.pn == "mcp4728":
                 self.dac = sensor
+            if sensor.pn == "max1704x":
+                self.bat = sensor
+            if sensor.name == "gps":
+                self.gps = sensor
+
         if self.adc_sensor:
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
@@ -123,14 +128,10 @@ class Lab_Spec_Page( Page ):
         norm_ct = []
         lamp_current_avg = []
         norm_ct_per_a = []
-        supply_v_static = []
-        bat_v_static = []
-        bat_per_static = []
-        lat_static = []
-        long_static = []
-        alt_static = []
-
-
+        self.gps.read()
+        gps_lat = self.gps.latitude
+        gps_long = self.gps.longitude
+        gps_alt = self.gps.altitude
         for index in range (0, self.lines_per_block):
             #load the static information on each line
             uid_static.append(uid)
@@ -206,10 +207,48 @@ class Lab_Spec_Page( Page ):
         self.measurement_lists.append(gain_static)
         self.measurement_lists.append(int_time_static)
         self.measurement_lists.append(bw_column)
-
-
-
-
+        norm_ct_column =[]
+        norm_ct_column.append(" ")
+        for row in range (1,self.lines_per_block-1):
+            norm_ct_column.append( avg_column[row] / bw_column[row] /  gain_static[row] /  int_time_static[row] )
+        norm_ct_column.append(" ")
+        self.measurement_lists.append(norm_ct_column)
+        current_before_after_average = round((avg_column[0]+avg_column[self.lines_per_block-1])/2,1)
+        current_column = []
+        norm_ct_per_a =[]
+        norm_ct_per_a.append(" ")
+        current_column.append(" ")
+        for row in range (1,self.lines_per_block-1):
+            current_column.append(current_before_after_average)
+            norm_ct_per_a.append(1000*1000*avg_column/current_before_after_average)
+        current_column.append(" ")
+        norm_ct_per_a.append(" ")
+        self.measurement_lists.append(current_column)
+        self.measurement_lists.append(norm_ct_per_a)
+        self.supply_5V.read()
+        self.bat.read()
+        supply_v = self.supply_5V.voltage
+        bat_v = self.bat.voltage
+        bat_per =self.bat.percentage
+        supply_v_column=[]
+        bat_v_column=[]
+        bat_per_column=[]
+        lat_column=[]
+        long_column=[]
+        alt_column=[]
+        for row in range (0,self.lines_per_block):
+            supply_v_column.append(supply_v)
+            bat_v_column.append(bat_v)
+            bat_per_column.append(bat_per)
+            lat_column.append(gps_lat)
+            long_column.append(gps_long)
+            alt_column.append(gps_alt)
+        self.measurement_lists.append(supply_v_column)
+        self.measurement_lists.append(bat_v_column)
+        self.measurement_lists.append(bat_per_column)
+        self.measurement_lists.append(lat_column)
+        self.measurement_lists.append(long_column)
+        self.measurement_lists.append(alt_column)
 
 
         #self.last_lamp_currents = self.last_lamp_currents[:2*self.repetitions]
