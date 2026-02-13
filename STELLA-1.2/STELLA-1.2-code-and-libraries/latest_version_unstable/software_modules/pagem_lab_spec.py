@@ -165,13 +165,15 @@ class Lab_Spec_Page( Page ):
         #self.text_areas[19].text = "..working.."
         dwell_s = 0.5 ## to allow chemistry to respond to excitation and to separate measurements, both for consistency
         self.measuring = True
-        self.update_values()
+        self.update_values() #to show the current mmt number
+        data = []
         for n in range (0, self.repetitions):
             if n > 0:
                 self.supply_5V.enable()
                 #self.dac.set("a", 20000)
             time.sleep(dwell_s)
             data_column = self.measure()
+            data.append(data_column)
             self.measurement_lists.append(data_column)
             self.supply_5V.disable()
             time.sleep(dwell_s)
@@ -179,16 +181,44 @@ class Lab_Spec_Page( Page ):
         stop = time.monotonic()
         self.sequence_elapsed_s = stop - self.mmt_sequence_start
         print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
+
+
+        avg_column = []
+        for row in range (0,self.lines_per_block):
+            avg_column.append(int(round(((data[1][row] + data[2][row] + data[3][row])/3)-data[0][row],0)))
+        self.measurement_lists.append(avg_column)
+        dr_column = []
+        dr_column.append(" ")
+        gain_static.append(" ")
+        int_time_static.append(" ")
+        for row in range (1,self.lines_per_block-1):
+            dr_column.append(round(100*avg_column[row]/65535,1))
+            gain_static.append(gain)
+            int_time_static.append(int_time)
+        dr_column.append(" ")
+        gain_static.append(" ")
+        int_time_static.append(" ")
+        self.measurement_lists.append(dr_column)
+        self.measurement_lists.append(gain_static)
+        self.measurement_lists.append(int_time_static)
+
+
+
+
+
+
         #self.last_lamp_currents = self.last_lamp_currents[:2*self.repetitions]
         #self.last_lamp_current_mA = int(round(sum(self.last_lamp_currents)/len(self.last_lamp_currents),0))
         #self.display_data.insert(0,("M04", self.right_justify(218), 06927, 6.0, 87))
         #self.display_data = self.display_data[:3] # list slicing, keep only first three elements
         #post processing: append calculations, auxilliary information
-        for row in range (0,self.lines_per_block):
-            for col in range (0,len(self.measurement_lists)):
-                print( self.measurement_lists[col][row], end=", " )
-            print()
+        if True:
+            for row in range (0,self.lines_per_block):
+                for col in range (7,len(self.measurement_lists)):
+                    print( self.measurement_lists[col][row], end=", " )
+                print()
         # save data out to display register and to file_write_request
+        # use the same file, but write a header line before every block
         # then clear the measurement_lists
         self.measurement_lists = []
 
