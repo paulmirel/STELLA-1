@@ -93,21 +93,72 @@ class Lab_Spec_Page( Page ):
 
     def run_measurement_sequence(self):
         self.mmt_number += 1
+
+        uid = self.instrument.uid
+        mmt_time = self.instrument.iso_time
+        dec_time = self.instrument.decimal_time
+        note = "note goes here"
+        instruction = "instruction goes here"
+        lamp_wl = "488nm"
+        lamp_pn = "GC VJLPL1.13-KQKS-V2V3-1"
+        lamp_loc = "bottom"
+        gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
+        int_time = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
+        uid_static = []
+        iso_static = []
+        dec_static = []
+        note_static = []
+        instruction_static = []
+        lamp_wl_static = []
+        lamp_pn_static = []
+        lamp_loc_static = []
         batch_static =[]
         mmt_static = []
         line_static = []
+        avg = []
+        dr = []
+        gain_static = []
+        int_time_static = []
+        bw = []
+        norm_ct = []
+        lamp_current_avg = []
+        norm_ct_per_a = []
+        supply_v_static = []
+        bat_v_static = []
+        bat_per_static = []
+        lat_static = []
+        long_static = []
+        alt_static = []
+
+
         for index in range (0, self.lines_per_block):
             #load the static information on each line
+            uid_static.append(uid)
+            iso_static.append(mmt_time)
+            dec_static.append(dec_time)
+            note_static.append(note)
+            instruction_static.append(instruction)
+            lamp_wl_static.append(lamp_wl)
+            lamp_pn_static.append(lamp_pn)
+            lamp_loc_static.append(lamp_loc)
             batch_static.append(self.instrument.batch_number)
             mmt_static.append(self.mmt_number)
             line_static.append("B{:02}_M{:02}_{:02}".format(self.instrument.batch_number, self.mmt_number, index))
         parameter_static = ["lamp current mA before", 415, 445, 480, 515, 555, 590, 630, 682, "lamp current mA after"]
+        self.measurement_lists.append(uid_static)
+        self.measurement_lists.append(iso_static)
+        self.measurement_lists.append(dec_static)
+        self.measurement_lists.append(note_static)
+        self.measurement_lists.append(instruction_static)
+        self.measurement_lists.append(lamp_wl_static)
+        self.measurement_lists.append(lamp_loc_static)
         self.measurement_lists.append(batch_static)
         self.measurement_lists.append(mmt_static)
         self.measurement_lists.append(line_static)
         self.measurement_lists.append(parameter_static)
         self.supply_5V.disable()
-        self.dac.set("a", 20000) #TBD set to REQ current
+        self.dac.set("a", 14000) # set to REQ current here
+        #self.dac.set("a", 0) # turn off the DAC output so that the base current doesn't show
         # move previous data down one line on the display
 
         #self.text_areas[18].text = "M{:02}".format(self.mmt_number)
@@ -118,6 +169,7 @@ class Lab_Spec_Page( Page ):
         for n in range (0, self.repetitions):
             if n > 0:
                 self.supply_5V.enable()
+                #self.dac.set("a", 20000)
             time.sleep(dwell_s)
             data_column = self.measure()
             self.measurement_lists.append(data_column)
@@ -136,7 +188,9 @@ class Lab_Spec_Page( Page ):
             for col in range (0,len(self.measurement_lists)):
                 print( self.measurement_lists[col][row], end=", " )
             print()
-
+        # save data out to display register and to file_write_request
+        # then clear the measurement_lists
+        self.measurement_lists = []
 
 
     def measure(self):
