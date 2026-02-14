@@ -309,6 +309,7 @@ def main():
             if instrument.active_page_number == instrument.pages_dict["Lab_Spec"]:
                 instrument.handle_inputs()
                 instrument.update_active_page()
+                time.sleep(0.01)
             elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
                 sensor = instrument.sensors_present[sensors_page.sensor_choice]
                 sensor.read()

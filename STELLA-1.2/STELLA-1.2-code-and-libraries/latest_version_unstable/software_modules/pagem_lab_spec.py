@@ -69,7 +69,7 @@ class Lab_Spec_Page( Page ):
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
         self.dac_values = [0,0,0,0]
-        self.lamp_current_index = 10
+        self.lamp_current_index = 20
         self.lamp_current_options = [0,1,3,5,7,9,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,150,200,250,300,350,400,450,500,550,600]
         self.last_lamp_current_mA = "-- "
         self.file_write_request = False
@@ -88,6 +88,17 @@ class Lab_Spec_Page( Page ):
         self.measurement_lists = []
         self.lines_per_block = 10
 
+    def set_lamp_current(self, req_index):
+        xdc = self.lamp_current_options[ req_index ]
+        A = 0.0002
+        B = -0.0944
+        C = 47.24
+        D = 13179
+        set_value = int( A*xdc**3 + B*xdc**2 + C*xdc + D)
+        self.dac.set("a", set_value)
+        return set_value
+
+
     def right_justify(self,value):
         if value<10:
             text = "    {}".format(value)
@@ -102,6 +113,8 @@ class Lab_Spec_Page( Page ):
         return text
 
     def run_measurement_sequence(self):
+        self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
+        self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
         if self.status_index == 0:
             print( "gps has fix:", self.gps.has_fix )
             self.mmt_number += 1
@@ -119,8 +132,6 @@ class Lab_Spec_Page( Page ):
             int_time = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
             parameters = ["lamp mA before", 415, 445, 480, 515, 555, 590, 630, 682, "lamp mA after"]
             self.supply_5V.disable()
-            self.dac.set("a", 14000) # set to REQ current here
-            #self.dac.set("a", 0) # turn off the DAC output so that the base current doesn't show
             # move previous data down one line on the display
             tag_column = []
             for row in range (0,self.lines_per_block):
@@ -253,6 +264,7 @@ class Lab_Spec_Page( Page ):
             #set measure button to grey
 
     def measure(self):
+
         timeout_interval = 5
         timeout = False
         data_ready = False
@@ -313,6 +325,8 @@ class Lab_Spec_Page( Page ):
             self.status_index = 4
             self.status_highlight.color_index = 2
         self.text_areas[8].text = self.status_list[self.status_index]
+
+        self.set_lamp_current(self.lamp_current_index)
 
         # update these if input changes values
         if len(self.spectral_sensors) >0:
