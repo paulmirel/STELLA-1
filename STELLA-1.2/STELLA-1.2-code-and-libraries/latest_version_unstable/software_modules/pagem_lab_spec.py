@@ -80,9 +80,9 @@ class Lab_Spec_Page( Page ):
         self.repetitions = 4 # including source off mmt
         self.lamp_on = False
         self.display_data = []
-        self.display_data.append(("M00", 63218, 13827, 3.2, 10))
-        self.display_data.insert(0,("M01", 43218, 19927, 2.2, 8))
-        self.display_data.insert(0,("M03", 21218, 00927, 4.4, 99))
+        #self.display_data[0] = " "," "," "," "," "
+        #self.display_data[1] = " "," "," "," "," "
+        #self.display_data[2] = " "," "," "," "," "
         self.supply_5V.disable()
         self.last_lamp_currents = []
         self.measurement_lists = []
@@ -141,12 +141,15 @@ class Lab_Spec_Page( Page ):
             self.measuring = True
             self.update_values() #to show the current mmt number
             data = []
+            saturated = False
             for n in range (0, self.repetitions):
                 if n > 0:
                     self.supply_5V.enable()
                 time.sleep(dwell_s)
                 self.supply_5V.read()
                 data_column = self.measure()
+                if max(data_column) > 65534:
+                    saturated = True
                 data.append(data_column)
                 self.measurement_lists.append(data_column)
                 del data_column
@@ -242,17 +245,9 @@ class Lab_Spec_Page( Page ):
             print()
 
 
-            a_b_values = 9999, 8888
-            if a_b_values[1] < 1:
-                a_b_values[1] = 1
-            a_b_ratio = round(a_b_values[0]/a_b_values[1],1)
-            pct_dr = round( max(a_b_values)/65535, 1)
-            if pct_dr >= 10:
-                pct_dr = int(pct_dr)
 
 
-            self.display_data.insert(0,(self.mmt_number, self.right_justify(a_b_values[0]), self.right_justify(a_b_values[1]), a_b_ratio, pct_dr))
-            self.display_data = self.display_data[:3] # list slicing, keep only first three elements
+
 
             if True:
                 for row in range (0,self.lines_per_block):
@@ -260,14 +255,27 @@ class Lab_Spec_Page( Page ):
                         print( self.measurement_lists[col][row], end=", " )
                     print()
 
+            a_b_values = avg_column[self.chA_index+1], avg_column[self.chB_index+1]
+            if a_b_values[1] < 1:
+                a_b_values[1] = 1
+            a_b_ratio = round(a_b_values[0]/a_b_values[1],1)
+            pct_dr = round( 100* max(a_b_values)/65535, 1)
+            if pct_dr >= 10:
+                pct_dr = int(pct_dr)
+            if saturated:
+                pct_dr = "SAT"
+
+            print( self.mmt_number, a_b_values[0], a_b_values[1],a_b_ratio,pct_dr)
 
             if True:
-                print("display data")
-                for row in range (0,len(self.display_data[0])):
-                    for col in range (0,len(self.display_data)):
-                        print( self.display_data[col][row], end=", " )
-                    print()
-
+                self.display_data.insert(0,(self.mmt_number, self.right_justify(a_b_values[0]), self.right_justify(a_b_values[1]), a_b_ratio, pct_dr))
+                self.display_data = self.display_data[:3] # list slicing, keep only first three elements
+                #update these only on a new mmt having been made
+                location = 18
+                for y in range (0,len(self.display_data)):
+                    for x in range (0, 5):
+                        self.text_areas[location].text = "{}".format(self.display_data[y][x])
+                        location += 1
             # save data out to display register and to file_write_request
             # use the same file, but write a header line before every block
             # then clear the measurement_lists
@@ -370,13 +378,7 @@ class Lab_Spec_Page( Page ):
 
 
 
-            if False:
-                #update these only on a new mmt having been made
-                location = 18
-                for y in range (0,3):
-                    for x in range (0, 5):
-                        self.text_areas[location].text = "{}".format(self.display_data[y][x])
-                        location += 1
+
 
 
             if False:
