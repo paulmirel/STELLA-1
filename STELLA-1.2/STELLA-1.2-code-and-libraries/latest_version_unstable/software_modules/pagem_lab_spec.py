@@ -263,7 +263,7 @@ class Lab_Spec_Page( Page ):
             if pct_dr >= 10:
                 pct_dr = int(pct_dr)
             if saturated:
-                pct_dr = "XX"
+                pct_dr = "sa" #"OL" #"S1" "sa"
 
             print( self.mmt_number, a_b_values[0], a_b_values[1],a_b_ratio,pct_dr)
             mmt_text = "M{:02}".format(self.mmt_number)
@@ -851,6 +851,8 @@ class Lab_Spec_Page( Page ):
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
             self.group.append(text_group)
+            vertical_separator = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=1,height=80, x=x+line_widths[index]-4, y=124)
+            self.group.append(vertical_separator)
 
             x += line_widths[index]
 
