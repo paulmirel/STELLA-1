@@ -196,24 +196,24 @@ class Lab_Spec_Page( Page ):
                 line += "{},".format(self.mmt_number)
                 line += "{},".format(tag_column[row])
                 line += "{},".format(parameters[row])
-                '''
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                line += "{},".format(
-                '''
+                line += "{},".format(self.measurement_lists[1][row])
+                line += "{},".format(self.measurement_lists[2][row])
+                line += "{},".format(self.measurement_lists[3][row])
+                line += "{},".format(self.measurement_lists[4][row])
+                line += "{},".format(avg_column[row])
+                line += "{},".format(dr_column[row])
+                line += "{},".format(gain)
+                line += "{},".format(int_time)
+                line += "{},".format(bw_column[row])
+                line += "{},".format(norm_ct_column[row])
+                line += "{},".format(current_before_after_average)
+                line += "{},".format(norm_ct_per_a)
+                line += "{},".format(self.supply_5V.voltage)
+                line += "{},".format(self.bat.voltage)
+                line += "{},".format(self.bat.percentage)
+                line += "{},".format(self.gps.latitude)
+                line += "{},".format(self.gps.longitude)
+                line += "{},".format(self.gps.altitude)
 
                 functionm_file.write_nonsystem_line( self.instrument, line)
             self.onboard_neopixel.fill(devicem_neopixel.OFF)
@@ -225,13 +225,7 @@ class Lab_Spec_Page( Page ):
 
 
         print()
-        #functionm_file.write_nonsystem_line( self.instrument, header_line )
-        #self.supply_5V.voltage
-        #self.bat.voltage
-        #self.bat.percentage
-        #self.gps.latitude
-        #self.gps.longitude
-        #self.gps.altitude
+
 
 
 
