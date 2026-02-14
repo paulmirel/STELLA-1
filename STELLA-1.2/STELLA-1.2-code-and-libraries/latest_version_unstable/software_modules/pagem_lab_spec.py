@@ -126,7 +126,6 @@ class Lab_Spec_Page( Page ):
         for row in range (0,self.lines_per_block):
             tag_column.append("B{:02}_M{:02}_{:02}".format(self.instrument.batch_number, self.mmt_number, row))
         self.measurement_lists.append(tag_column)
-        del tag_column
         dwell_s = 0.5 ## to allow chemistry to respond to excitation and to separate measurements, both for consistency
         self.measuring = True
         self.update_values() #to show the current mmt number
@@ -177,7 +176,7 @@ class Lab_Spec_Page( Page ):
         self.bat.read()
 
         header_line = "UID,iso8601,time hh.hh,note,instruction,lamp wavelength nm,lamp pn,lamp location"
-        header_line += ",batch,tag,parameter/band,rep 0,rep 1,rep 2,rep 3,average,DR_pct,gain,int_time ms"
+        header_line += ",batch,mmt,tag,parameter/band,rep 0,rep 1,rep 2,rep 3,average,DR_pct,gain,int_time ms"
         header_line += ",bandwidth nm,ct/nm/[gain]/s,avg current mA,cts/nm/s/A,5V supply V,bat V,bat pct"
         header_line += ",gps lat,gps long,gps alt"
 
@@ -185,7 +184,37 @@ class Lab_Spec_Page( Page ):
             self.onboard_neopixel.fill(devicem_neopixel.GREEN)
             functionm_file.write_nonsystem_line( self.instrument, header_line)
             for row in range (0,self.lines_per_block):
-                line = "test"
+                line = "{},".format(uid)
+                line += "{},".format(mmt_time)
+                line += "{},".format(dec_time)
+                line += "{},".format(note)
+                line += "{},".format(instruction)
+                line += "{},".format(lamp_wl)
+                line += "{},".format(lamp_pn)
+                line += "{},".format(lamp_loc)
+                line += "{},".format(self.instrument.batch_number)
+                line += "{},".format(self.mmt_number)
+                line += "{},".format(tag_column[row])
+                line += "{},".format(parameters[row])
+                '''
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                line += "{},".format(
+                '''
+
                 functionm_file.write_nonsystem_line( self.instrument, line)
             self.onboard_neopixel.fill(devicem_neopixel.OFF)
             print("data written to file")
