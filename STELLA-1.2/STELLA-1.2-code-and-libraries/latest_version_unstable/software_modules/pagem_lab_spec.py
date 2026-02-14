@@ -242,18 +242,32 @@ class Lab_Spec_Page( Page ):
             print()
 
 
+            a_b_values = 9999, 8888
+            if a_b_values[1] < 1:
+                a_b_values[1] = 1
+            a_b_ratio = round(a_b_values[0]/a_b_values[1],1)
+            pct_dr = round( max(a_b_values)/65535, 1)
+            if pct_dr >= 10:
+                pct_dr = int(pct_dr)
 
 
-            #self.last_lamp_currents = self.last_lamp_currents[:2*self.repetitions]
-            #self.last_lamp_current_mA = int(round(sum(self.last_lamp_currents)/len(self.last_lamp_currents),0))
-            #self.display_data.insert(0,("M04", self.right_justify(218), 06927, 6.0, 87))
-            #self.display_data = self.display_data[:3] # list slicing, keep only first three elements
-            #post processing: append calculations, auxilliary information
+            self.display_data.insert(0,(self.mmt_number, self.right_justify(a_b_values[0]), self.right_justify(a_b_values[1]), a_b_ratio, pct_dr))
+            self.display_data = self.display_data[:3] # list slicing, keep only first three elements
+
             if True:
                 for row in range (0,self.lines_per_block):
                     for col in range (0,len(self.measurement_lists)):
                         print( self.measurement_lists[col][row], end=", " )
                     print()
+
+
+            if True:
+                print("display data")
+                for row in range (0,len(self.display_data[0])):
+                    for col in range (0,len(self.display_data)):
+                        print( self.display_data[col][row], end=", " )
+                    print()
+
             # save data out to display register and to file_write_request
             # use the same file, but write a header line before every block
             # then clear the measurement_lists
