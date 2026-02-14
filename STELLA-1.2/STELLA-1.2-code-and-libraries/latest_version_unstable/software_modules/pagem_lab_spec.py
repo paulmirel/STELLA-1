@@ -263,12 +263,12 @@ class Lab_Spec_Page( Page ):
             if pct_dr >= 10:
                 pct_dr = int(pct_dr)
             if saturated:
-                pct_dr = "SAT"
+                pct_dr = "XX"
 
             print( self.mmt_number, a_b_values[0], a_b_values[1],a_b_ratio,pct_dr)
-
+            mmt_text = "M{:02}".format(self.mmt_number)
             if True:
-                self.display_data.insert(0,(self.mmt_number, self.right_justify(a_b_values[0]), self.right_justify(a_b_values[1]), a_b_ratio, pct_dr))
+                self.display_data.insert(0,(mmt_text, self.right_justify(a_b_values[0]), self.right_justify(a_b_values[1]), a_b_ratio, pct_dr))
                 self.display_data = self.display_data[:3] # list slicing, keep only first three elements
                 #update these only on a new mmt having been made
                 location = 18
