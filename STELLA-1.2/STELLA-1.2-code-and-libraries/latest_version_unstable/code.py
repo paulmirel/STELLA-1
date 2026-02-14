@@ -243,8 +243,7 @@ def main():
     lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, onboard_neopixel )
     start = time.monotonic()
 
-    if False:
-        #if instrument.spectral_sensors_detected:
+    if instrument.spectral_sensors_detected and not lab_spec_present:
         light_page = pagem_light.make_light_page( instrument )
         exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:
