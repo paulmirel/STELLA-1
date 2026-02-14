@@ -8,17 +8,19 @@ from adafruit_display_text import label
 import vectorio
 import terminalio
 from .classm_page import Page
-from software_modules import functionm_file
+from software_modules import functionm_file, devicem_neopixel
 import time
 import gc
 
 
+
 class Lab_Spec_Page( Page ):
-    def __init__( self, instrument ):
+    def __init__( self, instrument, onboard_neopixel):
         super().__init__()
         self.page_name = "Lab_Spec"
         self.instrument = instrument
         self.palette = instrument.palette
+        self.onboard_neopixel = onboard_neopixel
         self.selection = 0
         self.last_selection = 0
         self.selection_count = 0
@@ -179,13 +181,19 @@ class Lab_Spec_Page( Page ):
         header_line += ",bandwidth nm,ct/nm/[gain]/s,avg current mA,cts/nm/s/A,5V supply V,bat V,bat pct"
         header_line += ",gps lat,gps long,gps alt"
 
+        try:
+            self.onboard_neopixel.fill(devicem_neopixel.GREEN)
+            functionm_file.write_nonsystem_line( self.instrument, header_line)
+            for row in range (0,self.lines_per_block):
+                line = "test"
+                functionm_file.write_nonsystem_line( self.instrument, line)
+            self.onboard_neopixel.fill(devicem_neopixel.OFF)
+            print("data written to file")
+        except Exception as err:
+            print("failed to write data to file:", err)
+            self.instrument.vfs = False
+            self.onboard_neopixel.fill(devicem_neopixel.RED)
 
-        #put this in a separate function
-        timeout_interval = 5
-        timeout = False
-        start_interval = time.monotonic()
-        self.line_to_write = header_line
-        self.request_write = True
 
         print()
         #functionm_file.write_nonsystem_line( self.instrument, header_line )
@@ -809,9 +817,9 @@ class Lab_Spec_Page( Page ):
 
 
 
-def make_lab_spec_page( instrument ):
+def make_lab_spec_page( instrument, onboard_neopixel ):
     instrument.welcome_page.announce( "make_lab_spec_page" )
-    page = Lab_Spec_Page( instrument )
+    page = Lab_Spec_Page( instrument,onboard_neopixel )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )

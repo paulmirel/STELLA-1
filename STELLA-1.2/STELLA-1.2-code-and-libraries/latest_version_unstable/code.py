@@ -240,7 +240,7 @@ def main():
     time_place_page = pagem_time_place.make_time_place_page( instrument )
     #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
-    lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument )
+    lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, onboard_neopixel )
     start = time.monotonic()
 
     if False:
@@ -309,11 +309,6 @@ def main():
             if instrument.active_page_number == instrument.pages_dict["Lab_Spec"]:
                 instrument.handle_inputs()
                 instrument.update_active_page()
-                if vfs and lab_spec_page.request_write:
-                    onboard_neopixel.fill(devicem_neopixel.GREEN)
-                    functionm_file.write_nonsystem_line( instrument, lab_spec_page.line_to_write )
-                    onboard_neopixel.fill(devicem_neopixel.OFF)
-                    lab_spec_page.request_write = False
             elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
                 sensor = instrument.sensors_present[sensors_page.sensor_choice]
                 sensor.read()
