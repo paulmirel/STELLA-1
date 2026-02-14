@@ -44,7 +44,7 @@ class Lab_Spec_Page( Page ):
         for sensor_index in range (0, self.number_of_sensors):
             self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
         self.status_index = 0
-        self.status_list = ["OK","BUSY","0 mA","LOWB","NOSD","FAIL"]
+        self.status_list = ["OK","BUSY","0mA","LOWB","NOSD","FAIL"]
         self.adc_sensor = False
         self.supply_5V = False
         self.supply_5V_on = False
@@ -103,148 +103,155 @@ class Lab_Spec_Page( Page ):
         return text
 
     def run_measurement_sequence(self):
-        self.mmt_number += 1
-        gc.collect()
-        measure_start_free = gc.mem_free()
-        uid = self.instrument.uid
-        mmt_time = self.instrument.iso_time
-        dec_time = self.instrument.decimal_time
-        note = "note goes here"
-        instruction = "instruction goes here"
-        lamp_wl = "488nm"
-        lamp_pn = "GC VJLPL1.13-KQKS-V2V3-1"
-        lamp_loc = "bottom"
-        gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
-        int_time = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
-        self.gps.read()
-        parameters = ["lamp mA before", 415, 445, 480, 515, 555, 590, 630, 682, "lamp mA after"]
-        self.supply_5V.disable()
-        self.dac.set("a", 14000) # set to REQ current here
-        #self.dac.set("a", 0) # turn off the DAC output so that the base current doesn't show
-        # move previous data down one line on the display
-        tag_column = []
-        for row in range (0,self.lines_per_block):
-            tag_column.append("B{:02}_M{:02}_{:02}".format(self.instrument.batch_number, self.mmt_number, row))
-        self.measurement_lists.append(tag_column)
-        dwell_s = 0.5 ## to allow chemistry to respond to excitation and to separate measurements, both for consistency
-        self.measuring = True
-        self.update_values() #to show the current mmt number
-        data = []
-        for n in range (0, self.repetitions):
-            if n > 0:
-                self.supply_5V.enable()
-            time.sleep(dwell_s)
-            data_column = self.measure()
-            data.append(data_column)
-            self.measurement_lists.append(data_column)
-            del data_column
+        if self.status_index == 0:
+            print( "gps has fix:", self.gps.has_fix )
+            self.mmt_number += 1
+            gc.collect()
+            measure_start_free = gc.mem_free()
+            uid = self.instrument.uid
+            mmt_time = self.instrument.iso_time
+            dec_time = self.instrument.decimal_time
+            note = "note goes here"
+            instruction = "instruction goes here"
+            lamp_wl = "488nm"
+            lamp_pn = "GC VJLPL1.13-KQKS-V2V3-1"
+            lamp_loc = "bottom"
+            gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
+            int_time = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
+            parameters = ["lamp mA before", 415, 445, 480, 515, 555, 590, 630, 682, "lamp mA after"]
             self.supply_5V.disable()
-            time.sleep(dwell_s)
-        self.measuring = False
-        stop = time.monotonic()
-        self.sequence_elapsed_s = stop - self.mmt_sequence_start
-        print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
-        avg_column = []
-        for row in range (0,self.lines_per_block):
-            avg_column.append(int(round(((data[1][row] + data[2][row] + data[3][row])/3)-data[0][row],0)))
-        self.measurement_lists.append(avg_column)
-        dr_column = []
-        dr_column.append(" ")
-        bw_column = []
-        bw_column.append(" ")
-        for row in range (1,self.lines_per_block-1):
-            dr_column.append(round(100*avg_column[row]/65535,1))
-            bw_column.append(self.spectral_sensors[self.active_sensor_index].bandwidths_nm[row-1])
-        dr_column.append(" ")
-        bw_column.append(" ")
-        self.measurement_lists.append(dr_column)
-        self.measurement_lists.append(bw_column)
-        norm_ct_column =[]
-        norm_ct_column.append(" ")
-        for row in range (1,self.lines_per_block-1):
-            norm_ct_column.append( avg_column[row] / bw_column[row] /  gain /  int_time )
-        norm_ct_column.append(" ")
-        self.measurement_lists.append(norm_ct_column)
-        current_before_after_average = round((avg_column[0]+avg_column[self.lines_per_block-1])/2,1)
-        norm_ct_per_a =[]
-        norm_ct_per_a.append(" ")
-        for row in range (1,self.lines_per_block-1):
-            norm_ct_per_a.append(1000*1000*norm_ct_column[row]/current_before_after_average)
-        norm_ct_per_a.append(" ")
-        self.measurement_lists.append(norm_ct_per_a)
-        self.supply_5V.read()
-        self.bat.read()
-
-        header_line = "UID,iso8601,time hh.hh,note,instruction,lamp wavelength nm,lamp pn,lamp location"
-        header_line += ",batch,mmt,tag,parameter/band,rep 0,rep 1,rep 2,rep 3,average,DR_pct,gain,int_time ms"
-        header_line += ",bandwidth nm,ct/nm/[gain]/s,avg current mA,cts/nm/s/A,5V supply V,bat V,bat pct"
-        header_line += ",gps lat,gps long,gps alt"
-
-        try:
-            self.onboard_neopixel.fill(devicem_neopixel.GREEN)
-            functionm_file.write_nonsystem_line( self.instrument, header_line)
+            self.dac.set("a", 14000) # set to REQ current here
+            #self.dac.set("a", 0) # turn off the DAC output so that the base current doesn't show
+            # move previous data down one line on the display
+            tag_column = []
             for row in range (0,self.lines_per_block):
-                line = "{},".format(uid)
-                line += "{},".format(mmt_time)
-                line += "{},".format(dec_time)
-                line += "{},".format(note)
-                line += "{},".format(instruction)
-                line += "{},".format(lamp_wl)
-                line += "{},".format(lamp_pn)
-                line += "{},".format(lamp_loc)
-                line += "{},".format(self.instrument.batch_number)
-                line += "{},".format(self.mmt_number)
-                line += "{},".format(tag_column[row])
-                line += "{},".format(parameters[row])
-                line += "{},".format(self.measurement_lists[1][row])
-                line += "{},".format(self.measurement_lists[2][row])
-                line += "{},".format(self.measurement_lists[3][row])
-                line += "{},".format(self.measurement_lists[4][row])
-                line += "{},".format(avg_column[row])
-                line += "{},".format(dr_column[row])
-                line += "{},".format(gain)
-                line += "{},".format(int_time)
-                line += "{},".format(bw_column[row])
-                line += "{},".format(norm_ct_column[row])
-                line += "{},".format(current_before_after_average)
-                line += "{},".format(norm_ct_per_a)
-                line += "{},".format(self.supply_5V.voltage)
-                line += "{},".format(self.bat.voltage)
-                line += "{},".format(self.bat.percentage)
-                line += "{},".format(self.gps.latitude)
-                line += "{},".format(self.gps.longitude)
-                line += "{},".format(self.gps.altitude)
-
-                functionm_file.write_nonsystem_line( self.instrument, line)
-            self.onboard_neopixel.fill(devicem_neopixel.OFF)
-            print("data written to file")
-        except Exception as err:
-            print("failed to write data to file:", err)
-            self.instrument.vfs = False
-            self.onboard_neopixel.fill(devicem_neopixel.RED)
-
-
-        print()
-
-
-
-
-        #self.last_lamp_currents = self.last_lamp_currents[:2*self.repetitions]
-        #self.last_lamp_current_mA = int(round(sum(self.last_lamp_currents)/len(self.last_lamp_currents),0))
-        #self.display_data.insert(0,("M04", self.right_justify(218), 06927, 6.0, 87))
-        #self.display_data = self.display_data[:3] # list slicing, keep only first three elements
-        #post processing: append calculations, auxilliary information
-        if True:
+                tag_column.append("B{:02}_M{:02}_{:02}".format(self.instrument.batch_number, self.mmt_number, row))
+            self.measurement_lists.append(tag_column)
+            dwell_s = 0.5 ## to allow chemistry to respond to excitation and to separate measurements, both for consistency
+            self.measuring = True
+            self.update_values() #to show the current mmt number
+            data = []
+            for n in range (0, self.repetitions):
+                if n > 0:
+                    self.supply_5V.enable()
+                time.sleep(dwell_s)
+                self.supply_5V.read()
+                data_column = self.measure()
+                data.append(data_column)
+                self.measurement_lists.append(data_column)
+                del data_column
+                self.supply_5V.disable()
+                time.sleep(dwell_s)
+            self.measuring = False
+            stop = time.monotonic()
+            self.sequence_elapsed_s = stop - self.mmt_sequence_start
+            print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
+            avg_column = []
             for row in range (0,self.lines_per_block):
-                for col in range (0,len(self.measurement_lists)):
-                    print( self.measurement_lists[col][row], end=", " )
-                print()
-        # save data out to display register and to file_write_request
-        # use the same file, but write a header line before every block
-        # then clear the measurement_lists
-        self.measurement_lists = []
-        measure_stop_free = gc.mem_free()
+                avg_column.append(int(round(((data[1][row] + data[2][row] + data[3][row])/3)-data[0][row],0)))
+            self.measurement_lists.append(avg_column)
+            dr_column = []
+            dr_column.append(" ")
+            bw_column = []
+            bw_column.append(" ")
+            for row in range (1,self.lines_per_block-1):
+                dr_column.append(round(100*avg_column[row]/65535,1))
+                bw_column.append(self.spectral_sensors[self.active_sensor_index].bandwidths_nm[row-1])
+            dr_column.append(" ")
+            bw_column.append(" ")
+            self.measurement_lists.append(dr_column)
+            self.measurement_lists.append(bw_column)
+            norm_ct_column =[]
+            norm_ct_column.append(" ")
+            for row in range (1,self.lines_per_block-1):
+                norm_ct_column.append( avg_column[row] / bw_column[row] /  gain /  int_time )
+            norm_ct_column.append(" ")
+            self.measurement_lists.append(norm_ct_column)
+            current_before_after_average = round((avg_column[0]+avg_column[self.lines_per_block-1])/2,1)
+            if current_before_after_average <1:
+                self.status_index = 2
+                current_before_after_average = 1
+            norm_ct_per_a =[]
+            norm_ct_per_a.append(" ")
+            for row in range (1,self.lines_per_block-1):
+                norm_ct_per_a.append(1000*1000*norm_ct_column[row]/current_before_after_average)
+            norm_ct_per_a.append(" ")
+            self.measurement_lists.append(norm_ct_per_a)
 
+            self.bat.read()
+
+            header_line = "UID,iso8601,time hh.hh,note,instruction,lamp wavelength nm,lamp pn,lamp location"
+            header_line += ",batch,mmt,tag,parameter/band,rep 0,rep 1,rep 2,rep 3,average,DR_pct,gain,int_time ms"
+            header_line += ",bandwidth nm,ct/nm/[gain]/s,avg current mA,cts/nm/s/A,5V supply V,bat V,bat pct"
+            header_line += ",gps lat,gps long,gps alt"
+
+            try:
+                self.onboard_neopixel.fill(devicem_neopixel.GREEN)
+                functionm_file.write_nonsystem_line( self.instrument, header_line)
+                for row in range (0,self.lines_per_block):
+                    line = "{},".format(uid)
+                    line += "{},".format(mmt_time)
+                    line += "{},".format(dec_time)
+                    line += "{},".format(note)
+                    line += "{},".format(instruction)
+                    line += "{},".format(lamp_wl)
+                    line += "{},".format(lamp_pn)
+                    line += "{},".format(lamp_loc)
+                    line += "{},".format(self.instrument.batch_number)
+                    line += "{},".format(self.mmt_number)
+                    line += "{},".format(tag_column[row])
+                    line += "{},".format(parameters[row])
+                    line += "{},".format(self.measurement_lists[1][row])
+                    line += "{},".format(self.measurement_lists[2][row])
+                    line += "{},".format(self.measurement_lists[3][row])
+                    line += "{},".format(self.measurement_lists[4][row])
+                    line += "{},".format(avg_column[row])
+                    line += "{},".format(dr_column[row])
+                    line += "{},".format(gain)
+                    line += "{},".format(int_time)
+                    line += "{},".format(bw_column[row])
+                    line += "{},".format(norm_ct_column[row])
+                    line += "{},".format(current_before_after_average)
+                    line += "{},".format(norm_ct_per_a[row])
+                    line += "{},".format(self.supply_5V.voltage)
+                    line += "{},".format(self.bat.voltage)
+                    line += "{},".format(self.bat.percentage)
+                    line += "{},".format(self.gps.latitude)
+                    line += "{},".format(self.gps.longitude)
+                    line += "{},".format(self.gps.altitude)
+
+                    functionm_file.write_nonsystem_line( self.instrument, line)
+                self.onboard_neopixel.fill(devicem_neopixel.OFF)
+                print("data written to file")
+            except Exception as err:
+                print("failed to write data to file:", err)
+                self.instrument.vfs = False
+                self.onboard_neopixel.fill(devicem_neopixel.RED)
+
+
+            print()
+
+
+
+
+            #self.last_lamp_currents = self.last_lamp_currents[:2*self.repetitions]
+            #self.last_lamp_current_mA = int(round(sum(self.last_lamp_currents)/len(self.last_lamp_currents),0))
+            #self.display_data.insert(0,("M04", self.right_justify(218), 06927, 6.0, 87))
+            #self.display_data = self.display_data[:3] # list slicing, keep only first three elements
+            #post processing: append calculations, auxilliary information
+            if True:
+                for row in range (0,self.lines_per_block):
+                    for col in range (0,len(self.measurement_lists)):
+                        print( self.measurement_lists[col][row], end=", " )
+                    print()
+            # save data out to display register and to file_write_request
+            # use the same file, but write a header line before every block
+            # then clear the measurement_lists
+            self.measurement_lists = []
+            measure_stop_free = gc.mem_free()
+        else:
+            print("error, not available to measure")
+            #set measure button to grey
 
     def measure(self):
         timeout_interval = 5
@@ -285,6 +292,7 @@ class Lab_Spec_Page( Page ):
         return (current_before,f1,f2,f3,f4,f5,f6,f7,f8,current_after)
 
     def update_values( self ):
+        self.gps.read()
         # this is taking too long. Need to be selective about what we update and skip everything else
         start = time.monotonic()
         # always update these
@@ -293,12 +301,15 @@ class Lab_Spec_Page( Page ):
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
         self.text_areas[11].text = "{}".format(self.instrument.batch_number)
         if self.instrument.vfs:
-            if self.measuring:
-                self.status_index = 1
-                self.status_highlight.color_index = 4
+            if self.status_index == 2:
+                self.status_highlight.color_index = 2
             else:
-                self.status_index = 0
-                self.status_highlight.color_index = 5
+                if self.measuring:
+                    self.status_index = 1
+                    self.status_highlight.color_index = 4
+                else:
+                    self.status_index = 0
+                    self.status_highlight.color_index = 5
         else:
             self.status_index = 4
             self.status_highlight.color_index = 2
