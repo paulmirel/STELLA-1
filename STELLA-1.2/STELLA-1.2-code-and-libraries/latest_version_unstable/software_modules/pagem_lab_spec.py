@@ -38,10 +38,14 @@ class Lab_Spec_Page( Page ):
         self.exposure_target_fraction_low = 0.5
         self.number_of_sensors = len( self.spectral_sensors )
         self.gain_index = []
+        self.default_gain_index = 8
         for sensor_index in range (0, self.number_of_sensors):
+            self.spectral_sensors[sensor_index].gain_index = self.default_gain_index
             self.gain_index.append( self.spectral_sensors[sensor_index].gain_index )
         self.integration_time_index = []
+        self.default_integration_time_index = 19
         for sensor_index in range (0, self.number_of_sensors):
+            self.spectral_sensors[sensor_index].integration_time_index = self.default_integration_time_index
             self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
         self.status_index = 0
         self.status_list = ["OK","BUSY","0mA","LOWB","NOSD","FAIL"]
@@ -79,15 +83,10 @@ class Lab_Spec_Page( Page ):
         self.display_data.append(("M00", 63218, 13827, 3.2, 10))
         self.display_data.insert(0,("M01", 43218, 19927, 2.2, 8))
         self.display_data.insert(0,("M03", 21218, 00927, 4.4, 99))
-
         self.supply_5V.disable()
         self.last_lamp_currents = []
         self.measurement_lists = []
         self.lines_per_block = 10
-        self.request_write = False
-        self.line_to_write = ""
-
-
 
     def right_justify(self,value):
         if value<10:
