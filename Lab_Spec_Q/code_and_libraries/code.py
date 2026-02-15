@@ -44,7 +44,7 @@ i2c_bus.unlock()
 print( devices_present_hex )
 
 # supported devices by i2c_address:
-# 0x0B bat mon
+# 0xB bat mon
 # 0x10 mini_gps
 # 0x34 buzzer   Qwiic buzzer
 # 0x36 seesaw rotary encoder
@@ -97,6 +97,9 @@ def main():
             instrument.spectral_sensors_detected = True
 
     # initialize sensors
+    if ('0xb') in devices_present_hex:
+        from adafruit_lc709203f import LC709203F
+        battery_monitor = False
     if ('0x10') in devices_present_hex:
         from software_modules import devicem_gps
         gps = devicem_gps.initialize_i2c_gps( instrument )
