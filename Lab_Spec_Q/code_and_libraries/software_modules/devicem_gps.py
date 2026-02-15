@@ -1,4 +1,5 @@
 # gps module
+# version 1.1
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
@@ -22,9 +23,26 @@ def initialize_gps( instrument ):
         pass
     return gps
 
+def initialize_i2c_gps( instrument ):
+    gps = Null_GPS()
+    try:
+        gps = pa1616d_GPS( instrument.i2c_bus, i2c_flag=True)
+        instrument.welcome_page.announce( "initialize_gps" )
+        instrument.sensors_present.append( gps )
+        time.sleep(0.1)
+        gps.request_firmware_report()
+        gps.send_start_commands()
+    except Exception as err:
+        print("gps failed init: {}".format(err))
+        pass
+    return gps
+
 class pa1616d_GPS( Device ):
-    def __init__( self, com_bus ):
-        super().__init__(name = "gps", pn = "pa1616d", address = 0x00, swob = adafruit_gps.GPS( com_bus, debug=False))
+    def __init__( self, com_bus, i2c_flag ):
+        if i2c_flag:
+            super().__init__(name = "gps", pn = "pa1010d", address = 0x10, swob = adafruit_gps.GPS_GtopI2C( com_bus, debug=False))
+        else:
+            super().__init__(name = "gps", pn = "pa1616d", address = 0x00, swob = adafruit_gps.GPS( com_bus, debug=False))
         self.last_read = 0
         self.parameters = [ "fix", "latitude_deg", "longitude_deg", "altitude_m", "timestamp", "satellites"]
         self.values = [0,0,0,0,0,0]

@@ -97,11 +97,10 @@ def main():
             instrument.spectral_sensors_detected = True
 
     # initialize sensors
-    #gps = devicem_gps.initialize_gps( instrument )
+    gps = devicem_gps.initialize_i2c_gps( instrument )
     if ('0x48') in devices_present_hex:
         from software_modules import devicem_ads1015
         ads1015_12_bit_adc = devicem_ads1015.initialize_ads1015_12_bit_adc( instrument )
-        lab_spec_present[1] = True
     if ('0x36') in devices_present_hex:
         pass
         #from software_modules import devicem_tbd
