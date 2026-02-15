@@ -97,88 +97,15 @@ def main():
             instrument.spectral_sensors_detected = True
 
     # initialize sensors
-    stall()
-    gps = devicem_gps.initialize_gps( instrument )
+    #gps = devicem_gps.initialize_gps( instrument )
     if ('0x48') in devices_present_hex:
         from software_modules import devicem_ads1015
         ads1015_12_bit_adc = devicem_ads1015.initialize_ads1015_12_bit_adc( instrument )
         lab_spec_present[1] = True
-    if ('0x4a') in devices_present_hex:
-        from software_modules import devicem_ads1115
-        ads1115_16_bit_adc = devicem_ads1115.initialize_ads1115_16_bit_adc( instrument ) ### connect ADDR to SDA to set address
     if ('0x36') in devices_present_hex:
-        from software_modules import devicem_max1704x
-        battery_monitor = devicem_max1704x.initialize_battery_monitor( instrument )
-    if ('0x77') in devices_present_hex:
-        from software_modules import devicem_bme280
-        bme280_air_sensor = devicem_bme280.initialize_bme280_air_sensor( instrument )
-    if ('0x18') in devices_present_hex:
-        from software_modules import devicem_ds2484
-        ds2484_1_wire_thermometer = devicem_ds2484.initialize_ds2484_1_wire_thermometer( instrument )
-    # '0x38' focaltouch initializes within the instrument init function
-    if ('0x44') in devices_present_hex:
-        from software_modules import devicem_hdc3022
-        hdc3022_air_sensor = devicem_hdc3022.initialize_hdc3022_air_sensor( instrument )
-    if ('0x1e') in devices_present_hex:
-        from software_modules import devicem_lis2mdl
-        lis2mdl_magnetic_field_sensor = devicem_lis2mdl.initialize_lis2mdl_magnetic_field_sensor( instrument )
-    if ('0x6a') in devices_present_hex:
-        from software_modules import devicem_lis3mdl
-        lis3mdl_magnetic_field_sensor = devicem_lis3mdl.initialize_lis3mdl_magnetic_field_sensor( instrument )
-    if ('0x19') in devices_present_hex:
-        from software_modules import devicem_lsm303
-        lsm303_acceleration_sensor = devicem_lsm303.initialize_lsm303_acceleration_sensor( instrument )
-    if ('0x1c') in devices_present_hex:
-        from software_modules import devicem_lsm6ds
-        lsm6ds_accel_gyro_sensor = devicem_lsm6ds.initialize_lsm6ds_accel_gyro_sensor( instrument )
-    if ('0x53') in devices_present_hex:
-        from software_modules import devicem_ltr390
-        ltr390_uva_sensor = devicem_ltr390.initialize_ltr390_uva_sensor( instrument )
-    if ('0x1f') in devices_present_hex:
-        from software_modules import devicem_mcp9808  ### close a0, a1, a2 address jumpers on board
-        mcp9808_air_thermometer = devicem_mcp9808.initialize_mcp9808_air_thermometer( instrument )
-    if True: # This device doesn't answer the i2c_bus scan.
-        from software_modules import devicem_mlx90614
-        mlx90614_surface_thermometer = devicem_mlx90614.initialize_mlx90614_surface_thermometer( instrument )
-    if ('0x33') in devices_present_hex:
-        from software_modules import devicem_mlx90640 # data from this thermal camera is not yet supported
-        mlx90640_thermal_camera = devicem_mlx90640.initialize_mlx90640_thermal_camera( instrument )
-    if ('0x4f') in devices_present_hex:
-        from software_modules import devicem_pcf8591 ### close a0, a1, a2 address jumpers on board
-        pcf8591_8_bit_adc_dac = devicem_pcf8591.initialize_pcf8591_8_bit_adc_dac( instrument )
-    if ('0x12') in devices_present_hex:
-        from software_modules import devicem_pmsa0031
-        pmsa0031_particulates_sensor = devicem_pmsa0031.initialize_pmsa0031_particulates_sensor( instrument )
-    if ('0x61') in devices_present_hex:
-        from software_modules import devicem_scd30
-        scd30_CO2_sensor = devicem_scd30.initialize_scd30_CO2_sensor( instrument )
-    if ('0x62') in devices_present_hex:
-        from software_modules import devicem_scd4x
-        scd4x_co2_sensor = devicem_scd4x.initialize_scd4x_co2_sensor( instrument )
-    if ('0x64') in devices_present_hex:
-        from software_modules import devicem_mcp4728
-        mcp4728_quad_dac = devicem_mcp4728.initialize_mcp4728_quad_dac( instrument )
-        lab_spec_present[2] = True
-    if ('0x37') in devices_present_hex:
         pass
-        #from adafruit_seesaw.seesaw import Seesaw
-        #from software_modules import devicem_soil_cap
-        soil_capacitance_sensor_sensor = initialize_soil_capacitance_sensor( instrument )
-    if ('0x28') in devices_present_hex:
-        pass #need library
-        #from software_modules import devicem_soil_con
-        #soil_conductance_sensor = initialize_soil_conductance_sensor( instrument )
-    if ('0x29') in devices_present_hex:
-        from software_modules import devicem_vl53l1x
-        vl53l1x_4m_range_sensor = devicem_vl53l1x.initialize_vl53l1x_4m_range_sensor( instrument )
-
-    analog_in_0 = AnalogIn(board.A0)
-    if mlx90614_surface_thermometer.pn and as7265x_spectrometer.pn:
-        from software_modules import devicem_lv_ez_rangefinder
-        lv_ez_rangefinder = devicem_lv_ez_rangefinder.initialize( instrument, analog_in_0, supply_5V )
-        supply_5V.enable()
-    else:
-        lv_ez_rangefinder = False
+        #from software_modules import devicem_tbd
+        # tbd rotary_encoder = devicem_tbd.initialize_tbd( instrument )
 
     instrument.welcome_page.announce( "Found {} sensors".format( len(instrument.sensors_present) + len(instrument.spectral_sensors_present)))
 
@@ -195,6 +122,7 @@ def main():
     print( "memory usage by device objects = {} kB = {} %".format(( mem_free_after_imports - mem_free_after_devices)/1000,
                                 round(100 * ( mem_free_after_imports - mem_free_after_devices)/1000/start_mem_free_kB, 1)))
 
+    stall()
 
     controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
