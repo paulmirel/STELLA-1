@@ -60,7 +60,7 @@ print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), in
 from software_modules import classm_device
 from software_modules import functionm_file, functionm_palette
 from software_modules import devicem_pcf8523_rtc, devicem_neopixel
-from software_modules import devicem_gps
+from software_modules import devicem_gps, pagem_welcome_LSQ
 
 def main():
     gc.collect()
@@ -82,35 +82,22 @@ def main():
         buzzer.set(932, 130) # frequency in Hz, time in ms. 932 Hz is B flat in octave 5. Fairly pleasant through this piezo driver, though maybe a bit medical in tone.
         buzzer.beep()
     battery_indicator = initialize_led( board.LED )
-    stall()
-    instrument = create_instrument( i2c_bus, spi_bus, gps_uart_bus, UID, buzzer )
+    instrument = create_instrument( i2c_bus, UID, buzzer )
     instrument.vfs = vfs
     instrument.welcome_page.show()
 
-    supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
-
-    lab_spec_present = [False,False,False]
     instrument.spectral_sensors_detected = False
     # initialize spectral sensors
     if True:
-        if ('0x74') in devices_present_hex:
-            print("as7331 found")
-            from software_modules import spectralm_as7331 #UV
-            as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
         if ('0x39') in devices_present_hex:
             print("as7341 found")
             from software_modules import spectralm_as7341 #VIS
             as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
-            lab_spec_present[0] = True
-        if ('0x49') in devices_present_hex:
-            print("as7265x found ")
-            from software_modules import spectralm_as7265x #VIS+NIR
-            as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
         if len( instrument.spectral_sensors_present ) > 0:
             instrument.spectral_sensors_detected = True
 
     # initialize sensors
-
+    stall()
     gps = devicem_gps.initialize_gps( instrument )
     if ('0x48') in devices_present_hex:
         from software_modules import devicem_ads1015
@@ -370,27 +357,19 @@ def main():
         print( "i2c_bus deinitialized" )
 
 class Instrument:
-    def __init__( self, i2c_bus, spi_bus, uart_bus, UID, buzzer):
+    def __init__( self, i2c_bus, UID, buzzer):
         self.i2c_bus = i2c_bus
-        self.uart_bus = uart_bus
         self.device_type = DEVICE_TYPE
         self.uid = UID
         self.buzzer = buzzer
-        self.serial_out = user_settings.serial_out
-        self.sample_interval_s = user_settings.sample_interval_s
-        self.burst_count = user_settings.burst_count
-        self.serial_interval_s = user_settings.serial_interval_s
-        self.take_burst = False
-        self.burst_counter = 0
-        self.pages_list = []
         self.palette = functionm_palette.make_palette()
-        self.main_display_group = devicem_ili9341_display.initialize_display( spi_bus )
-        self.welcome_page = pagem_welcome.make_welcome_page( self, SOFTWARE_VERSION_NUMBER )
+        self.main_display_group = False #tbd
+        self.pages_list = []
+        self.welcome_page = pagem_welcome_LSQ.make_welcome_page( self, SOFTWARE_VERSION_NUMBER )
         self.hardware_clock = devicem_pcf8523_rtc.initialize_hardware_clock( i2c_bus )
         #self.hardware_clock.report()
         self.hardware_clock.sync_system_clock()
         self.clock_battery_ok_text =  "clock battery OK: {}".format( self.hardware_clock.battery_ok() )
-        self.welcome_page.announce( self.clock_battery_ok_text )
         self.datestamp = self.hardware_clock.get_datestamp_now()
         self.last_datestamp = self.datestamp
         self.iso_time = self.hardware_clock.get_iso_time_now()
@@ -399,25 +378,20 @@ class Instrument:
         self.filename = None
         self.sensors_present = []
         self.spectral_sensors_present = []
-        self.record = user_settings.record_on_startup
-        self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
         self.measurement_counter = 0
-        self.rotary_encoder = devicem_rotary_encoder.initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
+        #self.rotary_encoder = devicem_rotary_encoder.initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
         self.encoder_increment = 0
         self.button_pressed = False
-        self.touch_screen = devicem_focaltouch.initialize_touch_screen( self.i2c_bus )
         self.input_flag = False
         self.input_interval_start = 0
         self.input_interval = 1
         self.active_page_number = 2
         self.last_active_page_number = 0
         self.previous_page_number = 1
-        self.combined_page_selection = 0
-        self.combined_page_last_selection = 0
         self.vfs = False
         self.make_header()
-        self.combined = False
         self.rtc_syncd_to_gps = False
+
 
     def show_active_page( self ):
         if self.active_page_number != self.last_active_page_number:
@@ -622,8 +596,8 @@ class Instrument:
 
 
 
-def create_instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer ):
-    instrument = Instrument( i2c_bus, spi_bus, uart_bus, UID, buzzer )
+def create_instrument( i2c_bus, UID, buzzer ):
+    instrument = Instrument( i2c_bus, UID, buzzer )
     return instrument
 
 def initialize_uart( txpin, rxpin ):
