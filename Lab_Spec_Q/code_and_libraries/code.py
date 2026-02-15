@@ -28,6 +28,7 @@ from adafruit_display_text import label
 import vectorio
 import rtc
 import sys
+import adafruit_sdcard
 
 # functional imports
 import math
@@ -66,13 +67,14 @@ def main():
     displayio.release_displays()
     UID = get_uid()
     vfs = False
-    #vfs = functionm_file.initialize_sd_card( spi_bus, board.A5 )
+    spi_bus = busio.SPI(board.SD_CLK, board.SD_MOSI, board.SD_MISO)
+    vfs = functionm_file.initialize_sd_card( spi_bus, board.SD_CS )
     i2c_bus = initialize_i2c_bus()
-    #onboard_neopixel = devicem_neopixel.initialize_neopixel( board.NEOPIXEL )
-    #if vfs:
-    #    onboard_neopixel.fill(devicem_neopixel.YELLOW)
-    #else:
-    #    onboard_neopixel.fill(devicem_neopixel.RED)
+    onboard_neopixel = devicem_neopixel.initialize_neopixel( board.NEOPIXEL )
+    if vfs:
+        onboard_neopixel.fill(devicem_neopixel.YELLOW)
+    else:
+        onboard_neopixel.fill(devicem_neopixel.RED)
     if ('0x34') in devices_present_hex:
         from software_modules import devicem_qwiic_buzzer
         buzzer = devicem_qwiic_buzzer.initialize_qwiic_buzzer( i2c_bus )
