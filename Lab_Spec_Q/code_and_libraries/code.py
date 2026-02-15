@@ -60,7 +60,7 @@ print( "mem free after imports = {} kB, {} %".format(int(gc.mem_free()/1000), in
 from software_modules import classm_device
 from software_modules import functionm_file, functionm_palette
 from software_modules import devicem_pcf8523_rtc, devicem_neopixel
-from software_modules import devicem_gps, pagem_welcome_LSQ
+from software_modules import pagem_welcome_LSQ
 
 def main():
     gc.collect()
@@ -97,7 +97,9 @@ def main():
             instrument.spectral_sensors_detected = True
 
     # initialize sensors
-    gps = devicem_gps.initialize_i2c_gps( instrument )
+    if ('0x10') in devices_present_hex:
+        from software_modules import devicem_gps
+        gps = devicem_gps.initialize_i2c_gps( instrument )
     if ('0x48') in devices_present_hex:
         from software_modules import devicem_ads1015
         ads1015_12_bit_adc = devicem_ads1015.initialize_ads1015_12_bit_adc( instrument )
@@ -121,26 +123,7 @@ def main():
     print( "memory usage by device objects = {} kB = {} %".format(( mem_free_after_imports - mem_free_after_devices)/1000,
                                 round(100 * ( mem_free_after_imports - mem_free_after_devices)/1000/start_mem_free_kB, 1)))
 
-    stall()
-
-    controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
-    main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
-    status_page = pagem_status.make_status_page( instrument, battery_monitor )
-    settings_page = pagem_settings.make_settings_page( instrument )
-    sensors_page = pagem_sensors.make_sensors_page( instrument )
-    time_place_page = pagem_time_place.make_time_place_page( instrument )
-    #air_page = pagem_air.make_air_page( instrument )
-    heat_page = pagem_heat.make_heat_page( instrument )
-    lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, onboard_neopixel )
-    start = time.monotonic()
-
-    if instrument.spectral_sensors_detected and not lab_spec_present:
-        light_page = pagem_light.make_light_page( instrument )
-        exposure_page = pagem_exposure.make_exposure_page( instrument )
-    else:
-        light_page = pagem_light.make_light_missing_page( instrument )
-
-    if False:
+    if True:
         for page in instrument.pages_list:
             print( page.page_name )
     instrument.make_pages_dictionary()
@@ -157,29 +140,12 @@ def main():
 
 
 
-    system_update_period_s = 60
+    system_update_period_s = 30
     system_update_period_start = time.monotonic() - system_update_period_s + 10
     operational = True
-    first_sample_time = time.monotonic()
-    last_sample_time = time.monotonic() - instrument.sample_interval_s
-    last_serial_time = time.monotonic() - instrument.serial_interval_s
     startup_end_time = time.monotonic()
     startup_time_s = startup_end_time - startup_start_time
     print( "startup_time_s = ", startup_time_s )
-    stop = time.monotonic()
-    elapsed = stop - start
-    print( "time to make light page is {}s".format( elapsed ))
-    instrument.take_burst = False
-    accumulator_cycles = 5
-    loop_times = []
-
-    if True: #False: #non-menu startup page
-        if instrument.spectral_sensors_detected:
-            instrument.active_page_number = instrument.pages_dict["Light"]
-        if all(lab_spec_present):
-            instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
-        if False:
-            instrument.active_page_number = instrument.pages_dict["Heat"]
 
     try:
         if buzzer: buzzer.beep()
@@ -190,92 +156,18 @@ def main():
             onboard_neopixel.fill(devicem_neopixel.RED)
         instrument.check_inputs()
         while operational:
-            loop_start = time.monotonic()
+
+            time.sleep(0.1)
             instrument.show_active_page()
             instrument.handle_inputs()
-            controls_page.update_values()
-            sample_start_time = time.monotonic()
-            system_log = instrument.get_system_log()
-            if instrument.active_page_number == instrument.pages_dict["Lab_Spec"]:
-                instrument.handle_inputs()
-                instrument.update_active_page()
-                time.sleep(0.01)
-            elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
-                sensor = instrument.sensors_present[sensors_page.sensor_choice]
-                sensor.read()
-                instrument.handle_inputs()
-                instrument.update_active_page()
-                if instrument.record:
-                    functionm_file.write_line( instrument, system_log, sensor.log() )
-                    instrument.handle_inputs()
-                instrument.measurement_counter += 1
-                if instrument.serial_out:
-                    sensor.printlog()
-                    instrument.handle_inputs()
-                sample_stop_time = time.monotonic()
-                sample_time = sample_stop_time - sample_start_time
-                #print( "sample_time, one sensor, s = ", round(sample_time,3))
-            else:
-                for sensor in instrument.sensors_present:
-                    sensor.read()
-                    instrument.handle_inputs()
-                sample_stop_time = time.monotonic()
-                sample_time = sample_stop_time - sample_start_time
-                #print( "sample_time, all sensors, s = ", round(sample_time,3))
-                #print("call to update active page from line 325, page number",instrument.active_page_number, instrument.combined)
-                instrument.update_active_page()
-                if instrument.active_page_number == instrument.pages_dict["Light"]:
-                    light_page.update_plot()
-                if instrument.vfs:
-                        if instrument.take_burst:
-                            if instrument.burst_counter < instrument.burst_count:
-                                instrument.burst_counter += 1
-                                instrument.record = False
-                                onboard_neopixel.fill(devicem_neopixel.BLUE)
-                                for sensor in instrument.sensors_present:
-                                        functionm_file.write_line( instrument, system_log, sensor.log() )
-                                        instrument.handle_inputs()
-                            else:
-                                controls_page.update_burst_countdown( instrument.burst_count )
-                                instrument.take_burst = False
-                        else:
-                            instrument.burst_counter = 0
-                        if (time.monotonic() > last_sample_time + instrument.sample_interval_s):
-                            if instrument.record:
-                                onboard_neopixel.fill(devicem_neopixel.GREEN)
-                                for sensor in instrument.sensors_present:
-                                    functionm_file.write_line( instrument, system_log, sensor.log() )
-                                    instrument.handle_inputs()
-                            last_sample_time = time.monotonic()
-                        onboard_neopixel.fill(devicem_neopixel.OFF)
-                        instrument.measurement_counter += 1
-                else:
-                    onboard_neopixel.fill(devicem_neopixel.RED)
-                if (time.monotonic() > last_serial_time + instrument.serial_interval_s):
-                    if instrument.serial_out:
-                        for sensor in instrument.sensors_present:
-                            sensor.printlog()
-                            instrument.handle_inputs()
-                        print()
-                        last_serial_time = time.monotonic()
-
-                if battery_monitor.percentage < 20:
-                    flash_indicator( battery_indicator )
-                if time.monotonic() > system_update_period_start + system_update_period_s:
-                    instrument.check_calendar_day()
-                    instrument.sync_rtc_to_gps_time(gps.timestruct)
-                    system_update_period_start = time.monotonic()
-            loop_stop = time.monotonic()
-            loop_time = loop_stop - loop_start
-            #print("loop time {} s".format( loop_time ))
-            loop_times.append(loop_time)
-            if len(loop_times) > accumulator_cycles:
-                loop_times.pop(0)
-            #print( "loop working time: min = {}, max = {},".format( min(loop_times), max(loop_times)))
-            #print( "loop working time average = {}".format( round(sum(loop_times)/len(loop_times),3)))
-            #print()
-
-
+            if False: #battery_monitor.percentage < 20:
+                flash_indicator( battery_indicator )
+            if time.monotonic() > system_update_period_start + system_update_period_s:
+                gps.read()
+                instrument.check_calendar_day()
+                instrument.sync_rtc_to_gps_time(gps.timestruct)
+                print( "rtc_syncd_to_gps: ",instrument.rtc_syncd_to_gps)
+                system_update_period_start = time.monotonic()
 
     finally:
         displayio.release_displays()
@@ -321,30 +213,17 @@ class Instrument:
 
 
     def show_active_page( self ):
-        if self.active_page_number != self.last_active_page_number:
-            if self.last_active_page_number == 0:
-                self.previous_page_number = self.pages_dict["Main"]
-            else:
-                self.previous_page_number = self.last_active_page_number
-            self.pages_list[ self.last_active_page_number ].hide()
-            self.pages_list[ self.pages_dict["Controls"] ].hide()
-            active_page_name = self.pages_list[self.active_page_number].page_name
-            if active_page_name == "Main" or active_page_name == "Light" or active_page_name == "Heat":
-                self.pages_list[ self.pages_dict["Controls"] ].show()
-                self.pages_list[ self.active_page_number ].show()
-                if self.combined_page_selection < self.pages_list[ self.pages_dict["Controls"] ].selection_count:
-                    self.pages_list[ self.active_page_number ].hide_all_selections()
-                    self.pages_list[ self.pages_dict["Controls"] ].update_selection()
+        pass
+        if False:
+            if self.active_page_number != self.last_active_page_number:
+                if self.last_active_page_number == 0:
+                    pass #self.previous_page_number = self.pages_dict["Main"]
                 else:
-                    self.pages_list[ self.active_page_number ].update_selection()
-                    self.pages_list[ self.pages_dict["Controls"] ].hide_all_selections()
-            elif active_page_name == "Lab_Spec":
-                self.pages_list[ self.pages_dict["Controls"] ].hide()
-                self.pages_list[ self.pages_dict["Lab_Spec"] ].show()
-                #self.pages_list[ self.pages_dict["Light"] ].show()
-            else:
+                    self.previous_page_number = self.last_active_page_number
+                self.pages_list[ self.last_active_page_number ].hide()
+                active_page_name = self.pages_list[self.active_page_number].page_name
                 self.pages_list[ self.active_page_number ].show()
-            self.last_active_page_number = self.active_page_number
+                self.last_active_page_number = self.active_page_number
 
 
     def handle_inputs( self ):
@@ -401,22 +280,18 @@ class Instrument:
 
 
     def check_inputs( self ):
-        self.rotary_encoder.read_encoder()
-        if self.rotary_encoder.encoder_flag:
-            self.encoder_increment = self.rotary_encoder.last_value
-            self.rotary_encoder.encoder_flag = False
-            self.input_flag = True
-        self.rotary_encoder.read_button()
-        if self.rotary_encoder.button_flag:
-            self.buzzer.beep()
-            self.button_pressed = True
-            self.rotary_encoder.button_flag = False
-            self.input_flag = True
+        pass
         if False:
-            self.touch_screen.read()
-            if not self.touch_screen.flag and self.touch_screen.is_touched:
-                self.touch_tx = self.touch_screen.tx
-                self.touch_ty = self.touch_screen.ty
+            self.rotary_encoder.read_encoder()
+            if self.rotary_encoder.encoder_flag:
+                self.encoder_increment = self.rotary_encoder.last_value
+                self.rotary_encoder.encoder_flag = False
+                self.input_flag = True
+            self.rotary_encoder.read_button()
+            if self.rotary_encoder.button_flag:
+                self.buzzer.beep()
+                self.button_pressed = True
+                self.rotary_encoder.button_flag = False
                 self.input_flag = True
 
     def update_active_page( self ):
@@ -444,7 +319,7 @@ class Instrument:
         self.iso_time = self.hardware_clock.get_iso_time_now()
         self.decimal_time = self.hardware_clock.get_decimal_hour_now()
     def update_filename(self):
-        update_filename( self )
+        functionm_file.update_filename( self )
         print( "filename_in_use:", self.filename )
     def check_calendar_day( self ):
         self.datestamp = self.hardware_clock.get_datestamp_now()
@@ -457,7 +332,7 @@ class Instrument:
             self.measurement_counter = 0
 
     def sync_rtc_to_gps_time(self,timestruct):
-        if timestruct is not None:
+        if timestruct:
             self.rtc_syncd_to_gps = self.hardware_clock.sync_to_struct(timestruct)
         else:
             self.rtc_syncd_to_gps = False

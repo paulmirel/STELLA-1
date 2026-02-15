@@ -14,6 +14,7 @@ class Welcome_Page( Page ):
         self.page_name = "Welcome"
     def make_group( self, svn ):
         self.group = displayio.Group()
+        '''
         try:
             bitmap = displayio.OnDiskBitmap("/lib/stella_logo.bmp")
             #print( "Bitmap image file found" )
@@ -71,10 +72,11 @@ class Welcome_Page( Page ):
             self.message_area = label.Label( terminalio.FONT, text=text, color=0xFFFFFF )
             message_group.append( self.message_area )
             self.group.append( message_group )
-
+        '''
         return self.group
+
     def announce( self, text ):
-        self.message_area.text = text
+        #self.message_area.text = text
         print( text )
     def update_values( self ):
         pass
@@ -83,6 +85,6 @@ def make_welcome_page( instrument, SOFTWARE_VERSION_NUMBER ):
     welcome_page = Welcome_Page()
     group = welcome_page.make_group(SOFTWARE_VERSION_NUMBER)
     welcome_page.hide()
-    instrument.main_display_group.append( group )
+    #instrument.main_display_group.append( group )
     instrument.pages_list.append( welcome_page )
     return welcome_page
