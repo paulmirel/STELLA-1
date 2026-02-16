@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "1.0.1"
+SOFTWARE_VERSION_NUMBER = "1.0.2"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -566,7 +566,7 @@ class Instrument:
         self.iso_time = self.hardware_clock.get_iso_time_now()
         self.decimal_time = self.hardware_clock.get_decimal_hour_now()
     def update_filename(self):
-        update_filename( self )
+        functionm_file.update_filename( self )
         print( "filename_in_use:", self.filename )
     def check_calendar_day( self ):
         self.datestamp = self.hardware_clock.get_datestamp_now()
