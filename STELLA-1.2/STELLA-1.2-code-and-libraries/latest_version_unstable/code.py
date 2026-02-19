@@ -538,7 +538,8 @@ class Instrument:
             self.input_flag = True
         self.rotary_encoder.read_button()
         if self.rotary_encoder.button_flag:
-            self.buzzer.beep()
+            if self.buzzer:
+                self.buzzer.beep()
             self.button_pressed = True
             self.rotary_encoder.button_flag = False
             self.input_flag = True
