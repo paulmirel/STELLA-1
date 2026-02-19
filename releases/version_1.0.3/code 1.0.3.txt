@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "1.1.0"
+SOFTWARE_VERSION_NUMBER = "1.0.3"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -106,7 +106,6 @@ def main():
         buzzer.beep()
     else:
         buzzer = False
-
     battery_indicator = initialize_led( board.LED )
 
     instrument = create_instrument( i2c_bus, spi_bus, gps_uart_bus, UID, buzzer )
@@ -128,8 +127,6 @@ def main():
             from software_modules import spectralm_as7341 #VIS
             as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
             lab_spec_present[0] = True
-        else:
-            as7341_spectrometer = False
         if ('0x49') in devices_present_hex:
             print("as7265x found ")
             from software_modules import spectralm_as7265x #VIS+NIR
@@ -245,10 +242,7 @@ def main():
     time_place_page = pagem_time_place.make_time_place_page( instrument )
     #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
-    if all(lab_spec_present):
-        lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, as7341_spectrometer, onboard_neopixel )
-    else:
-        lab_spec_page = pagem_lab_spec.make_lab_spec_missing_page( instrument )
+    lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument )
     start = time.monotonic()
 
     if instrument.spectral_sensors_detected and not all(lab_spec_present):

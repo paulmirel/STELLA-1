@@ -31,7 +31,6 @@ def initialize_spectral_channel( name, sensor_unit, index ):
 
 class Spectral_Channel( Device ):
     def __init__( self, name, sensor_unit, index ):
-        #print( name, index )
         #super().__init__(name=name, sensor_group=sensor_group )
         super().__init__(name = name, pn = "as7265x", address = 0x49, swob = sensor_unit )
         self.sensor_unit = sensor_unit
@@ -96,7 +95,7 @@ class as7265x_Spectrometer( Device ):
         self.band_designations_in_wavelength_order = "A","B","C","D","E","F","G","H","R","I","S","J","T","U","V","W","K","L"
         self.data_counts = []
         self.data_calibrated = []
-        for index in range( 0, self.number_of_channels+1):
+        for index in range( 0, self.number_of_channels):
             self.data_counts.append(0)
             self.data_calibrated.append(0)
 

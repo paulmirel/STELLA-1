@@ -8,20 +8,15 @@ from adafruit_display_text import label
 import vectorio
 import terminalio
 from .classm_page import Page
-from software_modules import functionm_file, devicem_neopixel
 import time
-import gc
-
 
 
 class Lab_Spec_Page( Page ):
-    def __init__( self, instrument, as7341_spectrometer, onboard_neopixel):
+    def __init__( self, instrument ):
         super().__init__()
         self.page_name = "Lab_Spec"
         self.instrument = instrument
         self.palette = instrument.palette
-        self.as7341_spectrometer = as7341_spectrometer
-        self.onboard_neopixel = onboard_neopixel
         self.selection = 0
         self.last_selection = 0
         self.selection_count = 0
@@ -32,19 +27,20 @@ class Lab_Spec_Page( Page ):
         self.chA_index = 3
         self.chB_index = 2
         self.number_of_channels = 8 #TBD for alternate sensors
+        self.spectral_sensors = self.instrument.spectral_sensors_present
         self.active_sensor_index = 0
         self.max_counts = 65535
         self.exposure_target_fraction_high = 0.9
         self.exposure_target_fraction_low = 0.5
         self.number_of_sensors = len( self.spectral_sensors )
         self.gain_index = []
-        self.default_gain_index = 8
-        self.as7341_spectrometer.set_gain( self.default_gain_index )
+        for sensor_index in range (0, self.number_of_sensors):
+            self.gain_index.append( self.spectral_sensors[sensor_index].gain_index )
         self.integration_time_index = []
-        self.default_integration_time_index = 19
-        self.as7341_spectrometer.set_gain( self.default_integration_time_index )
+        for sensor_index in range (0, self.number_of_sensors):
+            self.integration_time_index.append( self.spectral_sensors[sensor_index].integration_time_index )
         self.status_index = 0
-        self.status_list = ["OK","BUSY","0mA","LOWB","NOSD","FAIL"]
+        self.status_list = ["OK","BUSY","0 mA","LOWB","NOSD","FAIL"]
         self.adc_sensor = False
         self.supply_5V = False
         self.supply_5V_on = False
@@ -56,16 +52,11 @@ class Lab_Spec_Page( Page ):
                 self.supply_5V = sensor
             if sensor.pn == "mcp4728":
                 self.dac = sensor
-            if sensor.pn == "max1704x":
-                self.bat = sensor
-            if sensor.name == "gps":
-                self.gps = sensor
-
         if self.adc_sensor:
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
         self.dac_values = [0,0,0,0]
-        self.lamp_current_index = 20
+        self.lamp_current_index = 10
         self.lamp_current_options = [0,1,3,5,7,9,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,150,200,250,300,350,400,450,500,550,600]
         self.last_lamp_current_mA = "-- "
         self.file_write_request = False
@@ -73,280 +64,85 @@ class Lab_Spec_Page( Page ):
         self.measuring = False
         self.mmt_sequence_start = 0
         self.mmt_interval = 10
-        self.repetitions = 4 # including source off mmt
+        self.repetitions = 3
+        self.measure_with_source_off = True
         self.lamp_on = False
-        self.display_data = []
-        #self.display_data[0] = " "," "," "," "," "
-        #self.display_data[1] = " "," "," "," "," "
-        #self.display_data[2] = " "," "," "," "," "
-        self.supply_5V.disable()
-        self.last_lamp_currents = []
-        self.measurement_lists = []
-        self.lines_per_block = 10
 
-    def set_lamp_current(self, req_index):
-        xdc = self.lamp_current_options[ req_index ]
-        A = 0.0002
-        B = -0.0944
-        C = 47.24
-        D = 13179
-        set_value = int( A*xdc**3 + B*xdc**2 + C*xdc + D)
-        self.dac.set("a", set_value)
-        return set_value
-
-
-    def right_justify(self,value):
-        if value<10:
-            text = "    {}".format(value)
-        if value<100:
-            text = "   {}".format(value)
-        if value<1000:
-            text = "  {}".format(value)
-        if value<10000:
-            text = " {}".format(value)
-        else:
-            text = "{}".format(value)
-        return text
 
     def run_measurement_sequence(self):
-        self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
-        self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
-        if self.status_index == 0:
-            print( "gps has fix:", self.gps.has_fix )
-            self.mmt_number += 1
-            gc.collect()
-            measure_start_free = gc.mem_free()
-            uid = self.instrument.uid
-            mmt_time = self.instrument.iso_time
-            dec_time = self.instrument.decimal_time
-            note = "note goes here"
-            instruction = "instruction goes here"
-            lamp_wl = "488nm"
-            lamp_pn = "GC VJLPL1.13-KQKS-V2V3-1"
-            lamp_loc = "bottom"
-            gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
-            int_time = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
-            parameters = ["lamp mA before", 415, 445, 480, 515, 555, 590, 630, 682, "lamp mA after"]
-            self.supply_5V.disable()
-            # move previous data down one line on the display
-            tag_column = []
-            for row in range (0,self.lines_per_block):
-                tag_column.append("B{:02}_M{:02}_{:02}".format(self.instrument.batch_number, self.mmt_number, row))
-            self.measurement_lists.append(tag_column)
-            dwell_s = 0.5 ## to allow chemistry to respond to excitation and to separate measurements, both for consistency
-            self.measuring = True
-            self.update_values() #to show the current mmt number
-            data = []
-            saturated = False
-            for n in range (0, self.repetitions):
-                if n > 0:
-                    self.supply_5V.enable()
-                time.sleep(dwell_s)
-                self.supply_5V.read()
-                data_column = self.measure()
-                if max(data_column) > 65534:
-                    saturated = True
-                data.append(data_column)
-                self.measurement_lists.append(data_column)
-                del data_column
-                self.supply_5V.disable()
-                time.sleep(dwell_s)
-            self.measuring = False
-            stop = time.monotonic()
-            self.sequence_elapsed_s = stop - self.mmt_sequence_start
-            print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
-            avg_column = []
-            for row in range (0,self.lines_per_block):
-                avg_column.append(int(round(((data[1][row] + data[2][row] + data[3][row])/3)-data[0][row],0)))
-            self.measurement_lists.append(avg_column)
-            dr_column = []
-            dr_column.append(" ")
-            bw_column = []
-            bw_column.append(" ")
-            for row in range (1,self.lines_per_block-1):
-                dr_column.append(round(100*avg_column[row]/65535,1))
-                bw_column.append(self.spectral_sensors[self.active_sensor_index].bandwidths_nm[row-1])
-            dr_column.append(" ")
-            bw_column.append(" ")
-            self.measurement_lists.append(dr_column)
-            self.measurement_lists.append(bw_column)
-            norm_ct_column =[]
-            norm_ct_column.append(" ")
-            for row in range (1,self.lines_per_block-1):
-                norm_ct_column.append( avg_column[row] / bw_column[row] /  gain /  int_time )
-            norm_ct_column.append(" ")
-            self.measurement_lists.append(norm_ct_column)
-            current_before_after_average = round((avg_column[0]+avg_column[self.lines_per_block-1])/2,1)
-            if current_before_after_average <1:
-                self.status_index = 2
-                current_before_after_average = 1
-            norm_ct_per_a =[]
-            norm_ct_per_a.append(" ")
-            for row in range (1,self.lines_per_block-1):
-                norm_ct_per_a.append(1000*1000*norm_ct_column[row]/current_before_after_average)
-            norm_ct_per_a.append(" ")
-            self.measurement_lists.append(norm_ct_per_a)
-
-            self.bat.read()
-
-            header_line = "UID,iso8601,time hh.hh,note,instruction,lamp wavelength nm,lamp pn,lamp location"
-            header_line += ",batch,mmt,tag,parameter/band,rep 0,rep 1,rep 2,rep 3,average,DR_pct,gain,int_time ms"
-            header_line += ",bandwidth nm,ct/nm/[gain]/s,avg current mA,cts/nm/s/A,5V supply V,bat V,bat pct"
-            header_line += ",gps lat,gps long,gps alt"
-
-            try:
-                self.onboard_neopixel.fill(devicem_neopixel.GREEN)
-                functionm_file.write_nonsystem_line( self.instrument, header_line)
-                for row in range (0,self.lines_per_block):
-                    line = "{},".format(uid)
-                    line += "{},".format(mmt_time)
-                    line += "{},".format(dec_time)
-                    line += "{},".format(note)
-                    line += "{},".format(instruction)
-                    line += "{},".format(lamp_wl)
-                    line += "{},".format(lamp_pn)
-                    line += "{},".format(lamp_loc)
-                    line += "{},".format(self.instrument.batch_number)
-                    line += "{},".format(self.mmt_number)
-                    line += "{},".format(tag_column[row])
-                    line += "{},".format(parameters[row])
-                    line += "{},".format(self.measurement_lists[1][row])
-                    line += "{},".format(self.measurement_lists[2][row])
-                    line += "{},".format(self.measurement_lists[3][row])
-                    line += "{},".format(self.measurement_lists[4][row])
-                    line += "{},".format(avg_column[row])
-                    line += "{},".format(dr_column[row])
-                    line += "{},".format(gain)
-                    line += "{},".format(int_time)
-                    line += "{},".format(bw_column[row])
-                    line += "{},".format(norm_ct_column[row])
-                    line += "{},".format(current_before_after_average)
-                    line += "{},".format(norm_ct_per_a[row])
-                    line += "{},".format(self.supply_5V.voltage)
-                    line += "{},".format(self.bat.voltage)
-                    line += "{},".format(self.bat.percentage)
-                    line += "{},".format(self.gps.latitude)
-                    line += "{},".format(self.gps.longitude)
-                    line += "{},".format(self.gps.altitude)
-
-                    functionm_file.write_nonsystem_line( self.instrument, line)
-                self.onboard_neopixel.fill(devicem_neopixel.OFF)
-                print("data written to file")
-            except Exception as err:
-                print("failed to write data to file:", err)
-                self.instrument.vfs = False
-                self.onboard_neopixel.fill(devicem_neopixel.RED)
-
-
-            print()
-
-
-
-
-
-
-            if True:
-                for row in range (0,self.lines_per_block):
-                    for col in range (0,len(self.measurement_lists)):
-                        print( self.measurement_lists[col][row], end=", " )
-                    print()
-
-            a_b_values = avg_column[self.chA_index+1], avg_column[self.chB_index+1]
-            if a_b_values[1] < 1:
-                a_b_values[1] = 1
-            a_b_ratio = round(a_b_values[0]/a_b_values[1],1)
-            pct_dr = round( 100* max(a_b_values)/65535, 1)
-            if pct_dr >= 10:
-                pct_dr = int(pct_dr)
-            if saturated:
-                pct_dr = "sa" #"OL" #"S1" "sa"
-
-            print( self.mmt_number, a_b_values[0], a_b_values[1],a_b_ratio,pct_dr)
-            mmt_text = "M{:02}".format(self.mmt_number)
-            if True:
-                self.display_data.insert(0,(mmt_text, self.right_justify(a_b_values[0]), self.right_justify(a_b_values[1]), a_b_ratio, pct_dr))
-                self.display_data = self.display_data[:3] # list slicing, keep only first three elements
-                #update these only on a new mmt having been made
-                location = 18
-                for y in range (0,len(self.display_data)):
-                    for x in range (0, 5):
-                        self.text_areas[location].text = "{}".format(self.display_data[y][x])
-                        location += 1
-            # save data out to display register and to file_write_request
-            # use the same file, but write a header line before every block
-            # then clear the measurement_lists
-            self.measurement_lists = []
-            measure_stop_free = gc.mem_free()
-        else:
-            print("error, not available to measure")
-            #set measure button to grey
-
+        # move previous data down one line on the display
+        self.mmt_number += 1
+        self.text_areas[18].text = "M{:02}".format(self.mmt_number)
+        self.text_areas[19].text = "..working.."
+        dwell_s = 0.5
+        self.lamp_on = False
+        self.measuring = True
+        self.update_values()
+        if self.measure_with_source_off:
+            print( "measuring with source off" )
+            self.measure()
+        for n in range (0, self.repetitions):
+            self.lamp_on = True
+            print( "measuring with source on, repetition {}".format(n) )
+            time.sleep(dwell_s)
+            self.measure()
+            time.sleep(dwell_s)
+            self.lamp_on = False
+        self.measuring = False
+        stop = time.monotonic()
+        self.sequence_elapsed_s = stop - self.mmt_sequence_start
+        print( "sequence elapsed time = {}s".format(self.sequence_elapsed_s))
+        self.text_areas[19].text = "A..." #A value
+        self.text_areas[20].text = "B..." #B value
+        self.text_areas[21].text = "A/B" #A/B
+        self.text_areas[22].text = "NN" #%DR
     def measure(self):
-
         timeout_interval = 5
         timeout = False
         data_ready = False
-        current_before = self.get_lamp_current()
-        self.spectral_sensors[self.active_sensor_index].swob._configure_f1_f4()
+        #as7341.start_low()
         start = time.monotonic()
-        print("begin f1-f4 channel detect")
         while not data_ready and not timeout:
-            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
+            #data_ready = as7341.data_ready
             print(".", end = "")
-            time.sleep(0.01)
+            self.update_values()
+            time.sleep(0.1)
             if time.monotonic() > start + timeout_interval:
                 timeout = True
-        stop = time.monotonic()
-        print()
-        print( "f1-f4 elapsed time = {}s".format(stop-start))
-        f1,f2,f3,f4 = self.spectral_sensors[self.active_sensor_index].swob.read_channel_register
-        #print(f1,f2,f3,f4)
-
-        self.spectral_sensors[self.active_sensor_index].swob._configure_f5_f8()
-        start = time.monotonic()
-        print("begin f5-f8 channel detect")
+        #if not timeout:
+        self.values_low = [19230, 25840, 28867, 30330]#as7341.read_values_low()
+        timeout = False
         data_ready = False
+        #as7341.start_high()
+        start = time.monotonic()
         while not data_ready and not timeout:
-            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
+            #data_ready = as7341.data_ready
             print(".", end = "")
-            time.sleep(0.01)
+            self.update_values()
+            time.sleep(0.1)
             if time.monotonic() > start + timeout_interval:
                 timeout = True
-        stop = time.monotonic()
-        print()
-        print( "f5-f8 elapsed time = {}s".format(stop-start))
-        current_after = self.get_lamp_current()
-        f5,f6,f7,f8 = self.spectral_sensors[self.active_sensor_index].swob.read_channel_register
-        #print(f5,f6,f7,f8)
-        return (current_before,f1,f2,f3,f4,f5,f6,f7,f8,current_after)
+        print("\n")
+        #if not timeout:
+        self.values_high = [49230, 34840, 28867, 19330] #as7341.read_values_high()
 
     def update_values( self ):
-        self.gps.read()
-        # this is taking too long. Need to be selective about what we update and skip everything else
-        start = time.monotonic()
-        # always update these
         timenow = self.instrument.hardware_clock.read()
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
         self.text_areas[11].text = "{}".format(self.instrument.batch_number)
         if self.instrument.vfs:
-            if self.status_index == 2:
-                self.status_highlight.color_index = 2
+            if self.measuring:
+                self.status_index = 1
+                self.status_highlight.color_index = 4
             else:
-                if self.measuring:
-                    self.status_index = 1
-                    self.status_highlight.color_index = 4
-                else:
-                    self.status_index = 0
-                    self.status_highlight.color_index = 5
+                self.status_index = 0
+                self.status_highlight.color_index = 5
         else:
             self.status_index = 4
             self.status_highlight.color_index = 2
         self.text_areas[8].text = self.status_list[self.status_index]
 
-        self.set_lamp_current(self.lamp_current_index)
-
-        # update these if input changes values
         if len(self.spectral_sensors) >0:
             gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
             self.text_areas[9].text = "{}".format(gain)
@@ -376,23 +172,13 @@ class Lab_Spec_Page( Page ):
 
 
 
-
-            if False:
-                # temporary live readings
-
-
-                #self.spectral_sensors[self.active_sensor_index].read_counts_all()
-                chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
-                chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
-                self.text_areas[19].text = "{}".format(self.right_justify(chA_counts))
-                self.text_areas[20].text = "{}".format(self.right_justify(chB_counts))
-                data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
-                #print(data_ready)
-                self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
-
-
         if False:
-
+            if self.adc_sensor:
+                self.adc_sensor.read()
+                lamp_currrent_voltage = self.adc_sensor.voltage[0]
+            else:
+                lamp_currrent_voltage = 0
+            self.text_areas[12].text = "{}mA".format(int(round(lamp_currrent_voltage*1000,1)))
             self.text_areas[15].text = "M{:03}".format( self.mmt_number )
             chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
             chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
@@ -416,8 +202,7 @@ class Lab_Spec_Page( Page ):
                 self.text_areas[25].text = "{}".format(round(ratio_ab,1))
             else:
                 self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
-        stop = time.monotonic()
-        #print( "update values takes {}s".format(stop-start))
+
 
 
 
@@ -502,14 +287,7 @@ class Lab_Spec_Page( Page ):
             self.update_values()
 
 
-    def get_lamp_current(self):
-        if self.adc_sensor:
-            self.adc_sensor.read()
-            lamp_currrent_voltage = self.adc_sensor.voltage[0]
-        else:
-            lamp_currrent_voltage = 0
-        self.last_lamp_current_mA = int(round(lamp_currrent_voltage*1000,1))
-        return self.last_lamp_current_mA
+
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -847,8 +625,6 @@ class Lab_Spec_Page( Page ):
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
             self.group.append(text_group)
-            vertical_separator = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=1,height=80, x=x+line_widths[index]-4, y=124)
-            self.group.append(vertical_separator)
 
             x += line_widths[index]
 
@@ -878,83 +654,9 @@ class Lab_Spec_Page( Page ):
 
 
 
-def make_lab_spec_page( instrument, onboard_neopixel ):
+def make_lab_spec_page( instrument ):
     instrument.welcome_page.announce( "make_lab_spec_page" )
-    page = Lab_Spec_Page( instrument,onboard_neopixel )
-    group = page.make_group()
-    page.hide()
-    instrument.main_display_group.append( group )
-    instrument.pages_list.append( page )
-    return page
-
-class Lab_Spec_Missing_Page( Page ):
-    def __init__( self, instrument ):
-        super().__init__()
-        self.page_name = "Lab_Spec"
-        self.instrument = instrument
-        self.palette = instrument.palette
-        self.selection = 0
-        self.selection_count = 0
-        self.field_selected = False
-    def make_group( self ):
-        self.group = displayio.Group()
-        status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240, x=0, y=0 )
-        self.group.append( status_background )
-        text_spacing_y = 28
-        status_title_group = displayio.Group(scale=2, x=10, y=18)
-        status_title_text = "Lab_Spec sensors not found:"
-        status_title_text_area = label.Label(terminalio.FONT, text=status_title_text, color=self.palette[0])
-        status_title_group.append(status_title_text_area)
-        self.group.append(status_title_group)
-
-        text_group = displayio.Group(scale=2, x=10, y=18+text_spacing_y)
-        text = "connect Lab_Spec plugin "
-        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
-
-        text_group = displayio.Group(scale=2, x=10, y=18+2*text_spacing_y)
-        text = "and restart"
-        text_area = label.Label(terminalio.FONT, text=text, color=self.palette[0])
-        text_group.append(text_area)
-        self.group.append(text_group)
-
-
-        # RETURN
-        select_width = 4
-        return_height = 28
-        return_select_y = 240 - 4 - 2 - return_height - select_width
-        return_select_height = return_height + 2*select_width
-        return_y = return_select_y + select_width
-        return_text_y = return_y + 12
-        return_select_width = 100
-        return_select_x = 320 - 4 - return_select_width
-        return_x = return_select_x + select_width
-        self.return_select = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=return_select_width, height=return_select_height, x=return_select_x, y=return_select_y)
-        self.group.append( self.return_select )
-        #self.return_select.hidden = True
-        return_control_width = return_select_width - 2 * select_width
-        self.return_color = vectorio.Rectangle(pixel_shader=self.palette, color_index=19, width=return_control_width, height=return_height, x=return_x, y=return_y)
-        self.group.append( self.return_color )
-        return_text_x = return_x + 10
-        return_group = displayio.Group(scale=2, x=return_text_x, y=return_text_y)
-        return_text = "RETURN"
-        self.return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
-        return_group.append(self.return_text_area)
-        self.group.append(return_group)
-        return self.group
-    def hide_all_selections( self ):
-        pass
-    def action( self ):
-        self.instrument.active_page_number = self.instrument.pages_dict["Main"]
-    def update_selection( self ):
-        pass
-    def update_plot( self ):
-        pass
-
-def make_lab_spec_missing_page( instrument ):
-    instrument.welcome_page.announce( "make_lab_spec_missing_page" )
-    page = Lab_Spec_Missing_Page( instrument )
+    page = Lab_Spec_Page( instrument )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )
