@@ -36,13 +36,11 @@ class Lab_Spec_Page( Page ):
         self.max_counts = 65535
         self.exposure_target_fraction_high = 0.9
         self.exposure_target_fraction_low = 0.5
-        self.number_of_sensors = len( self.spectral_sensors )
-        self.gain_index = []
-        self.default_gain_index = 8
-        self.as7341_spectrometer.set_gain( self.default_gain_index )
-        self.integration_time_index = []
-        self.default_integration_time_index = 19
-        self.as7341_spectrometer.set_gain( self.default_integration_time_index )
+        self.number_of_sensors = 1
+        self.gain_index = 8
+        self.as7341_spectrometer.set_gain( self.gain_index )
+        self.integration_time_index = 19
+        self.as7341_spectrometer.set_integration_time( self.integration_time_index )
         self.status_index = 0
         self.status_list = ["OK","BUSY","0mA","LOWB","NOSD","FAIL"]
         self.adc_sensor = False
@@ -109,8 +107,8 @@ class Lab_Spec_Page( Page ):
         return text
 
     def run_measurement_sequence(self):
-        self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
-        self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+        self.as7341_spectrometer.set_integration_time( self.integration_time_index)
+        self.as7341_spectrometer.set_gain( self.gain_index)
         if self.status_index == 0:
             print( "gps has fix:", self.gps.has_fix )
             self.mmt_number += 1
@@ -124,8 +122,8 @@ class Lab_Spec_Page( Page ):
             lamp_wl = "488nm"
             lamp_pn = "GC VJLPL1.13-KQKS-V2V3-1"
             lamp_loc = "bottom"
-            gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
-            int_time = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
+            gain = self.as7341_spectrometer.gain_list[ self.gain_index]
+            int_time = self.as7341_spectrometer.integration_time_ms_list[ self.integration_time_index ]
             parameters = ["lamp mA before", 415, 445, 480, 515, 555, 590, 630, 682, "lamp mA after"]
             self.supply_5V.disable()
             # move previous data down one line on the display
@@ -165,7 +163,7 @@ class Lab_Spec_Page( Page ):
             bw_column.append(" ")
             for row in range (1,self.lines_per_block-1):
                 dr_column.append(round(100*avg_column[row]/65535,1))
-                bw_column.append(self.spectral_sensors[self.active_sensor_index].bandwidths_nm[row-1])
+                bw_column.append(self.as7341_spectrometer.bandwidths_nm[row-1])
             dr_column.append(" ")
             bw_column.append(" ")
             self.measurement_lists.append(dr_column)
@@ -287,11 +285,11 @@ class Lab_Spec_Page( Page ):
         timeout = False
         data_ready = False
         current_before = self.get_lamp_current()
-        self.spectral_sensors[self.active_sensor_index].swob._configure_f1_f4()
+        self.as7341_spectrometer.swob._configure_f1_f4()
         start = time.monotonic()
         print("begin f1-f4 channel detect")
         while not data_ready and not timeout:
-            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
+            data_ready = self.as7341_spectrometer.swob._data_ready_bit
             print(".", end = "")
             time.sleep(0.01)
             if time.monotonic() > start + timeout_interval:
@@ -299,15 +297,15 @@ class Lab_Spec_Page( Page ):
         stop = time.monotonic()
         print()
         print( "f1-f4 elapsed time = {}s".format(stop-start))
-        f1,f2,f3,f4 = self.spectral_sensors[self.active_sensor_index].swob.read_channel_register
+        f1,f2,f3,f4 = self.as7341_spectrometer.swob.read_channel_register
         #print(f1,f2,f3,f4)
 
-        self.spectral_sensors[self.active_sensor_index].swob._configure_f5_f8()
+        self.as7341_spectrometer.swob._configure_f5_f8()
         start = time.monotonic()
         print("begin f5-f8 channel detect")
         data_ready = False
         while not data_ready and not timeout:
-            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
+            data_ready = self.as7341_spectrometer.swob._data_ready_bit
             print(".", end = "")
             time.sleep(0.01)
             if time.monotonic() > start + timeout_interval:
@@ -316,7 +314,7 @@ class Lab_Spec_Page( Page ):
         print()
         print( "f5-f8 elapsed time = {}s".format(stop-start))
         current_after = self.get_lamp_current()
-        f5,f6,f7,f8 = self.spectral_sensors[self.active_sensor_index].swob.read_channel_register
+        f5,f6,f7,f8 = self.as7341_spectrometer.swob.read_channel_register
         #print(f5,f6,f7,f8)
         return (current_before,f1,f2,f3,f4,f5,f6,f7,f8,current_after)
 
@@ -345,79 +343,78 @@ class Lab_Spec_Page( Page ):
         self.text_areas[8].text = self.status_list[self.status_index]
 
         self.set_lamp_current(self.lamp_current_index)
-
-        # update these if input changes values
-        if len(self.spectral_sensors) >0:
-            gain = self.spectral_sensors[self.active_sensor_index].gain_list[ self.gain_index[self.active_sensor_index] ]
-            self.text_areas[9].text = "{}".format(gain)
-            integration_time_ms = self.spectral_sensors[self.active_sensor_index].integration_time_ms_list[ self.integration_time_index[self.active_sensor_index] ]
-            if integration_time_ms < 1000:
-                self.text_areas[10].text = "{}ms".format(integration_time_ms)
-            else:
-                self.text_areas[10].text = "{}s".format(round(integration_time_ms/1000,1))
-            self.text_areas[5].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chA_index])
-            self.text_areas[6].text = "{}nm".format(self.spectral_sensors[self.active_sensor_index].wavelength_bands_nm[self.chB_index])
-            if self.chA_index == self.chB_index:
-                if self.selection == 3:
-                    self.value_areas[4].color_index = 4
-                if self.selection == 4:
-                    self.value_areas[3].color_index = 4
-            else:
-                if self.selection == 3:
-                    self.value_areas[4].color_index = 9
-                if self.selection == 4:
-                    self.value_areas[3].color_index = 9
-            if self.selection == 5 and self.field_selected:
-                self.text_areas[7].text = "{}mA".format(self.lamp_current_options[self.lamp_current_index])
-            else:
-                self.text_areas[7].text = "{}mA".format(self.last_lamp_current_mA)
-
+        self.as7341_spectrometer.set_gain(self.gain_index)
+        gain = self.as7341_spectrometer.gain_list[self.gain_index]
+        self.text_areas[9].text = "{}".format(gain)
+        self.as7341_spectrometer.set_integration_time(self.integration_time_index)
+        integration_time_ms = self.as7341_spectrometer.integration_time_ms_list[self.integration_time_index]
+        if integration_time_ms < 1000:
+            self.text_areas[10].text = "{}ms".format(integration_time_ms)
+        else:
+            self.text_areas[10].text = "{}s".format(round(integration_time_ms/1000,1))
+        self.text_areas[5].text = "{}nm".format(self.as7341_spectrometer.wavelength_bands_nm[self.chA_index])
+        self.text_areas[6].text = "{}nm".format(self.as7341_spectrometer.wavelength_bands_nm[self.chB_index])
+        if self.chA_index == self.chB_index:
+            if self.selection == 3:
+                self.value_areas[4].color_index = 4
+            if self.selection == 4:
+                self.value_areas[3].color_index = 4
+        else:
+            if self.selection == 3:
+                self.value_areas[4].color_index = 9
+            if self.selection == 4:
+                self.value_areas[3].color_index = 9
+        if self.selection == 5 and self.field_selected:
+            self.text_areas[7].text = "{}mA".format(self.lamp_current_options[self.lamp_current_index])
+        else:
+            self.text_areas[7].text = "{}mA".format(self.last_lamp_current_mA)
 
 
 
 
-
-            if False:
-                # temporary live readings
-
-
-                #self.spectral_sensors[self.active_sensor_index].read_counts_all()
-                chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
-                chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
-                self.text_areas[19].text = "{}".format(self.right_justify(chA_counts))
-                self.text_areas[20].text = "{}".format(self.right_justify(chB_counts))
-                data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
-                #print(data_ready)
-                self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
 
 
         if False:
+            # temporary live readings
 
-            self.text_areas[15].text = "M{:03}".format( self.mmt_number )
+
+            #self.spectral_sensors[self.active_sensor_index].read_counts_all()
             chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
             chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
-            self.text_areas[18].text = "{:05}".format(chA_counts)
-            chA_pdr = 100*chA_counts/self.max_counts
-            if chA_pdr < 10:
-                self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
-            else:
-                self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
-            self.text_areas[23].text = "{:05}".format(chB_counts)
-            chB_pdr = 100*chB_counts/self.max_counts
-            if chB_pdr < 10:
-                self.text_areas[24].text = "{}%".format(round(chB_pdr,1))
-            else:
-                self.text_areas[24].text = "{}%".format(int(round(chB_pdr,0)))
-            if chB_counts>0:
-                ratio_ab = chA_counts/ chB_counts
-            else:
-                ratio_ab = 0
-            if ratio_ab < 10:
-                self.text_areas[25].text = "{}".format(round(ratio_ab,1))
-            else:
-                self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
-        stop = time.monotonic()
-        #print( "update values takes {}s".format(stop-start))
+            self.text_areas[19].text = "{}".format(self.right_justify(chA_counts))
+            self.text_areas[20].text = "{}".format(self.right_justify(chB_counts))
+            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
+            #print(data_ready)
+            self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
+
+
+    if False:
+
+        self.text_areas[15].text = "M{:03}".format( self.mmt_number )
+        chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
+        chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
+        self.text_areas[18].text = "{:05}".format(chA_counts)
+        chA_pdr = 100*chA_counts/self.max_counts
+        if chA_pdr < 10:
+            self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
+        else:
+            self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
+        self.text_areas[23].text = "{:05}".format(chB_counts)
+        chB_pdr = 100*chB_counts/self.max_counts
+        if chB_pdr < 10:
+            self.text_areas[24].text = "{}%".format(round(chB_pdr,1))
+        else:
+            self.text_areas[24].text = "{}%".format(int(round(chB_pdr,0)))
+        if chB_counts>0:
+            ratio_ab = chA_counts/ chB_counts
+        else:
+            ratio_ab = 0
+        if ratio_ab < 10:
+            self.text_areas[25].text = "{}".format(round(ratio_ab,1))
+        else:
+            self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
+    stop = time.monotonic()
+    #print( "update values takes {}s".format(stop-start))
 
 
 
@@ -443,19 +440,19 @@ class Lab_Spec_Page( Page ):
                     if self.lamp_current_index < 0:
                         self.lamp_current_index = 0
                 if self.selection == 6:
-                    self.gain_index[self.active_sensor_index] = (self.gain_index[self.active_sensor_index] + self.instrument.encoder_increment )
-                    if self.gain_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1:
-                        self.gain_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].gain_list) - 1
-                    if self.gain_index[self.active_sensor_index] < 0:
-                        self.gain_index[self.active_sensor_index] = 0
-                    self.spectral_sensors[self.active_sensor_index].set_gain( self.gain_index[self.active_sensor_index])
+                    self.gain_index = (self.gain_index + self.instrument.encoder_increment )
+                    if self.gain_index > len(self.as7341_spectrometer.gain_list) - 1:
+                        self.gain_index = len(self.as7341_spectrometer.gain_list) - 1
+                    if self.gain_index < 0:
+                        self.gain_index = 0
+                    self.as7341_spectrometer.set_gain( self.gain_index )
                 if self.selection == 7:
-                    self.integration_time_index[self.active_sensor_index] = (self.integration_time_index[self.active_sensor_index] + self.instrument.encoder_increment )
-                    if self.integration_time_index[self.active_sensor_index] > len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list) - 1:
-                        self.integration_time_index[self.active_sensor_index] = len(self.spectral_sensors[self.active_sensor_index].integration_time_ms_list) - 1
-                    if self.integration_time_index[self.active_sensor_index] < 0:
-                        self.integration_time_index[self.active_sensor_index] = 0
-                    self.spectral_sensors[self.active_sensor_index].set_integration_time( self.integration_time_index[self.active_sensor_index])
+                    self.integration_time_index = (self.integration_time_index + self.instrument.encoder_increment )
+                    if self.integration_time_index > len(self.as7341_spectrometer.integration_time_ms_list) - 1:
+                        self.integration_time_index = len(self.as7341_spectrometer.integration_time_ms_list) - 1
+                    if self.integration_time_index < 0:
+                        self.integration_time_index = 0
+                    self.as7341_spectrometer.set_integration_time( self.integration_time_index )
 
 
             self.instrument.encoder_increment = 0
@@ -878,9 +875,9 @@ class Lab_Spec_Page( Page ):
 
 
 
-def make_lab_spec_page( instrument, onboard_neopixel ):
+def make_lab_spec_page( instrument, as7341_spectrometer, onboard_neopixel ):
     instrument.welcome_page.announce( "make_lab_spec_page" )
-    page = Lab_Spec_Page( instrument,onboard_neopixel )
+    page = Lab_Spec_Page( instrument, as7341_spectrometer, onboard_neopixel )
     group = page.make_group()
     page.hide()
     instrument.main_display_group.append( group )
