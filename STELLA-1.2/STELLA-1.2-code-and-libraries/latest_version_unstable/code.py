@@ -376,12 +376,12 @@ def main():
                         print()
                         last_serial_time = time.monotonic()
 
-                if battery_monitor.percentage < 20:
-                    flash_indicator( battery_indicator )
-                if time.monotonic() > system_update_period_start + system_update_period_s:
-                    instrument.check_calendar_day()
-                    instrument.sync_rtc_to_gps_time(gps.timestruct)
-                    system_update_period_start = time.monotonic()
+            if battery_monitor.percentage < 20:
+                flash_indicator( battery_indicator )
+            if time.monotonic() > system_update_period_start + system_update_period_s:
+                instrument.check_calendar_day()
+                instrument.sync_rtc_to_gps_time(gps.timestruct)
+                system_update_period_start = time.monotonic()
             loop_stop = time.monotonic()
             loop_time = loop_stop - loop_start
             #print("loop time {} s".format( loop_time ))
@@ -538,8 +538,7 @@ class Instrument:
             self.input_flag = True
         self.rotary_encoder.read_button()
         if self.rotary_encoder.button_flag:
-            if self.buzzer:
-                self.buzzer.beep()
+            if self.buzzer: self.buzzer.beep()
             self.button_pressed = True
             self.rotary_encoder.button_flag = False
             self.input_flag = True

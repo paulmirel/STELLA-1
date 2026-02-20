@@ -19,8 +19,9 @@ class Main_Menu_Page( Page ):
         self.selection_count = 1
         self.field_selected = False
     def make_group( self ):
-        menu_list = "Light", "Heat", "*Air", "*Plants", "*Lab_Spec", "Time & Place", "Sensors", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
-        menu_color_list = 32, 11, 12, 20, 29, 14, 21, 19, 19, 19
+        #menu_list = "Light", "Heat", "*Air", "*Plants", "Soil", "Lab_Spec", "Time & Place", "Sensors"
+        menu_list = "Light", "Heat", "*Air", "*Soil", "*Plants", "Lab_Spec", "Time & Place", "Sensors"
+        menu_color_list = 32, 11, 12, 24, 20, 29, 14, 21, 19, 19, 19
         self.group = displayio.Group()
         start_y = 54
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240-start_y, x=0, y=start_y )
@@ -186,12 +187,14 @@ class Main_Menu_Page( Page ):
         if False: #self.selection == 2:
             self.instrument.active_page_number = self.instrument.pages_dict["Air"]
         if False: #self.selection == 3:
+            self.instrument.active_page_number = self.instrument.pages_dict["Soil"]
+        if False:#self.selection == 4:
             self.instrument.active_page_number = self.instrument.pages_dict["Plants"]
-        if self.selection == 4:
-            self.instrument.active_page_number = self.instrument.pages_dict["Lab_Spec"]
         if self.selection == 5:
-            self.instrument.active_page_number = self.instrument.pages_dict["Time"]
+            self.instrument.active_page_number = self.instrument.pages_dict["Lab_Spec"]
         if self.selection == 6:
+            self.instrument.active_page_number = self.instrument.pages_dict["Time"]
+        if self.selection == 7:
             self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
         if self.selection == 8:
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]

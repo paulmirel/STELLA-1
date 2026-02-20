@@ -20,7 +20,7 @@ def make_palette():
     palette[11] = 0xFF751A # heat
     palette[12] = 0x66CCFF # light blue, air analyzer
     palette[13] = 0x6FDC6F # plants
-    palette[14] = 0xCE954B # here
+    palette[14] = 0xB366FF # time place #0xCE954B
     palette[15] = 0x8C8C8C # dark grey
     palette[16] = 0x00998F # burst
     palette[17] = 0x0066FF # border
@@ -30,7 +30,7 @@ def make_palette():
     palette[21] = 0x00CCBE # sensors
     palette[22] = 0xA6A6A6 # medium grey, return
     palette[23] = 0xFF6666 # medium red, not used yet
-    palette[24] = 0x000000 # placeholder
+    palette[24] = 0xBF8040 # soil #0x996633
     palette[25] = 0x7E00DB # blueviolet, 410nm
     palette[26] = 0x2300FF # blue, 435nm
     palette[27] = 0x007BFF # royalblue, 460nm

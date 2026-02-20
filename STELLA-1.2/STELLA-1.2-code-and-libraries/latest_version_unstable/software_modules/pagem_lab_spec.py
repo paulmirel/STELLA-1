@@ -253,14 +253,15 @@ class Lab_Spec_Page( Page ):
             if a_b_values[1] < 1:
                 a_b_values[1] = 1
             a_b_ratio = round(a_b_values[0]/a_b_values[1],1)
-            pct_dr = round( 100* max(a_b_values)/65535, 1)
-            if pct_dr >= 10:
-                pct_dr = int(pct_dr)
+            pct_dr = int(round( 100* max(a_b_values)/65535, 1))
             if saturated:
                 pct_dr = "sa" #"OL" #"S1" "sa"
 
             print( self.mmt_number, a_b_values[0], a_b_values[1],a_b_ratio,pct_dr)
-            mmt_text = "M{:02}".format(self.mmt_number)
+            if self.mmt_number>99:
+                mmt_text = "{}".format(self.mmt_number)
+            else:
+                mmt_text = "M{:02}".format(self.mmt_number)
             if True:
                 self.display_data.insert(0,(mmt_text, self.right_justify(a_b_values[0]), self.right_justify(a_b_values[1]), a_b_ratio, pct_dr))
                 self.display_data = self.display_data[:3] # list slicing, keep only first three elements
@@ -370,49 +371,6 @@ class Lab_Spec_Page( Page ):
             self.text_areas[7].text = "{}mA".format(self.last_lamp_current_mA)
 
 
-
-
-
-
-        if False:
-            # temporary live readings
-
-
-            #self.spectral_sensors[self.active_sensor_index].read_counts_all()
-            chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
-            chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
-            self.text_areas[19].text = "{}".format(self.right_justify(chA_counts))
-            self.text_areas[20].text = "{}".format(self.right_justify(chB_counts))
-            data_ready = self.spectral_sensors[self.active_sensor_index].swob._data_ready_bit
-            #print(data_ready)
-            self.spectral_sensors[self.active_sensor_index].swob._color_meas_enabled = False
-
-
-    if False:
-
-        self.text_areas[15].text = "M{:03}".format( self.mmt_number )
-        chA_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chA_index]
-        chB_counts = self.spectral_sensors[self.active_sensor_index].data_counts[self.chB_index]
-        self.text_areas[18].text = "{:05}".format(chA_counts)
-        chA_pdr = 100*chA_counts/self.max_counts
-        if chA_pdr < 10:
-            self.text_areas[19].text = "{}%".format(round(chA_pdr,1))
-        else:
-            self.text_areas[19].text = "{}%".format(int(round(chA_pdr,0)))
-        self.text_areas[23].text = "{:05}".format(chB_counts)
-        chB_pdr = 100*chB_counts/self.max_counts
-        if chB_pdr < 10:
-            self.text_areas[24].text = "{}%".format(round(chB_pdr,1))
-        else:
-            self.text_areas[24].text = "{}%".format(int(round(chB_pdr,0)))
-        if chB_counts>0:
-            ratio_ab = chA_counts/ chB_counts
-        else:
-            ratio_ab = 0
-        if ratio_ab < 10:
-            self.text_areas[25].text = "{}".format(round(ratio_ab,1))
-        else:
-            self.text_areas[25].text = "{}".format(int(round(ratio_ab,0)))
     stop = time.monotonic()
     #print( "update values takes {}s".format(stop-start))
 
