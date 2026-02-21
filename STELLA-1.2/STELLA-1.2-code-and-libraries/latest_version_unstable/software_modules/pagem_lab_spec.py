@@ -189,7 +189,7 @@ class Lab_Spec_Page( Page ):
 
             header_line = "UID,iso8601,time hh.hh,note,instruction,lamp wavelength nm,lamp pn,lamp location"
             header_line += ",batch,mmt,tag,parameter/band,rep 0,rep 1,rep 2,rep 3,average,DR_pct,gain,int_time ms"
-            header_line += ",bandwidth nm,ct/nm/[gain]/s,avg current mA,cts/nm/s/A,5V supply V,bat V,bat pct"
+            header_line += ",bandwidth nm,ct/nm/[gain]/ms,avg current mA,cts/nm/s/A,5V supply V,bat V,bat pct"
             header_line += ",gps lat,gps long,gps alt"
 
             try:
