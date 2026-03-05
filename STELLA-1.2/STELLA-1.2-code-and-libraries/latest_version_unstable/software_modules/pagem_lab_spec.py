@@ -82,6 +82,7 @@ class Lab_Spec_Page( Page ):
         self.measurement_lists = []
         self.lines_per_block = 10
 
+
     def set_lamp_current(self, req_index):
         xdc = self.lamp_current_options[ req_index ]
         A = 0.0002
@@ -109,7 +110,7 @@ class Lab_Spec_Page( Page ):
     def run_measurement_sequence(self):
         self.as7341_spectrometer.set_integration_time( self.integration_time_index)
         self.as7341_spectrometer.set_gain( self.gain_index)
-        if self.status_index == 0:
+        if self.status_index == 0 or self.status_index == 2:
             print( "gps has fix:", self.gps.has_fix )
             self.mmt_number += 1
             gc.collect()
@@ -178,6 +179,8 @@ class Lab_Spec_Page( Page ):
             if current_before_after_average <1:
                 self.status_index = 2
                 current_before_after_average = 1
+            else:
+                self.status_index = 1
             norm_ct_per_a =[]
             norm_ct_per_a.append(" ")
             for row in range (1,self.lines_per_block-1):
@@ -335,13 +338,12 @@ class Lab_Spec_Page( Page ):
         if self.instrument.vfs:
             if self.status_index == 2:
                 self.status_highlight.color_index = 2
+            elif self.measuring:
+                self.status_index = 1
+                self.status_highlight.color_index = 4
             else:
-                if self.measuring:
-                    self.status_index = 1
-                    self.status_highlight.color_index = 4
-                else:
-                    self.status_index = 0
-                    self.status_highlight.color_index = 5
+                self.status_index = 0
+                self.status_highlight.color_index = 5
         else:
             self.status_index = 4
             self.status_highlight.color_index = 2
