@@ -65,8 +65,10 @@ print( devices_present_hex )
 # 0x4f pcf8591  Analog to digital converter, 8 bits, 4 channels, and digital to analog converter, 1 channel ### close a0, a1, a2 address jumpers on board to set address
 # 0x53 ltr390   UV and total illumination sensor
 # 0x5a mlx90614 Thermal infrared remote surface thermometer
+# 0x60 mcp4728  Quad DAC
 # 0x61 scd30    CO2 sensor, NDIR: nondispersive infrared absorption, with temperature and humidity sensors
 # 0x62 scd4x    CO2 sensor, thermo-acoustic: pulsed infrared resonant heating and microphone, with temperature and humidity sensors
+# 0x68 pcf8523  Real time clock
 # 0x6a lis3mdl  Magnetic field sensor
 # 0x74 as7331   Ultraviolet spectral sensor
 # 0x77 bme280   Barometric pressure sensor, with temperature and humidity sensors
@@ -196,7 +198,7 @@ def main():
     if ('0x62') in devices_present_hex:
         from software_modules import devicem_scd4x
         scd4x_co2_sensor = devicem_scd4x.initialize_scd4x_co2_sensor( instrument )
-    if ('0x64') in devices_present_hex:
+    if ('0x64') in devices_present_hex or ('0x60') in devices_present_hex:
         from software_modules import devicem_mcp4728
         mcp4728_quad_dac = devicem_mcp4728.initialize_mcp4728_quad_dac( instrument )
         lab_spec_present[2] = True
@@ -375,7 +377,7 @@ def main():
                             instrument.handle_inputs()
                         print()
                         last_serial_time = time.monotonic()
-
+            battery_monitor.read()
             if battery_monitor.percentage < 20:
                 flash_indicator( battery_indicator )
             if time.monotonic() > system_update_period_start + system_update_period_s:

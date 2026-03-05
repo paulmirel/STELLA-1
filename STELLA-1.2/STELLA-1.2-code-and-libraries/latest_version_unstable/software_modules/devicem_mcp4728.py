@@ -20,7 +20,13 @@ def initialize_mcp4728_quad_dac( instrument ):
 
 class MCP4728_Quad_DAC( Device ):
     def __init__( self, instrument ):
-        super().__init__(name = "quad_dac_12_bits", pn = "mcp4728", address = 0x64, swob = adafruit_mcp4728.MCP4728(instrument.i2c_bus, adafruit_mcp4728.MCP4728A4_DEFAULT_ADDRESS))
+        try:
+            super().__init__(name = "quad_dac_12_bits", pn = "mcp4728", address = 0x60, swob = adafruit_mcp4728.MCP4728(instrument.i2c_bus, adafruit_mcp4728.MCP4728_DEFAULT_ADDRESS))
+        except:
+            try:
+                super().__init__(name = "quad_dac_12_bits", pn = "mcp4728", address = 0x64, swob = adafruit_mcp4728.MCP4728(instrument.i2c_bus, adafruit_mcp4728.MCP4728A4_DEFAULT_ADDRESS))
+            except Exception as err:
+                print("Failed to find MCP4728 at either address:", err)
         self.instrument = instrument
         self.swob.channel_a.value = 0
         self.swob.channel_b.value = 0

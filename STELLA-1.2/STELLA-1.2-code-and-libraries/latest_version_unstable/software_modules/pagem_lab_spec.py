@@ -249,7 +249,11 @@ class Lab_Spec_Page( Page ):
                         print( self.measurement_lists[col][row], end=", " )
                     print()
 
-            a_b_values = avg_column[self.chA_index+1], avg_column[self.chB_index+1]
+
+            b_value = avg_column[self.chB_index+1]
+            if b_value < 1:
+                b_value = 1
+            a_b_values = avg_column[self.chA_index+1], b_value
             if a_b_values[1] < 1:
                 a_b_values[1] = 1
             a_b_ratio = round(a_b_values[0]/a_b_values[1],1)
