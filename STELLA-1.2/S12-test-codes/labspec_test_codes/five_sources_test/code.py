@@ -12,14 +12,12 @@ MCP4728A4_DEFAULT_ADDRESS = 0x64
 i2c_bus = board.I2C()
 
 #  use for MCP4728 variant
-#mcp4728 = adafruit_mcp4728.MCP4728(i2c_bus, adafruit_mcp4728.MCP4728_DEFAULT_ADDRESS)
-#  use for MCP4728A4 variant
-mcp4728 = adafruit_mcp4728.MCP4728(i2c_bus, adafruit_mcp4728.MCP4728A4_DEFAULT_ADDRESS)
-output_value = 55000
-mcp4728.channel_a.value = 0#output_value
-mcp4728.channel_b.value = output_value
-mcp4728.channel_c.value = output_value
-mcp4728.channel_d.value = output_value
+try:
+    mcp4728 = adafruit_mcp4728.MCP4728(i2c_bus, adafruit_mcp4728.MCP4728_DEFAULT_ADDRESS)
+except Exception as err:
+    print( err )
+    #  use for MCP4728A4 variant
+    mcp4728 = adafruit_mcp4728.MCP4728(i2c_bus, adafruit_mcp4728.MCP4728A4_DEFAULT_ADDRESS)
 
 
 try:
@@ -34,14 +32,47 @@ except:
 def get_voltage(pin):
     return (pin.value * 3.3) / 65536 * 2
 
+output_value = 55000
 index = 0
+
 while True:
-    enable_5V.value = True
-    time.sleep(0.2)
-    print( "5V ON: voltage on the 5V line = ", get_voltage(monitor_5V))
-    print( "loop count {}".format(index) )
-    index += 1
-    time.sleep( 1 )
-    enable_5V.value = False
-    time.sleep( 2 )
-    print( "5V OFF: voltage on the 5V line = ", get_voltage(monitor_5V))
+    try:
+        print()
+        if index in range (0, 4):
+            mcp4728.channel_a.value = output_value
+            print("Channel 0" )
+        else:
+            mcp4728.channel_a.value = 0
+
+        if index in range (4, 8):
+            mcp4728.channel_b.value = output_value
+            print("Channel 1" )
+        else:
+            mcp4728.channel_b.value = 0
+
+        if index in range (8, 12):
+            mcp4728.channel_c.value = output_value
+            print("Channel 2" )
+        else:
+            mcp4728.channel_c.value = 0
+
+        if index in range (12, 16):
+            mcp4728.channel_d.value = output_value
+            print("Channel 3" )
+        else:
+            mcp4728.channel_d.value = 0
+
+        if index > 14:
+            index = 0
+
+        enable_5V.value = True
+        time.sleep(0.2)
+        print( "5V ON: voltage on the 5V line = ", get_voltage(monitor_5V))
+        print( "loop count {}".format(index) )
+        index += 1
+        time.sleep( 1 )
+        enable_5V.value = False
+        time.sleep( 2 )
+        #print( "5V OFF: voltage on the 5V line = ", get_voltage(monitor_5V))
+    finally:
+        enable_5V.value = False
