@@ -3,6 +3,7 @@ import board
 import digitalio
 import analogio
 import adafruit_mcp4728
+import adafruit_as7341_nonblocking
 
 MCP4728_DEFAULT_ADDRESS = 0x60
 MCP4728A4_DEFAULT_ADDRESS = 0x64
@@ -19,6 +20,8 @@ except Exception as err:
     #  use for MCP4728A4 variant
     mcp4728 = adafruit_mcp4728.MCP4728(i2c_bus, adafruit_mcp4728.MCP4728A4_DEFAULT_ADDRESS)
 
+spectral_sensor = adafruit_as7341_nonblocking.AS7341(i2c_bus)
+spectral_sensor.led_current = 50
 
 try:
     enable_5V = digitalio.DigitalInOut( board.D10 )
@@ -62,17 +65,27 @@ while True:
         else:
             mcp4728.channel_d.value = 0
 
-        if index > 14:
+        if index in range( 16, 20 ):
+            print("Spectral_sensor lamp" )
+            headlamp_enabled = True
+        else:
+            headlamp_enabled = False
+
+        if index > 19:
             index = 0
 
         enable_5V.value = True
+        if headlamp_enabled:
+            spectral_sensor.led = True
         time.sleep(0.2)
         print( "5V ON: voltage on the 5V line = ", get_voltage(monitor_5V))
         print( "loop count {}".format(index) )
         index += 1
-        time.sleep( 1 )
+        time.sleep( 0.75 )
+        if headlamp_enabled:
+            spectral_sensor.led = False
         enable_5V.value = False
-        time.sleep( 2 )
+        time.sleep( 1.2 )
         #print( "5V OFF: voltage on the 5V line = ", get_voltage(monitor_5V))
     finally:
         enable_5V.value = False
