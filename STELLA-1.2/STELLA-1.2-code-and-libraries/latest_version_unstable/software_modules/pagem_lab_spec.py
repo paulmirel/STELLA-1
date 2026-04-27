@@ -64,7 +64,6 @@ class Lab_Spec_Page( Page ):
         self.mmt_number = 0
         self.dac_values = [0,0,0,0]
         self.dac_channels = ["a", "b", "c", "d"]
-        self.dac_channel = 0
         self.lamp_current_index = 9 # default
         self.lamp_current_options = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,35,40,45,50,60,70,80,90,100]
         self.last_lamp_current_mA = "None"
@@ -83,17 +82,28 @@ class Lab_Spec_Page( Page ):
         self.last_lamp_currents = []
         self.measurement_lists = []
         self.lines_per_block = 10
+        self.lamps = [("488nm","scattr"),("365nm","scattr"),("640nm","scattr"),("white","x-mit"),("white","reflct")]
+        self.lamp_in_use = 0
+        self.number_of_lamps = 5
 
 
     def set_lamp_current(self, req_index):
+        self.all_lamps_off()
         req_current_percent = self.lamp_current_options[ req_index ]
         set_min = 12000#13000
         set_max = 30000 #65535
         set_span = set_max - set_min
         set_value = int( req_current_percent/100 * set_span + set_min )
         if set_value > set_max: set_value = set_max
-        self.dac.set( self.dac_channels[self.dac_channel], set_value )
+        if self.lamp_in_use < self.number_of_lamps - 1:
+            self.dac.set( self.dac_channels[self.lamp_in_use], set_value )
         return set_value
+
+    def all_lamps_off(self):
+        self.dac.set("a", 0)
+        self.dac.set("b", 0)
+        self.dac.set("c", 0)
+        self.dac.set("d", 0)
 
 
     def right_justify(self,value):
@@ -122,9 +132,9 @@ class Lab_Spec_Page( Page ):
             dec_time = self.instrument.decimal_time
             note = "note goes here"
             instruction = "instruction goes here"
-            lamp_wl = "488nm"
-            lamp_pn = "GC VJLPL1.13-KQKS-V2V3-1"
-            lamp_loc = "bottom"
+            lamp_wl = self.lamps[self.lamp_in_use][0]
+            #TBD lamp_pn = "GC VJLPL1.13-KQKS-V2V3-1"
+            light_path = self.lamps[self.lamp_in_use][1]
             gain = self.as7341_spectrometer.gain_list[ self.gain_index]
             int_time = self.as7341_spectrometer.integration_time_ms_list[ self.integration_time_index ]
             parameters = ["lamp mA before", 415, 445, 480, 515, 555, 590, 630, 682, "lamp mA after"]
@@ -203,8 +213,8 @@ class Lab_Spec_Page( Page ):
                     line += "{},".format(note)
                     line += "{},".format(instruction)
                     line += "{},".format(lamp_wl)
-                    line += "{},".format(lamp_pn)
-                    line += "{},".format(lamp_loc)
+                    line += "{},".format("lamp_pn TBD")
+                    line += "{},".format(light_path)
                     line += "{},".format(self.instrument.batch_number)
                     line += "{},".format(self.mmt_number)
                     line += "{},".format(tag_column[row])
@@ -333,6 +343,9 @@ class Lab_Spec_Page( Page ):
         timenow = self.instrument.hardware_clock.read()
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
+        self.text_areas[3].text = self.lamps[self.lamp_in_use][0]
+        self.text_areas[4].text = self.lamps[self.lamp_in_use][1]
+
         self.text_areas[11].text = "{}".format(self.instrument.batch_number)
         if self.instrument.vfs:
             if self.status_index == 2:
@@ -390,6 +403,12 @@ class Lab_Spec_Page( Page ):
     def action( self ):
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
+                if self.selection == 1:
+                    self.lamp_in_use = ( self.lamp_in_use + self.instrument.encoder_increment)
+                    if self.lamp_in_use > self.number_of_lamps -1 :
+                        self.lamp_in_use = self.number_of_lamps -1
+                    if self.lamp_in_use < 0:
+                        self.lamp_in_use = 0
                 if self.selection == 3:
                     self.chA_index = ( self.chA_index + self.instrument.encoder_increment)
                     if self.chA_index > self.number_of_channels -1 :
@@ -437,6 +456,11 @@ class Lab_Spec_Page( Page ):
                 self.run_measurement_sequence()
             else:
                 self.field_selected = not self.field_selected
+                if self.selection == 1:
+                    if self.field_selected:
+                        self.value_areas[1].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[1].color_index = self.field_not_selected_color_index
                 if self.selection == 3:
                     if self.field_selected:
                         self.value_areas[3].color_index = self.field_selected_color_index
