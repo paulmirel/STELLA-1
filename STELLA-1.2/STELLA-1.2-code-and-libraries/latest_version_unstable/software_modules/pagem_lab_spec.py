@@ -1,5 +1,5 @@
 # Lab_Spec page
-# version 2.0
+# version 2.1
 # Copyright NASA 2025 under MIT open source license
 # Author Paul Mirel
 
@@ -63,9 +63,11 @@ class Lab_Spec_Page( Page ):
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.mmt_number = 0
         self.dac_values = [0,0,0,0]
-        self.lamp_current_index = 20
-        self.lamp_current_options = [0,1,3,5,7,9,12,14,16,18,20,25,30,35,40,45,50,60,70,80,90,100,150,200,250,300,350,400,450,500,550,600]
-        self.last_lamp_current_mA = "-- "
+        self.dac_channels = ["a", "b", "c", "d"]
+        self.dac_channel = 0
+        self.lamp_current_index = 9 # default
+        self.lamp_current_options = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,35,40,45,50,60,70,80,90,100]
+        self.last_lamp_current_mA = "None"
         self.file_write_request = False
         self.mmt_number = 0
         self.measuring = False
@@ -84,13 +86,13 @@ class Lab_Spec_Page( Page ):
 
 
     def set_lamp_current(self, req_index):
-        xdc = self.lamp_current_options[ req_index ]
-        A = 0.0002
-        B = -0.0944
-        C = 47.24
-        D = 13179
-        set_value = int( A*xdc**3 + B*xdc**2 + C*xdc + D)
-        self.dac.set("a", set_value)
+        req_current_percent = self.lamp_current_options[ req_index ]
+        set_min = 12000#13000
+        set_max = 30000 #65535
+        set_span = set_max - set_min
+        set_value = int( req_current_percent/100 * set_span + set_min )
+        if set_value > set_max: set_value = set_max
+        self.dac.set( self.dac_channels[self.dac_channel], set_value )
         return set_value
 
 
@@ -176,11 +178,7 @@ class Lab_Spec_Page( Page ):
             norm_ct_column.append(" ")
             self.measurement_lists.append(norm_ct_column)
             current_before_after_average = round((avg_column[0]+avg_column[self.lines_per_block-1])/2,1)
-            if current_before_after_average <1:
-                self.status_index = 2
-                current_before_after_average = 1
-            else:
-                self.status_index = 1
+            if current_before_after_average < 0.01: current_before_after_average = 0.01
             norm_ct_per_a =[]
             norm_ct_per_a.append(" ")
             for row in range (1,self.lines_per_block-1):
@@ -282,6 +280,7 @@ class Lab_Spec_Page( Page ):
             # use the same file, but write a header line before every block
             # then clear the measurement_lists
             self.measurement_lists = []
+            if self.last_lamp_current_mA < 0.01: self.status_index = 2
             measure_stop_free = gc.mem_free()
         else:
             print("error, not available to measure")
@@ -372,9 +371,15 @@ class Lab_Spec_Page( Page ):
             if self.selection == 4:
                 self.value_areas[3].color_index = 9
         if self.selection == 5 and self.field_selected:
-            self.text_areas[7].text = "{}mA".format(self.lamp_current_options[self.lamp_current_index])
+            self.text_areas[7].text = "{}%".format(self.lamp_current_options[self.lamp_current_index])
         else:
-            self.text_areas[7].text = "{}mA".format(self.last_lamp_current_mA)
+            if type(self.last_lamp_current_mA) == str:
+                self.text_areas[7].text = "{}".format(self.last_lamp_current_mA)
+            else:
+                if self.last_lamp_current_mA < 10:
+                    self.text_areas[7].text = "{}mA".format(self.last_lamp_current_mA)
+                else:
+                    self.text_areas[7].text = "{}mA".format(int(round(self.last_lamp_current_mA,0)))
 
 
     stop = time.monotonic()
@@ -469,7 +474,7 @@ class Lab_Spec_Page( Page ):
             lamp_currrent_voltage = self.adc_sensor.voltage[0]
         else:
             lamp_currrent_voltage = 0
-        self.last_lamp_current_mA = int(round(lamp_currrent_voltage*1000,1))
+        self.last_lamp_current_mA = round(lamp_currrent_voltage*1000,2)
         return self.last_lamp_current_mA
 
     def make_group( self ):
@@ -522,8 +527,8 @@ class Lab_Spec_Page( Page ):
         self.selection_rectangles[-1].hidden = False
 
         line_y += line_spacing - height_1
-        line_names = ["excitation", "position", "inspect A", "inspect B" ]
-        line_values = ["488nm","below", " --", " --"]
+        line_names = ["excitation", "light path", "inspect A", "inspect B" ]
+        line_values = ["488nm","scattr", " --", " --"] #"x-mit" "reflct"
         line_selectable = [ True, True, True, True ]
         line_widths = [78,86,77,77]
         x = start_x
