@@ -248,7 +248,7 @@ def main():
     #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
     if all(lab_spec_present):
-        lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, as7341_spectrometer, onboard_neopixel )
+        lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, onboard_neopixel )
     else:
         lab_spec_page = pagem_lab_spec.make_lab_spec_missing_page( instrument )
     start = time.monotonic()
