@@ -371,7 +371,7 @@ def main():
                 else:
                     onboard_neopixel.fill(devicem_neopixel.RED)
                 if (time.monotonic() > last_serial_time + instrument.serial_interval_s):
-                    if instrument.serial_out:
+                    if instrument.serial_out_index == 0:
                         for sensor in instrument.sensors_present:
                             sensor.printlog()
                             instrument.handle_inputs()
@@ -409,7 +409,8 @@ class Instrument:
         self.device_type = DEVICE_TYPE
         self.uid = UID
         self.buzzer = buzzer
-        self.serial_out = user_settings.serial_out
+        self.serial_out_index = 0 #TBD get from  user_settings.serial_out_index
+        self.serial_output_choices = ["text", "json", "none"]
         self.sample_interval_s = user_settings.sample_interval_s
         self.burst_count = user_settings.burst_count
         self.serial_interval_s = user_settings.serial_interval_s

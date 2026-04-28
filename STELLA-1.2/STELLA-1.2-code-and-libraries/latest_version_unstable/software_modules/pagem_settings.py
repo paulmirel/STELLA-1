@@ -25,9 +25,6 @@ class Settings_Page( Page ):
         self.intervals = [1,2,3,4,5,6,7,8,9,10,15,20,25,30,45,60,2*60,3*60,4*60,5*60,10*60,15*60,20*60,30*60,45*60,3600,2*3600,3*3600,4*3600,5*3600,10*3600]
         self.sample_interval_index = 1
         self.serial_interval_index = 1
-        self.serial_output_choices = ["text", "json", "none"]
-        self.serial_output_index = 0
-
 
     def make_group( self ):
         self.group = displayio.Group()
@@ -279,7 +276,7 @@ class Settings_Page( Page ):
                         set_burst_count = 20
                     self.instrument.burst_count = set_burst_count
                 if self.selection == 2:
-                    self.instrument.serial_out = not self.instrument.serial_out
+                    self.instrument.serial_out_index = (self.instrument.serial_out_index + self.instrument.encoder_increment) % len(self.instrument.serial_output_choices)
                 if self.selection == 3:
                     self.serial_interval_index += self.instrument.encoder_increment
                     if self.serial_interval_index < 0:
@@ -331,10 +328,8 @@ class Settings_Page( Page ):
     def update_values( self ):
         self.text_areas[2].text = self.interval_units( self.instrument.sample_interval_s )
         self.text_areas[4].text = "{}".format(self.instrument.burst_count)
-        if self.instrument.serial_out:
-            self.text_areas[6].text = "enabled"
-        else:
-            self.text_areas[6].text = "disabled"
+        self.text_areas[6].text = self.instrument.serial_output_choices[self.instrument.serial_out_index]
+
         self.text_areas[8].text = self.interval_units( self.instrument.serial_interval_s )
         if self.instrument.wifi_enabled:
             self.text_areas[10].text = "enabled"
