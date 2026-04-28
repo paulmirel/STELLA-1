@@ -108,7 +108,7 @@ class Lab_Spec_Page( Page ):
         self.set_lamp_current(self.lamp_current_index)
         self.as7341_spectrometer.set_gain(self.gain_index)
         gain = self.as7341_spectrometer.gain_list[self.gain_index]
-        if self.selection == 5 and self.field_selected:
+        if self.selection == 4 and self.field_selected:
             self.text_areas[9].text = "{}%".format(self.lamp_current_options[self.lamp_current_index])
         else:
             if type(self.last_lamp_current_mA) == str:
