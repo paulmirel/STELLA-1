@@ -31,8 +31,11 @@ class Qwiic_Buzzer( Device ):
         if self.mute:
             pass
         else:
-            self.set(800, 12)
-            self.swob.on()
+            if self.click_enabled:
+                self.set(800, 12)
+                self.swob.on()
+            else:
+                pass
     def stop(self):
         self.swob.off()
     def set(self, frequency_hz, time_ms ):

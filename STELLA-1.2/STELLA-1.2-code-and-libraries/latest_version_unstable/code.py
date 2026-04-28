@@ -104,6 +104,7 @@ def main():
         from software_modules import devicem_qwiic_buzzer
         buzzer = devicem_qwiic_buzzer.initialize_qwiic_buzzer( i2c_bus )
         buzzer.mute = False
+        buzzer.click_enabled = True
         buzzer.beep()
     else:
         buzzer = False
