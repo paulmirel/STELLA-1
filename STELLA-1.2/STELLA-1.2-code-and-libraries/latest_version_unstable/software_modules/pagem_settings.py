@@ -25,6 +25,10 @@ class Settings_Page( Page ):
         self.intervals = [1,2,3,4,5,6,7,8,9,10,15,20,25,30,45,60,2*60,3*60,4*60,5*60,10*60,15*60,20*60,30*60,45*60,3600,2*3600,3*3600,4*3600,5*3600,10*3600]
         self.sample_interval_index = 1
         self.serial_interval_index = 1
+        self.serial_output_choices = ["text", "json", "none"]
+        self.serial_output_index = 0
+
+
     def make_group( self ):
         self.group = displayio.Group()
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
@@ -163,6 +167,7 @@ class Settings_Page( Page ):
                 self.group.append(self.area_rectangle)
                 self.value_areas.append(self.area_rectangle)
 
+
             text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
             self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
             self.text_areas.append(self.text_area)
@@ -170,31 +175,63 @@ class Settings_Page( Page ):
             self.group.append(text_group)
             x += line_widths[index]
 
-        line_y = line_y + line_spacing+14
-        line_values = ["Set default values in the user_settings.py file"]
-        line_selectable = [False ]
-        line_widths = [320]
-        x = start_x +10
+        line_y = line_y + line_spacing
+        line_values = ["WiFi (bat use+):", " --"]
+        line_selectable = [False, True ]
+        line_widths = [200,115]
+        x = start_x
         for index in range(0, len(line_values)):
-            text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=line_y)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
+
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+select_width-border_width)
+                self.group.append(border_rectangle)
+
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line_y+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+
+
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
             self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
             self.group.append(text_group)
             x += line_widths[index]
 
-        line_y = line_y + height_1+2
-        line_values = ["in the CIRCUITPY/configuration_files/ folder"]
-        line_selectable = [False ]
-        line_widths = [320]
-        x = start_x +10
-        for index in range(0, len(line_values)):
-            text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
-            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
-            self.text_areas.append(self.text_area)
-            text_group.append(self.text_area)
-            self.group.append(text_group)
-            x += line_widths[index]
+
+        if False:
+            line_y = line_y + line_spacing+14
+            line_values = ["Set default values in the user_settings.py file"]
+            line_selectable = [False ]
+            line_widths = [320]
+            x = start_x +10
+            for index in range(0, len(line_values)):
+                text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+                self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+                self.text_areas.append(self.text_area)
+                text_group.append(self.text_area)
+                self.group.append(text_group)
+                x += line_widths[index]
+
+            line_y = line_y + height_1+2
+            line_values = ["in the CIRCUITPY/configuration_files/ folder"]
+            line_selectable = [False ]
+            line_widths = [320]
+            x = start_x +10
+            for index in range(0, len(line_values)):
+                text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+                self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+                self.text_areas.append(self.text_area)
+                text_group.append(self.text_area)
+                self.group.append(text_group)
+                x += line_widths[index]
 
         # RETURN
         select_width = 4
@@ -251,12 +288,14 @@ class Settings_Page( Page ):
                         self.serial_interval_index = len(self.intervals) -1
                     self.instrument.serial_interval_s = self.intervals[self.serial_interval_index]
                 if self.selection == 4:
+                    self.instrument.wifi_enabled = not self.instrument.wifi_enabled
+                if self.selection == 5:
                     self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             self.instrument.encoder_increment = 0
             self.update_values()
 
         if self.instrument.button_pressed:
-            if self.selection == 4:
+            if self.selection == 5:
                 self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             else:
                 self.field_selected = not self.field_selected
@@ -280,6 +319,11 @@ class Settings_Page( Page ):
                         self.value_areas[3].color_index = self.field_selected_color_index
                     else:
                         self.value_areas[3].color_index = self.field_not_selected_color_index
+                if self.selection == 4:
+                    if self.field_selected:
+                        self.value_areas[4].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[4].color_index = self.field_not_selected_color_index
 
             self.instrument.button_pressed = False
             self.update_values()
@@ -292,6 +336,10 @@ class Settings_Page( Page ):
         else:
             self.text_areas[6].text = "disabled"
         self.text_areas[8].text = self.interval_units( self.instrument.serial_interval_s )
+        if self.instrument.wifi_enabled:
+            self.text_areas[10].text = "enabled"
+        else:
+            self.text_areas[10].text = "disabled"
 
     def update_selection(self):
         self.selection_rectangles[self.last_selection].hidden = True

@@ -413,6 +413,7 @@ class Instrument:
         self.sample_interval_s = user_settings.sample_interval_s
         self.burst_count = user_settings.burst_count
         self.serial_interval_s = user_settings.serial_interval_s
+        self.wifi_enabled = False
         self.take_burst = False
         self.burst_counter = 0
         self.pages_list = []
