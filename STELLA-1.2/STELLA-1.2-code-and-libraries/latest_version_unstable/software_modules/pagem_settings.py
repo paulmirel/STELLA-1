@@ -332,7 +332,7 @@ class Settings_Page( Page ):
 
         self.text_areas[8].text = self.interval_units( self.instrument.serial_interval_s )
         if self.instrument.wifi_enabled:
-            self.text_areas[10].text = "enabled"
+            self.text_areas[10].text = "enabl-TBD"
         else:
             self.text_areas[10].text = "disabled"
 

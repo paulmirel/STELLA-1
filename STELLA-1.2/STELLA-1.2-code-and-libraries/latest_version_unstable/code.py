@@ -410,7 +410,7 @@ class Instrument:
         self.uid = UID
         self.buzzer = buzzer
         self.serial_out_index = 0 #TBD get from  user_settings.serial_out_index
-        self.serial_output_choices = ["text", "json", "none"]
+        self.serial_output_choices = ["text", "json-TBD", "none"]
         self.sample_interval_s = user_settings.sample_interval_s
         self.burst_count = user_settings.burst_count
         self.serial_interval_s = user_settings.serial_interval_s
