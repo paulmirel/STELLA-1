@@ -104,7 +104,6 @@ def main():
         from software_modules import devicem_qwiic_buzzer
         buzzer = devicem_qwiic_buzzer.initialize_qwiic_buzzer( i2c_bus )
         buzzer.mute = False
-        buzzer.set(932, 130) # frequency in Hz, time in ms. 932 Hz is B flat in octave 5. Fairly pleasant through this piezo driver, though maybe a bit medical in tone.
         buzzer.beep()
     else:
         buzzer = False
@@ -531,11 +530,11 @@ class Instrument:
             #self.update_active_page()
             self.input_flag = False
 
-
     def check_inputs( self ):
         self.rotary_encoder.read_encoder()
         if self.rotary_encoder.encoder_flag:
             self.encoder_increment = self.rotary_encoder.last_value
+            if self.buzzer: self.buzzer.click()
             self.rotary_encoder.encoder_flag = False
             self.input_flag = True
         self.rotary_encoder.read_button()

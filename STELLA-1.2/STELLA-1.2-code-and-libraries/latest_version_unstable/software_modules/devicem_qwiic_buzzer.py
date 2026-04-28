@@ -25,6 +25,13 @@ class Qwiic_Buzzer( Device ):
         if self.mute:
             pass
         else:
+            self.set(932, 130) # frequency in Hz, time in ms. 932 Hz is B flat in octave 5. Fairly pleasant through this piezo driver, though maybe a bit medical in tone.
+            self.swob.on()
+    def click(self):
+        if self.mute:
+            pass
+        else:
+            self.set(800, 12)
             self.swob.on()
     def stop(self):
         self.swob.off()
