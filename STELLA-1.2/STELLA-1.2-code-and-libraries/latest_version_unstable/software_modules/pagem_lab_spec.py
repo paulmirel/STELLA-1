@@ -521,7 +521,7 @@ class Lab_Spec_Page( Page ):
                                                             height=height_2-2*select_width, x=42, y=line_y+height_1+select_width)
         self.group.append(batch_highlight)
         self.status_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=54-2*select_width+14,
-                                                            height=height_2-2*select_width, x=150, y=line_y+height_1+select_width)
+                                                            height=height_2-2*select_width, x=154, y=line_y+height_1+select_width)
         self.group.append(self.status_highlight)
         line_names = ["inc", "batch", "battery", "status", "measure & log" ]
         line_values = ["B+","---", "---", "----", "MEASURE"]
