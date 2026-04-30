@@ -375,6 +375,17 @@ class Lab_Spec_Page( Page ):
                 mmt_text = "{}".format(self.mmt_number)
             else:
                 mmt_text = "M{:02}".format(self.mmt_number)
+
+
+            # so, it looks like I'm only keeping the numbers on the display.
+            # want to change that: keep the raw count values for all channels for the last three mmts along with batch and mmt number.
+            # that'll be 8 values plus two tracking numbers, so 10x3 = 30 numbers. Not memory intensive.
+            # mmt number should be a string, so it can be M00, or R00 for a reference mmt.
+            # need another register for the reference mmt in use. If we zero it out when not using it, we can keep the math the same. A-0 = A
+            # if any of the resulting values are negative, set the 0 y value in the middle of the plot. If they are all positive, set it near the bottom.
+            # if the scale shows values close to saturation, put a red bar across the top, with the bottom of it correctly showing the saturation value on the plot.
+            # recalculate the a/b numbers on the fly, and redisplay if the choices change.
+
             if True:
                 self.display_data.insert(0,(mmt_text, "{:4d}".format(a_b_values[0]), "{:4d}".format(a_b_values[1]), a_b_ratio, "{:2d}".format(pct_dr)))
                 self.display_data = self.display_data[:3] # list slicing, keep only first three elements
