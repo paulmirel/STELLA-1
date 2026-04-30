@@ -1,5 +1,5 @@
 # Lab_Spec page
-# version 2.2
+# version 2.3
 # Copyright NASA 2026 under MIT open source license
 # Author Paul Mirel
 
@@ -375,7 +375,7 @@ class Lab_Spec_Page( Page ):
                 self.display_data.insert(0,(mmt_text, "{:4d}".format(a_b_values[0]), "{:4d}".format(a_b_values[1]), a_b_ratio, "{:2d}".format(pct_dr)))
                 self.display_data = self.display_data[:3] # list slicing, keep only first three elements
                 #update these only on a new mmt having been made
-                location = 18
+                location = 14
                 for y in range (0,len(self.display_data)):
                     for x in range (0, 5):
                         self.text_areas[location].text = "{}".format(self.display_data[y][x])
@@ -674,10 +674,109 @@ class Lab_Spec_Page( Page ):
 
             x += line_widths[index]
 
+        view_B_line_y = line_y
+
+        # measured values
+        box_offset_y = -8
+        box_offset_x = -5
+        box_width_mod = 0#4
+        box_position_mod = 2
+        box_height_mod = -4
+        value_width = 66 - int(box_position_mod/2)
+        line_y = 128
+        #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
+        line_values = ["", "", "", "", ""]
+        line_widths = [42, value_width, value_width, 42, 30 ]
+        line_selectable = [True, False, False, False, False]
+        x = 78+box_position_mod
+        for index in range(0, len(line_values)):
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]+box_width_mod,
+                                                                    height=height_2+box_height_mod, x=x+box_offset_x, y=line_y+height_1+box_offset_y)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
+                if False:
+                    border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]+1-2*(select_width-border_width)+box_width_mod,
+                                                                        height=height_2-2*(select_width-border_width), x=x+select_width-border_width+box_offset_x, y=line_y+height_1+select_width-border_width+box_offset_y)
+                    self.group.append(border_rectangle)
+
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]+1-2*select_width+box_width_mod,
+                                                            height=height_2-2*select_width+box_height_mod, x=x+select_width+box_offset_x, y=line_y+height_1+select_width+box_offset_y)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+            text_group = displayio.Group(scale=2, x=x, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+
+            x += line_widths[index]
+
+        line_y += 24
+        #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
+        line_values = ["", "", "", "", ""]
+        line_widths = [42, value_width, value_width, 42, 30 ]
+        x = 78+box_position_mod
+        line_selectable = [True, False, False, False, False]
+        for index in range(0, len(line_values)):
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]+box_width_mod,
+                                                                    height=height_2+box_height_mod, x=x+box_offset_x, y=line_y+height_1+box_offset_y)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
+                if False:
+                    border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]+1-2*(select_width-border_width+box_width_mod),
+                                                                        height=height_2-2*(select_width-border_width), x=x+select_width-border_width+box_offset_x, y=line_y+height_1+select_width-border_width+box_offset_y)
+                    self.group.append(border_rectangle)
+
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]+1-2*select_width+box_width_mod,
+                                                            height=height_2-2*select_width+box_height_mod, x=x+select_width+box_offset_x, y=line_y+height_1+select_width+box_offset_y)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+            text_group = displayio.Group(scale=2, x=x, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+
+            x += line_widths[index]
+
+        line_y += 24
+        #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
+        line_values = ["", "", "", "", ""]
+        line_widths = [42, value_width, value_width, 42, 30 ]
+        x = 78+box_position_mod
+        line_selectable = [True, False, False, False, False]
+        for index in range(0, len(line_values)):
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]+box_width_mod,
+                                                                    height=height_2+box_height_mod, x=x+box_offset_x, y=line_y+height_1+box_offset_y)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
+                if False:
+                    border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]+1-2*(select_width-border_width)+box_width_mod,
+                                                                        height=height_2-2*(select_width-border_width), x=x+select_width-border_width+box_offset_x, y=line_y+height_1+select_width-border_width+box_offset_y)
+                    self.group.append(border_rectangle)
+
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]+1-2*select_width+box_width_mod,
+                                                            height=height_2-2*select_width+box_height_mod, x=x+select_width+box_offset_x, y=line_y+height_1+select_width+box_offset_y)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+            text_group = displayio.Group(scale=2, x=x, y=line_y+int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+            vertical_separator = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=1,height=80, x=x+line_widths[index]-4, y=124)
+            self.group.append(vertical_separator)
+
+            x += line_widths[index]
 
 
-
-        line_y += line_spacing - 10
+        line_y = view_B_line_y+ line_spacing - 10
         line_names = ["", "", "", "" ]
         line_values = ["*instruction", "<", "DO", ">"]
         line_selectable = [ True, True, True, True ]
@@ -720,55 +819,6 @@ class Lab_Spec_Page( Page ):
         self.value_areas[-2].color_index = 32
         self.value_areas[-1].color_index = 15
         #self.text_areas[-1].color = self.palette[9]
-
-        # measured values
-        line_y = 128
-        #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
-        line_values = ["", "", "", "", ""]
-        line_widths = [42, 66, 66, 42, 30 ]
-        x = 78
-        for index in range(0, len(line_values)):
-
-            text_group = displayio.Group(scale=2, x=x, y=line_y+int(height_2/2))
-            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
-            self.text_areas.append(self.text_area)
-            text_group.append(self.text_area)
-            self.group.append(text_group)
-
-            x += line_widths[index]
-
-        line_y += 24
-        #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
-        line_values = ["", "", "", "", ""]
-        line_widths = [42, 66, 66, 42, 30 ]
-        x = 78
-        for index in range(0, len(line_values)):
-
-            text_group = displayio.Group(scale=2, x=x, y=line_y+int(height_2/2))
-            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
-            self.text_areas.append(self.text_area)
-            text_group.append(self.text_area)
-            self.group.append(text_group)
-
-            x += line_widths[index]
-
-        line_y += 24
-        #line_names = ["mmt#", "A value", "B value", "A/B", "%DR" ]
-        line_values = ["", "", "", "", ""]
-        line_widths = [42, 66, 66, 42, 30 ]
-        x = 78
-        for index in range(0, len(line_values)):
-
-            text_group = displayio.Group(scale=2, x=x, y=line_y+int(height_2/2))
-            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
-            self.text_areas.append(self.text_area)
-            text_group.append(self.text_area)
-            self.group.append(text_group)
-            vertical_separator = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=1,height=80, x=x+line_widths[index]-4, y=124)
-            self.group.append(vertical_separator)
-
-            x += line_widths[index]
-
 
         self.selection_count = len( self.selection_rectangles )
         return self.group
