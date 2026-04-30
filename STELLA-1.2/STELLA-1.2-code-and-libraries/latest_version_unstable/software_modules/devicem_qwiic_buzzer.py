@@ -32,8 +32,9 @@ class Qwiic_Buzzer( Device ):
             pass
         else:
             if self.click_enabled:
-                self.set(800, 12) #paul style
-                #self.set(2, 5) #mike style
+                #self.set(800, 12) #paul style, not clicky, but acceptable volume
+                #self.set(2, 5) #mike style, very clicky, but also too quiet
+                self.set(3000, 8) #maximized for volume based on the data sheet audio power curve
                 self.swob.on()
             else:
                 pass
