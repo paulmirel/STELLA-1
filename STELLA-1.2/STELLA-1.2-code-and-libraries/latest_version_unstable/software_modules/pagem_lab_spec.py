@@ -188,6 +188,9 @@ class Lab_Spec_Page( Page ):
             elif self.selection == 2:
                 self.mmt_sequence_start = time.monotonic()
                 self.run_measurement_sequence()
+            elif self.selection == 9 or self.selection == 10 or self.selection == 11:
+                self.graph_group.hidden = not self.graph_group.hidden
+
             else:
                 self.field_selected = not self.field_selected
                 if self.selection == 3:
@@ -821,6 +824,18 @@ class Lab_Spec_Page( Page ):
         #self.text_areas[-1].color = self.palette[9]
 
         self.selection_count = len( self.selection_rectangles )
+
+        #graph group
+        self.graph_group = displayio.Group()
+        self.graph_border = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=280+8, height=200, x=20-4, y=42-4)
+        self.graph_group.append(self.graph_border)
+        self.graph_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=280, height=200-8, x=20, y=42)
+        self.graph_group.append(self.graph_rectangle)
+        self.graph_group.hidden = True
+
+
+        self.group.append(self.graph_group)
+
         return self.group
 
     def update_selection( self ):
