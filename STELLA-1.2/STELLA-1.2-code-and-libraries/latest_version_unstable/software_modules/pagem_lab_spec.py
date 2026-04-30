@@ -181,15 +181,16 @@ class Lab_Spec_Page( Page ):
             self.update_values()
 
         if self.instrument.button_pressed:
-            if self.selection == 0:
+            if self.selection == 9 or self.selection == 10 or self.selection == 11 or not self.graph_group.hidden:
+                self.graph_group.hidden = not self.graph_group.hidden
+            elif self.selection == 0:
                 self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             elif self.selection == 1:
                 self.instrument.update_batch()
             elif self.selection == 2:
                 self.mmt_sequence_start = time.monotonic()
                 self.run_measurement_sequence()
-            elif self.selection == 9 or self.selection == 10 or self.selection == 11:
-                self.graph_group.hidden = not self.graph_group.hidden
+
 
             else:
                 self.field_selected = not self.field_selected

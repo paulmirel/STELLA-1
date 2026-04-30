@@ -32,8 +32,8 @@ class Qwiic_Buzzer( Device ):
             pass
         else:
             if self.click_enabled:
-                #self.set(800, 12) #paul style
-                self.set(2, 5) #mike style
+                self.set(800, 12) #paul style
+                #self.set(2, 5) #mike style
                 self.swob.on()
             else:
                 pass
