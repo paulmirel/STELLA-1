@@ -878,14 +878,45 @@ class Lab_Spec_Page( Page ):
         self.graph_group.append(self.graph_border)
         self.graph_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=280, height=200-8, x=20, y=42)
         self.graph_group.append(self.graph_rectangle)
-        self.graph_group.hidden = True
+        self.graph_group.hidden = False #True TBD
 
+        self.ybottom_pix = 240-8-20
 
+        plot_title_group = displayio.Group(scale=2, x=80, y=54)
+        plot_title_area = label.Label(terminalio.FONT, text="Bxx : Mxx : xx%dr", color=self.palette[0])
+        plot_title_group.append(plot_title_area)
+        self.graph_group.append(plot_title_group)
 
+        y_units_group = displayio.Group(scale=1, x=26, y=50)
+        y_units_area = label.Label(terminalio.FONT, text="counts", color=self.palette[0])
+        y_units_group.append(y_units_area)
+        self.graph_group.append(y_units_group)
+
+        y_max_group = displayio.Group(scale=1, x=26, y=68)
+        self.y_max_area = label.Label(terminalio.FONT, text="65535", color=self.palette[0])
+        y_max_group.append(self.y_max_area)
+        self.graph_group.append(y_max_group)
+
+        y_min_group = displayio.Group(scale=1, x=26, y=self.ybottom_pix)
+        self.y_min_area = label.Label(terminalio.FONT, text="-65535", color=self.palette[0])
+        y_min_group.append(self.y_min_area)
+        self.graph_group.append(y_min_group)
+
+        x_units_group = displayio.Group(scale=1, x=26, y=self.ybottom_pix+14)
+        x_units_area = label.Label(terminalio.FONT, text="WL(nm)", color=self.palette[0])
+        x_units_group.append(x_units_area)
+        self.graph_group.append(x_units_group)
+
+        #title text area
+        #ymax value text area
+        #ymin value text area
+        #wl.nm marker texts
+        #units_x
+        #units_y?
 
         point_radius = 6
-        self.ybottom_pix = 240-8-20
-        xleft_pix = 60
+
+        xleft_pix = 64
         xright_pix = 320-30
         xspan_pix = xright_pix - xleft_pix
 
@@ -909,6 +940,12 @@ class Lab_Spec_Page( Page ):
         color_index_list = [25,26,28,29,31,32,33,35]
         for index in range( 0, len(self.plot_points)):
             self.plot_points[index].color_index = color_index_list[index]
+            x_value_group = displayio.Group(scale=1, x=plot_xpix[index]-8, y=self.ybottom_pix+14)
+            x_value_area = label.Label(terminalio.FONT, text="{}".format(plot_xvalues[index]), color=self.palette[0])
+
+            x_value_group.append(x_value_area)
+            self.graph_group.append(x_value_group)
+
 
 
 
