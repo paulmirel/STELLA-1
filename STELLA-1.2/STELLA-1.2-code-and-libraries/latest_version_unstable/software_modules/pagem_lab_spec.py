@@ -93,14 +93,26 @@ class Lab_Spec_Page( Page ):
         plot_ymin = min(plot_yvalues)
         plot_yspan = plot_ymax - plot_ymin
         print(plot_ymax, plot_ymin, plot_yspan)
-        self.plot_title_area.text = "{} : {} : {}% dr".format(self.plot_register[0], self.plot_register[1],dr)
+        if dr >99:
+            self.plot_title_area.text = "{}:{}:SATURATED".format(self.plot_register[0], self.plot_register[1])
+        else:
+            self.plot_title_area.text = "{} : {} : {}% dr".format(self.plot_register[0], self.plot_register[1],dr)
         self.y_max_area.text = "{}".format(plot_ymax)
         self.y_min_area.text = "{}".format(plot_ymin)
         yspan_pix = self.ybottom_pix - self.ytop_pix
         pix_per_val = yspan_pix/ plot_yspan
+        y_pix = []
         for index in range (0, len(plot_yvalues)):
-            y_pix = self.ytop_pix + yspan_pix - int((plot_yvalues[index]-plot_ymin)*pix_per_val)
-            self.plot_points[index].y = y_pix
+            y_pix.append(self.ytop_pix + yspan_pix - int((plot_yvalues[index]-plot_ymin)*pix_per_val))
+
+        shading_points = []
+        shading_points.append((self.plot_xpix[-1], self.ytop_pix + yspan_pix))
+        shading_points.append((self.plot_xpix[0], self.ytop_pix + yspan_pix))
+
+        for index in range (0, len(self.plot_xpix)):
+            self.plot_points[index].y = y_pix[index]
+            shading_points.append((self.plot_xpix[index], y_pix[index]))
+        self.shading.points=shading_points
 
 
         # generate pixel values for flinging the points around
@@ -435,7 +447,10 @@ class Lab_Spec_Page( Page ):
             # recalculate the a/b numbers on the fly, and redisplay if the choices change.
 
             if True:
-                self.display_data.insert(0,(mmt_text, "{:4d}".format(a_b_values[0]), "{:4d}".format(a_b_values[1]), a_b_ratio, "{:2d}".format(pct_dr)))
+                if saturated:
+                    self.display_data.insert(0,(mmt_text, "{:4d}".format(a_b_values[0]), "{:4d}".format(a_b_values[1]), a_b_ratio, "sa"))
+                else:
+                    self.display_data.insert(0,(mmt_text, "{:4d}".format(a_b_values[0]), "{:4d}".format(a_b_values[1]), a_b_ratio, "{:2d}".format(pct_dr)))
                 self.display_data = self.display_data[:3] # list slicing, keep only first three elements
                 #update these only on a new mmt having been made
                 location = 14
@@ -936,19 +951,27 @@ class Lab_Spec_Page( Page ):
         plot_xmax = 700
         plot_xmin = 400
         plot_xspan = plot_xmax - plot_xmin
-        plot_xpix = []
+        self.plot_xpix = []
+
         for xvalue in plot_xvalues:
-            plot_xpix.append(int((xspan_pix*(xvalue-plot_xmin)/plot_xspan)+xleft_pix))
+            self.plot_xpix.append(int((xspan_pix*(xvalue-plot_xmin)/plot_xspan)+xleft_pix))
         #print(plot_xpix)
+        self.shading_points = []
+        for xpix in self.plot_xpix:
+            self.shading_points.append((xpix, 0))
+
+        self.shading = vectorio.Polygon(pixel_shader=self.palette, color_index=8,points=self.shading_points)
+        self.graph_group.append(self.shading)
+
         self.plot_points=[]
-        for xpix in plot_xpix:
+        for xpix in self.plot_xpix:
             circle = vectorio.Circle(pixel_shader=self.palette, color_index=0, radius = point_radius, x=xpix, y=self.ybottom_pix)
             self.plot_points.append(circle)
             self.graph_group.append(circle)
         color_index_list = [25,26,28,29,31,32,33,35]
         for index in range( 0, len(self.plot_points)):
             self.plot_points[index].color_index = color_index_list[index]
-            x_value_group = displayio.Group(scale=1, x=plot_xpix[index]-8, y=self.ybottom_pix+14)
+            x_value_group = displayio.Group(scale=1, x=self.plot_xpix[index]-8, y=self.ybottom_pix+14)
             x_value_area = label.Label(terminalio.FONT, text="{}".format(plot_xvalues[index]), color=self.palette[0])
 
             x_value_group.append(x_value_area)
