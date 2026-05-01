@@ -64,14 +64,14 @@ class Lab_Spec_Page( Page ):
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.dac_values = [0,0,0,0]
         self.dac_channels = ["a", "b", "c", "d"]
-        self.lamp_current_index = 9 # default
+        self.lamp_current_index = 20 # default
         self.lamp_current_options = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,35,40,45,50,60,70,80,90,100]
         self.last_lamp_current_mA = "None"
         self.mmt_number = 0
         self.measuring = False
         self.mmt_sequence_start = 0
         self.mmt_interval = 10
-        self.repetitions = 4 # including source off mmt
+        self.repetitions = 4 # including source_off mmt
         self.lamp_on = False
         self.display_data = []
         self.supply_5V.disable()
@@ -87,6 +87,11 @@ class Lab_Spec_Page( Page ):
     def plot(self):
         self.plot_register = self.mmt_register[self.selection-9]
         print(self.plot_register)
+        plot_yvalues = self.plot_register[2:]
+        plot_ymax = int(max(plot_yvalues)*1.05)
+        plot_ymin = int(min(plot_yvalues)*0.95)
+        plot_yspan = plot_ymax - plot_ymin
+        print(plot_ymax, plot_ymin, plot_yspan)
 
     def update_values( self ):
         self.bat.read()
@@ -290,11 +295,11 @@ class Lab_Spec_Page( Page ):
             print("average column:", avg_column)
 
             self.plot_register = []
-            self.plot_register.append("B{}".format(self.instrument.batch_number))
+            self.plot_register.append("B{:02}".format(self.instrument.batch_number))
             if True:
-                self.plot_register.append("M{}".format(self.mmt_number))
+                self.plot_register.append("M{:02}".format(self.mmt_number))
             else:
-                self.plot_register.append("R{}".format(self.mmt_number))
+                self.plot_register.append("R{:02}".format(self.mmt_number))
             for index in range(1, 9):
                 self.plot_register.append(avg_column[index])
             #insert the plot register in the 0th position of the mmt_register, shift the others, and trim the list to 3
@@ -874,6 +879,39 @@ class Lab_Spec_Page( Page ):
         self.graph_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=280, height=200-8, x=20, y=42)
         self.graph_group.append(self.graph_rectangle)
         self.graph_group.hidden = True
+
+
+
+
+        point_radius = 6
+        self.ybottom_pix = 240-8-20
+        xleft_pix = 60
+        xright_pix = 320-30
+        xspan_pix = xright_pix - xleft_pix
+
+        x_axis_pix = 4
+        self.x_axis = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=xright_pix-xleft_pix, height=x_axis_pix, x=xleft_pix, y=self.ybottom_pix-int(x_axis_pix/2))
+        self.graph_group.append(self.x_axis)
+
+        plot_xvalues = [415, 445, 480, 515, 555, 590, 630, 682]
+        plot_xmax = 700
+        plot_xmin = 400
+        plot_xspan = plot_xmax - plot_xmin
+        plot_xpix = []
+        for xvalue in plot_xvalues:
+            plot_xpix.append(int((xspan_pix*(xvalue-plot_xmin)/plot_xspan)+xleft_pix))
+        #print(plot_xpix)
+        self.plot_points=[]
+        for xpix in plot_xpix:
+            circle = vectorio.Circle(pixel_shader=self.palette, color_index=0, radius = point_radius, x=xpix, y=self.ybottom_pix)
+            self.plot_points.append(circle)
+            self.graph_group.append(circle)
+        color_index_list = [25,26,28,29,31,32,33,35]
+        for index in range( 0, len(self.plot_points)):
+            self.plot_points[index].color_index = color_index_list[index]
+
+
+
 
 
         self.group.append(self.graph_group)
