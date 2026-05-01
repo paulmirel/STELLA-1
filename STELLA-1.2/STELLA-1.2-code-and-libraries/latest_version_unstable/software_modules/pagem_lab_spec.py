@@ -81,6 +81,12 @@ class Lab_Spec_Page( Page ):
         self.lamps = ["488nm","365nm","640nm","x_wht","r_wht"]
         self.lamp_in_use = 0
         self.number_of_lamps = len( self.lamps )
+        self.plot_register = ["B--","M--", 0,0,0,0,0,0,0,0]
+        self.mmt_register = [self.plot_register, self.plot_register, self.plot_register]
+
+    def plot(self):
+        self.plot_register = self.mmt_register[self.selection-9]
+        print(self.plot_register)
 
     def update_values( self ):
         self.bat.read()
@@ -183,6 +189,8 @@ class Lab_Spec_Page( Page ):
         if self.instrument.button_pressed:
             if self.selection == 9 or self.selection == 10 or self.selection == 11 or not self.graph_group.hidden:
                 self.graph_group.hidden = not self.graph_group.hidden
+                if not self.graph_group.hidden:
+                    self.plot()
             elif self.selection == 0:
                 self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             elif self.selection == 1:
@@ -279,6 +287,22 @@ class Lab_Spec_Page( Page ):
             avg_column = []
             for row in range (0,self.lines_per_block):
                 avg_column.append(int(round(((data[1][row] + data[2][row] + data[3][row])/3)-data[0][row],0)))
+            print("average column:", avg_column)
+
+            self.plot_register = []
+            self.plot_register.append("B{}".format(self.instrument.batch_number))
+            if True:
+                self.plot_register.append("M{}".format(self.mmt_number))
+            else:
+                self.plot_register.append("R{}".format(self.mmt_number))
+            for index in range(1, 9):
+                self.plot_register.append(avg_column[index])
+            #insert the plot register in the 0th position of the mmt_register, shift the others, and trim the list to 3
+            self.mmt_register.insert(0,self.plot_register)
+            self.mmt_register = self.mmt_register[:3]
+
+
+
             self.measurement_lists.append(avg_column)
             dr_column = []
             dr_column.append(" ")
@@ -360,6 +384,12 @@ class Lab_Spec_Page( Page ):
                 for col in range (0,len(self.measurement_lists)):
                     print( self.measurement_lists[col][row], end=", " )
                 print()
+
+
+
+
+
+
             b_value = avg_column[self.chB_index+1]
             if b_value < 1:
                 b_value = 1
