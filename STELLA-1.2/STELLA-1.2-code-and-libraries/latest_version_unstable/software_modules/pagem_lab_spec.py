@@ -64,7 +64,7 @@ class Lab_Spec_Page( Page ):
             self.adc_sensor.swob.gain = self.adc_sensor.gain_list[3] #set ADC gain to 4x, for 0 to 1.024V
         self.dac_values = [0,0,0,0]
         self.dac_channels = ["a", "b", "c", "d"]
-        self.lamp_current_index = 20 # default
+        self.lamp_current_index = 26 # default
         self.lamp_current_options = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,35,40,45,50,60,70,80,90,100]
         self.last_lamp_current_mA = "None"
         self.mmt_number = 0
@@ -88,10 +88,23 @@ class Lab_Spec_Page( Page ):
         self.plot_register = self.mmt_register[self.selection-9]
         print(self.plot_register)
         plot_yvalues = self.plot_register[2:]
-        plot_ymax = int(max(plot_yvalues)*1.05)
-        plot_ymin = int(min(plot_yvalues)*0.95)
+        plot_ymax = max(plot_yvalues)
+        dr=int(100*plot_ymax/65535)
+        plot_ymin = min(plot_yvalues)
         plot_yspan = plot_ymax - plot_ymin
         print(plot_ymax, plot_ymin, plot_yspan)
+        self.plot_title_area.text = "{} : {} : {}% dr".format(self.plot_register[0], self.plot_register[1],dr)
+        self.y_max_area.text = "{}".format(plot_ymax)
+        self.y_min_area.text = "{}".format(plot_ymin)
+        yspan_pix = self.ybottom_pix - self.ytop_pix
+        pix_per_val = yspan_pix/ plot_yspan
+        for index in range (0, len(plot_yvalues)):
+            y_pix = self.ytop_pix + yspan_pix - int((plot_yvalues[index]-plot_ymin)*pix_per_val)
+            self.plot_points[index].y = y_pix
+
+
+        # generate pixel values for flinging the points around
+        # generate pixel value for setting the x axis bar position
 
     def update_values( self ):
         self.bat.read()
@@ -873,18 +886,20 @@ class Lab_Spec_Page( Page ):
         self.selection_count = len( self.selection_rectangles )
 
         #graph group
+
         self.graph_group = displayio.Group()
         self.graph_border = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=280+8, height=200, x=20-4, y=42-4)
         self.graph_group.append(self.graph_border)
         self.graph_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=280, height=200-8, x=20, y=42)
         self.graph_group.append(self.graph_rectangle)
-        self.graph_group.hidden = False #True TBD
+        self.graph_group.hidden = True
 
         self.ybottom_pix = 240-8-20
+        self.ytop_pix = 72
 
         plot_title_group = displayio.Group(scale=2, x=80, y=54)
-        plot_title_area = label.Label(terminalio.FONT, text="Bxx : Mxx : xx%dr", color=self.palette[0])
-        plot_title_group.append(plot_title_area)
+        self.plot_title_area = label.Label(terminalio.FONT, text="Bxx : Mxx : xx%dr", color=self.palette[0])
+        plot_title_group.append(self.plot_title_area)
         self.graph_group.append(plot_title_group)
 
         y_units_group = displayio.Group(scale=1, x=26, y=50)
@@ -906,13 +921,6 @@ class Lab_Spec_Page( Page ):
         x_units_area = label.Label(terminalio.FONT, text="WL(nm)", color=self.palette[0])
         x_units_group.append(x_units_area)
         self.graph_group.append(x_units_group)
-
-        #title text area
-        #ymax value text area
-        #ymin value text area
-        #wl.nm marker texts
-        #units_x
-        #units_y?
 
         point_radius = 6
 
@@ -945,11 +953,6 @@ class Lab_Spec_Page( Page ):
 
             x_value_group.append(x_value_area)
             self.graph_group.append(x_value_group)
-
-
-
-
-
 
         self.group.append(self.graph_group)
 
