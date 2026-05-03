@@ -130,6 +130,9 @@ def main():
 
     supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
     inet_lan = wifi_module.initialize( instrument )
+    def wif(nm, value):
+        print(f"# WIF {nm} = {value}")
+    inet_lan.subscribe( wif )
 
     lab_spec_present = [False,False,False]
     instrument.spectral_sensors_detected = False

@@ -70,16 +70,21 @@ else:
     import socketpool
     from software_modules import every
     Every = every.Every
+    from software_modules import micro_observable 
+    Observable = micro_observable.Observable
 
-    class WifiModule(NullWifi):
+    class WifiModule(NullWifi, Observable):
         """for the main loop
         """
         # try not to be too intrusive when we retry the wifi connection
         # FIXME: check if async can help avoid blocking here?
         connect_retry = Every(30) # and immediately
 
+        _subscribable = 'wifi_enabled'
+
         def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
+            NullWifi.__init__(self, *args, **kwargs)
+            Observable.__init__(self)
             self.inet = wifi.radio # for non-socket services, e.g. mdns
             self.first_time = True
             # this is nice: immediately react to saved-setting (if any)
@@ -108,7 +113,7 @@ else:
                         # Connect to the Wi-Fi network
                         wifi.radio.connect(ssid, password)
                         print(f"✅ Wifi {ssid} : {wifi.radio.ipv4_address}")
-                        #self.publish( True )
+                        self.publish( 'wifi_enabled', True )
                         return True
 
                     except OSError as e:
@@ -131,7 +136,7 @@ else:
                     first_time = True
                 else:
                     print(f"## wifi STOP")
-                    #self.publish( False ) # disconnecting
+                    self.publish( 'wifi_enabled', False ) # disconnecting
                     wifi.radio.enabled = False
 
 
@@ -144,7 +149,7 @@ else:
     def initialize(instrument):
         wifi_module.instrument = instrument
         return wifi_module
-        
+
 if __name__ == "__main__":
     print("Standalone test")
     DEBUG=True
