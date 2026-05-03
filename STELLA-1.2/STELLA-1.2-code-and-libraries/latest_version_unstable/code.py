@@ -301,19 +301,19 @@ def main():
 
     controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
     main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
-    status_page = None # pagem_status.make_status_page( instrument, battery_monitor )
+    status_page = pagem_status.make_status_page( instrument, battery_monitor )
     settings_page = pagem_settings.make_settings_page( instrument )
     sensors_page = pagem_sensors.make_sensors_page( instrument )
-    time_place_page = None #pagem_time_place.make_time_place_page( instrument )
+    time_place_page = pagem_time_place.make_time_place_page( instrument )
     #air_page = pagem_air.make_air_page( instrument )
-    heat_page = None #pagem_heat.make_heat_page( instrument )
-    if False and all(lab_spec_present):
+    heat_page = pagem_heat.make_heat_page( instrument )
+    if all(lab_spec_present):
         lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, onboard_neopixel )
     else:
         lab_spec_page = pagem_lab_spec.make_lab_spec_missing_page( instrument )
     start = time.monotonic()
 
-    if False and instrument.spectral_sensors_detected and not all(lab_spec_present):
+    if instrument.spectral_sensors_detected and not all(lab_spec_present):
         light_page = pagem_light.make_light_page( instrument )
         exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:
@@ -359,7 +359,6 @@ def main():
             instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
         if False:
             instrument.active_page_number = instrument.pages_dict["Heat"]
-        instrument.active_page_number = instrument.pages_dict["Settings"]
 
     try:
         if buzzer: buzzer.beep()
@@ -397,7 +396,7 @@ def main():
                 #print( "sample_time, one sensor, s = ", round(sample_time,3))
             else:
                 for sensor in instrument.sensors_present:
-                    #sensor.read()
+                    sensor.read()
                     instrument.handle_inputs()
                 sample_stop_time = time.monotonic()
                 sample_time = sample_stop_time - sample_start_time
@@ -434,7 +433,7 @@ def main():
                 if (time.monotonic() > last_serial_time + instrument.serial_interval_s):
                     if instrument.serial_out_index == 0:
                         for sensor in instrument.sensors_present:
-                            #sensor.printlog()
+                            sensor.printlog()
                             instrument.handle_inputs()
                         print()
                         last_serial_time = time.monotonic()
@@ -593,7 +592,6 @@ class Instrument:
                             #print( "act on active page of combination on selection {}".format(active_page.selection ))
                             active_page.action()
                     else:
-                        print(f"## active_page {active_page.__class__.__name__} {active_page}.action")
                         active_page.action()
                         #print( active_page.selection  )
                     #print( "button pressed, do something with that")
