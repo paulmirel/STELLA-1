@@ -131,11 +131,11 @@ else:
             if self.last_wifi_enabled != self.instrument.wifi_enabled:
                 self.last_wifi_enabled = self.instrument.wifi_enabled
                 if self.instrument.wifi_enabled:
-                    print(f"## wifi START")
+                    print(f"wifi START")
                     wifi.radio.enabled = True
                     first_time = True
                 else:
-                    print(f"## wifi STOP")
+                    print(f"wifi STOP")
                     self.publish( 'wifi_enabled', False ) # disconnecting
                     wifi.radio.enabled = False
 

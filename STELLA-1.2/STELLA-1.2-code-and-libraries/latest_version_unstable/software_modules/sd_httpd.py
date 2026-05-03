@@ -135,12 +135,13 @@ def initialize(port=80):
 was_connected = False
 
 def _startup(n, v):
-    print(f"## httpd restart {v}")
+    global was_connected
     if v:
         was_connected = False # force re-start
 
     else:
-        HTTPServer.stop()
+        if was_connected:
+            HTTPServer.stop()
         was_connected = False
         print(f"❌ http disconnected (wifi|inet_lan)")
 
@@ -168,7 +169,7 @@ def update():
                     raise e
         else:
             url = f"http://{inet_lan.wifi_module.ipv4_address()}:{Port}"
-            print(f"✅ starting {url}")
+            print(f"✅ HTTP for sd-card starting as {url}")
             HTTPServer.start( str(inet_lan.wifi_module.ipv4_address()), port=Port)
             was_connected = True
     else:

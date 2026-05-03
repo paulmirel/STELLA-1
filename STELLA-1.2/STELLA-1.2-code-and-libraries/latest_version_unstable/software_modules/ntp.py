@@ -71,7 +71,6 @@ else:
     def _startup( p, v ):
         global first_time
         if v:
-            print(f"## NTP should try...")
             first_time = True
             retry_time.interval = retry_time.interval # hack to force restart and trigger now
             resync_time.interval = resync_time.interval
@@ -89,7 +88,7 @@ else:
         global _got_time, first_time
         if inet_lan.wifi_module.is_connected():
             if (_got_time and resync_time()) or (not _got_time and retry_time() ):
-                print(f"## retrying...")
+                print(f"NTP retrying...")
                 try:
                     ntp_tuple = ntp.datetime
                 except OSError as e:
