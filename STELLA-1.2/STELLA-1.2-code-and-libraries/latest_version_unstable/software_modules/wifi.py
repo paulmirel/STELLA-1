@@ -139,7 +139,6 @@ else:
                     self.publish( 'wifi_enabled', False ) # disconnecting
                     wifi.radio.enabled = False
 
-
             if self.instrument.wifi_enabled:
                 self.connected() # side-effect is to connect/re-connect
 

@@ -98,6 +98,34 @@ except ImportError as e:
                 return None
     else:
         raise e
+try:
+    # ntp is optional
+    from software_modules import ntp
+except ImportError as e:
+    if 'software_modules.ntp' in str(e):
+        print(f"❌ ntp module: no internet time")
+        class ntp:
+            # the only api from code.py
+            def initialize(instrument):
+                return None
+            def update():
+                pass
+    else:
+        raise e
+try:
+    # httpd for sd card is optional
+    from software_modules import sd_httpd
+except ImportError as e: 
+    if 'software_modules.sd_httpd' in str(e):
+        print(f"❌ sd_httpd module: no web-page")
+        class sd_httpd:
+            # the only api from code.py
+            def initialize(instrument):
+                return None
+            def update():
+                pass
+    else:
+        raise e
 
 def main():
 
@@ -133,6 +161,8 @@ def main():
     def wif(nm, value):
         print(f"# WIF {nm} = {value}")
     inet_lan.subscribe( wif )
+    ntp.initialize(instrument)
+    sd_httpd.initialize()
 
     lab_spec_present = [False,False,False]
     instrument.spectral_sensors_detected = False
@@ -397,6 +427,8 @@ def main():
                         last_serial_time = time.monotonic()
             if inet_lan:
                 inet_lan.update()
+                ntp.update()
+                sd_httpd.update
             battery_monitor.read()
             if battery_monitor.percentage < 20:
                 flash_indicator( battery_indicator )
