@@ -104,12 +104,13 @@ try:
 except ImportError as e:
     if 'software_modules.ntp' in str(e):
         print(f"❌ ntp module: no internet time")
+        class NTPTime:
+            def update(self):
+                pass
         class ntp:
             # the only api from code.py
             def initialize(instrument):
-                return None
-            def update():
-                pass
+                return NTPTime()
     else:
         raise e
 try:
@@ -158,10 +159,7 @@ def main():
 
     supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
     inet_lan = wifi_module.initialize( instrument )
-    def wif(nm, value):
-        print(f"# WIF {nm} = {value}")
-    inet_lan.subscribe( wif )
-    ntp.initialize(instrument)
+    ntp_time = ntp.initialize()
     sd_httpd.initialize()
 
     lab_spec_present = [False,False,False]
@@ -427,7 +425,7 @@ def main():
                         last_serial_time = time.monotonic()
             if inet_lan:
                 inet_lan.update()
-                ntp.update()
+                ntp_time.update()
                 sd_httpd.update
             battery_monitor.read()
             if battery_monitor.percentage < 20:
