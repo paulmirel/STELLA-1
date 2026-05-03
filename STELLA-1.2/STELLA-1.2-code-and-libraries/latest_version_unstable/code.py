@@ -127,6 +127,20 @@ except ImportError as e:
                 pass
     else:
         raise e
+try:
+    # mdns is optional
+    from software_modules import mdns
+except ImportError as e:
+    if 'software_modules.mdns' in str(e):
+        print(f"❌ mdns module: use ip address in url")
+        class mdns:
+            # the only api from code.py
+            def initialize(instrument):
+                return None
+            def update():
+                pass
+    else:
+        raise e
 
 def main():
 
@@ -160,6 +174,7 @@ def main():
     supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
     inet_lan = wifi_module.initialize( instrument )
     ntp_time = ntp.initialize()
+    mdns.initialize(hostname=f"stella-{instrument.uid}" )
     sd_httpd.initialize()
 
     lab_spec_present = [False,False,False]
@@ -426,7 +441,8 @@ def main():
             if inet_lan:
                 inet_lan.update()
                 ntp_time.update()
-                sd_httpd.update
+                sd_httpd.update()
+                mdns.update()
             battery_monitor.read()
             if battery_monitor.percentage < 20:
                 flash_indicator( battery_indicator )

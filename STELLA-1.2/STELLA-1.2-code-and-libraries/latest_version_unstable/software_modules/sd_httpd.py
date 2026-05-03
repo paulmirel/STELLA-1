@@ -134,9 +134,9 @@ def initialize(port=80):
 
 was_connected = False
 
-def _startup(n, v):
+def _startup(n, wifi_enabled):
     global was_connected
-    if v:
+    if wifi_enabled:
         was_connected = False # force re-start
 
     else:
