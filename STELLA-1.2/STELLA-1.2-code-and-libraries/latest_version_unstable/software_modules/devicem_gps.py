@@ -28,6 +28,8 @@ class pa1616d_GPS( Device ):
         self.last_read = 0
         self.parameters = [ "fix", "latitude_deg", "longitude_deg", "altitude_m", "timestamp", "satellites"]
         self.values = [0,0,0,0,0,0]
+        self.timestruct = None
+
     def send_start_commands(self):
         self.swob.send_command(b"PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0") #set data output configuration
         self.swob.send_command(b"PMTK220,1000") #set update interval to 1000 ms
