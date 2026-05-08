@@ -78,7 +78,7 @@ class Lab_Spec_Page( Page ):
         self.last_lamp_currents = []
         self.measurement_lists = []
         self.lines_per_block = 10
-        self.lamps = ["488nm","365nm","640nm","x_wht","r_wht"]
+        self.lamps = [("488nm",3,2),("365nm",1,0),("640nm",7,6),("x_wht",2,6),("r_wht",2,6)] #("lamp designation", chA_index, chB_index)
         self.lamp_in_use = 0
         self.number_of_lamps = len( self.lamps )
         self.plot_register = ["B--","M--", 0,0,0,0,0,0,0,0]
@@ -140,7 +140,7 @@ class Lab_Spec_Page( Page ):
             self.status_index = 4
             self.status_highlight.color_index = 2
         self.text_areas[6].text = self.status_list[self.status_index]
-        self.text_areas[8].text = self.lamps[self.lamp_in_use]
+        self.text_areas[8].text = self.lamps[self.lamp_in_use][0]
         self.set_lamp_current(self.lamp_current_index)
         self.as7341_spectrometer.set_gain(self.gain_index)
         gain = self.as7341_spectrometer.gain_list[self.gain_index]
@@ -181,6 +181,8 @@ class Lab_Spec_Page( Page ):
             if self.field_selected:
                 if self.selection == 3:
                     self.lamp_in_use = ( self.lamp_in_use + self.instrument.encoder_increment)  % self.number_of_lamps
+                    self.chA_index = self.lamps[self.lamp_in_use][1]
+                    self.chB_index = self.lamps[self.lamp_in_use][2]
                 if self.selection == 4:
                     self.lamp_current_index += self.instrument.encoder_increment
                     if self.lamp_current_index > len (self.lamp_current_options) -1:
