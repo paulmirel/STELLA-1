@@ -1,1 +1,6 @@
 CIRCUITPY_PYSTACK_SIZE=4000
+CIRCUITPY_WIFI_SSID="wifi_network_name_that_you_want_to_use"
+CIRCUITPY_WIFI_PASSWORD="password_for_above_network"
+# make sure your passwords don't get committed to Git"
+
+

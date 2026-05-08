@@ -1,7 +1,7 @@
 """
 # Configuration
 
-We try to load `software_modules.wifi`, and then test the module 
+We try to load `software_modules.wifi`, and then test the module
 to see if the resource is available, cf.: `if devices.wifi`. And use the module's:
 
     .inet # (aka. wifi.radio or ethernet....)
@@ -10,7 +10,7 @@ to see if the resource is available, cf.: `if devices.wifi`. And use the module'
 ## hostname
 
 You can provide a hostname in settings.toml:
-    
+
     # a str.format() template. Params are `envhostname_or_uid` and `device_uid`
     CIRCUITPY_Hostname="myhostname" # .local will be appended for you
     OR
@@ -22,7 +22,7 @@ You can also set the hostname programmatically after `import` (see **Usage**).
 
 ## mDNS record
 
-The default is to advertise as a http server, port 80 (`_http._tcp`). **NB.**: The adafruit "web" workflow 
+The default is to advertise as a http server, port 80 (`_http._tcp`). **NB.**: The adafruit "web" workflow
 will use port 80 if you configure the appropriate entry in settings.toml.
 
 You can set that programatically...
@@ -38,7 +38,7 @@ except ImportError as e:
     inet_lan = None
 
 if not inet_lan:
-    print("❌ can't mdns: no wifi module")
+    print("can't mdns: no wifi module")
     sys.modules[__name__] = None
 
 # Have a module, and presumably hardware
@@ -55,15 +55,15 @@ else:
         if not str(e).endswith("'mdns'"):
             raise e
         mdns = None
-    
-    if not mdns:
-        print("❌ can't mdns: no mdns module (built-in)")
-        sys.modules[__name__] = None
-    
-    else:
-        print(f"✅ mdns supported")
 
-        from software_modules import every 
+    if not mdns:
+        print("can't mdns: no mdns module (built-in)")
+        sys.modules[__name__] = None
+
+    else:
+        print(f"mdns supported")
+
+        from software_modules import every
         Every = every.Every
 
         DEBUG = False # verbosity
@@ -109,7 +109,7 @@ else:
                     if first_time or DEBUG:
                         port_part = (':'+str(RECORD['port'])) if 'port' in RECORD else ''
                         scheme = RECORD['service_type'][1:] # strip _
-                        print(f"✅ mdns as {scheme}://{mdns_server.hostname}.local{port_part}")
+                        print(f"mdns as {scheme}://{mdns_server.hostname}.local{port_part}")
                         first_time = False
 
         def update():

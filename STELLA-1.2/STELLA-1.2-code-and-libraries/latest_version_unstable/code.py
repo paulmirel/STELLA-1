@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "1.1.2"
+SOFTWARE_VERSION_NUMBER = "1.2.0"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -91,7 +91,7 @@ try:
     from software_modules import wifi as wifi_module
 except ImportError as e:
     if 'software_modules.wifi' in str(e):
-        print(f"❌ wifi module")
+        print(f"wifi module")
         class wifi_module:
             # the only api from code.py
             def initialize(instrument):
@@ -103,7 +103,7 @@ try:
     from software_modules import ntp
 except ImportError as e:
     if 'software_modules.ntp' in str(e):
-        print(f"❌ ntp module: no internet time")
+        print(f"ntp module: no internet time")
         class NTPTime:
             def update(self):
                 pass
@@ -116,9 +116,9 @@ except ImportError as e:
 try:
     # httpd for sd card is optional
     from software_modules import sd_httpd
-except ImportError as e: 
+except ImportError as e:
     if 'software_modules.sd_httpd' in str(e):
-        print(f"❌ sd_httpd module: no web-page")
+        print(f"sd_httpd module: no web-page")
         class sd_httpd:
             # the only api from code.py
             def initialize(instrument):
@@ -132,7 +132,7 @@ try:
     from software_modules import mdns
 except ImportError as e:
     if 'software_modules.mdns' in str(e):
-        print(f"❌ mdns module: use ip address in url")
+        print(f"mdns module: use ip address in url")
         class mdns:
             # the only api from code.py
             def initialize(instrument):

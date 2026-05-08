@@ -13,13 +13,13 @@ DEBUG = os.getenv("DEBUG_HTTP", None)
 MOUNT = '/sd'
 
 # need a inet connection
-try:                    
+try:
     from software_modules import wifi as inet_lan
 except ImportError as e:
     if not str(e).endswith("'software_modules.wifi'"):
         raise e
     inet_lan = None
-    print("❌ Can't start http server, no wifi module")
+    print("Can't start http server, no wifi module")
 
 if inet_lan:
     import os,time,re
@@ -31,10 +31,10 @@ if inet_lan:
         if not "adafruit_httpserver" in str(e):
             raise e
         inet_lan = None
-        print("❌ Can't start http server, no lib/adafruit_httpserver")
+        print("Can't start http server, no lib/adafruit_httpserver")
 
 if inet_lan:
-    print("✅ httpd for sd-card supported")
+    print("httpd for sd-card supported")
 
     # save memory by limiting mime-types to those that we use
     MIMETypes.configure(
@@ -143,7 +143,7 @@ def _startup(n, wifi_enabled):
         if was_connected:
             HTTPServer.stop()
         was_connected = False
-        print(f"❌ http disconnected (wifi|inet_lan)")
+        print(f"http disconnected (wifi|inet_lan)")
 
 inet_lan.wifi_module.subscribe( _startup )
 
@@ -169,14 +169,14 @@ def update():
                     raise e
         else:
             url = f"http://{inet_lan.wifi_module.ipv4_address()}:{Port}"
-            print(f"✅ HTTP for sd-card starting as {url}")
+            print(f"HTTP for sd-card starting as {url}")
             HTTPServer.start( str(inet_lan.wifi_module.ipv4_address()), port=Port)
             was_connected = True
     else:
         if was_connected:
             HTTPServer.stop()
             was_connected = False
-            print(f"❌ http disconnected (wifi|inet_lan)")
+            print(f"http disconnected (wifi|inet_lan)")
 
 if __name__ == "__main__":
     print("Standalone test")

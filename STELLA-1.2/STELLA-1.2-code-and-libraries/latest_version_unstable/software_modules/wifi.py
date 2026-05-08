@@ -8,7 +8,7 @@ You must setup the file CIRCUITPY/settings.toml:
 
 # Usage
 
-## Test as standalone: 
+## Test as standalone:
 
     copy this to CIRCUITPY/code.py
 
@@ -40,7 +40,7 @@ class NullWifi:
 
 # Password can be None for some ssid's (distinct from the empty string ""!)
 if ssid==None:
-    print("❌ No wifi: no settings.toml `CIRCUITPY_WIFI_SSID` (and maybe CIRCUITPY_WIFI_PASSWORD)")
+    print("No wifi: no settings.toml `CIRCUITPY_WIFI_SSID` (and maybe CIRCUITPY_WIFI_PASSWORD)")
     # GC us
     def initialize(instrument):
         return NullWifi(instrument)
@@ -57,7 +57,7 @@ else:
         # fixme: another `devices` module for external wifi
 
 if wifi==None:
-    print("❌ No wifi: no `wifi` (built-in) python module")
+    print("No wifi: no `wifi` (built-in) python module")
     # GC us
     def initialize(instrument):
         return NullWifi(instrument)
@@ -65,12 +65,12 @@ if wifi==None:
 # (actual connection is a dynamic issue)
 else:
     # Hardware (and "resources") detected!
-    print("✅ wifi supported")
+    print("wifi supported")
 
     import socketpool
     from software_modules import every
     Every = every.Every
-    from software_modules import micro_observable 
+    from software_modules import micro_observable
     Observable = micro_observable.Observable
 
     class WifiModule(NullWifi, Observable):
@@ -112,14 +112,14 @@ else:
                     try:
                         # Connect to the Wi-Fi network
                         wifi.radio.connect(ssid, password)
-                        print(f"✅ Wifi {ssid} : {wifi.radio.ipv4_address}")
+                        print(f"Wifi {ssid} : {wifi.radio.ipv4_address}")
                         self.publish( 'wifi_enabled', True )
                         return True
 
                     except OSError as e:
                         if 'No network with that ssid' in str(e):
                             if self.first_time or DEBUG:
-                                print(f"❌ no wifi w/ssid {ssid}")
+                                print(f"no wifi w/ssid {ssid}")
                         else:
                             raise e
                 finally:
