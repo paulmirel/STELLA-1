@@ -435,8 +435,13 @@ def main():
                         for sensor in instrument.sensors_present:
                             sensor.printlog()
                             instrument.handle_inputs()
-                        print()
-                        last_serial_time = time.monotonic()
+                    if instrument.serial_out_index == 1:
+                        if False:
+                            for sensor in instrument.sensors_present:
+                                sensor.emit_json_packet()
+                                instrument.handle_inputs()
+                        print("emit_json_packet TBD")
+                    last_serial_time = time.monotonic()
             if inet_lan:
                 inet_lan.update()
                 ntp_time.update()
