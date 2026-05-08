@@ -5,9 +5,9 @@ sample_interval_s = 3.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
 
 burst_count = 2
 
-record_on_startup = True
+record_on_startup = False #True
 
-serial_out_index = 0 #0 text, 1 json, 2 none
+serial_out_index = 2 #0 text, 1 json, 2 none
 
 serial_interval_s = 10.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
 
