@@ -86,6 +86,62 @@ from software_modules import pagem_settings, pagem_sensors, pagem_lab_spec
 from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air, pagem_time_place
 from software_modules import devicem_supply_5V
 
+try:
+    # wifi is optional
+    from software_modules import wifi as wifi_module
+except ImportError as e:
+    if 'software_modules.wifi' in str(e):
+        print(f"❌ wifi module")
+        class wifi_module:
+            # the only api from code.py
+            def initialize(instrument):
+                return None
+    else:
+        raise e
+try:
+    # ntp is optional
+    from software_modules import ntp
+except ImportError as e:
+    if 'software_modules.ntp' in str(e):
+        print(f"❌ ntp module: no internet time")
+        class NTPTime:
+            def update(self):
+                pass
+        class ntp:
+            # the only api from code.py
+            def initialize(instrument):
+                return NTPTime()
+    else:
+        raise e
+try:
+    # httpd for sd card is optional
+    from software_modules import sd_httpd
+except ImportError as e: 
+    if 'software_modules.sd_httpd' in str(e):
+        print(f"❌ sd_httpd module: no web-page")
+        class sd_httpd:
+            # the only api from code.py
+            def initialize(instrument):
+                return None
+            def update():
+                pass
+    else:
+        raise e
+try:
+    # mdns is optional
+    from software_modules import mdns
+except ImportError as e:
+    if 'software_modules.mdns' in str(e):
+        print(f"❌ mdns module: use ip address in url")
+        class mdns:
+            # the only api from code.py
+            def initialize(instrument):
+                return None
+            def update():
+                pass
+    else:
+        raise e
+
 def main():
 
     gc.collect()
@@ -116,6 +172,10 @@ def main():
     instrument.welcome_page.show()
 
     supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
+    inet_lan = wifi_module.initialize( instrument )
+    ntp_time = ntp.initialize()
+    mdns.initialize(hostname=f"stella-{instrument.uid}" )
+    sd_httpd.initialize()
 
     lab_spec_present = [False,False,False]
     instrument.spectral_sensors_detected = False
@@ -377,13 +437,20 @@ def main():
                             instrument.handle_inputs()
                         print()
                         last_serial_time = time.monotonic()
+            if inet_lan:
+                inet_lan.update()
+                ntp_time.update()
+                sd_httpd.update()
+                mdns.update()
             battery_monitor.read()
             if battery_monitor.percentage < 20:
                 flash_indicator( battery_indicator )
             if time.monotonic() > system_update_period_start + system_update_period_s:
                 instrument.check_calendar_day()
-                instrument.sync_rtc_to_gps_time(gps.timestruct)
+                if gps.timestruct:
+                    instrument.sync_rtc_to_gps_time(gps.timestruct)
                 system_update_period_start = time.monotonic()
+
             loop_stop = time.monotonic()
             loop_time = loop_stop - loop_start
             #print("loop time {} s".format( loop_time ))

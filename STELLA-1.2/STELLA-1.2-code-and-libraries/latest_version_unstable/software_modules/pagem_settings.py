@@ -286,6 +286,7 @@ class Settings_Page( Page ):
                     self.instrument.serial_interval_s = self.intervals[self.serial_interval_index]
                 if self.selection == 4:
                     self.instrument.wifi_enabled = not self.instrument.wifi_enabled
+                    # BUG? this happens before "pressed", if just scrolling, this causes an action!
                 if self.selection == 5:
                     self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             self.instrument.encoder_increment = 0
