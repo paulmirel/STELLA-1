@@ -1,5 +1,5 @@
 # Lab_Spec page
-# version 2.3
+# version 2.4
 # Copyright NASA 2026 under MIT open source license
 # Author Paul Mirel
 
@@ -73,15 +73,16 @@ class Lab_Spec_Page( Page ):
         self.mmt_interval = 10
         self.repetitions = 4 # including source_off mmt
         self.lamp_on = False
-        self.display_data = []
+        self.display_data = [(""),(""),("")]
         self.supply_5V.disable()
         self.last_lamp_currents = []
         self.measurement_lists = []
         self.lines_per_block = 10
+        self.low_current_warning_threshold_mA = 0.01
         self.lamps = [("488nm",3,2),("365nm",1,0),("640nm",7,6),("x_wht",2,6),("r_wht",2,6)] #("lamp designation", chA_index, chB_index)
         self.lamp_in_use = 0
         self.number_of_lamps = len( self.lamps )
-        self.plot_register = ["B--","M--", 0,0,0,0,0,0,0,0]
+        self.plot_register = ["--","--", 0,0,0,0,0,0,0,0]
         self.mmt_register = [self.plot_register, self.plot_register, self.plot_register]
 
     def plot(self):
@@ -100,6 +101,8 @@ class Lab_Spec_Page( Page ):
         self.y_max_area.text = "{}".format(plot_ymax)
         self.y_min_area.text = "{}".format(plot_ymin)
         yspan_pix = self.ybottom_pix - self.ytop_pix
+        if plot_yspan < 1:
+            plot_yspan = 1
         pix_per_val = yspan_pix/ plot_yspan
         y_pix = []
         for index in range (0, len(plot_yvalues)):
@@ -175,6 +178,38 @@ class Lab_Spec_Page( Page ):
                 self.value_areas[8].color_index = 9
         stop = time.monotonic()
         #print( "update values takes {}s".format(stop-start))
+        for index in range (0, len(self.mmt_register)): #[self.plot_register, self.plot_register, self.plot_register]
+            max_value = max(self.mmt_register[index][2:])
+            a_value = self.mmt_register[index][self.chA_index+2]
+            b_value = self.mmt_register[index][self.chB_index+2]
+            if b_value < 1:
+                b_value = 1
+            a_b_ratio = round(a_value/b_value,1)
+            if a_b_ratio < 10:
+                pass
+            else:
+                a_b_ratio = int(a_b_ratio)
+            pct_dr = int(round( 100* max_value/65535, 1))
+            if pct_dr<100:
+                pass
+            else:
+                pct_dr = "sa"
+            if self.mmt_number>99:
+                mmt_text = "{}".format(self.mmt_number)
+            else:
+                mmt_text = "M{:02}".format(self.mmt_number)
+            self.display_data[index] = (self.mmt_register[index][1], "{:5d}".format(a_value), "{:5d}".format(b_value), a_b_ratio, pct_dr)
+
+
+
+
+
+        location = 14
+        for y in range (0,len(self.display_data)):
+            for x in range (0, 5):
+                self.text_areas[location].text = "{}".format(self.display_data[y][x])
+                location += 1
+
 
     def action( self ):
         if self.instrument.encoder_increment != 0:
@@ -333,8 +368,6 @@ class Lab_Spec_Page( Page ):
             self.mmt_register.insert(0,self.plot_register)
             self.mmt_register = self.mmt_register[:3]
 
-
-
             self.measurement_lists.append(avg_column)
             dr_column = []
             dr_column.append(" ")
@@ -417,54 +450,8 @@ class Lab_Spec_Page( Page ):
                     print( self.measurement_lists[col][row], end=", " )
                 print()
 
-
-
-
-
-
-            b_value = avg_column[self.chB_index+1]
-            if b_value < 1:
-                b_value = 1
-            a_b_values = avg_column[self.chA_index+1], b_value
-            if a_b_values[1] < 1:
-                a_b_values[1] = 1
-            a_b_ratio = round(a_b_values[0]/a_b_values[1],1)
-            pct_dr = int(round( 100* max(a_b_values)/65535, 1))
-            if saturated:
-                pct_dr = "sa"
-            print( self.mmt_number, a_b_values[0], a_b_values[1],a_b_ratio,pct_dr)
-            if self.mmt_number>99:
-                mmt_text = "{}".format(self.mmt_number)
-            else:
-                mmt_text = "M{:02}".format(self.mmt_number)
-
-
-            # so, it looks like I'm only keeping the numbers on the display.
-            # want to change that: keep the raw count values for all channels for the last three mmts along with batch and mmt number.
-            # that'll be 8 values plus two tracking numbers, so 10x3 = 30 numbers. Not memory intensive.
-            # mmt number should be a string, so it can be M00, or R00 for a reference mmt.
-            # need another register for the reference mmt in use. If we zero it out when not using it, we can keep the math the same. A-0 = A
-            # if any of the resulting values are negative, set the 0 y value in the middle of the plot. If they are all positive, set it near the bottom.
-            # if the scale shows values close to saturation, put a red bar across the top, with the bottom of it correctly showing the saturation value on the plot.
-            # recalculate the a/b numbers on the fly, and redisplay if the choices change.
-
-            if True:
-                if saturated:
-                    self.display_data.insert(0,(mmt_text, "{:4d}".format(a_b_values[0]), "{:4d}".format(a_b_values[1]), a_b_ratio, "sa"))
-                else:
-                    self.display_data.insert(0,(mmt_text, "{:4d}".format(a_b_values[0]), "{:4d}".format(a_b_values[1]), a_b_ratio, "{:2d}".format(pct_dr)))
-                self.display_data = self.display_data[:3] # list slicing, keep only first three elements
-                #update these only on a new mmt having been made
-                location = 14
-                for y in range (0,len(self.display_data)):
-                    for x in range (0, 5):
-                        self.text_areas[location].text = "{}".format(self.display_data[y][x])
-                        location += 1
-            # save data out to display register and to file_write_request
-            # use the same file, but write a header line before every block
-            # then clear the measurement_lists
             self.measurement_lists = []
-            if self.last_lamp_current_mA < 0.01: self.status_index = 2
+            if self.last_lamp_current_mA < self.low_current_warning_threshold_mA: self.status_index = 2
             measure_stop_free = gc.mem_free()
         else:
             print("error, not available to measure")
