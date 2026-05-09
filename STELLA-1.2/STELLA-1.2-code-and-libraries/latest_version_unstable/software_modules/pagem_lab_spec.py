@@ -86,9 +86,18 @@ class Lab_Spec_Page( Page ):
         self.mmt_register = [self.plot_register, self.plot_register, self.plot_register]
         self.instruction_list = ["Measure & log", "Measure reference", "Clear ref register"]
         self.instruction_index = 0
+        self.m_or_r = "M"
+        self.reference_register = [0,0,0,0,0,0,0,0]
+        self.subtract_reference_to_plot = False
 
     def plot(self):
         self.plot_register = self.mmt_register[self.selection-9]
+        print("register contents")
+        print(self.plot_register)
+        print(self.reference_register)
+        if False: #self.subtract_reference_to_plot: #TBD get this working correctly, don't subtract ref from ref, don't mess up the display data
+            for index in range (0, len(self.reference_register)):
+                self.plot_register[index+2] = self.plot_register[index+2] - self.reference_register[index]
         print(self.plot_register)
         plot_yvalues = self.plot_register[2:]
         plot_ymax = max(plot_yvalues)
@@ -100,6 +109,7 @@ class Lab_Spec_Page( Page ):
             self.plot_title_area.text = "{}:{}:SATURATED".format(self.plot_register[0], self.plot_register[1])
         else:
             self.plot_title_area.text = "{} : {} : {}% dr".format(self.plot_register[0], self.plot_register[1],dr)
+        #TBD add -Rxx to plot title
         self.y_max_area.text = "{}".format(plot_ymax)
         self.y_min_area.text = "{}".format(plot_ymin)
         yspan_pix = self.ybottom_pix - self.ytop_pix
@@ -199,7 +209,7 @@ class Lab_Spec_Page( Page ):
             if self.mmt_number>99:
                 mmt_text = "{}".format(self.mmt_number)
             else:
-                mmt_text = "M{:02}".format(self.mmt_number)
+                mmt_text = "{}{:02}".format(self.m_or_r, self.mmt_number)
             self.display_data[index] = (self.mmt_register[index][1], "{:5d}".format(a_value), "{:5d}".format(b_value), a_b_ratio, pct_dr)
         location = 14
         for y in range (0,len(self.display_data)):
@@ -272,9 +282,13 @@ class Lab_Spec_Page( Page ):
                     self.mmt_sequence_start = time.monotonic()
                     self.run_measurement_sequence()
                 if self.instruction_index == 1:
-                    print("make a reference mmt, call it R--")
+                    self.m_or_r = "R"
+                    self.subtract_reference_to_plot = True
+                    self.mmt_sequence_start = time.monotonic()
+                    self.run_measurement_sequence()
                 if self.instruction_index == 2:
-                    print("clear the reference register")
+                    self.reference_register = [0,0,0,0,0,0,0,0]
+                    self.subtract_reference_to_plot = False
             elif self.selection == 15:
                 print("next")
 
@@ -335,7 +349,7 @@ class Lab_Spec_Page( Page ):
             mmt_time = self.instrument.iso_time
             dec_time = self.instrument.decimal_time
             note = "note goes here"
-            instruction = "instruction goes here"
+            instruction = self.instruction_list[self.instruction_index]
             lamp_wl = self.lamps[self.lamp_in_use][0]
             #TBD lamp_pn = "GC VJLPL1.13-KQKS-V2V3-1"
             light_path = self.lamps[self.lamp_in_use][1]
@@ -346,7 +360,7 @@ class Lab_Spec_Page( Page ):
             # move previous data down one line on the display
             tag_column = []
             for row in range (0,self.lines_per_block):
-                tag_column.append("B{:02}_M{:02}_{:02}".format(self.instrument.batch_number, self.mmt_number, row))
+                tag_column.append("B{:02}_{}{:02}_{:02}".format(self.instrument.batch_number, self.m_or_r, self.mmt_number, row))
             self.measurement_lists.append(tag_column)
             dwell_s = 0.5 ## to allow chemistry to respond to excitation and to separate measurements, both for consistency
             self.measuring = True
@@ -377,10 +391,7 @@ class Lab_Spec_Page( Page ):
 
             self.plot_register = []
             self.plot_register.append("B{:02}".format(self.instrument.batch_number))
-            if True:
-                self.plot_register.append("M{:02}".format(self.mmt_number))
-            else:
-                self.plot_register.append("R{:02}".format(self.mmt_number))
+            self.plot_register.append("{}{:02}".format(self.m_or_r, self.mmt_number))
             for index in range(1, 9):
                 self.plot_register.append(avg_column[index])
             #insert the plot register in the 0th position of the mmt_register, shift the others, and trim the list to 3
@@ -472,9 +483,16 @@ class Lab_Spec_Page( Page ):
             self.measurement_lists = []
             if self.last_lamp_current_mA < self.low_current_warning_threshold_mA: self.status_index = 2
             measure_stop_free = gc.mem_free()
+            if self.m_or_r == "R":
+                for index in range(1, 9):
+                    self.reference_register[index-1] = avg_column[index]
+                print("set the reference register")
+                print(self.reference_register)
+                self.m_or_r = "M"
         else:
             print("error, not available to measure")
             #set measure button to grey
+
 
     def measure(self):
         timeout_interval = 5
@@ -517,11 +535,6 @@ class Lab_Spec_Page( Page ):
             if readout_list[index] < 0:
                 readout_list[index] = 0
         return readout_list
-
-
-
-
-
 
     def set_lamp_current(self, req_index):
         self.all_lamps_off()
