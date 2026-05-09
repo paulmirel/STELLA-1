@@ -20,7 +20,7 @@ class Main_Menu_Page( Page ):
         self.field_selected = False
     def make_group( self ):
         #menu_list = "Light", "Heat", "*Air", "*Plants", "Soil", "Lab_Spec", "Time & Place", "Sensors"
-        menu_list = "Light", "Heat", "*Air", "*Soil", "*Plants", "Lab_Spec", "Time & Place", "Sensors"
+        menu_list = "Remote Sense", "Thermal", "Ambient Air", "*Soil", "*Plants", "Lab Spec", "Time & Place", "Sensors"
         menu_color_list = 32, 11, 12, 24, 20, 29, 14, 21, 19, 19, 19
         self.group = displayio.Group()
         start_y = 54
