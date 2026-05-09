@@ -11,7 +11,7 @@ serial_out_index = 2 #0 text, 1 json, 2 none
 
 serial_interval_s = 10.0 + ( 0 * 60 ) + ( 0 * 3600 ) + ( 0 * 3600 * 24 )
 
-wifi_enabled = True #False
+wifi_enabled = False #True #False
 
 start_on_page = "main" # list choices here
 

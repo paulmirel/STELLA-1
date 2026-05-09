@@ -84,6 +84,8 @@ class Lab_Spec_Page( Page ):
         self.number_of_lamps = len( self.lamps )
         self.plot_register = ["--","--", 0,0,0,0,0,0,0,0]
         self.mmt_register = [self.plot_register, self.plot_register, self.plot_register]
+        self.instruction_list = ["Measure & log", "Measure reference", "Clear ref register"]
+        self.instruction_index = 0
 
     def plot(self):
         self.plot_register = self.mmt_register[self.selection-9]
@@ -199,16 +201,12 @@ class Lab_Spec_Page( Page ):
             else:
                 mmt_text = "M{:02}".format(self.mmt_number)
             self.display_data[index] = (self.mmt_register[index][1], "{:5d}".format(a_value), "{:5d}".format(b_value), a_b_ratio, pct_dr)
-
-
-
-
-
         location = 14
         for y in range (0,len(self.display_data)):
             for x in range (0, 5):
                 self.text_areas[location].text = "{}".format(self.display_data[y][x])
                 location += 1
+        self.text_areas[29].text = self.instruction_list[self.instruction_index]
 
 
     def action( self ):
@@ -250,6 +248,8 @@ class Lab_Spec_Page( Page ):
                         self.chB_index = self.number_of_channels -1
                     if self.chB_index < 0:
                         self.chB_index = 0
+                if self.selection == 12:
+                    self.instruction_index = ( self.instruction_index + self.instrument.encoder_increment)  % len( self.instruction_list )
             self.instrument.encoder_increment = 0
             self.update_values()
 
@@ -265,6 +265,20 @@ class Lab_Spec_Page( Page ):
             elif self.selection == 2:
                 self.mmt_sequence_start = time.monotonic()
                 self.run_measurement_sequence()
+            elif self.selection == 13:
+                print("previous")
+            elif self.selection == 14:
+                if self.instruction_index == 0:
+                    self.mmt_sequence_start = time.monotonic()
+                    self.run_measurement_sequence()
+                if self.instruction_index == 1:
+                    print("make a reference mmt, call it R--")
+                if self.instruction_index == 2:
+                    print("clear the reference register")
+            elif self.selection == 15:
+                print("next")
+
+
 
 
             else:
@@ -301,6 +315,11 @@ class Lab_Spec_Page( Page ):
                         self.value_areas[8].color_index = self.field_selected_color_index
                     else:
                         self.value_areas[8].color_index = self.field_not_selected_color_index
+                if self.selection == 12:
+                    if self.field_selected:
+                        self.value_areas[12].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[12].color_index = self.field_not_selected_color_index
             self.instrument.button_pressed = False
             self.update_values()
 
@@ -845,7 +864,7 @@ class Lab_Spec_Page( Page ):
 
         line_y = view_B_line_y+ line_spacing - 10
         line_names = ["", "", "", "" ]
-        line_values = ["*instruction", "<", "DO", ">"]
+        line_values = ["---", "<", "DO", ">"]
         line_selectable = [ True, True, True, True ]
         line_widths = [232, 24, 38, 24]
         x = start_x
