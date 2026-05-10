@@ -3,6 +3,6 @@
 
 import microcontroller
 
-UID = int.from_bytes(microcontroller.cpu.uid, "big") % 10000
+UID = int.from_bytes(microcontroller.cpu.uid, "big") % 100000
 
 print("unique identifier (UID) : {0}".format( UID ))
