@@ -481,12 +481,12 @@ class Instrument:
         self.device_type = DEVICE_TYPE
         self.uid = UID
         self.buzzer = buzzer
-        self.serial_out_index = user_settings.serial_out_index
+        self.serial_out_index = getattr(user_settings, "serial_out_index", 0)
         self.serial_output_choices = ["text", "json-TBD", "none"]
-        self.sample_interval_s = user_settings.sample_interval_s
-        self.burst_count = user_settings.burst_count
-        self.serial_interval_s = user_settings.serial_interval_s
-        self.wifi_enabled = user_settings.wifi_enabled
+        self.sample_interval_s = getattr(user_settings, "sample_interval_s", 3)
+        self.burst_count = getattr(user_settings, "burst_count", 2)
+        self.serial_interval_s = getattr(user_settings, "serial_interval_s", 10)
+        self.wifi_enabled = getattr(user_settings, "wifi_enabled", False)
         self.take_burst = False
         self.burst_counter = 0
         self.pages_list = []
@@ -506,7 +506,7 @@ class Instrument:
         self.filename = None
         self.sensors_present = []
         self.spectral_sensors_present = []
-        self.record = user_settings.record_on_startup
+        self.record = getattr(user_settings, "record_on_startup", False)
         self.session_tag = "{}-{}-session-".format(self.uid, self.iso_time)
         self.measurement_counter = 0
         self.rotary_encoder = devicem_rotary_encoder.initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
