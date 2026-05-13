@@ -5,6 +5,9 @@ Exports socket_pool(), connected()
 You must setup the file CIRCUITPY/settings.toml:
     CIRCUITPY_WIFI_SSID="Your WiFi SSID Here"
     CIRCUITPY_WIFI_PASSWORD="Your WiFi Password Here"
+    # optionally, more credentials, up to 20
+    CIRCUITPY_WIFI_SSID1="another WiFi SSID Here"
+    CIRCUITPY_WIFI_PASSWORD1="another WiFi Password Here"
 
 # Usage
 
@@ -26,8 +29,29 @@ DEBUG=False # verbosity
 
 # can't do wifi if no ssid/password
 import os,sys
-ssid = os.getenv("CIRCUITPY_WIFI_SSID", None)
-password = os.getenv("CIRCUITPY_WIFI_PASSWORD", None)
+from collections import OrderedDict
+
+
+def _credentials():
+    """
+    return a list of (ssid,password, n) from settings.toml
+    for keys
+            CIRCUITPY_WIFI_SSID, CIRCUITPY_WIFI_PASSWORD
+    then 
+            CIRCUITPY_WIFI_SSID{n}, CIRCUITPY_WIFI_PASSWORD{n}
+            for n 0..20
+    """
+    credentials = OrderedDict()
+    for n in range(-1, 21):
+        # -1 means no {n} suffix, allowing 0 or 1 as base suffix
+        suffix = str(n) if n >= 0 else ''
+        if ssid := os.getenv(f"CIRCUITPY_WIFI_SSID{suffix}", None):
+            if password := os.getenv(f"CIRCUITPY_WIFI_PASSWORD{suffix}", None):
+                credentials[ssid] = (password, n)
+    print(f"wifi credentials {len(credentials)}")
+    return credentials
+
+credentials = _credentials()
 wifi = None # the module when we import it
 
 class NullWifi:
@@ -39,7 +63,7 @@ class NullWifi:
         pass
 
 # Password can be None for some ssid's (distinct from the empty string ""!)
-if ssid==None:
+if not credentials:
     print("No wifi: no settings.toml `CIRCUITPY_WIFI_SSID` (and maybe CIRCUITPY_WIFI_PASSWORD)")
     # GC us
     def initialize(instrument):
@@ -109,19 +133,20 @@ else:
 
             if self.first_time or (not self.is_connected() and self.connect_retry()):
                 try:
-                    try:
-                        # Connect to the Wi-Fi network
-                        wifi.radio.connect(ssid, password)
-                        print(f"Wifi {ssid} : {wifi.radio.ipv4_address}")
-                        self.publish( 'wifi_enabled', True )
-                        return True
+                    for ssid,(password,_) in credentials.items():
+                        try:
+                            # Connect to the Wi-Fi network
+                            wifi.radio.connect(ssid, password)
+                            print(f"Wifi {ssid} : {wifi.radio.ipv4_address}")
+                            self.publish( 'wifi_enabled', True )
+                            return True
 
-                    except OSError as e:
-                        if 'No network with that ssid' in str(e):
-                            if self.first_time or DEBUG:
-                                print(f"no wifi w/ssid {ssid}")
-                        else:
-                            raise e
+                        except OSError as e:
+                            if 'No network with that ssid' in str(e):
+                                if self.first_time or DEBUG:
+                                    print(f"no wifi w/ssid {ssid}")
+                            else:
+                                raise e
                 finally:
                     self.first_time = False
             else:
@@ -153,8 +178,10 @@ if __name__ == "__main__":
     print("Standalone test")
     DEBUG=True
     # no initialize()
+    class Instrument:
+        wifi_enabled = True
     if 'socket_pool': # proxy for "if devices.wifi"
-        initialize(None)
+        initialize(Instrument())
         while True:
             wifi_module.update()
     else:
