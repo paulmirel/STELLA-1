@@ -26,6 +26,7 @@ if inet_lan:
     from software_modules import file_utils
 
     try:
+        import adafruit_httpserver
         from adafruit_httpserver import ChunkedResponse, Request, Response, Server, MIMETypes
     except ImportError as e:
         if not "adafruit_httpserver" in str(e):
