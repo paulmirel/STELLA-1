@@ -109,7 +109,7 @@ except ImportError as e:
                 pass
         class ntp:
             # the only api from code.py
-            def initialize(instrument):
+            def initialize():
                 return NTPTime()
     else:
         raise e
