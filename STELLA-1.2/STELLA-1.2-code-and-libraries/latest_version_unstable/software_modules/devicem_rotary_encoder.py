@@ -6,7 +6,7 @@ import rotaryio
 import digitalio
 import time
 from .classm_device import Device
-            
+
 def increment_select( page ):
     select_value = (page.select_value + encoder_move) % page.number_of_select_positions
 
@@ -39,10 +39,11 @@ class Rotary_Encoder( Device ):
             if not self.encoder_flag:
                 if self.last_position is not None and self.position != self.last_position:
                     self.last_value = self.position - self.last_position
-                    if self.last_value > 1:
-                        self.last_value = 1
-                    if self.last_value < -1:
-                        self.last_value = -1
+                    if False:
+                        if self.last_value > 1:
+                            self.last_value = 1
+                        if self.last_value < -1:
+                            self.last_value = -1
                     if self.last_value != 0:
                         self.encoder_flag = True
                 self.last_position = self.position
