@@ -22,10 +22,11 @@ except ImportError as e:
     print("Can't start http server, no wifi module")
 
 if inet_lan:
-    import os,time,re
+    import time,re
     from software_modules import file_utils
 
     try:
+        import adafruit_httpserver
         from adafruit_httpserver import ChunkedResponse, Request, Response, Server, MIMETypes
     except ImportError as e:
         if not "adafruit_httpserver" in str(e):
@@ -143,11 +144,10 @@ def _startup(n, wifi_enabled):
         if was_connected:
             HTTPServer.stop()
         was_connected = False
-        print(f"http disconnected (wifi|inet_lan)")
+        print("http disconnected (wifi|inet_lan)")
 
 inet_lan.wifi_module.subscribe( _startup )
 
-import sys
 def update():
     global was_connected
 
@@ -167,6 +167,14 @@ def update():
                     pass
                 else:
                     raise e
+            except adafruit_httpserver.exceptions.InvalidPathError as e:
+                # file-not-exists, backslash, parent-dir
+                print(str(e))
+                # continue
+            except BrokenPipeError:
+                # safe to ignore
+                pass
+
         else:
             url = f"http://{inet_lan.wifi_module.ipv4_address()}:{Port}"
             print(f"HTTP for sd-card starting as {url}")
@@ -176,7 +184,7 @@ def update():
         if was_connected:
             HTTPServer.stop()
             was_connected = False
-            print(f"http disconnected (wifi|inet_lan)")
+            print("http disconnected (wifi|inet_lan)")
 
 if __name__ == "__main__":
     print("Standalone test")
@@ -190,4 +198,3 @@ if __name__ == "__main__":
             update()
     else:
         print("Exit, no inet resource")
-
