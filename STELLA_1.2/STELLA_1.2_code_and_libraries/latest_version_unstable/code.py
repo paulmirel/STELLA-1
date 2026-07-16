@@ -388,9 +388,6 @@ def main():
                     functionm_file.write_line( instrument, system_log, sensor.log() )
                     instrument.handle_inputs()
                 instrument.measurement_counter += 1
-                if instrument.serial_out:
-                    sensor.printlog()
-                    instrument.handle_inputs()
                 sample_stop_time = time.monotonic()
                 sample_time = sample_stop_time - sample_start_time
                 #print( "sample_time, one sensor, s = ", round(sample_time,3))
