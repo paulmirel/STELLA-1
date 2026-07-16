@@ -62,7 +62,11 @@ def initialize(port=80):
     HTTPServer = Server(inet_lan.wifi_module.socket_pool(), MOUNT, debug=not not DEBUG)
 
     def isodate( seconds ):
-        ts = time.localtime(seconds)
+        try:
+            ts = time.localtime(0)
+        except (OverflowError, ValueError):
+            print("Bad timestamp on a file, re-copy the sdcard file on a real computer")
+            return "1970-01-01T00:00:00" # actually "BAD TIMESTAMP". Someone should fix the file.
         return f"{ts.tm_year:04d}-{ts.tm_mon:02d}-{ts.tm_mday:02d}T{ts.tm_hour:02d}:{ts.tm_min:02d}:{ts.tm_sec:02d}"
 
     # / would normally be /sd/index.html, but we want to generate that
