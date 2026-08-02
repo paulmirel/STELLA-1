@@ -469,7 +469,7 @@ class AS7341:  # pylint:disable=too-many-instance-attributes, no-member
         # Enable SP_EN bit
         self._color_meas_enabled = True
         self._low_channels_configured = True
-        #self._wait_for_data()
+        #self._wait_for_data() #### makes this non-blocking
 
     def _configure_f5_f8(self) -> None:
         """Configure the sensor to read from elements F5-F8, Clear, and NIR"""
@@ -494,7 +494,7 @@ class AS7341:  # pylint:disable=too-many-instance-attributes, no-member
         # Enable SP_EN bit
         self._color_meas_enabled = True
         self._high_channels_configured = True
-        #self._wait_for_data()
+        #self._wait_for_data() #### makes this non-blocking
 
     @property
     def flicker_detected(self) -> Optional[int]:
