@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2022 Alec Delaney, written for Adafruit Industries
+# SPDX-FileCopyrightText: Copyright (c) 2026 Liz Clark for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
+
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+    "setuptools-scm",
+]
+
+[project]
+name = "adafruit-circuitpython-stcc4"
+description = "CircuitPython driver for the STCC4 and SHT41 - CO2, Temperature and Humidity Sensor"
+version = "0.0.0+auto.0"
+readme = "README.rst"
+authors = [
+    {name = "Adafruit Industries", email = "circuitpython@adafruit.com"}
+]
+urls = {Homepage = "https://github.com/adafruit/Adafruit_CircuitPython_STCC4"}
+keywords = [
+    "adafruit",
+    "blinka",
+    "circuitpython",
+    "micropython",
+    "stcc4",
+    "STCC4,",
+    "SHT41,",
+    "CO2,",
+    "temperature,",
+    "humidity,",
+    "sensor,",
+    "environmental",
+]
+license = "MIT"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: System :: Hardware",
+    "Programming Language :: Python :: 3",
+]
+dynamic = ["dependencies", "optional-dependencies"]
+
+[tool.setuptools]
+# TODO: IF LIBRARY FILES ARE A PACKAGE FOLDER,
+#       CHANGE `py_modules = ['...']` TO `packages = ['...']`
+py-modules = ["adafruit_stcc4"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+optional-dependencies = {optional = {file = ["optional_requirements.txt"]}}
