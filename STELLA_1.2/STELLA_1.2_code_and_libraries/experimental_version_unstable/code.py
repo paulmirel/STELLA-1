@@ -58,6 +58,7 @@ print( devices_present_hex )
 # TBD 0x37 seesaw soil_cap Soil capacitance sensor
 # 0x38 focaltouch   Capacitive touch screen sensor
 # 0x39 as7341   Visible spectral sensor
+# 0x39 as7343   VNIR spectral sensor (address collision)
 # 0x44 hdc302x  Precision temperature and humidity sensor
 # 0x48 ads1015  Analog to digital converter, 12 bits, 4 channels
 # 0x49 as7265x  Visible and Near Infrared spectral sensor
@@ -185,7 +186,7 @@ def main():
             print("as7331 found")
             from software_modules import spectralm_as7331 #UV
             as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
-        if ('0x39') in devices_present_hex:
+        if False: #('0x39') in devices_present_hex:
             print("as7341 found")
             from software_modules import spectralm_as7341 #VIS
             as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
@@ -271,12 +272,12 @@ def main():
         pass #need library
         #from software_modules import devicem_soil_con
         #soil_conductance_sensor = initialize_soil_conductance_sensor( instrument )
-    if ('0x29') in devices_present_hex:
+    if False:#('0x29') in devices_present_hex:
         from software_modules import devicem_vl53l1x
         vl53l1x_4m_range_sensor = devicem_vl53l1x.initialize_vl53l1x_4m_range_sensor( instrument )
 
     analog_in_0 = AnalogIn(board.A0)
-    if mlx90614_surface_thermometer.pn and as7265x_spectrometer.pn:
+    if mlx90614_surface_thermometer.pn: ##TBD recognize RS and RS-B plugins## and as7265x_spectrometer.pn:
         from software_modules import devicem_lv_ez_rangefinder
         lv_ez_rangefinder = devicem_lv_ez_rangefinder.initialize( instrument, analog_in_0, supply_5V )
         supply_5V.enable()
