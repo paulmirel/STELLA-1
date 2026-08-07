@@ -9,14 +9,13 @@ from .classm_device import Device
 
 
 def initialize_as7341_spectrometer( instrument ):
-    as7341_spectrometer = Null_as7341_Spectrometer()
+    as7341_spectrometer = False# Null_as7341_Spectrometer()
     try:
         as7341_spectrometer = as7341_Spectrometer( instrument )
         instrument.welcome_page.announce( "initialize_as7341_spectrometer" )
         instrument.spectral_sensors_present.append( as7341_spectrometer )
     except Exception as err:
-        print( "as7341_spectrometer", err )
-        pass
+        print( "as7341_spectrometer failed to initialize" )
     return as7341_spectrometer
 
 

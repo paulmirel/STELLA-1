@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "1.3.0"
+SOFTWARE_VERSION_NUMBER = "1.3.1x"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2025 under MIT open source license
@@ -186,13 +186,20 @@ def main():
             print("as7331 found")
             from software_modules import spectralm_as7331 #UV
             as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
-        if False: #('0x39') in devices_present_hex:
-            print("as7341 found")
+        if ('0x39') in devices_present_hex:
             from software_modules import spectralm_as7341 #VIS
             as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
-            lab_spec_present[0] = True
+            if as7341_spectrometer:
+                lab_spec_present[0] = True
+                print("as7341 found")
+            else:
+                print("might it be an as7343?")
+                from software_modules import spectralm_as7343 #VNIR
+                as7343_spectrometer = spectralm_as7343.initialize_as7343_spectrometer( instrument )
+                lab_spec_present[0] = True
         else:
             as7341_spectrometer = False
+            as7343_spectrometer = False
         if ('0x49') in devices_present_hex:
             print("as7265x found ")
             from software_modules import spectralm_as7265x #VIS+NIR
