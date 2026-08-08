@@ -58,14 +58,12 @@ class Spectral_Channel( Device ):
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
         bandwidth_nm = self.bandwidth_nm
         normal_ct_per_s_nm = round(1000*raw/(gain*int_time_ms*bandwidth_nm),3)
-        irradiance = round(raw/self.sensor_unit.steno_cal_counts_per_irradiance[self.index],3)
         chip_temp_C = 0
         self.values = [self.wavelength_nm,
                         gain,
                         int_time_ms,
                         raw,
                         normal_ct_per_s_nm,
-                        irradiance,
                         bandwidth_nm,
                         chip_temp_C]
 
@@ -84,33 +82,25 @@ class as7343_Spectrometer( Device ):
         self.instrument = instrument
         self.choice_label = "as7343 VNIR"
         print("got this far")
-        self.wavelength_bands_nm = tbd
-        self.bandwidths_nm = tbd
-        self.chip_number = 1, 1, 1, 1, 1, 1, 1, 1
-
-
-
-        if False:
-
-            self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
-            self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
-            self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
-            self.calibration_error = 0.6
-            self.irradiance = [0,0,0,0,0,0,0,0]
-            self.dict_stenocal = {}
-            self.swob.led_current = 50
-            self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
-            self.gain_index = 5
-            self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000]
-            self.integration_time_number_of_choices = len(self.integration_time_ms_list)
-            self.integration_time_index = 8
-            self.lamp_selection_list = ["Vis mA"]
-            self.current_index = 0
-            self.lamp_current_mA_list = [0,2,4,6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100 ]
-            self.data_counts = [0,0,0,0,0,0,0,0]
-            if self.swob:
-                self.set_gain( self.gain_index )
-                self.set_integration_time( self.integration_time_index )
+        self.wavelength_bands_nm = 405,425,450,475,515,555,550,600,640,690,745,855
+        self.bandwidths_nm =        30, 22, 55, 30, 40,100, 35, 80, 50, 55, 60, 54
+        self.chip_number =           1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1
+        self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
+        self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
+        #self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
+        self.swob.led_current = 50
+        self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 ]
+        self.gain_index = 5
+        self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000]
+        self.integration_time_number_of_choices = len(self.integration_time_ms_list)
+        self.integration_time_index = 8
+        self.lamp_selection_list = ["VNIR mA"]
+        self.current_index = 0
+        self.lamp_current_mA_list = [0,2,4,6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100 ]
+        self.data_counts = [0,0,0,0,0,0,0,0]
+        if self.swob:
+            self.set_gain( self.gain_index )
+            self.set_integration_time( self.integration_time_index )
 
     def make_spectral_channels( self ):
         index = 0
@@ -149,7 +139,7 @@ class as7343_Spectrometer( Device ):
 
     def set_gain(self, index):
         # library sets gain to 128
-        gain_constant_list = [ AS7343_Gain.GAIN_0_5X, AS7343_Gain.GAIN_1X, AS7343_Gain.GAIN_2X, AS7343_Gain.GAIN_4X, AS7343_Gain.GAIN_8X, AS7343_Gain.GAIN_16X, AS7343_Gain.GAIN_32X, AS7343_Gain.GAIN_64X, AS7343_Gain.GAIN_128X, AS7343_Gain.GAIN_256X, AS7343_Gain.GAIN_512X ]
+        gain_constant_list = [AS7343_Gain.X0_5,AS7343_Gain.X1,AS7343_Gain.X2,AS7343_Gain.X4,AS7343_Gain.X8,AS7343_Gain.X16,AS7343_Gain.X32,AS7343_Gain.X64,AS7343_Gain.X128,AS7343_Gain.X256,AS7343_Gain.X512,AS7343_Gain.X1024,AS7343_Gain.X2048]
         try:
             self.swob._gain = gain_constant_list[ index ]
             return self.gain_list[ self.swob._gain ]
