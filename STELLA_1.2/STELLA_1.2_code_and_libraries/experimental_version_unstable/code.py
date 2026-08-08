@@ -193,10 +193,11 @@ def main():
                 lab_spec_present[0] = True
                 print("as7341 found")
             else:
-                print("might it be an as7343?")
                 from software_modules import spectralm_as7343 #VNIR
                 as7343_spectrometer = spectralm_as7343.initialize_as7343_spectrometer( instrument )
-                lab_spec_present[0] = True
+                if as7343_spectrometer:
+                    print("as7343 found")
+                    lab_spec_present[0] = True
         else:
             as7341_spectrometer = False
             as7343_spectrometer = False

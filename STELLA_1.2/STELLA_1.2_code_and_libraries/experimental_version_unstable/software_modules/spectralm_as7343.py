@@ -82,29 +82,35 @@ class as7343_Spectrometer( Device ):
     def __init__( self, instrument ):
         super().__init__(name = "as7343_spectrometer", pn = "as7343", address = 0x39, swob = AS7343( instrument.i2c_bus ))
         self.instrument = instrument
-        self.choice_label = "as7343 VIS"
-        self.wavelength_bands_nm = 415, 445, 480, 515, 555, 590, 630, 682
-        self.bandwidths_nm = 26, 30, 36, 39, 39, 40, 50, 52
+        self.choice_label = "as7343 VNIR"
+        print("got this far")
+        self.wavelength_bands_nm = tbd
+        self.bandwidths_nm = tbd
         self.chip_number = 1, 1, 1, 1, 1, 1, 1, 1
-        self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
-        self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
-        self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
-        self.calibration_error = 0.6
-        self.irradiance = [0,0,0,0,0,0,0,0]
-        self.dict_stenocal = {}
-        self.swob.led_current = 50
-        self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
-        self.gain_index = 5
-        self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000]
-        self.integration_time_number_of_choices = len(self.integration_time_ms_list)
-        self.integration_time_index = 8
-        self.lamp_selection_list = ["Vis mA"]
-        self.current_index = 0
-        self.lamp_current_mA_list = [0,2,4,6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100 ]
-        self.data_counts = [0,0,0,0,0,0,0,0]
-        if self.swob:
-            self.set_gain( self.gain_index )
-            self.set_integration_time( self.integration_time_index )
+
+
+
+        if False:
+
+            self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
+            self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
+            self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
+            self.calibration_error = 0.6
+            self.irradiance = [0,0,0,0,0,0,0,0]
+            self.dict_stenocal = {}
+            self.swob.led_current = 50
+            self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
+            self.gain_index = 5
+            self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000]
+            self.integration_time_number_of_choices = len(self.integration_time_ms_list)
+            self.integration_time_index = 8
+            self.lamp_selection_list = ["Vis mA"]
+            self.current_index = 0
+            self.lamp_current_mA_list = [0,2,4,6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100 ]
+            self.data_counts = [0,0,0,0,0,0,0,0]
+            if self.swob:
+                self.set_gain( self.gain_index )
+                self.set_integration_time( self.integration_time_index )
 
     def make_spectral_channels( self ):
         index = 0

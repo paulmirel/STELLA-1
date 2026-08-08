@@ -15,7 +15,8 @@ def initialize_as7341_spectrometer( instrument ):
         instrument.welcome_page.announce( "initialize_as7341_spectrometer" )
         instrument.spectral_sensors_present.append( as7341_spectrometer )
     except Exception as err:
-        print( "as7341_spectrometer failed to initialize" )
+        #print( "as7341_spectrometer offline" )
+        pass
     return as7341_spectrometer
 
 
