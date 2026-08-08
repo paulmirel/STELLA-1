@@ -9,7 +9,7 @@ from .classm_device import Device
 
 
 def initialize_as7341_spectrometer( instrument ):
-    as7341_spectrometer = False# Null_as7341_Spectrometer()
+    as7341_spectrometer = False
     try:
         as7341_spectrometer = as7341_Spectrometer( instrument )
         instrument.welcome_page.announce( "initialize_as7341_spectrometer" )
@@ -34,13 +34,12 @@ class Spectral_Channel( Device ):
         super().__init__(name = name, pn = "as7341", address = 0x39, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s_nm", "irradiance", "bandwidth_nm", "chip_temp_C"]
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "ct_per_s_nm", "bandwidth_nm", "chip_temp_C"]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
         self.values = [ self.wavelength_nm,
                         sensor_unit.gain_list[sensor_unit.gain_index],
                         sensor_unit.integration_time_ms_list[sensor_unit.integration_time_index],
-                        0,
                         0,
                         0,
                         self.bandwidth_nm,
@@ -58,7 +57,6 @@ class Spectral_Channel( Device ):
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
         bandwidth_nm = self.bandwidth_nm
         normal_ct_per_s_nm = round(1000*raw/(gain*int_time_ms*bandwidth_nm),3)
-        irradiance = round(raw/self.sensor_unit.steno_cal_counts_per_irradiance[self.index],3)
         chip_temp_C = 0
         self.values = [self.wavelength_nm,
                         gain,
@@ -89,14 +87,6 @@ class as7341_Spectrometer( Device ):
         self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
         self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
         self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
-        #self.tsis_cal_counts_per_irradiance = 1405.9, 2079.6, 2631.6, 3556.8, 4246.0, 5060.6, 6888.9, 9130.9
-        # first principles calibration by Sten Odenwald of NASA Heliophysics
-        # TBD print( "as7341 Sten O cal counts per irradiance at what gain?  TBD " )
-        # WHAT UNITS? Need calibration.
-        self.steno_cal_counts_per_irradiance = 4398.0, 6104.0, 7583.0, 9972.0, 11536.0, 13374.0, 17115.0, 20916.0
-        self.calibration_error = 0.6
-        self.irradiance = [0,0,0,0,0,0,0,0]
-        self.dict_stenocal = {}
         self.swob.led_current = 50
         self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
         self.gain_index = 5
@@ -197,28 +187,3 @@ class as7341_Spectrometer( Device ):
             print( "failed to set current:", err )
             return False
 
-class Null_as7341_Spectrometer(Device):
-    def __init__( self ):
-        super().__init__(name = None, swob = None)
-    def read(self):
-        pass
-    def log(self, value):
-        pass
-    def serial_log(self, wavelength):
-        pass
-    def report(self):
-        pass
-    def printlog(self):
-        pass
-    def lamps_on(self):
-        pass
-    def lamps_off(self):
-        pass
-    def blink(self, duration):
-        pass
-    def get_bandwidth(self, wavelength):
-        pass
-    def header(self):
-        pass
-    def check_gain_ratio(self):
-        pass

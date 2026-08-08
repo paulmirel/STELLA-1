@@ -157,13 +157,11 @@ class Light_Page( Page ):
                     spectral_graph_x_values_nm.append(band)
                     channel_values = data_dict_to_plot.get(band)
                     if channel_values is not None:
-                        spectral_bandwidths_nm.append( channel_values[3] )
+                        spectral_bandwidths_nm.append( channel_values[2] )
                         if units_y == "counts": #["counts", "cts_per_s", "irradiance" ]
                             linear_y_value = channel_values[0]
                         elif units_y == "ct_per_s_nm":
                             linear_y_value = channel_values[1]
-                        elif units_y == "uW_per_cm^2":
-                            linear_y_value = channel_values[2]
                         linear_y_values.append( linear_y_value )
                         linear_y_counts.append(channel_values[0])
                         scale_choice = self.spectral_register.scale_choices[ self.spectral_register.scale_index]

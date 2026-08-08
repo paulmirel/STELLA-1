@@ -295,6 +295,7 @@ def main():
     instrument.welcome_page.announce( "Found {} sensors".format( len(instrument.sensors_present) + len(instrument.spectral_sensors_present)))
 
     for sensor in instrument.spectral_sensors_present:
+        #instrument.sensors_present.append( sensor )
         sensor.make_spectral_channels()
     instrument.make_wavelength_bands_list()
 
@@ -322,7 +323,7 @@ def main():
         lab_spec_page = pagem_lab_spec.make_lab_spec_missing_page( instrument )
     start = time.monotonic()
 
-    if False:#instrument.spectral_sensors_detected and not all(lab_spec_present):
+    if instrument.spectral_sensors_detected and not all(lab_spec_present):
         light_page = pagem_light.make_light_page( instrument )
         exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:
@@ -361,7 +362,7 @@ def main():
     accumulator_cycles = 5
     loop_times = []
 
-    if False:#True: #False: #non-menu startup page
+    if True: #False: #non-menu startup page
         if instrument.spectral_sensors_detected:
             instrument.active_page_number = instrument.pages_dict["Light"]
         if all(lab_spec_present):
@@ -389,6 +390,7 @@ def main():
                 instrument.update_active_page()
                 time.sleep(0.01)
             elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
+                as7343_spectrometer.read()
                 sensor = instrument.sensors_present[sensors_page.sensor_choice]
                 sensor.read()
                 instrument.handle_inputs()
@@ -401,6 +403,7 @@ def main():
                 sample_time = sample_stop_time - sample_start_time
                 #print( "sample_time, one sensor, s = ", round(sample_time,3))
             else:
+                as7343_spectrometer.read()
                 for sensor in instrument.sensors_present:
                     sensor.read()
                     instrument.handle_inputs()

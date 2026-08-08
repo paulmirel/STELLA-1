@@ -3,8 +3,8 @@ DEVICE_TYPE = "as7343_spectral_sensor"
 # Copyright NASA 2026
 # Author Paul Mirel
 
-from adafruit_as7343 import AS7343
-from adafruit_as7343 import Gain as AS7343_Gain
+from adafruit_as7343_modified import AS7343
+from adafruit_as7343_modified import Gain as AS7343_Gain
 from .classm_device import Device
 
 
@@ -34,7 +34,7 @@ class Spectral_Channel( Device ):
         super().__init__(name = name, pn = "as7343", address = 0x39, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s_nm", "irradiance", "bandwidth_nm", "chip_temp_C"]
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "ct_per_s_nm", "bandwidth_nm", "chip_temp_C"]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
         self.values = [ self.wavelength_nm,
@@ -53,7 +53,7 @@ class Spectral_Channel( Device ):
 
 
     def read(self):
-        raw = self.sensor_unit.read_counts_by_index( self.index )
+        raw = self.sensor_unit.data_counts[ self.index ]
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
         bandwidth_nm = self.bandwidth_nm
@@ -81,6 +81,9 @@ class as7343_Spectrometer( Device ):
         super().__init__(name = "as7343_spectrometer", pn = "as7343", address = 0x39, swob = AS7343( instrument.i2c_bus ))
         self.instrument = instrument
         self.choice_label = "as7343 VNIR"
+        self.parameters = [ "all ch" ]
+        self.values = [ "" ]
+        self.readout_order =        12,  6,  0,  7,  8,  1, 15,  2,  9, 13, 14,  3
         self.wavelength_bands_nm = 405,425,450,475,515,555,550,600,640,690,745,855
         self.bandwidths_nm =        30, 22, 55, 30, 40,100, 35, 80, 50, 55, 60, 54
         self.chip_number =           1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1
@@ -108,28 +111,14 @@ class as7343_Spectrometer( Device ):
             spectral_channel = initialize_spectral_channel( name, self, index )
             index += 1
 
-
-    def read_counts_by_index( self, index ):
-        try:
-            if index == 0: counts = self.swob.channel_415nm
-            if index == 1: counts = self.swob.channel_445nm
-            if index == 2: counts = self.swob.channel_480nm
-            if index == 3: counts = self.swob.channel_515nm
-            if index == 4: counts = self.swob.channel_555nm
-            if index == 5: counts = self.swob.channel_590nm
-            if index == 6: counts = self.swob.channel_630nm
-            if index == 7: counts = self.swob.channel_680nm
-            self.data_counts[index] = counts
-            return counts
-        except Exception as err:
-            print( "read channel counts failed: ", err )
-            return False
-
-    def read_counts_all(self):
+    def read(self):
         self.raw = self.swob.all_channels
         self.data_counts = []
-        for item in self.raw:
-            self.data_counts.append(item)
+        for index in range(0, len(self.wavelength_bands_nm)):
+            self.data_counts.append(self.raw[self.readout_order[index]])
+        #print(self.raw)
+        #print(self.data_counts)
+
 
     def get_max_min_counts( self ):
         self.max_counts = max(self.data_counts)
