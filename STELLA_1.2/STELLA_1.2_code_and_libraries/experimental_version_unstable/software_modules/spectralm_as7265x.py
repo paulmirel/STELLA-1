@@ -36,7 +36,7 @@ class Spectral_Channel( Device ):
         super().__init__(name = name, pn = "as7265x", address = 0x49, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "ct_per_s", "irrad_W_per_m2", "bandwidth_nm",
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "ct_per_s", "bandwidth_nm",
                             "chip_number", "chip_temp_C"]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
@@ -44,7 +44,6 @@ class Spectral_Channel( Device ):
         self.values = [ self.wavelength_nm,
                         sensor_unit.gain_list[sensor_unit.gain_index],
                         sensor_unit.integration_time_ms_list[sensor_unit.integration_time_index],
-                        0,
                         0,
                         0,
                         self.bandwidth_nm,
@@ -59,7 +58,6 @@ class Spectral_Channel( Device ):
 
     def read(self):
         raw = self.sensor_unit.read_counts_by_index( self.index )
-        irradiance = self.sensor_unit.read_calibrated_by_index( self.index )
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
         bandwidth_nm = self.bandwidth_nm
@@ -70,7 +68,6 @@ class Spectral_Channel( Device ):
                         int_time_ms,
                         raw,
                         normal_ct_per_s_nm,
-                        irradiance,
                         bandwidth_nm,
                         self.chip_number,
                         chip_temp_C]
