@@ -3,13 +3,13 @@ DEVICE_TYPE = "as7343_spectral_sensor"
 # Copyright NASA 2026
 # Author Paul Mirel
 
-from adafruit_as7343_nonblocking import AS7343
-from adafruit_as7343_nonblocking import Gain as AS7343_Gain
+from adafruit_as7343 import AS7343
+from adafruit_as7343 import Gain as AS7343_Gain
 from .classm_device import Device
 
 
 def initialize_as7343_spectrometer( instrument ):
-    as7343_spectrometer = Null_as7343_Spectrometer()
+    as7343_spectrometer = False
     try:
         as7343_spectrometer = as7343_Spectrometer( instrument )
         instrument.welcome_page.announce( "initialize_as7343_spectrometer" )
@@ -81,7 +81,6 @@ class as7343_Spectrometer( Device ):
         super().__init__(name = "as7343_spectrometer", pn = "as7343", address = 0x39, swob = AS7343( instrument.i2c_bus ))
         self.instrument = instrument
         self.choice_label = "as7343 VNIR"
-        print("got this far")
         self.wavelength_bands_nm = 405,425,450,475,515,555,550,600,640,690,745,855
         self.bandwidths_nm =        30, 22, 55, 30, 40,100, 35, 80, 50, 55, 60, 54
         self.chip_number =           1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1
@@ -97,7 +96,7 @@ class as7343_Spectrometer( Device ):
         self.lamp_selection_list = ["VNIR mA"]
         self.current_index = 0
         self.lamp_current_mA_list = [0,2,4,6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100 ]
-        self.data_counts = [0,0,0,0,0,0,0,0]
+        self.data_counts = [0,0,0,0,0,0,0,0,0,0,0,0]
         if self.swob:
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
@@ -188,28 +187,3 @@ class as7343_Spectrometer( Device ):
             print( "failed to set current:", err )
             return False
 
-class Null_as7343_Spectrometer(Device):
-    def __init__( self ):
-        super().__init__(name = None, swob = None)
-    def read(self):
-        pass
-    def log(self, value):
-        pass
-    def serial_log(self, wavelength):
-        pass
-    def report(self):
-        pass
-    def printlog(self):
-        pass
-    def lamps_on(self):
-        pass
-    def lamps_off(self):
-        pass
-    def blink(self, duration):
-        pass
-    def get_bandwidth(self, wavelength):
-        pass
-    def header(self):
-        pass
-    def check_gain_ratio(self):
-        pass

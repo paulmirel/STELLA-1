@@ -322,7 +322,7 @@ def main():
         lab_spec_page = pagem_lab_spec.make_lab_spec_missing_page( instrument )
     start = time.monotonic()
 
-    if instrument.spectral_sensors_detected and not all(lab_spec_present):
+    if False:#instrument.spectral_sensors_detected and not all(lab_spec_present):
         light_page = pagem_light.make_light_page( instrument )
         exposure_page = pagem_exposure.make_exposure_page( instrument )
     else:
@@ -361,7 +361,7 @@ def main():
     accumulator_cycles = 5
     loop_times = []
 
-    if True: #False: #non-menu startup page
+    if False:#True: #False: #non-menu startup page
         if instrument.spectral_sensors_detected:
             instrument.active_page_number = instrument.pages_dict["Light"]
         if all(lab_spec_present):
