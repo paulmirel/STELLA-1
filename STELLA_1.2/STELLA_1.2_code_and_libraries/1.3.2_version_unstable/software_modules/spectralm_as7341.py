@@ -53,7 +53,7 @@ class Spectral_Channel( Device ):
 
 
     def read(self):
-        raw = self.sensor_unit.read_counts_by_index( self.index )
+        raw = self.sensor_unit.data_counts[self.index] #self.sensor_unit.read_counts_by_index( self.index )
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
         bandwidth_nm = self.bandwidth_nm
@@ -118,28 +118,32 @@ class as7341_Spectrometer( Device ):
             spectral_channel = initialize_spectral_channel( name, self, index )
             index += 1
 
+    if False:
+        def read_counts_by_index( self, index ):
+            try:
+                if index == 0: counts = self.swob.channel_415nm
+                if index == 1: counts = self.swob.channel_445nm
+                if index == 2: counts = self.swob.channel_480nm
+                if index == 3: counts = self.swob.channel_515nm
+                if index == 4: counts = self.swob.channel_555nm
+                if index == 5: counts = self.swob.channel_590nm
+                if index == 6: counts = self.swob.channel_630nm
+                if index == 7: counts = self.swob.channel_680nm
+                self.data_counts[index] = counts
+                return counts
+            except Exception as err:
+                print( "read channel counts failed: ", err )
+                return False
 
-    def read_counts_by_index( self, index ):
+    def read(self):
         try:
-            if index == 0: counts = self.swob.channel_415nm
-            if index == 1: counts = self.swob.channel_445nm
-            if index == 2: counts = self.swob.channel_480nm
-            if index == 3: counts = self.swob.channel_515nm
-            if index == 4: counts = self.swob.channel_555nm
-            if index == 5: counts = self.swob.channel_590nm
-            if index == 6: counts = self.swob.channel_630nm
-            if index == 7: counts = self.swob.channel_680nm
-            self.data_counts[index] = counts
-            return counts
+            self.raw = self.swob.all_channels
+            self.data_counts = []
+            for item in self.raw:
+                self.data_counts.append(item)
         except Exception as err:
-            print( "read channel counts failed: ", err )
-            return False
+            print("sensor read timeout")
 
-    def read_counts_all(self):
-        self.raw = self.swob.all_channels
-        self.data_counts = []
-        for item in self.raw:
-            self.data_counts.append(item)
 
     def get_max_min_counts( self ):
         self.max_counts = max(self.data_counts)
