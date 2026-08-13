@@ -36,7 +36,7 @@ class Spectral_Channel( Device ):
         super().__init__(name = name, pn = "as7265x", address = 0x49, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "normal_ct_per_s", "irrad_W_per_m2", "bandwidth_nm",
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "ct_per_s_nm", "irrad_W_per_m2", "bandwidth_nm",
                             "chip_number", "chip_temp_C"]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
@@ -58,8 +58,8 @@ class Spectral_Channel( Device ):
         return (self.values[3],self.values[4],self.values[5],self.values[6])
 
     def read(self):
-        raw = self.sensor_unit.read_counts_by_index( self.index )
-        irradiance = self.sensor_unit.read_calibrated_by_index( self.index )
+        raw = self.sensor_unit.data_counts[self.index] #read_counts_by_index( self.index )
+        irradiance = 0# self.sensor_unit.read_calibrated_by_index( self.index )
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
         bandwidth_nm = self.bandwidth_nm
@@ -177,6 +177,7 @@ class as7265x_Spectrometer( Device ):
     def acquire_measurement( self ):
         self.swob.take_measurements()
 
+
     def read_counts_by_wavelength( self, wavelength ):
         index = self.wavelength_bands_nm.index(wavelength)
         return self.read_counts_by_index( index )
@@ -237,7 +238,7 @@ class as7265x_Spectrometer( Device ):
             print( "read channel calibrated failed: ", err )
             return False
 
-    def read_counts_all( self ):
+    def read( self ):
         for index in range( 0, self.number_of_channels):
             self.read_counts_by_index( index )
 
