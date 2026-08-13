@@ -1,0 +1,59 @@
+# hdc3022 module
+# Copyright NASA 2025 under MIT open source license
+# Author Paul Mirel
+
+import adafruit_hdc302x
+from .classm_device import Device
+
+def initialize_hdc3022_air_sensor( instrument ):
+    hdc3022_air_sensor = Null_hdc3022_Air_Sensor()
+    try:
+        hdc3022_air_sensor = hdc3022_Air_Sensor( instrument.i2c_bus )
+        instrument.welcome_page.announce( "initialize_hdc3022_air_sensor" )
+        instrument.sensors_present.append( hdc3022_air_sensor )
+    except Exception as err:
+        pass
+        #print("hdc3022 failed: {}".format(err))
+    return hdc3022_air_sensor
+
+class hdc3022_Air_Sensor( Device ):
+    def __init__( self, com_bus ):
+        super().__init__(name = "air", pn = "hdc3022", address = 0x44, swob = adafruit_hdc302x.HDC302x( com_bus ))
+        self.temperature_C = 0
+        self.humidity_percent = 0
+        self.parameters = [ "temperature_C", "humidity_pct" ]
+        self.values = [0,0]
+    def read(self):
+        self.temperature_C = round( self.swob.temperature, 1 )
+        self.humidity_percent = round( self.swob.relative_humidity, 1 )
+        self.values = [self.temperature_C,self.humidity_percent]
+        #print( self.temperature_C )
+
+    def log(self):
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+
+    def printlog(self):
+        print( self.log())
+        
+    def get_values( self ):
+        return( self.values )
+
+
+class Null_hdc3022_Air_Sensor(Device):
+    def __init__( self ):
+        super().__init__(name = None, swob = None)
+        self.temperature_C = 0
+        self.humidity_percent = 0
+    def read(self):
+        pass
+    def log(self):
+        pass
+    def report(self):
+        pass
+    def printlog(self):
+        pass
+    def header(self):
+        pass
