@@ -16,7 +16,7 @@ class Main_Menu_Page( Page ):
         self.palette = instrument.palette
         self.selection = 0
         self.last_selection = -1
-        self.selection_count = 1
+        self.selection_count = 0#1
         self.field_selected = False
     def make_group( self ):
         #menu_list = "Light", "Heat", "*Air", "*Plants", "Soil", "Lab_Spec", "Time & Place", "Sensors"
@@ -156,11 +156,14 @@ class Main_Menu_Page( Page ):
         self.group.append(status_group)
         self.selection_count += 1
 
-        more_text =   "*more.."
+        more_text =   "Calibr"
         more_group = displayio.Group(scale=2, x=footer_text_start_x+footer_offset_x, y=footer_text_y)
         more_text_area = label.Label(terminalio.FONT, text=more_text, color=self.palette[0])
         more_group.append(more_text_area)
         self.group.append(more_group)
+        self.selection_count += 1
+
+
         return_text = "RETURN"
         return_group = displayio.Group(scale=2, x=footer_text_start_x+2*footer_offset_x, y=footer_text_y)
         return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
@@ -198,6 +201,9 @@ class Main_Menu_Page( Page ):
             self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
         if self.selection == 8:
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]
+        if self.selection == 9:
+            print("go to calibration page")
+            #self.instrument.active_page_number = self.instrument.pages_dict["Calibration"]
         if self.selection == 10:
             print( "return whence")
             self.instrument.active_page_number = self.instrument.previous_page_number
