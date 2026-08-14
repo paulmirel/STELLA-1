@@ -202,7 +202,6 @@ class Main_Menu_Page( Page ):
         if self.selection == 8:
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]
         if self.selection == 9:
-            print("go to calibration page")
             self.instrument.active_page_number = self.instrument.pages_dict["Calibration"]
         if self.selection == 10:
             print( "return whence")
