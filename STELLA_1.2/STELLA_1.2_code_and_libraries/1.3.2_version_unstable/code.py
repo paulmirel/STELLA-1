@@ -84,6 +84,7 @@ from software_modules import devicem_rotary_encoder, devicem_focaltouch
 from software_modules import pagem_welcome, pagem_controls, pagem_main_menu, pagem_status
 from software_modules import pagem_settings, pagem_sensors, pagem_lab_spec
 from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air, pagem_time_place
+from software_modules import pagem_calibration
 from software_modules import devicem_supply_5V
 
 try:
@@ -315,6 +316,7 @@ def main():
     time_place_page = pagem_time_place.make_time_place_page( instrument )
     #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
+    calibration_page = pagem_calibration.make_calibration_page( instrument, onboard_neopixel )
     if all(lab_spec_present):
         lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, onboard_neopixel )
     else:
