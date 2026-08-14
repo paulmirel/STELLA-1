@@ -156,7 +156,7 @@ class Main_Menu_Page( Page ):
         self.group.append(status_group)
         self.selection_count += 1
 
-        more_text =   "Calibr"
+        more_text =   "Calibrt"
         more_group = displayio.Group(scale=2, x=footer_text_start_x+footer_offset_x, y=footer_text_y)
         more_text_area = label.Label(terminalio.FONT, text=more_text, color=self.palette[0])
         more_group.append(more_text_area)
