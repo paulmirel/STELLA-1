@@ -260,8 +260,8 @@ class Calibration_Page( Page ):
         self.status_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=5, width=54-2*select_width+14,
                                                             height=height_2-2*select_width, x=154, y=line_y+height_1+select_width)
         self.group.append(self.status_highlight)
-        line_names = ["inc", "batch", "battery", "status", "measure & log" ]
-        line_values = ["B+","---", "---", "----", "MEASURE"]
+        line_names = ["inc", "batch", "battery", "status", "self-test/reset" ]
+        line_values = ["B+","---", "---", "----", "S-TEST"] #RESET #_STOP_
         line_selectable = [ True, False, False, False, True ]
         line_widths = [38,52,58,70,100]
         x = start_x
