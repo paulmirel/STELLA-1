@@ -108,7 +108,7 @@ class Calibration_Page( Page ):
                 self.status_highlight.color_index = 3
             else:
                 self.status_index = 0
-                self.status_highlight.color_index = 20
+                self.status_highlight.color_index = 5
         else:
             self.status_index = 4
             self.status_highlight.color_index = 2
@@ -205,7 +205,7 @@ class Calibration_Page( Page ):
 
     def make_group( self ):
         self.group = displayio.Group()
-        background = vectorio.Rectangle(pixel_shader=self.palette, color_index=8, width=320, height=240, x=0, y=0)
+        background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
         self.group.append( background )
 
         line_spacing = 43
@@ -237,13 +237,13 @@ class Calibration_Page( Page ):
                                                                     height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+select_width-border_width)
                 self.group.append(border_rectangle)
 
-                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=8, width=line_widths[index]-2*select_width,
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
                                                             height=height_2-2*select_width, x=x+select_width, y=line_y+select_width)
                 self.group.append(self.area_rectangle)
                 self.value_areas.append(self.area_rectangle)
 
             text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+int(height_2/2))
-            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[9])
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
             self.group.append(text_group)
@@ -254,10 +254,10 @@ class Calibration_Page( Page ):
 
 
         line_y += line_spacing - height_1
-        batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=6, width=56-2*select_width,
+        batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=12, width=56-2*select_width,
                                                             height=height_2-2*select_width, x=42, y=line_y+height_1+select_width)
         self.group.append(batch_highlight)
-        self.status_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=20, width=54-2*select_width+14,
+        self.status_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=5, width=54-2*select_width+14,
                                                             height=height_2-2*select_width, x=154, y=line_y+height_1+select_width)
         self.group.append(self.status_highlight)
         line_names = ["inc", "batch", "battery", "status", "measure & log" ]
@@ -267,7 +267,7 @@ class Calibration_Page( Page ):
         x = start_x
         for index in range(0, len(line_names)):
             text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
-            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[9])
+            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
             text_group.append(text_area)
             self.group.append(text_group)
             if line_selectable[index]:
@@ -284,15 +284,15 @@ class Calibration_Page( Page ):
                 self.group.append(self.area_rectangle)
                 self.value_areas.append(self.area_rectangle)
             text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+height_1 +int(height_2/2))
-            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[9])
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
             self.text_areas.append(self.text_area)
             text_group.append(self.text_area)
             self.group.append(text_group)
             x += line_widths[index]
 
 
-        self.value_areas[-2].color_index = 6
-        self.value_areas[-1].color_index = 20
+        self.value_areas[-2].color_index = 12
+        self.value_areas[-1].color_index = 5
 
         line_y += line_spacing
 
@@ -302,7 +302,7 @@ class Calibration_Page( Page ):
         #graph group
 
         self.graph_group = displayio.Group()
-        self.graph_border = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=280+8, height=200, x=20-4, y=42-4)
+        self.graph_border = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=280+8, height=200, x=20-4, y=42-4)
         self.graph_group.append(self.graph_border)
         self.graph_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=280, height=200-8, x=20, y=42)
         self.graph_group.append(self.graph_rectangle)
