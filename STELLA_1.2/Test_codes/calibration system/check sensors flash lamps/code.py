@@ -2,6 +2,7 @@
 
 # listing available at https://learn.adafruit.com/i2c-addresses/the-list
 
+# 0x18 -- DS3231 real time clock after address changer
 # 0x34 -- qwiic buzzer
 # 0x36 -- max1704x battery monitor COLLISION AS5600 magnetic angle sensor
 # 0x38 -- capacitive touch screen
@@ -27,6 +28,10 @@ if i2c_bus.try_lock():
     print()
     print( "Check main i2c_bus:")
     main_bus_addresses = i2c_bus.scan()
+    #for item in main_bus_addresses:
+    #    print( hex(item ) )
+    if 0x18 in main_bus_addresses:
+        print( "    precision real time clock found" )
     if 0x40 in main_bus_addresses:
         print( "    servo driver found" )
     if 0x46 in main_bus_addresses:
