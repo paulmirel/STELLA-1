@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: 2022 Alec Delaney, written for Adafruit Industries
+# SPDX-FileCopyrightText: Copyright (c) 2026 Liz Clark for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
+
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+    "setuptools-scm",
+]
+
+[project]
+name = "adafruit-circuitpython-ads122c04"
+description = "CircuitPython driver for the Adafruit ADS122C04 24-Bit ADC - 4 Channel 2-kSPS - STEMMA QT / Qwiic"
+version = "0.0.0+auto.0"
+readme = "README.rst"
+authors = [
+    {name = "Adafruit Industries", email = "circuitpython@adafruit.com"}
+]
+urls = {Homepage = "https://github.com/adafruit/Adafruit_CircuitPython_ADS122C04"}
+keywords = [
+    "adafruit",
+    "blinka",
+    "circuitpython",
+    "micropython",
+    "ads122c04",
+    "ADC,",
+    "24-bit,",
+    "analog",
+    "in",
+]
+license = "MIT"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: System :: Hardware",
+    "Programming Language :: Python :: 3",
+]
+dynamic = ["dependencies", "optional-dependencies"]
+
+[tool.setuptools]
+# TODO: IF LIBRARY FILES ARE A PACKAGE FOLDER,
+#       CHANGE `py_modules = ['...']` TO `packages = ['...']`
+packages = ["adafruit_ads122c04"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+optional-dependencies = {optional = {file = ["optional_requirements.txt"]}}

@@ -2,7 +2,7 @@
 
 # listing available at https://learn.adafruit.com/i2c-addresses/the-list
 
-# 0x18 -- DS3231 real time clock after address changer
+# 0x18 -- DS3231 precision real time clock
 # 0x34 -- qwiic buzzer
 # 0x36 -- max1704x battery monitor COLLISION AS5600 magnetic angle sensor
 # 0x38 -- capacitive touch screen
@@ -11,6 +11,7 @@
 # 0x68 -- PCF8523 real time clock
 # 0x70 -- TCA9548 1-to-8 I2C multiplexer
 
+
 import time
 import board
 import busio
@@ -18,10 +19,20 @@ import adafruit_tca9548a
 import adafruit_as5600
 from adafruit_as7343 import AS7343
 from adafruit_as7341 import AS7341
+import adafruit_ds3231
 
 i2c_bus = busio.I2C(board.SCL, board.SDA)
+precision_real_time_clock = adafruit_ds3231.DS3231(i2c_bus)
 
-
+time_struture = precision_real_time_clock.datetime
+print(time_struture)
+year = time_struture.tm_year
+month = time_struture.tm_mon
+day = time_struture.tm_mday
+hour = time_struture.tm_hour
+minute = time_struture.tm_min
+second = time_struture.tm_sec
+print( year, month, day, hour, minute, second)
 
 main_bus_addresses = []
 if i2c_bus.try_lock():
@@ -41,6 +52,7 @@ if i2c_bus.try_lock():
     i2c_bus.unlock()
 
 mux_8_to_1 = adafruit_tca9548a.TCA9548A(i2c_bus)
+
 
 spectral_sensors = []
 for index in range (0,7):
