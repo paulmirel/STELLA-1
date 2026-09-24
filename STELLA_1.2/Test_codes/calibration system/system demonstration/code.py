@@ -20,12 +20,14 @@ import adafruit_as5600
 from adafruit_as7343 import AS7343
 from adafruit_as7341 import AS7341
 import adafruit_ds3231
+from adafruit_pca9685 import PCA9685
+from adafruit_motor import servo
 
 i2c_bus = busio.I2C(board.SCL, board.SDA)
 precision_real_time_clock = adafruit_ds3231.DS3231(i2c_bus)
 
 time_struture = precision_real_time_clock.datetime
-print(time_struture)
+
 year = time_struture.tm_year
 month = time_struture.tm_mon
 day = time_struture.tm_mday
@@ -70,12 +72,12 @@ for index in range (0,7):
     if sensor_kind == 7343:
         active_sensor.led_current_ma = 20
         active_sensor.led_enabled = True
-        time.sleep(1)
+        time.sleep(2)
         active_sensor.led_enabled = False
     if sensor_kind == 7341:
         active_sensor.led_current = 20
         active_sensor.led = True
-        time.sleep(1)
+        time.sleep(2)
         active_sensor.led = False
 
 print( "Check raw wheel angles:")
@@ -85,4 +87,29 @@ print( "sensor_wheel_angle_sensor angle =", sensor_wheel_angle_raw)
 filter_wheel_angle_sensor = adafruit_as5600.AS5600(i2c_bus, address = 0x46)
 filter_wheel_angle_raw = filter_wheel_angle_sensor.raw_angle
 print( "filter_wheel_angle_sensor angle =", filter_wheel_angle_raw)
+
+pca = PCA9685(i2c_bus)
+
+
+
+sensor_fractions = [0, 0.175, 0.345, 0.510, 0.666, 0.833, 1]
+pca.frequency = 60
+
+filter_servo = servo.Servo(pca.channels[0], min_pulse=570, max_pulse=2424)
+sensor_servo = servo.Servo(pca.channels[15], min_pulse=570, max_pulse=2424)#, actuation_range= 180)
+
+
+for fraction in sensor_fractions:
+    print( "go to fraction:",fraction)
+    sensor_servo.fraction = 1-fraction
+    time.sleep(4)
+
+for fraction in sensor_fractions:
+    print( "go to fraction:",fraction)
+    filter_servo.fraction = 1-fraction
+    time.sleep(4)
+
+
+print("done")
+pca.deinit()
 
