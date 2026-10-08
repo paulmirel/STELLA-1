@@ -87,61 +87,63 @@ from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air,
 from software_modules import pagem_calibration
 from software_modules import devicem_supply_5V
 
-try:
-    # wifi is optional
-    from software_modules import wifi as wifi_module
-except ImportError as e:
-    if 'software_modules.wifi' in str(e):
-        print(f"wifi module")
-        class wifi_module:
-            # the only api from code.py
-            def initialize(instrument):
-                return None
-    else:
-        raise e
-try:
-    # ntp is optional
-    from software_modules import ntp
-except ImportError as e:
-    if 'software_modules.ntp' in str(e):
-        print(f"ntp module: no internet time")
-        class NTPTime:
-            def update(self):
-                pass
-        class ntp:
-            # the only api from code.py
-            def initialize():
-                return NTPTime()
-    else:
-        raise e
-try:
-    # httpd for sd card is optional
-    from software_modules import sd_httpd
-except ImportError as e:
-    if 'software_modules.sd_httpd' in str(e):
-        print(f"sd_httpd module: no web-page")
-        class sd_httpd:
-            # the only api from code.py
-            def initialize(instrument):
-                return None
-            def update():
-                pass
-    else:
-        raise e
-try:
-    # mdns is optional
-    from software_modules import mdns
-except ImportError as e:
-    if 'software_modules.mdns' in str(e):
-        print(f"mdns module: use ip address in url")
-        class mdns:
-            # the only api from code.py
-            def initialize(instrument):
-                return None
-            def update():
-                pass
-    else:
-        raise e
+load_wifi = True
+if load_wifi:
+    try:
+        # wifi is optional
+        from software_modules import wifi as wifi_module
+    except ImportError as e:
+        if 'software_modules.wifi' in str(e):
+            print(f"wifi module")
+            class wifi_module:
+                # the only api from code.py
+                def initialize(instrument):
+                    return None
+        else:
+            raise e
+    try:
+        # ntp is optional
+        from software_modules import ntp
+    except ImportError as e:
+        if 'software_modules.ntp' in str(e):
+            print(f"ntp module: no internet time")
+            class NTPTime:
+                def update(self):
+                    pass
+            class ntp:
+                # the only api from code.py
+                def initialize():
+                    return NTPTime()
+        else:
+            raise e
+    try:
+        # httpd for sd card is optional
+        from software_modules import sd_httpd
+    except ImportError as e:
+        if 'software_modules.sd_httpd' in str(e):
+            print(f"sd_httpd module: no web-page")
+            class sd_httpd:
+                # the only api from code.py
+                def initialize(instrument):
+                    return None
+                def update():
+                    pass
+        else:
+            raise e
+    try:
+        # mdns is optional
+        from software_modules import mdns
+    except ImportError as e:
+        if 'software_modules.mdns' in str(e):
+            print(f"mdns module: use ip address in url")
+            class mdns:
+                # the only api from code.py
+                def initialize(instrument):
+                    return None
+                def update():
+                    pass
+        else:
+            raise e
 
 def main():
 
@@ -317,7 +319,7 @@ def main():
     #air_page = pagem_air.make_air_page( instrument )
     heat_page = pagem_heat.make_heat_page( instrument )
 
-    if True:
+    if ('0x40') in devices_present_hex:
         calibration_page = pagem_calibration.make_calibration_page( instrument, onboard_neopixel )
     else:
         calibration_page = pagem_calibration.make_calibration_missing_page( instrument, onboard_neopixel )
@@ -374,6 +376,8 @@ def main():
             instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
         if False:
             instrument.active_page_number = instrument.pages_dict["Heat"]
+        if ('0x40') in devices_present_hex:
+            instrument.active_page_number = instrument.pages_dict["Calibration"]
 
     try:
         if buzzer: buzzer.beep()

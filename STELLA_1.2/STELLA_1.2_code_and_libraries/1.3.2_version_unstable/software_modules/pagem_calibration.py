@@ -1,6 +1,7 @@
 # calibration page
 # Copyright NASA 2026 under MIT open source license
 # Author Paul Mirel
+
 import displayio
 from adafruit_display_text import label
 import vectorio
@@ -60,39 +61,41 @@ class Calibration_Page( Page ):
 
 
     def set_integration_time_ms( self, integration_setting_ms ):
-        tolerance = 0.05
-        cycle_limit = 16
-        unit_integration_time_ms = 0.00278
-        integration_time_actual_ms = 0
-        astep_16_bit_value = 0
-        atime_8_bit_value = 127
-        calculating_integration_settings = True
-        #print("calculating")
-        cycle = 0
-        while calculating_integration_settings:
-            #print(".", end = "")
-            astep_16_bit_value = int( integration_setting_ms / (unit_integration_time_ms * (atime_8_bit_value + 1)))
-            if astep_16_bit_value < 1:
-                atime_8_bit_value = int(atime_8_bit_value / 2)
-            if astep_16_bit_value > 65533:
-                atime_8_bit_value = atime_8_bit_value * 2
-            if atime_8_bit_value < 1:
-                astep_16_bit_value = astep_16_bit_value - 1
-            integration_time_actual_ms = (astep_16_bit_value+1) * (atime_8_bit_value+1) * unit_integration_time_ms
-            if (integration_time_actual_ms - integration_setting_ms)/integration_time_actual_ms > tolerance:
-                atime_8_bit_value = atime_8_bit_value - 1
-            if (integration_setting_ms - integration_time_actual_ms)/integration_setting_ms > tolerance:
-                atime_8_bit_value = atime_8_bit_value + 1
-            if astep_16_bit_value in range (0, 65534) and atime_8_bit_value in range (0, 255):
-                if abs(integration_time_actual_ms - integration_setting_ms)/integration_time_actual_ms < tolerance:
-                    calculating_integration_settings = False
+        pass
+        if False:
+            tolerance = 0.05
+            cycle_limit = 16
+            unit_integration_time_ms = 0.00278
+            integration_time_actual_ms = 0
+            astep_16_bit_value = 0
+            atime_8_bit_value = 127
+            calculating_integration_settings = True
+            #print("calculating")
+            cycle = 0
+            while calculating_integration_settings:
+                #print(".", end = "")
+                astep_16_bit_value = int( integration_setting_ms / (unit_integration_time_ms * (atime_8_bit_value + 1)))
+                if astep_16_bit_value < 1:
+                    atime_8_bit_value = int(atime_8_bit_value / 2)
+                if astep_16_bit_value > 65533:
+                    atime_8_bit_value = atime_8_bit_value * 2
+                if atime_8_bit_value < 1:
+                    astep_16_bit_value = astep_16_bit_value - 1
+                integration_time_actual_ms = (astep_16_bit_value+1) * (atime_8_bit_value+1) * unit_integration_time_ms
+                if (integration_time_actual_ms - integration_setting_ms)/integration_time_actual_ms > tolerance:
+                    atime_8_bit_value = atime_8_bit_value - 1
+                if (integration_setting_ms - integration_time_actual_ms)/integration_setting_ms > tolerance:
+                    atime_8_bit_value = atime_8_bit_value + 1
+                if astep_16_bit_value in range (0, 65534) and atime_8_bit_value in range (0, 255):
+                    if abs(integration_time_actual_ms - integration_setting_ms)/integration_time_actual_ms < tolerance:
+                        calculating_integration_settings = False
 
-            #print(astep_16_bit_value, atime_8_bit_value)
-            cycle += 1
-            if cycle > cycle_limit:
-                calculating_integration_settings = False
-        print( "set these:", int(integration_setting_ms), atime_8_bit_value, astep_16_bit_value, int(integration_time_actual_ms), round((integration_time_actual_ms-integration_setting_ms)/integration_setting_ms,2))
-        return integration_time_actual_ms
+                #print(astep_16_bit_value, atime_8_bit_value)
+                cycle += 1
+                if cycle > cycle_limit:
+                    calculating_integration_settings = False
+            print( "set these:", int(integration_setting_ms), atime_8_bit_value, astep_16_bit_value, int(integration_time_actual_ms), round((integration_time_actual_ms-integration_setting_ms)/integration_setting_ms,2))
+            return integration_time_actual_ms
 
 
     def plot(self):
