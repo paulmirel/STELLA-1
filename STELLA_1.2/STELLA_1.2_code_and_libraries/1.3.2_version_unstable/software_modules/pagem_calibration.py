@@ -10,6 +10,14 @@ from .classm_page import Page
 from software_modules import functionm_file, devicem_neopixel
 import time
 import gc
+import board
+import busio
+import adafruit_tca9548a
+import adafruit_as5600
+from adafruit_as7343 import AS7343
+from adafruit_as7341 import AS7341
+import adafruit_ds3231
+from adafruit_pca9685 import PCA9685
 
 class Calibration_Page( Page ):
     def __init__( self, instrument, onboard_neopixel ):
@@ -23,14 +31,6 @@ class Calibration_Page( Page ):
         self.field_selected = False
         self.field_selected_color_index = 5
         self.field_not_selected_color_index = 9
-        if False: # sensor specific selections
-            for spectral_sensor in self.instrument.spectral_sensors_present:
-                if spectral_sensor.pn == "as7341":
-                    self.as7341_spectrometer = spectral_sensor
-            self.as7341_spectrometer.set_gain( self.gain_index )
-            self.integration_time_index = 19
-            self.as7341_spectrometer.set_integration_time( self.integration_time_index )
-            self.number_of_sensors = 1
         self.active_sensor_index = 0
         self.max_counts = 65535
         self.exposure_target_fraction_high = 0.9
@@ -50,8 +50,18 @@ class Calibration_Page( Page ):
                 self.gps = sensor
         self.mmt_number = 0
         self.measuring = False
+        self.precision_real_time_clock = adafruit_ds3231.DS3231(self.instrument.i2c_bus)
+        if True:
+            time_struture = self.precision_real_time_clock.datetime
+            self.year = time_struture.tm_year
+            self.month = time_struture.tm_mon
+            self.day = time_struture.tm_mday
+            self.hour = time_struture.tm_hour
+            self.minute = time_struture.tm_min
+            self.second = time_struture.tm_sec
+            print( self.year, self.month, self.day, self.hour, self.minute, self.second)
+            time.sleep(1)
 
-        self.integration_time_setting_test()
 
     def integration_time_setting_test( self ):
         integration_setting_ms = 10

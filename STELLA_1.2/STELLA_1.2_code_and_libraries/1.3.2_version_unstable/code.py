@@ -310,36 +310,41 @@ def main():
                                 round(100 * ( mem_free_after_imports - mem_free_after_devices)/1000/start_mem_free_kB, 1)))
 
 
-    controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
-    main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
-    status_page = pagem_status.make_status_page( instrument, battery_monitor )
-    settings_page = pagem_settings.make_settings_page( instrument )
-    sensors_page = pagem_sensors.make_sensors_page( instrument )
-    time_place_page = pagem_time_place.make_time_place_page( instrument )
-    #air_page = pagem_air.make_air_page( instrument )
-    heat_page = pagem_heat.make_heat_page( instrument )
 
+
+    main_menu_page = pagem_main_menu.make_main_menu_page( instrument )
+    controls_page = pagem_controls.make_controls_page( instrument, gps, battery_monitor )
     if ('0x40') in devices_present_hex:
         calibration_page = pagem_calibration.make_calibration_page( instrument, onboard_neopixel )
+        calibration_mode = True
     else:
+        calibration_mode = False
+        status_page = pagem_status.make_status_page( instrument, battery_monitor )
+        settings_page = pagem_settings.make_settings_page( instrument )
+        sensors_page = pagem_sensors.make_sensors_page( instrument )
+        time_place_page = pagem_time_place.make_time_place_page( instrument )
+        #air_page = pagem_air.make_air_page( instrument )
+        heat_page = pagem_heat.make_heat_page( instrument )
         calibration_page = pagem_calibration.make_calibration_missing_page( instrument, onboard_neopixel )
 
-    if all(lab_spec_present):
-        lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, onboard_neopixel )
-    else:
-        lab_spec_page = pagem_lab_spec.make_lab_spec_missing_page( instrument )
-    start = time.monotonic()
+        if all(lab_spec_present):
+            lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, onboard_neopixel )
+        else:
+            lab_spec_page = pagem_lab_spec.make_lab_spec_missing_page( instrument )
 
-    if instrument.spectral_sensors_detected and not all(lab_spec_present):
-        light_page = pagem_light.make_light_page( instrument )
-        exposure_page = pagem_exposure.make_exposure_page( instrument )
-    else:
-        light_page = pagem_light.make_light_missing_page( instrument )
+        start = time.monotonic()
+        if instrument.spectral_sensors_detected and not all(lab_spec_present):
+
+            light_page = pagem_light.make_light_page( instrument )
+            exposure_page = pagem_exposure.make_exposure_page( instrument )
+        else:
+            light_page = pagem_light.make_light_missing_page( instrument )
 
     if False:
         for page in instrument.pages_list:
             print( page.page_name )
     instrument.make_pages_dictionary()
+
     #print( instrument.pages_dict )
 
 
@@ -362,22 +367,24 @@ def main():
     startup_end_time = time.monotonic()
     startup_time_s = startup_end_time - startup_start_time
     print( "startup_time_s = ", startup_time_s )
-    stop = time.monotonic()
-    elapsed = stop - start
-    print( "time to make light page is {}s".format( elapsed ))
+
     instrument.take_burst = False
     accumulator_cycles = 5
     loop_times = []
 
-    if True: #False: #non-menu startup page
+    if calibration_mode: #False: #non-menu startup page
+        instrument.active_page_number = instrument.pages_dict["Calibration"]
+    else:
+        stop = time.monotonic()
+        elapsed = stop - start
+        print( "time to make light page is {}s".format( elapsed ))
         if instrument.spectral_sensors_detected:
             instrument.active_page_number = instrument.pages_dict["Light"]
         if all(lab_spec_present):
             instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
         if False:
             instrument.active_page_number = instrument.pages_dict["Heat"]
-        if ('0x40') in devices_present_hex:
-            instrument.active_page_number = instrument.pages_dict["Calibration"]
+
 
     try:
         if buzzer: buzzer.beep()
@@ -394,74 +401,79 @@ def main():
             controls_page.update_values()
             sample_start_time = time.monotonic()
             system_log = instrument.get_system_log()
-            if instrument.active_page_number == instrument.pages_dict["Lab_Spec"]:
+            if instrument.active_page_number == instrument.pages_dict["Calibration"]:
                 instrument.handle_inputs()
                 instrument.update_active_page()
                 time.sleep(0.01)
-            elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
-                sensor = instrument.sensors_present[sensors_page.sensor_choice]
-                sensor.read()
-                ###TBD if channel, read that spectral sensor
-                instrument.handle_inputs()
-                instrument.update_active_page()
-                if instrument.record:
-                    functionm_file.write_line( instrument, system_log, sensor.log() )
-                    instrument.handle_inputs()
-                instrument.measurement_counter += 1
-                sample_stop_time = time.monotonic()
-                sample_time = sample_stop_time - sample_start_time
-                #print( "sample_time, one sensor, s = ", round(sample_time,3))
             else:
-                for sensor in instrument.sensors_present:
-                    sensor.read()
+                if instrument.active_page_number == instrument.pages_dict["Lab_Spec"]:
                     instrument.handle_inputs()
-                for sensor in instrument.spectral_sensors_present:
+                    instrument.update_active_page()
+                    time.sleep(0.01)
+                elif instrument.active_page_number == instrument.pages_dict["Sensors"]:
+                    sensor = instrument.sensors_present[sensors_page.sensor_choice]
                     sensor.read()
+                    ###TBD if channel, read that spectral sensor
                     instrument.handle_inputs()
-                sample_stop_time = time.monotonic()
-                sample_time = sample_stop_time - sample_start_time
-                #print( "sample_time, all sensors, s = ", round(sample_time,3))
-                #print("call to update active page from line 325, page number",instrument.active_page_number, instrument.combined)
-                instrument.update_active_page()
-                if instrument.active_page_number == instrument.pages_dict["Light"]:
-                    light_page.update_plot()
-                if instrument.vfs:
-                        if instrument.take_burst:
-                            if instrument.burst_counter < instrument.burst_count:
-                                instrument.burst_counter += 1
-                                instrument.record = False
-                                onboard_neopixel.fill(devicem_neopixel.BLUE)
-                                for sensor in instrument.sensors_present:
+                    instrument.update_active_page()
+                    if instrument.record:
+                        functionm_file.write_line( instrument, system_log, sensor.log() )
+                        instrument.handle_inputs()
+                    instrument.measurement_counter += 1
+                    sample_stop_time = time.monotonic()
+                    sample_time = sample_stop_time - sample_start_time
+                    #print( "sample_time, one sensor, s = ", round(sample_time,3))
+                else:
+                    for sensor in instrument.sensors_present:
+                        sensor.read()
+                        instrument.handle_inputs()
+                    for sensor in instrument.spectral_sensors_present:
+                        sensor.read()
+                        instrument.handle_inputs()
+                    sample_stop_time = time.monotonic()
+                    sample_time = sample_stop_time - sample_start_time
+                    #print( "sample_time, all sensors, s = ", round(sample_time,3))
+                    #print("call to update active page from line 325, page number",instrument.active_page_number, instrument.combined)
+                    instrument.update_active_page()
+                    if instrument.active_page_number == instrument.pages_dict["Light"]:
+                        light_page.update_plot()
+                    if instrument.vfs:
+                            if instrument.take_burst:
+                                if instrument.burst_counter < instrument.burst_count:
+                                    instrument.burst_counter += 1
+                                    instrument.record = False
+                                    onboard_neopixel.fill(devicem_neopixel.BLUE)
+                                    for sensor in instrument.sensors_present:
+                                            functionm_file.write_line( instrument, system_log, sensor.log() )
+                                            instrument.handle_inputs()
+                                else:
+                                    controls_page.update_burst_countdown( instrument.burst_count )
+                                    instrument.take_burst = False
+                            else:
+                                instrument.burst_counter = 0
+                            if (time.monotonic() > last_sample_time + instrument.sample_interval_s):
+                                if instrument.record:
+                                    onboard_neopixel.fill(devicem_neopixel.GREEN)
+                                    for sensor in instrument.sensors_present:
                                         functionm_file.write_line( instrument, system_log, sensor.log() )
                                         instrument.handle_inputs()
-                            else:
-                                controls_page.update_burst_countdown( instrument.burst_count )
-                                instrument.take_burst = False
-                        else:
-                            instrument.burst_counter = 0
-                        if (time.monotonic() > last_sample_time + instrument.sample_interval_s):
-                            if instrument.record:
-                                onboard_neopixel.fill(devicem_neopixel.GREEN)
-                                for sensor in instrument.sensors_present:
-                                    functionm_file.write_line( instrument, system_log, sensor.log() )
-                                    instrument.handle_inputs()
-                            last_sample_time = time.monotonic()
-                        onboard_neopixel.fill(devicem_neopixel.OFF)
-                        instrument.measurement_counter += 1
-                else:
-                    onboard_neopixel.fill(devicem_neopixel.RED)
-                if (time.monotonic() > last_serial_time + instrument.serial_interval_s):
-                    if instrument.serial_out_index == 0:
-                        for sensor in instrument.sensors_present:
-                            sensor.printlog()
-                            instrument.handle_inputs()
-                    if instrument.serial_out_index == 1:
-                        if False:
+                                last_sample_time = time.monotonic()
+                            onboard_neopixel.fill(devicem_neopixel.OFF)
+                            instrument.measurement_counter += 1
+                    else:
+                        onboard_neopixel.fill(devicem_neopixel.RED)
+                    if (time.monotonic() > last_serial_time + instrument.serial_interval_s):
+                        if instrument.serial_out_index == 0:
                             for sensor in instrument.sensors_present:
-                                sensor.emit_json_packet()
+                                sensor.printlog()
                                 instrument.handle_inputs()
-                        print("emit_json_packet TBD")
-                    last_serial_time = time.monotonic()
+                        if instrument.serial_out_index == 1:
+                            if False:
+                                for sensor in instrument.sensors_present:
+                                    sensor.emit_json_packet()
+                                    instrument.handle_inputs()
+                            print("emit_json_packet TBD")
+                        last_serial_time = time.monotonic()
             if inet_lan:
                 inet_lan.update()
                 ntp_time.update()
