@@ -1,0 +1,62 @@
+# lsm303 module
+# Copyright NASA 2025 under MIT open source license
+# Author Paul Mirel
+
+import adafruit_lsm303_accel
+from .classm_device import Device
+
+def initialize_lsm303_acceleration_sensor( instrument ):
+    lsm303_acceleration_sensor = Null_lsm303_Acceleration_Sensor()
+    try:
+        lsm303_acceleration_sensor = lsm303_Acceleration_Sensor( instrument.i2c_bus )
+        instrument.welcome_page.announce( "initialize_lsm303_acceleration_sensor" )
+        instrument.sensors_present.append( lsm303_acceleration_sensor )
+    except NameError as err:
+        pass
+        #print( "library missing:", err )
+    except Exception:
+        pass
+    return lsm303_acceleration_sensor
+
+class lsm303_Acceleration_Sensor( Device ):
+    #https://www.st.com/resource/en/datasheet/lsm303agr.pdf
+    def __init__( self, com_bus ):
+        super().__init__(name = "acceleration", pn = "lms303", address = 0x19, swob = adafruit_lsm303_accel.LSM303_Accel( com_bus ))
+        self.Ax_m_per_s2 = None
+        self.Ay_m_per_s2 = None
+        self.Az_m_per_s2 = None
+        self.A_uncertainty_m_per_s2= 0.4
+        self.parameters = ["ax_m_per_s2","ay_m_per_s2","az_m_per_s2"]
+        self.values = [0,0,0]
+    def read(self):
+        self.Ax_m_per_s2, self.Ay_m_per_s2, self.Az_m_per_s2 = self.swob.acceleration
+        #print( self.Ax_m_per_s2, self.Ay_m_per_s2, self.Az_m_per_s2 )
+        self.values = [round(self.Ax_m_per_s2,3), round(self.Ay_m_per_s2,3), round(self.Az_m_per_s2,3)]
+
+    def log(self):
+        log = "{}, {}".format( self.name, self.pn )
+        for index in range (0, len(self.parameters)):
+            log = log + ", {}, {}".format( self.parameters[index], self.values[index])
+        return log
+
+    def printlog(self):
+        print( self.log())
+    def header(self):
+        return( "lsm303_acceleration_x-!-m_per_s_sq, lsm303_acceleration_y-!-m_per_s_sq, lsm303_acceleration_z-!-m_per_s_sq" )
+
+class Null_lsm303_Acceleration_Sensor(Device):
+    def __init__( self ):
+        super().__init__(name = None, swob = None)
+        self.Ax_m_per_s2 = None
+        self.Ay_m_per_s2 = None
+        self.Az_m_per_s2 = None
+    def read(self):
+        pass
+    def log(self):
+        pass
+    def report(self):
+        pass
+    def printlog(self):
+        pass
+    def header(self):
+        pass
