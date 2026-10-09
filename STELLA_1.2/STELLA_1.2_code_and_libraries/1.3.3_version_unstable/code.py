@@ -1,4 +1,4 @@
-SOFTWARE_VERSION_NUMBER = "1.3.2"
+SOFTWARE_VERSION_NUMBER = "1.3.3"
 DEVICE_TYPE = "STELLA-1.2"
 # STELLA-1.2 multifunction instrument
 # Copyright NASA 2026 under MIT open source license
@@ -59,6 +59,7 @@ print( devices_present_hex )
 # 0x38 focaltouch   Capacitive touch screen sensor
 # 0x39 as7341   Visible spectral sensor
 # 0x44 hdc302x  Precision temperature and humidity sensor
+# 0x44 sht40  Precision temperature and humidity sensor
 # 0x48 ads1015  Analog to digital converter, 12 bits, 4 channels
 # 0x49 as7265x  Visible and Near Infrared spectral sensor
 # 0x4a ads1115  Analog to digital converter, 16 bits, 4 channels ### connect ADDR to SDA to set address
@@ -146,7 +147,6 @@ if load_wifi:
             raise e
 
 def main():
-
     gc.collect()
     displayio.release_displays()
     UID = get_uid()
@@ -231,8 +231,16 @@ def main():
         ds2484_1_wire_thermometer = devicem_ds2484.initialize_ds2484_1_wire_thermometer( instrument )
     # '0x38' focaltouch initializes within the instrument init function
     if ('0x44') in devices_present_hex:
-        from software_modules import devicem_hdc3022
-        hdc3022_air_sensor = devicem_hdc3022.initialize_hdc3022_air_sensor( instrument )
+        from software_modules import devicem_sht40
+        sht40_air_sensor = devicem_sht40.initialize_sht40_air_sensor( instrument )
+        try:
+            sht40_air_sensor.read()
+            print("SHT40 found")
+        except RuntimeError as err:
+            instrument.sensors_present.pop()
+            from software_modules import devicem_hdc3022
+            hdc3022_air_sensor = devicem_hdc3022.initialize_hdc3022_air_sensor( instrument )
+            print("HDC3022 found")
     if ('0x1e') in devices_present_hex:
         from software_modules import devicem_lis2mdl
         lis2mdl_magnetic_field_sensor = devicem_lis2mdl.initialize_lis2mdl_magnetic_field_sensor( instrument )
@@ -325,7 +333,7 @@ def main():
         time_place_page = pagem_time_place.make_time_place_page( instrument )
         #air_page = pagem_air.make_air_page( instrument )
         heat_page = pagem_heat.make_heat_page( instrument )
-        calibration_page = pagem_calibration.make_calibration_missing_page( instrument, onboard_neopixel )
+        calibration_page = pagem_calibration.make_calibration_missing_page( instrument )
 
         if all(lab_spec_present):
             lab_spec_page = pagem_lab_spec.make_lab_spec_page( instrument, onboard_neopixel )
@@ -380,10 +388,12 @@ def main():
         print( "time to make light page is {}s".format( elapsed ))
         if instrument.spectral_sensors_detected:
             instrument.active_page_number = instrument.pages_dict["Light"]
-        if all(lab_spec_present):
+        elif all(lab_spec_present):
             instrument.active_page_number = instrument.pages_dict["Lab_Spec"]
-        if False:
+        elif False:
             instrument.active_page_number = instrument.pages_dict["Heat"]
+        else:
+            instrument.active_page_number = instrument.pages_dict["Main"]
 
 
     try:

@@ -12,6 +12,7 @@ import time
 import gc
 import board
 import busio
+import rtc
 import adafruit_tca9548a
 import adafruit_as5600
 from adafruit_as7343 import AS7343
@@ -51,16 +52,16 @@ class Calibration_Page( Page ):
         self.mmt_number = 0
         self.measuring = False
         self.precision_real_time_clock = adafruit_ds3231.DS3231(self.instrument.i2c_bus)
-        if True:
-            time_struture = self.precision_real_time_clock.datetime
-            self.year = time_struture.tm_year
-            self.month = time_struture.tm_mon
-            self.day = time_struture.tm_mday
-            self.hour = time_struture.tm_hour
-            self.minute = time_struture.tm_min
-            self.second = time_struture.tm_sec
-            print( self.year, self.month, self.day, self.hour, self.minute, self.second)
-            time.sleep(1)
+        time_struture = self.precision_real_time_clock.datetime
+        self.year = time_struture.tm_year
+        self.month = time_struture.tm_mon
+        self.day = time_struture.tm_mday
+        self.hour = time_struture.tm_hour
+        self.minute = time_struture.tm_min
+        self.second = time_struture.tm_sec
+        print( self.year, self.month, self.day, self.hour, self.minute, self.second)
+        self.sync_system_clock()
+
 
 
     def integration_time_setting_test( self ):
@@ -108,51 +109,12 @@ class Calibration_Page( Page ):
             return integration_time_actual_ms
 
 
-    def plot(self):
-        self.plot_register = self.mmt_register[self.selection-9]
-        print("register contents")
-        print(self.plot_register)
-        print(self.reference_register)
-        if False: #self.subtract_reference_to_plot: #TBD get this working correctly, don't subtract ref from ref, don't mess up the display data
-            for index in range (0, len(self.reference_register)):
-                self.plot_register[index+2] = self.plot_register[index+2] - self.reference_register[index]
-        print(self.plot_register)
-        plot_yvalues = self.plot_register[2:]
-        plot_ymax = max(plot_yvalues)
-        dr=int(100*plot_ymax/65535)
-        plot_ymin = min(plot_yvalues)
-        plot_yspan = plot_ymax - plot_ymin
-        print(plot_ymax, plot_ymin, plot_yspan)
-        if dr >99:
-            self.plot_title_area.text = "{}:{}:SATURATED".format(self.plot_register[0], self.plot_register[1])
-        else:
-            self.plot_title_area.text = "{} : {} : {}% dr".format(self.plot_register[0], self.plot_register[1],dr)
-        #TBD add -Rxx to plot title
-        self.y_max_area.text = "{}".format(plot_ymax)
-        self.y_min_area.text = "{}".format(plot_ymin)
-        yspan_pix = self.ybottom_pix - self.ytop_pix
-        if plot_yspan < 1:
-            plot_yspan = 1
-        pix_per_val = yspan_pix/ plot_yspan
-        y_pix = []
-        for index in range (0, len(plot_yvalues)):
-            y_pix.append(self.ytop_pix + yspan_pix - int((plot_yvalues[index]-plot_ymin)*pix_per_val))
 
-        shading_points = []
-        shading_points.append((self.plot_xpix[-1], self.ytop_pix + yspan_pix))
-        shading_points.append((self.plot_xpix[0], self.ytop_pix + yspan_pix))
-
-        for index in range (0, len(self.plot_xpix)):
-            self.plot_points[index].y = y_pix[index]
-            shading_points.append((self.plot_xpix[index], y_pix[index]))
-        self.shading.points=shading_points
 
 
     def update_values( self ):
         self.bat.read()
-        self.gps.read()
-        start = time.monotonic()
-        timenow = self.instrument.hardware_clock.read()
+        timenow = self.precision_real_time_clock.datetime
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
         self.text_areas[4].text = "{:3d}".format(self.instrument.batch_number)
@@ -446,7 +408,52 @@ class Calibration_Page( Page ):
             if item.hidden == False:
                 item.hidden = True
 
+    def sync_system_clock(self):
+        try:
+            system_clock = rtc.RTC()
+            system_clock.datetime = self.precision_real_time_clock.datetime
+            print( "system clock synchronized to precision hardware clock" )
+        except:
+            print( "failed to synchronize system clock to precision hardware clock" )
 
+    def plot(self):
+        self.plot_register = self.mmt_register[self.selection-9]
+        print("register contents")
+        print(self.plot_register)
+        print(self.reference_register)
+        if False: #self.subtract_reference_to_plot: #TBD get this working correctly, don't subtract ref from ref, don't mess up the display data
+            for index in range (0, len(self.reference_register)):
+                self.plot_register[index+2] = self.plot_register[index+2] - self.reference_register[index]
+        print(self.plot_register)
+        plot_yvalues = self.plot_register[2:]
+        plot_ymax = max(plot_yvalues)
+        dr=int(100*plot_ymax/65535)
+        plot_ymin = min(plot_yvalues)
+        plot_yspan = plot_ymax - plot_ymin
+        print(plot_ymax, plot_ymin, plot_yspan)
+        if dr >99:
+            self.plot_title_area.text = "{}:{}:SATURATED".format(self.plot_register[0], self.plot_register[1])
+        else:
+            self.plot_title_area.text = "{} : {} : {}% dr".format(self.plot_register[0], self.plot_register[1],dr)
+        #TBD add -Rxx to plot title
+        self.y_max_area.text = "{}".format(plot_ymax)
+        self.y_min_area.text = "{}".format(plot_ymin)
+        yspan_pix = self.ybottom_pix - self.ytop_pix
+        if plot_yspan < 1:
+            plot_yspan = 1
+        pix_per_val = yspan_pix/ plot_yspan
+        y_pix = []
+        for index in range (0, len(plot_yvalues)):
+            y_pix.append(self.ytop_pix + yspan_pix - int((plot_yvalues[index]-plot_ymin)*pix_per_val))
+
+        shading_points = []
+        shading_points.append((self.plot_xpix[-1], self.ytop_pix + yspan_pix))
+        shading_points.append((self.plot_xpix[0], self.ytop_pix + yspan_pix))
+
+        for index in range (0, len(self.plot_xpix)):
+            self.plot_points[index].y = y_pix[index]
+            shading_points.append((self.plot_xpix[index], y_pix[index]))
+        self.shading.points=shading_points
 
 class Calibration_Missing_Page( Page ):
     def __init__( self, instrument ):
@@ -512,6 +519,11 @@ class Calibration_Missing_Page( Page ):
         pass
     def update_plot( self ):
         pass
+
+
+
+
+
 
 def make_calibration_missing_page( instrument ):
     instrument.welcome_page.announce( "make_calibration_missing_page" )
