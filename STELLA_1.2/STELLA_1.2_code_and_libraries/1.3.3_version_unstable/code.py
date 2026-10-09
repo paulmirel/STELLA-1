@@ -88,7 +88,7 @@ from software_modules import pagem_light, pagem_exposure, pagem_heat, pagem_air,
 from software_modules import pagem_calibration
 from software_modules import devicem_supply_5V
 
-load_wifi = True
+load_wifi = False
 if load_wifi:
     try:
         # wifi is optional
@@ -175,10 +175,11 @@ def main():
     instrument.welcome_page.show()
 
     supply_5V = devicem_supply_5V.initialize_supply_5V(instrument)
-    inet_lan = wifi_module.initialize( instrument )
-    ntp_time = ntp.initialize()
-    mdns.initialize(hostname=f"stella-{instrument.uid}" )
-    sd_httpd.initialize()
+    if load_wifi:
+        inet_lan = wifi_module.initialize( instrument )
+        ntp_time = ntp.initialize()
+        mdns.initialize(hostname=f"stella-{instrument.uid}" )
+        sd_httpd.initialize()
 
     lab_spec_present = [False,False,False]
     instrument.spectral_sensors_detected = False
@@ -484,11 +485,12 @@ def main():
                                     instrument.handle_inputs()
                             print("emit_json_packet TBD")
                         last_serial_time = time.monotonic()
-            if inet_lan:
-                inet_lan.update()
-                ntp_time.update()
-                sd_httpd.update()
-                mdns.update()
+            if load_wifi:
+                if inet_lan:
+                    inet_lan.update()
+                    ntp_time.update()
+                    sd_httpd.update()
+                    mdns.update()
             battery_monitor.read()
             if battery_monitor.percentage < 20:
                 flash_indicator( battery_indicator )

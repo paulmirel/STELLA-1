@@ -117,8 +117,8 @@ class Calibration_Page( Page ):
         timenow = self.precision_real_time_clock.datetime
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
-        self.text_areas[4].text = "{:3d}".format(self.instrument.batch_number)
-        self.text_areas[5].text = "{}%".format(int(self.bat.percentage))
+        self.text_areas[5].text = "{:3d}".format(self.instrument.batch_number)
+        self.text_areas[3].text = "{}%".format(int(self.bat.percentage))
         if self.instrument.vfs:
             if self.status_index == 2:
                 self.status_highlight.color_index = 2
@@ -279,10 +279,10 @@ class Calibration_Page( Page ):
         self.status_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=5, width=54-2*select_width+14,
                                                             height=height_2-2*select_width, x=154, y=line_y+height_1+select_width)
         self.group.append(self.status_highlight)
-        line_names = ["inc", "batch", "battery", "status", "self-test/reset" ]
-        line_values = ["B+","---", "---", "----", "S-TEST"] #RESET #_STOP_
-        line_selectable = [ True, False, False, False, True ]
-        line_widths = [38,52,58,70,100]
+        line_names = ["battery", "inc", "batch", "status", "self-test/reset" ]
+        line_values = ["---","B+","---", "----", "SELF-TS"] #RESET #_STOP_
+        line_selectable = [ False, True, False, False, True ]
+        line_widths = [52,38,58,70,100]
         x = start_x
         for index in range(0, len(line_names)):
             text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
