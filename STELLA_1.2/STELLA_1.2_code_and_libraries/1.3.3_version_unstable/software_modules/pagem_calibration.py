@@ -314,6 +314,37 @@ class Calibration_Page( Page ):
         self.value_areas[-1].color_index = 5
 
         line_y += line_spacing
+        line_names = ["control", "gain", "integration", " exposure", "%DR" ]
+        line_values = ["AUTO","1024","200ms", "UNDER", "99"]
+        line_selectable = [ True, True, True, False, False ]
+        line_widths = [68,68,77,68,36]
+        x = start_x
+        for index in range(0, len(line_names)):
+            text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=line_y+height_1)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
+                self.group.append(border_rectangle)
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line_y+height_1+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+height_1 +int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+            x += line_widths[index]
+
+
 
 
         self.selection_count = len( self.selection_rectangles )
