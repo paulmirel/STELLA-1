@@ -345,7 +345,7 @@ class Calibration_Page( Page ):
             x += line_widths[index]
 
         line_y += line_spacing
-        line_names = ["wheel", "loaded", "position", " part number", "tracking"]
+        line_names = ["wheel", "sensors", "position", " part number", "tracking"]
         line_values = ["5", "7","0","as7265x", "500"]
         line_selectable = [ False, False, True, False, False ]
         line_widths = [44,50,56,100,60]
@@ -375,8 +375,67 @@ class Calibration_Page( Page ):
             self.group.append(text_group)
             x += line_widths[index]
 
+        line_y += line_spacing
+        line_names = ["wheel", "filters", "position", " part number", "value"]
+        line_values = ["F0", "9","0","TBD", "TBD"]
+        line_selectable = [ False, False, True, False, False ]
+        line_widths = [44,50,56,100,60]
+        x = start_x
+        for index in range(0, len(line_names)):
+            text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=line_y+height_1)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
+                self.group.append(border_rectangle)
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line_y+height_1+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+height_1 +int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+            x += line_widths[index]
 
-
+        line_y += line_spacing - height_1
+        line_names = ["", "", "", "", ""]
+        line_values = ["ALL", "RUN","PAUSE","ready", "PLOT"]
+        line_selectable = [ True, True, True, False, True ]
+        line_widths = [50,52,74,78,62]
+        x = start_x
+        for index in range(0, len(line_names)):
+            text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
+            text_area = label.Label(terminalio.FONT, text=line_names[index], color=self.palette[0])
+            text_group.append(text_area)
+            self.group.append(text_group)
+            if line_selectable[index]:
+                selection_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index],
+                                                                    height=height_2, x=x, y=line_y+height_1)
+                selection_rectangle.hidden = True
+                self.group.append(selection_rectangle)
+                self.selection_rectangles.append(selection_rectangle)
+                border_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=line_widths[index]-2*(select_width-border_width),
+                                                                    height=height_2-2*(select_width-border_width), x=x+select_width-border_width, y=line_y+height_1+select_width-border_width)
+                self.group.append(border_rectangle)
+                self.area_rectangle = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=line_widths[index]-2*select_width,
+                                                            height=height_2-2*select_width, x=x+select_width, y=line_y+height_1+select_width)
+                self.group.append(self.area_rectangle)
+                self.value_areas.append(self.area_rectangle)
+            text_group = displayio.Group(scale=2, x=x+offset_2, y=line_y+height_1 +int(height_2/2))
+            self.text_area = label.Label(terminalio.FONT, text=line_values[index], color=self.palette[0])
+            self.text_areas.append(self.text_area)
+            text_group.append(self.text_area)
+            self.group.append(text_group)
+            x += line_widths[index]
         self.selection_count = len( self.selection_rectangles )
 
         #graph group
