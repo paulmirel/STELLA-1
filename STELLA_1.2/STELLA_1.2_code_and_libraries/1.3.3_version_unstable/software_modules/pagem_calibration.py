@@ -274,15 +274,15 @@ class Calibration_Page( Page ):
 
         line_y += line_spacing - height_1
         batch_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=12, width=56-2*select_width,
-                                                            height=height_2-2*select_width, x=42, y=line_y+height_1+select_width)
+                                                            height=height_2-2*select_width, x=98, y=line_y+height_1+select_width)
         self.group.append(batch_highlight)
         self.status_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=5, width=54-2*select_width+14,
                                                             height=height_2-2*select_width, x=154, y=line_y+height_1+select_width)
         self.group.append(self.status_highlight)
-        line_names = ["battery", "inc", "batch", "status", "self-test/reset" ]
+        line_names = ["battery", "inc", "  batch", "status", "self-test/reset" ]
         line_values = ["---","B+","---", "----", "SELF-TS"] #RESET #_STOP_
         line_selectable = [ False, True, False, False, True ]
-        line_widths = [52,38,58,70,100]
+        line_widths = [54,38,56,70,100]
         x = start_x
         for index in range(0, len(line_names)):
             text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
