@@ -65,26 +65,30 @@ class Calibration_Page( Page ):
         self.sync_system_clock()
         self.mux_8_to_1 = adafruit_tca9548a.TCA9548A(self.instrument.i2c_bus)
         self.spectral_sensors = []
+
         for index in range (0,7):
             try:
                 active_sensor = spectralm_as7343.initialize_as7343_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
                 sensor_kind = 7343
             except Exception as err:
-                pass
-                try:
-                    active_sensor = spectralm_as7341.initialize_as7341_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
-                    sensor_kind = 7341
-                except Exception as err:
-                    print (err)
-                    pass
+                #print (err)
+                sensor_kind = 0
+            try:
+                active_sensor = spectralm_as7341.initialize_as7341_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
+                sensor_kind = 7341
+            except Exception as err:
+                #print (err)
+                sensor_kind = 0
+            try:
+                print("try as7265x")
+                sensor_kind = 0
+            except Exception as err:
+                print(err)
             self.spectral_sensors.append ( active_sensor )
             if sensor_kind == 7343:
                 active_sensor.lamp_on()
-                print(index, "on")
                 time.sleep(2)
                 active_sensor.lamp_off()
-                print(index, "off")
-
             if sensor_kind == 7341:
                 active_sensor.lamp_on()
                 time.sleep(2)
