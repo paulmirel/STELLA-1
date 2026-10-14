@@ -15,8 +15,9 @@ import busio
 import rtc
 import adafruit_tca9548a
 import adafruit_as5600
-from adafruit_as7343 import AS7343
-from adafruit_as7341 import AS7341
+from software_modules import spectralm_as7341 #VIS
+
+
 import adafruit_ds3231
 from adafruit_pca9685 import PCA9685
 
@@ -70,9 +71,10 @@ class Calibration_Page( Page ):
             except Exception as err:
                 pass
                 try:
-                    active_sensor = AS7341(self.mux_8_to_1[index])
+                    active_sensor = spectralm_as7341.initialize_as7341_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
                     sensor_kind = 7341
                 except Exception as err:
+                    print (err)
                     pass
             self.spectral_sensors.append ( active_sensor )
             if sensor_kind == 7343:
@@ -81,10 +83,9 @@ class Calibration_Page( Page ):
                 time.sleep(2)
                 active_sensor.led_enabled = False
             if sensor_kind == 7341:
-                active_sensor.led_current = 20
-                active_sensor.led = True
+                active_sensor.lamp_on()
                 time.sleep(2)
-                active_sensor.led = False
+                active_sensor.lamp_off()
 
 
 

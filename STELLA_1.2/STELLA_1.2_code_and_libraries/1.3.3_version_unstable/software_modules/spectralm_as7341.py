@@ -8,14 +8,14 @@ from adafruit_as7341 import Gain as AS7341_Gain
 from .classm_device import Device
 
 
-def initialize_as7341_spectrometer( instrument ):
+def initialize_as7341_spectrometer( instrument, alt_bus = None ):
     as7341_spectrometer = False
     try:
-        as7341_spectrometer = as7341_Spectrometer( instrument )
+        as7341_spectrometer = as7341_Spectrometer( instrument, alt_bus )
         instrument.welcome_page.announce( "initialize_as7341_spectrometer" )
         instrument.spectral_sensors_present.append( as7341_spectrometer )
     except Exception as err:
-        #print( "as7341_spectrometer_offline" )
+        print( "as7341_spectrometer_offline", err)
         pass
     return as7341_spectrometer
 
@@ -79,8 +79,11 @@ class Spectral_Channel( Device ):
         print( self.log())
 
 class as7341_Spectrometer( Device ):
-    def __init__( self, instrument ):
-        super().__init__(name = "as7341_spectrometer", pn = "as7341", address = 0x39, swob = AS7341( instrument.i2c_bus ))
+    def __init__( self, instrument, alt_bus = None ):
+        if alt_bus is None:
+            super().__init__(name = "as7341_spectrometer", pn = "as7341", address = 0x39, swob = AS7341( instrument.i2c_bus ))
+        else:
+            super().__init__(name = "as7341_spectrometer", pn = "as7341", address = 0x39, swob = AS7341( alt_bus ))
         self.instrument = instrument
         self.choice_label = "as7341 VIS"
         self.wavelength_bands_nm = 415, 445, 480, 515, 555, 590, 630, 682
