@@ -61,6 +61,30 @@ class Calibration_Page( Page ):
         self.second = time_struture.tm_sec
         print( self.year, self.month, self.day, self.hour, self.minute, self.second)
         self.sync_system_clock()
+        self.mux_8_to_1 = adafruit_tca9548a.TCA9548A(self.instrument.i2c_bus)
+        self.spectral_sensors = []
+        for index in range (0,7):
+            try:
+                active_sensor = AS7343(self.mux_8_to_1[index])
+                sensor_kind = 7343
+            except Exception as err:
+                pass
+                try:
+                    active_sensor = AS7341(self.mux_8_to_1[index])
+                    sensor_kind = 7341
+                except Exception as err:
+                    pass
+            self.spectral_sensors.append ( active_sensor )
+            if sensor_kind == 7343:
+                active_sensor.led_current_ma = 20
+                active_sensor.led_enabled = True
+                time.sleep(2)
+                active_sensor.led_enabled = False
+            if sensor_kind == 7341:
+                active_sensor.led_current = 20
+                active_sensor.led = True
+                time.sleep(2)
+                active_sensor.led = False
 
 
 
@@ -377,7 +401,7 @@ class Calibration_Page( Page ):
 
         line_y += line_spacing
         line_names = ["wheel", "filters", "position", " part number", "value"]
-        line_values = ["F0", "9","0","TBD", "TBD"]
+        line_values = ["F0", "9","A","TBD", "TBD"]
         line_selectable = [ False, False, True, False, False ]
         line_widths = [44,50,56,100,60]
         x = start_x
