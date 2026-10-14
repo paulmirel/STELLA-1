@@ -7,10 +7,10 @@ import time
 import qwiic_as7265x
 from .classm_device import Device
 
-def initialize_as7265x_spectrometer( instrument ):
+def initialize_as7265x_spectrometer( instrument, alt_bus = None ):
     as7265x_spectrometer = Null_as7265x_Spectrometer()
     try:
-        as7265x_spectrometer = as7265x_Spectrometer( instrument )#.i2c_bus )
+        as7265x_spectrometer = as7265x_Spectrometer( instrument, alt_bus )
         instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
         instrument.spectral_sensors_present.append( as7265x_spectrometer )
         as7265x_spectrometer.all_lamps_on()
@@ -86,8 +86,11 @@ class Spectral_Channel( Device ):
 
 
 class as7265x_Spectrometer( Device ):
-    def __init__( self, instrument ): #com_bus ):
-        super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  ))
+    def __init__( self, instrument, alt_bus=None ): #com_bus ):
+        if alt_bus is None:
+            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  ))
+        else:
+            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x( alt_bus )) #this probably won't work
         self.choice_label = "as7256x V+NIR"
         self.instrument = instrument
         #self.wavelength_bands_nm = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535

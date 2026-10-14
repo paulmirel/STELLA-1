@@ -8,10 +8,10 @@ from adafruit_as7343 import Gain as AS7343_Gain
 from .classm_device import Device
 
 
-def initialize_as7343_spectrometer( instrument ):
+def initialize_as7343_spectrometer( instrument, alt_bus = None ):
     as7343_spectrometer = False
     try:
-        as7343_spectrometer = as7343_Spectrometer( instrument )
+        as7343_spectrometer = as7343_Spectrometer( instrument, alt_bus )
         instrument.welcome_page.announce( "initialize_as7343_spectrometer" )
         instrument.spectral_sensors_present.append( as7343_spectrometer )
     except Exception as err:
@@ -80,8 +80,11 @@ class Spectral_Channel( Device ):
         print( self.log())
 
 class as7343_Spectrometer( Device ):
-    def __init__( self, instrument ):
-        super().__init__(name = "as7343_spectrometer", pn = "as7343", address = 0x39, swob = AS7343( instrument.i2c_bus ))
+    def __init__( self, instrument, alt_bus = None )
+        if alt_bus is None:
+            super().__init__(name = "as7343_spectrometer", pn = "as7343", address = 0x39, swob = AS7343( instrument.i2c_bus ))
+        else:
+            super().__init__(name = "as7343_spectrometer", pn = "as7343", address = 0x39, swob = AS7343( alt_bus ))
         self.instrument = instrument
         self.choice_label = "as7343 VNIR"
         self.parameters = [ "all ch" ]
