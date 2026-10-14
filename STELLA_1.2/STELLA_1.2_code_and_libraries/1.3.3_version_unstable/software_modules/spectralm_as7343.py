@@ -80,7 +80,7 @@ class Spectral_Channel( Device ):
         print( self.log())
 
 class as7343_Spectrometer( Device ):
-    def __init__( self, instrument, alt_bus = None )
+    def __init__( self, instrument, alt_bus = None ):
         if alt_bus is None:
             super().__init__(name = "as7343_spectrometer", pn = "as7343", address = 0x39, swob = AS7343( instrument.i2c_bus ))
         else:
@@ -101,9 +101,9 @@ class as7343_Spectrometer( Device ):
         self.gain_index = 5
         self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000]
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
-        self.integration_time_index = 8
+        self.integration_time_index = 5
         self.lamp_selection_list = ["VNIR mA"]
-        self.current_index = 0
+        self.current_index = 8
         self.lamp_current_mA_list = [0,2,4,6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100 ]
         self.data_counts = [0,0,0,0,0,0,0,0,0,0,0,0]
         if self.swob:
@@ -156,16 +156,16 @@ class as7343_Spectrometer( Device ):
             return False
 
     def lamp_on(self):
-        self.swob.led = True
+        self.swob.led_enabled = True
     def lamp_off(self):
-        self.swob.led = False
+        self.swob.led_enabled = False
     def blink( self, duration ):
         self.swob.led_current = 50
         self.swob.led = True
         time.sleep( duration )
         self.swob.led = False
 
-    def set_lamp_current_mA( self, current_index, lamp_index ):
+    def set_lamp_current_mA( self, current_index, lamp_index=None ):
         try:
             if current_index == 0:
                 self.lamp_off()
@@ -173,7 +173,7 @@ class as7343_Spectrometer( Device ):
             else:
                 self.lamp_on()
                 current_mA = self.lamp_current_mA_list[current_index]
-                self.swob.led_current = current_mA
+                self.swob.led_current_ma = current_mA
                 return current_mA
         except Exception as err:
             print( "failed to set current:", err )

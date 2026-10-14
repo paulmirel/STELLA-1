@@ -107,7 +107,7 @@ class as7341_Spectrometer( Device ):
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
         self.integration_time_index = 8
         self.lamp_selection_list = ["Vis mA"]
-        self.current_index = 0
+        self.current_index = 5
         self.lamp_current_mA_list = [0,2,4,6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100 ]
         self.data_counts = [0,0,0,0,0,0,0,0]
         if self.swob:
@@ -190,7 +190,7 @@ class as7341_Spectrometer( Device ):
         time.sleep( duration )
         self.swob.led = False
 
-    def set_lamp_current_mA( self, current_index, lamp_index ):
+    def set_lamp_current_mA( self, current_index, lamp_index=None ):
         try:
             if current_index == 0:
                 self.lamp_off()
