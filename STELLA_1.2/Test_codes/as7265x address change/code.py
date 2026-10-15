@@ -66,12 +66,16 @@ if True:
 
     for index in range (0,7):
         print("working sensor", index)
-        active_sensor = AS7265x_I2C(mux_8_to_1[index])
-        active_sensor.indicator_led = True
-        time.sleep(1)
-        active_sensor.indicator_led = False
-        time.sleep(1)
-        active_sensor.indicator_led = True
+        try:
+            active_sensor = AS7265x_I2C(mux_8_to_1[index])
+            active_sensor.indicator_led = True
+            time.sleep(1)
+            active_sensor.indicator_led = False
+            time.sleep(2)
+            active_sensor.indicator_led = False
+        except ValueError as err:
+            print("nobody at", index)
+
 
 
 

@@ -4,18 +4,18 @@ DEVICE_TYPE = "as7265x_spectral_sensor"
 # Author Paul Mirel
 
 import time
-import qwiic_as7265x
+from sparkfun_triad import AS7265x_I2C
 from .classm_device import Device
 
-def initialize_as7265x_spectrometer( instrument, alt_bus = None ):
-    as7265x_spectrometer = Null_as7265x_Spectrometer()
+def initialize_as7265x_spectrometer( instrument, alt_bus=None ):
+    as7265x_spectrometer = False
     try:
-        as7265x_spectrometer = as7265x_Spectrometer( instrument, alt_bus )
+        as7265x_spectrometer = as7265x_Spectrometer( instrument, alt_bus)
         instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
         instrument.spectral_sensors_present.append( as7265x_spectrometer )
-        as7265x_spectrometer.all_lamps_on()
+        #as7265x_spectrometer.all_lamps_on()
         time.sleep(0.1)
-        as7265x_spectrometer.all_lamps_off()
+        #as7265x_spectrometer.all_lamps_off()
     except Exception as err:
         print( "as7265x spectrometer failed: {}".format( err ))
     return as7265x_spectrometer
@@ -86,11 +86,11 @@ class Spectral_Channel( Device ):
 
 
 class as7265x_Spectrometer( Device ):
-    def __init__( self, instrument, alt_bus=None ): #com_bus ):
+    def __init__( self, instrument, alt_bus=None ):
         if alt_bus is None:
-            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x(  ))
+            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = AS7265x_I2C(instrument.i2c_bus))
         else:
-            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = qwiic_as7265x.QwiicAS7265x( alt_bus )) #this probably won't work
+            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = AS7265x_I2C(alt_bus))
         self.choice_label = "as7256x V+NIR"
         self.instrument = instrument
         #self.wavelength_bands_nm = 610, 680, 730, 760, 810, 860, 560, 585, 645, 705, 900, 940, 410, 435, 460, 485, 510, 535
@@ -134,19 +134,19 @@ class as7265x_Spectrometer( Device ):
             self.integration_time_ms_list.append( integration_time_ms )
 
         #self.lamp_current_mA_index = 0
-        self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
+        #self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
         self.lamp_selection_list = [ "UV mA", "Vis mA", "NIR mA" ]
         self.lamp_current_mA_list = []
         self.lamp_current_mA_list.append([ 0, 12.5 ])
         self.lamp_current_mA_list.append([ 0, 12.5, 25, 50, 100 ])
         self.lamp_current_mA_list.append([ 0, 12.5, 25, 50 ])
-        self.lamp_current_constant_list = [  self.swob.kLedCurrentLimit12_5mA, self.swob.kLedCurrentLimit25mA, self.swob.kLedCurrentLimit50mA, self.swob.kLedCurrentLimit100mA ]
+        #self.lamp_current_constant_list = [  self.swob.kLedCurrentLimit12_5mA, self.swob.kLedCurrentLimit25mA, self.swob.kLedCurrentLimit50mA, self.swob.kLedCurrentLimit100mA ]
         if self.swob:
-            self.swob.begin()
-            self.swob.disable_indicator()
-            self.swob.set_measurement_mode(self.swob.kMeasurementMode6ChanContinuous)
-            self.set_gain( self.gain_index )
-            self.set_integration_time( self.integration_time_index )
+            self.swob.indicator_led = True #needed to establish control
+            self.swob.indicator_led = False
+            self.swob.conversion_mode = AS7265x_I2C.MODE_2
+            #self.set_gain( self.gain_index )
+            #self.set_integration_time( self.integration_time_index )
         self.chip_temperatures = [ 0,0,0,0 ]
 
     def make_spectral_channels( self ):
@@ -259,8 +259,10 @@ class as7265x_Spectrometer( Device ):
         return self.max_counts, self.min_counts
 
     def read_chip_temperature_by_chip_number( self, chip_number):
-        self.chip_temperatures[ chip_number] = int(round(self.swob.get_temperature(device = chip_number),0))
-        return self.chip_temperatures[ chip_number]
+        pass
+        if False:
+            self.chip_temperatures[ chip_number] = int(round(self.swob.get_temperature(device = chip_number),0))
+            return self.chip_temperatures[ chip_number]
 
     def read_irradiances_all_channels( self ):
         self.data_fcal_irradiances = self.swob.get_value(1) # 1 index returns factory calibrated irradiance values, bands in unsorted order
@@ -275,95 +277,45 @@ class as7265x_Spectrometer( Device ):
         return self.dict_bandwidths[wavelength]
 
     def all_lamps_on(self):
-        #print( "turn on the lamps")
-        self.swob.enable_bulb(0)   # white
-        self.swob.enable_bulb(1)   # NIR
-        self.swob.enable_bulb(2)   # UV
+        pass
+        if False: #print( "turn on the lamps")
+            self.swob.enable_bulb(0)   # white
+            self.swob.enable_bulb(1)   # NIR
+            self.swob.enable_bulb(2)   # UV
     def all_lamps_off(self):
-        #print( "turn off the lamps")
-        self.swob.disable_bulb(0)   # white
-        self.swob.disable_bulb(1)   # NIR
-        self.swob.disable_bulb(2)   # UV
+        pass
+        if False:#print( "turn off the lamps")
+            self.swob.disable_bulb(0)   # white
+            self.swob.disable_bulb(1)   # NIR
+            self.swob.disable_bulb(2)   # UV
     def lamp_on( self, lamp_index ):
-        self.swob.enable_bulb( self.lamp_device_constant_list[ lamp_index ])
+        pass
+        if False:
+            self.swob.enable_bulb( self.lamp_device_constant_list[ lamp_index ])
     def lamp_off( self, lamp_index ):
-        self.swob.disable_bulb( self.lamp_device_constant_list[ lamp_index ])
+        pass
+        if False:
+            self.swob.disable_bulb( self.lamp_device_constant_list[ lamp_index ])
     def set_lamp_current_mA( self, current_index, lamp_index ):
-        if lamp_index == 0: #limit UV lamp to 12.5mA
-            if current_index > 1:
-                current_index = 1
-        if lamp_index == 2: #limit NIR lamp to 50mA
-            if current_index > 3:
-                current_index = 3
-        try:
-            if current_index == 0:
-                self.lamp_off( lamp_index )
-                return 0
-            else:
-                self.lamp_on( lamp_index )
-                self.swob.set_bulb_current( self.lamp_current_constant_list[ current_index-1 ], self.lamp_device_constant_list[ lamp_index ] )
-                return self.lamp_current_mA_list[lamp_index][ current_index ]
-        except Exception as err:
-            print( "failed to set current:", err )
-            return False
+        pass
+        if False:
+            if lamp_index == 0: #limit UV lamp to 12.5mA
+                if current_index > 1:
+                    current_index = 1
+            if lamp_index == 2: #limit NIR lamp to 50mA
+                if current_index > 3:
+                    current_index = 3
+            try:
+                if current_index == 0:
+                    self.lamp_off( lamp_index )
+                    return 0
+                else:
+                    self.lamp_on( lamp_index )
+                    self.swob.set_bulb_current( self.lamp_current_constant_list[ current_index-1 ], self.lamp_device_constant_list[ lamp_index ] )
+                    return self.lamp_current_mA_list[lamp_index][ current_index ]
+            except Exception as err:
+                print( "failed to set current:", err )
+                return False
 
-
-class Null_as7265x_Spectrometer( Device ):
-    def __init__( self ):
-        super().__init__(name = None, swob = None)
-        self.swob = None
-        self.choice_label = None
-        self.wavelength_bands_nm = None
-        self.band_designations_in_read_all_order = None
-        self.bandwidths_nm =None
-        self.chip_number = None
-        self.dict_chip_number = None
-        self.dict_bandwidths = None
-        self.bands_sorted = None
-        self.uncertainty_percent = None
-        self.afov_deg = None
-        # settings
-        self.gain_list = None
-        self.default_gain_index = None
-        self.integration_time_ms_step = None
-        self.integration_time_index_maximum = None
-        self.integration_time_ms_maximum = None
-        self.integration_time_number_of_choices = None
-        self.integration_time_index_per_choice = None
-        self.integration_time_ms_list = None
-        self.default_integration_time_index = None
-        self.lamp_current_mA_list = None
-    def set_gain(self, index):
-        pass
-    def set_integration_time( self, index ):
-        pass
-    def read_chip_temperatures( self ):
-        pass
-    def read_counts_all_channels( self ):
-        pass
-    def read_irradiances_all_channels( self ):
-        pass
-    def read_counts( self, index ):
-        pass
-    def list_wavelength_bands_nm( self ):
-        pass
-    def header( self ):
-        pass
-    def get_bandwidth(self, wavelength):
-        return self.dict_bandwidths[wavelength]
-    def log( self, wavelength):
-        pass
-    def serial_log(self, wavelength):
-        pass
-    def printlog(self,ch):
-        pass
-    def lamps_on(self):
-        pass
-    def lamps_off(self):
-        pass
-    def lamp_set_current_mA( self, current_index, lamp_index ):
-        pass
-    def lamp_set_current_mA_all( self, current_index ):
-        pass
 
 

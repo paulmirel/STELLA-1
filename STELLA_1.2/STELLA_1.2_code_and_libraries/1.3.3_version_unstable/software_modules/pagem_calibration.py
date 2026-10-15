@@ -17,6 +17,8 @@ import adafruit_tca9548a
 import adafruit_as5600
 from software_modules import spectralm_as7341
 from software_modules import spectralm_as7343
+from software_modules import spectralm_as7265x
+
 
 
 import adafruit_ds3231
@@ -68,6 +70,13 @@ class Calibration_Page( Page ):
 
         for index in range (0,7):
             try:
+                print("try as7265x", index)
+                active_sensor = spectralm_as7265x.initialize_as7265x_spectrometer( self.instrument, alt_bus=self.mux_8_to_1[index] )
+                sensor_kind = 7265
+            except Exception as err:
+                print(err)
+
+            try:
                 active_sensor = spectralm_as7343.initialize_as7343_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
                 sensor_kind = 7343
             except Exception as err:
@@ -79,11 +88,7 @@ class Calibration_Page( Page ):
             except Exception as err:
                 #print (err)
                 sensor_kind = 0
-            try:
-                print("try as7265x")
-                sensor_kind = 0
-            except Exception as err:
-                print(err)
+
             self.spectral_sensors.append ( active_sensor )
             if sensor_kind == 7343:
                 active_sensor.lamp_on()
