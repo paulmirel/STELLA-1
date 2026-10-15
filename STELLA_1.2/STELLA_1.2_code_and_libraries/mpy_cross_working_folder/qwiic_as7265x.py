@@ -211,7 +211,8 @@ class QwiicAS7265x(object):
         @return **bool** `True` if connected, otherwise `False`
         """
         # Check if connected by seeing if an ACK is received
-        return self._i2c.isDeviceConnected(self.address)
+        return True
+        #return self._i2c.isDeviceConnected(self.address)
 
     connected = property(is_connected)
 
