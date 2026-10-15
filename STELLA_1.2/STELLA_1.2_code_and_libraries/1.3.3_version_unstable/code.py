@@ -184,32 +184,35 @@ def main():
     lab_spec_present = [False,False,False]
     instrument.spectral_sensors_detected = False
     # initialize spectral sensors
-    if True:
-        if ('0x74') in devices_present_hex:
-            print("as7331 found")
-            from software_modules import spectralm_as7331 #UV
-            as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
-        if ('0x39') in devices_present_hex:
-            from software_modules import spectralm_as7341 #VIS
-            as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
-            if as7341_spectrometer:
-                lab_spec_present[0] = True
-                print("as7341 found")
-            else:
-                from software_modules import spectralm_as7343 #VNIR
-                as7343_spectrometer = spectralm_as7343.initialize_as7343_spectrometer( instrument )
-                if as7343_spectrometer:
-                    print("as7343 found")
+    if ('0x40') in devices_present_hex:
+        pass
+    else:
+        if True:
+            if ('0x74') in devices_present_hex:
+                print("as7331 found")
+                from software_modules import spectralm_as7331 #UV
+                as7331_spectrometer = spectralm_as7331.initialize_as7331_spectrometer( instrument )
+            if ('0x39') in devices_present_hex:
+                from software_modules import spectralm_as7341 #VIS
+                as7341_spectrometer = spectralm_as7341.initialize_as7341_spectrometer( instrument )
+                if as7341_spectrometer:
                     lab_spec_present[0] = True
-        else:
-            as7341_spectrometer = False
-            as7343_spectrometer = False
-        if ('0x49') in devices_present_hex:
-            print("as7265x found ")
-            from software_modules import spectralm_as7265x #VIS+NIR
-            as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
-        if len( instrument.spectral_sensors_present ) > 0:
-            instrument.spectral_sensors_detected = True
+                    print("as7341 found")
+                else:
+                    from software_modules import spectralm_as7343 #VNIR
+                    as7343_spectrometer = spectralm_as7343.initialize_as7343_spectrometer( instrument )
+                    if as7343_spectrometer:
+                        print("as7343 found")
+                        lab_spec_present[0] = True
+            else:
+                as7341_spectrometer = False
+                as7343_spectrometer = False
+            if ('0x49') in devices_present_hex:
+                print("as7265x found ")
+                from software_modules import spectralm_as7265x #VIS+NIR
+                as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
+            if len( instrument.spectral_sensors_present ) > 0:
+                instrument.spectral_sensors_detected = True
 
     # initialize sensors
 

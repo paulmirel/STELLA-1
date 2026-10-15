@@ -49,6 +49,3 @@ if True:
     AS7265x.indicator_led = False
     time.sleep(4)
     AS7265x.indicator_led = True
-
-
-
