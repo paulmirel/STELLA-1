@@ -40,12 +40,38 @@ if False: # this works with the third party library and the address changer
     time.sleep(4)
     AS7265x.indicator_led = True
 
+#section 5
+if False:
+    i2c_bus = board.I2C()
+    mux_8_to_1 = adafruit_tca9548a.TCA9548A(i2c_bus)
+    AS7265x0 = AS7265x_I2C(mux_8_to_1[0])
+    AS7265x0.indicator_led = True
+    time.sleep(1)
+    AS7265x0.indicator_led = False
+    time.sleep(4)
+    AS7265x0.indicator_led = True
+    #section 6
+    AS7265x1 = AS7265x_I2C(mux_8_to_1[1])
+    AS7265x1.indicator_led = True
+    time.sleep(1)
+    AS7265x1.indicator_led = False
+    time.sleep(4)
+    AS7265x1.indicator_led = True
+
+
+#section 7
 if True:
     i2c_bus = board.I2C()
     mux_8_to_1 = adafruit_tca9548a.TCA9548A(i2c_bus)
-    AS7265x = AS7265x_I2C(mux_8_to_1[0])
-    AS7265x.indicator_led = True
-    time.sleep(1)
-    AS7265x.indicator_led = False
-    time.sleep(4)
-    AS7265x.indicator_led = True
+
+    for index in range (0,7):
+        print("working sensor", index)
+        active_sensor = AS7265x_I2C(mux_8_to_1[index])
+        active_sensor.indicator_led = True
+        time.sleep(1)
+        active_sensor.indicator_led = False
+        time.sleep(1)
+        active_sensor.indicator_led = True
+
+
+
