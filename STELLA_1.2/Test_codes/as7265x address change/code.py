@@ -3,6 +3,7 @@ import busio
 import board
 import adafruit_tca9548a
 from sparkfun_triad import AS7265x_I2C
+from adafruit_as7341 import AS7341
 import sys
 import time
 
@@ -71,11 +72,27 @@ if True:
             active_sensor.indicator_led = True
             time.sleep(1)
             active_sensor.indicator_led = False
-            time.sleep(2)
-            active_sensor.indicator_led = False
+            #time.sleep(2)
+            #active_sensor.indicator_led = False
         except ValueError as err:
             print("nobody at", index)
 
 
+#section 7
+if False:
+    i2c_bus = board.I2C()
+    mux_8_to_1 = adafruit_tca9548a.TCA9548A(i2c_bus)
+
+    for index in range (0,7):
+        print("working sensor", index)
+        try:
+            active_sensor = AS7341(mux_8_to_1[index])
+            active_sensor.indicator_led = True
+            time.sleep(1)
+            active_sensor.indicator_led = False
+            #time.sleep(2)
+            #active_sensor.indicator_led = False
+        except ValueError as err:
+            print("nobody at", index, err)
 
 
