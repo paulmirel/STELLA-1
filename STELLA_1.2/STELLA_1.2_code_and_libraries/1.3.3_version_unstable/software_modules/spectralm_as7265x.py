@@ -181,9 +181,8 @@ class as7265x_Spectrometer( Device ):
 
 
     def read_counts_by_wavelength( self, wavelength ):
-        pass
-        #index = self.wavelength_bands_nm.index(wavelength)
-        #return self.read_counts_by_index( index )
+        index = self.wavelength_bands_nm.index(wavelength)
+        return self.read_counts_by_index( index )
 
 
     def read_counts_by_index( self, index ):
@@ -258,6 +257,7 @@ class as7265x_Spectrometer( Device ):
     def read( self ):
         for index in range( 0, self.number_of_channels):
             self.read_counts_by_index( index )
+        print(self.data_counts)
 
     def report_counts_by_index( self, index ):
         pass
