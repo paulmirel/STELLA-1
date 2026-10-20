@@ -330,18 +330,19 @@ class AS726x:
 
     @property
     def integration_time(self) -> float:
-        """The integration time in milliseconds between 2.8 and 714 ms"""
+        """The integration time in milliseconds between 2.78 and 711 ms"""
+        """ NASA Library Modification Note: the integration time is 2.78 ms for each step, not 2.8, per datasheet."""
         return self._integration_time
 
     @integration_time.setter
     def integration_time(self, val: float) -> None:
         val = int(val)
-        if not 2.8 <= val <= 714:
-            raise ValueError("Out of supported range 2.8 - 714 ms")
+        if not 2.78 <= val <= 711:
+            raise ValueError("Out of supported range 2.78 - 711 ms")
         if self._integration_time == val:
             return
         self._integration_time = val
-        self._virtual_write(_AS726X_INT_T, int(val / 2.8))
+        self._virtual_write(_AS726X_INT_T, int(val / 2.78))
 
     def start_measurement(self) -> None:
         """Begin a measurement.
