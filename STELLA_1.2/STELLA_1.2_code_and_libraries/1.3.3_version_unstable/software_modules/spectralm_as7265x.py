@@ -127,27 +127,26 @@ class as7265x_Spectrometer( Device ):
                 integration_time_ms = int( integration_time_ms)
             self.integration_time_ms_list.append( integration_time_ms )
 
-
+        if self.swob:
+            self.swob.indicator_led = True #needed to establish control
+            self.swob.indicator_led = False
+            self.swob.conversion_mode = AS7265x_I2C.MODE_2
+            self.set_gain( self.gain_index )
+            self.set_integration_time( self.integration_time_index )
         self.uncertainty_percent = 12
         self.afov_full_angle_deg = (20.5 * 2) #datasheet reports half angle.
 
 
-        if False:
-            #self.lamp_current_mA_index = 0
-            #self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
-            self.lamp_selection_list = [ "UV mA", "Vis mA", "NIR mA" ]
-            self.lamp_current_mA_list = []
-            self.lamp_current_mA_list.append([ 0, 12.5 ])
-            self.lamp_current_mA_list.append([ 0, 12.5, 25, 50, 100 ])
-            self.lamp_current_mA_list.append([ 0, 12.5, 25, 50 ])
-            #self.lamp_current_constant_list = [  self.swob.kLedCurrentLimit12_5mA, self.swob.kLedCurrentLimit25mA, self.swob.kLedCurrentLimit50mA, self.swob.kLedCurrentLimit100mA ]
-            if self.swob:
-                self.swob.indicator_led = True #needed to establish control
-                self.swob.indicator_led = False
-                self.swob.conversion_mode = AS7265x_I2C.MODE_2
-                #self.set_gain( self.gain_index )
-                #self.set_integration_time( self.integration_time_index )
-            self.chip_temperatures = [ 0,0,0,0 ]
+
+        #self.lamp_current_mA_index = 0
+        #self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
+        self.lamp_selection_list = [ "UV mA", "Vis mA", "NIR mA" ]
+        self.lamp_current_mA_list = []
+        self.lamp_current_mA_list.append([ 0, 12.5 ])
+        self.lamp_current_mA_list.append([ 0, 12.5, 25, 50, 100 ])
+        self.lamp_current_mA_list.append([ 0, 12.5, 25, 50 ])
+
+        self.chip_temperatures = [ 0,0,0 ]
 
     def make_spectral_channels( self ):
         index = 0
@@ -259,7 +258,7 @@ class as7265x_Spectrometer( Device ):
     def read( self ):
         for index in range( 0, self.number_of_channels):
             self.read_counts_by_index( index )
-        print(self.data_counts)
+        #print(self.data_counts)
 
     def report_counts_by_index( self, index ):
         pass
