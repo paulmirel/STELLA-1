@@ -136,19 +136,19 @@ class as7265x_Spectrometer( Device ):
         self.uncertainty_percent = 12
         self.afov_full_angle_deg = (20.5 * 2) #datasheet reports half angle.
 
-        self.lamp_selection_list = [ "UV mA", "Vis mA", "NIR mA" ]
-        self.lamp_current_mA_list = ( 0, 12.5, 25, 50, 100 )
+        self.lamp_selection_list = [ "Vis mA", "NIR mA", "UV mA" ]
+        self.lamp_current_mA_list = [( 0, 12.5, 25, 50, 100 ),  (0, 12.5, 25),  (0, 12.5)]
+        if True:
+            self.set_lamp_current_mA(1,0)
+            self.set_lamp_current_mA(1,1)
+            self.set_lamp_current_mA(1,2)
 
-        self.all_lamps_on()
-        time.sleep(0.2)
-        self.all_lamps_off()
-        if False:
-            for chip in range (0,3):
-                print("chip {} lamp on".format(chip))
-                self.lamp_on(chip)
-                time.sleep(30)
-                print("chip {} lamp off".format(chip))
-                self.lamp_off(chip)
+        for chip in range (0,3):
+            print("chip {} lamp on".format(chip))
+            self.lamp_on(chip)
+            time.sleep(0.2)
+            print("chip {} lamp off".format(chip))
+            self.lamp_off(chip)
         self.chip_temperatures = [ 0,0,0 ]
 
     def make_spectral_channels( self ):
@@ -302,18 +302,16 @@ class as7265x_Spectrometer( Device ):
         return self.dict_bandwidths[wavelength]
 
     def all_lamps_on(self):
+        #seems to be nonfunctional
         print( "turn on the lamps")
         for chip in range (0,3):
-            self.swob.device = chip
-            self.swob.driver_led = True
+           self.lamp_on(chip)
 
     def all_lamps_off(self):
+        #seems to be nonfunctional
         print( "turn off the lamps")
         for chip in range (0,3):
-            self.swob.device = chip
-            self.swob.driver_led = False
-
-
+            self.lamp_off(chip)
 
     def lamp_on( self, chip_index ):
         self.swob.device = chip_index
@@ -324,6 +322,7 @@ class as7265x_Spectrometer( Device ):
         self.swob.driver_led = False
 
     def set_lamp_current_mA( self, current_index, chip_index ):
+        print ("chip_index", chip_index, "current_index", current_index, "current mA", self.lamp_current_mA_list[chip_index][ current_index ])
         self.swob.device = chip_index
         if chip_index == 2: #limit UV lamp to 12.5mA
             if current_index > 1:
@@ -332,12 +331,12 @@ class as7265x_Spectrometer( Device ):
             if current_index > 3:
                 current_index = 3
         try:
-            if current_index == 0:
+            if current_index == 0: #VIZ
                 self.lamp_off( chip_index )
                 return 0
             else:
                 self.lamp_on( chip_index )
-                self.swob.driver_led_current = self.lamp_current_mA_list[ current_index-1 ]
+                self.swob.driver_led_current = self.lamp_current_mA_list[chip_index][ current_index ]
                 return self.swob.driver_led_current
         except Exception as err:
             print( "failed to set current:", err )
