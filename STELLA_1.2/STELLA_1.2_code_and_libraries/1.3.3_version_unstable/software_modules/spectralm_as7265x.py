@@ -38,7 +38,7 @@ class Spectral_Channel( Device ):
         self.index = index
         self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "ct_per_s_nm", "irrad_W_per_m2", "bandwidth_nm",
                             "chip_number", "chip_temp_C"]
-        self.wavelength_nm = sensor_unit.wavelength_bands_nm_in_order[self.index]
+        self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
         self.chip_number = sensor_unit.chip_number_in_wavelength_order[self.index]
         self.values = [ self.wavelength_nm,
@@ -93,23 +93,23 @@ class as7265x_Spectrometer( Device ):
             super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = AS7265x_I2C(alt_bus))
         self.choice_label = "as7256x V+NIR"
         self.instrument = instrument
-        self.wavelength_bands_nm = [(610, 680, 730, 760, 810, 860), (560, 585, 645, 705, 900, 940), (410, 435, 460, 485, 510, 535)]
+        #self.wavelength_bands_nm = [(610, 680, 730, 760, 810, 860), (560, 585, 645, 705, 900, 940), (410, 435, 460, 485, 510, 535)]
         self.band_designations = [("R", "S", "T", "U", "V", "W"), ("G", "H", "I", "J", "K", "L"), ("A", "B", "C", "D", "E", "F" )]
         self.bandwidths_nm = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
-        self.wavelength_bands_nm_in_order = 410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 940
-        self.number_of_channels = len( self.wavelength_bands_nm_in_order )
+        self.wavelength_bands_nm = 410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 940
+        self.number_of_channels = len( self.wavelength_bands_nm )
         self.band_designations_in_wavelength_order = "A","B","C","D","E","F","G","H","R","I","S","J","T","U","V","W","K","L"
         self.chip_number_in_wavelength_order = [2,2,2,2,2,2,1,1,0,1,0,1,0,0,0,0,1,1]
         self.data_counts = []
-        #self.data_calibrated = []
+        self.data_calibrated = []
         for index in range( 0, self.number_of_channels+1):
             self.data_counts.append(0)
-            #self.data_calibrated.append(0)
+            self.data_calibrated.append(0)
 
         self.max_counts = 0
         self.min_counts = 0
         self.gain_list = [ 1, 3.7, 16, 64 ]
-        self.gain_index = 2
+        self.gain_index = 3
 
         self.integration_time_ms_step = 2.78
         self.integration_time_index_maximum = 256
@@ -117,7 +117,7 @@ class as7265x_Spectrometer( Device ):
         self.integration_time_number_of_choices = 16
         self.integration_time_index_per_choice = self.integration_time_index_maximum/ self.integration_time_number_of_choices
         self.integration_time_ms_list = []
-        self.integration_time_index = int( self.integration_time_number_of_choices / 2)
+        self.integration_time_index = 15#int( self.integration_time_number_of_choices / 2)
         self.integration_time_ms_list.append( self.integration_time_ms_step )
         for index in range( 1, self.integration_time_number_of_choices + 1 ):
             integration_time_ms = ((index) * self.integration_time_index_per_choice * self.integration_time_ms_step)
@@ -127,12 +127,12 @@ class as7265x_Spectrometer( Device ):
                 integration_time_ms = int( integration_time_ms)
             self.integration_time_ms_list.append( integration_time_ms )
 
+
+        self.uncertainty_percent = 12
+        self.afov_full_angle_deg = (20.5 * 2) #datasheet reports half angle.
+
+
         if False:
-            self.uncertainty_percent = 12
-            self.afov_full_angle_deg = (20.5 * 2) #datasheet reports half angle.
-
-
-
             #self.lamp_current_mA_index = 0
             #self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
             self.lamp_selection_list = [ "UV mA", "Vis mA", "NIR mA" ]
@@ -151,7 +151,7 @@ class as7265x_Spectrometer( Device ):
 
     def make_spectral_channels( self ):
         index = 0
-        for item in self.wavelength_bands_nm_in_order:
+        for item in self.wavelength_bands_nm:
             name = "{}nm_channel".format(item)
             spectral_channel = initialize_spectral_channel( name, self, index )
             index += 1
@@ -188,7 +188,7 @@ class as7265x_Spectrometer( Device ):
     def read_counts_by_index( self, index ):
         counts = 0
         try:
-            if index in range (0,5):
+            if index in [0,1,2,3,4,5]:
                 self.swob.device = 2
                 if index == 0: counts = self.swob.raw_channel0
                 if index == 1: counts = self.swob.raw_channel1
@@ -204,7 +204,7 @@ class as7265x_Spectrometer( Device ):
                 if index == 11: counts = self.swob.raw_channel3
                 if index == 16: counts = self.swob.raw_channel4
                 if index == 17: counts = self.swob.raw_channel5
-            else:
+            elif index in [8,10,12,13,14,15]:
                 self.swob.device = 0
                 if index == 8: counts = self.swob.raw_channel0
                 if index == 10: counts = self.swob.raw_channel1
@@ -219,8 +219,10 @@ class as7265x_Spectrometer( Device ):
             return False
 
     def read_calibrated_by_index( self, index ):
+        value = 0
+
         try:
-            if index in range (0,5):
+            if index in [0,1,2,3,4,5]:
                 self.swob.device = 2
                 if index == 0: value = self.swob.channel0
                 if index == 1: value = self.swob.channel1
@@ -236,7 +238,7 @@ class as7265x_Spectrometer( Device ):
                 if index == 11: value = self.swob.channel3
                 if index == 16: value = self.swob.channel4
                 if index == 17: value = self.swob.channel5
-            else:
+            elif index in [8,10,12,13,14,15]:
                 self.swob.device = 0
                 if index == 8: value = self.swob.channel0
                 if index == 10: value = self.swob.channel1
