@@ -65,6 +65,7 @@ print( devices_present_hex )
 # 0x4a ads1115  Analog to digital converter, 16 bits, 4 channels ### connect ADDR to SDA to set address
 # 0x4f pcf8591  Analog to digital converter, 8 bits, 4 channels, and digital to analog converter, 1 channel ### close a0, a1, a2 address jumpers on board to set address
 # 0x53 ltr390   UV and total illumination sensor
+# 0x59 tcs3448  Spectral sensor VNIR
 # 0x5a mlx90614 Thermal infrared remote surface thermometer
 # 0x60 mcp4728  Quad DAC
 # 0x61 scd30    CO2 sensor, NDIR: nondispersive infrared absorption, with temperature and humidity sensors
@@ -211,6 +212,10 @@ def main():
                 print("as7265x found ")
                 from software_modules import spectralm_as7265x #VIS+NIR
                 as7265x_spectrometer = spectralm_as7265x.initialize_as7265x_spectrometer( instrument )
+            if ('0x59') in devices_present_hex:
+                print("tcs3448 found ")
+                from software_modules import spectralm_tcs3448 #VIS+NIR
+                tcs3448_spectrometer = spectralm_tcs3448.initialize_tcs3448_spectrometer( instrument )
             if len( instrument.spectral_sensors_present ) > 0:
                 instrument.spectral_sensors_detected = True
 
