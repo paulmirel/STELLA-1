@@ -136,16 +136,19 @@ class as7265x_Spectrometer( Device ):
         self.uncertainty_percent = 12
         self.afov_full_angle_deg = (20.5 * 2) #datasheet reports half angle.
 
-
-
-        #self.lamp_current_mA_index = 0
-        #self.lamp_device_constant_list = [ self.swob.kLedUv, self.swob.kLedWhite, self.swob.kLedIr ]
         self.lamp_selection_list = [ "UV mA", "Vis mA", "NIR mA" ]
-        self.lamp_current_mA_list = []
-        self.lamp_current_mA_list.append([ 0, 12.5 ])
-        self.lamp_current_mA_list.append([ 0, 12.5, 25, 50, 100 ])
-        self.lamp_current_mA_list.append([ 0, 12.5, 25, 50 ])
+        self.lamp_current_mA_list = ( 0, 12.5, 25, 50, 100 )
 
+        self.all_lamps_on()
+        time.sleep(0.2)
+        self.all_lamps_off()
+        if False:
+            for chip in range (0,3):
+                print("chip {} lamp on".format(chip))
+                self.lamp_on(chip)
+                time.sleep(30)
+                print("chip {} lamp off".format(chip))
+                self.lamp_off(chip)
         self.chip_temperatures = [ 0,0,0 ]
 
     def make_spectral_channels( self ):
@@ -299,45 +302,46 @@ class as7265x_Spectrometer( Device ):
         return self.dict_bandwidths[wavelength]
 
     def all_lamps_on(self):
-        pass
-        if False: #print( "turn on the lamps")
-            self.swob.enable_bulb(0)   # white
-            self.swob.enable_bulb(1)   # NIR
-            self.swob.enable_bulb(2)   # UV
+        print( "turn on the lamps")
+        for chip in range (0,3):
+            self.swob.device = chip
+            self.swob.driver_led = True
+
     def all_lamps_off(self):
-        pass
-        if False:#print( "turn off the lamps")
-            self.swob.disable_bulb(0)   # white
-            self.swob.disable_bulb(1)   # NIR
-            self.swob.disable_bulb(2)   # UV
-    def lamp_on( self, lamp_index ):
-        pass
-        if False:
-            self.swob.enable_bulb( self.lamp_device_constant_list[ lamp_index ])
-    def lamp_off( self, lamp_index ):
-        pass
-        if False:
-            self.swob.disable_bulb( self.lamp_device_constant_list[ lamp_index ])
-    def set_lamp_current_mA( self, current_index, lamp_index ):
-        pass
-        if False:
-            if lamp_index == 0: #limit UV lamp to 12.5mA
-                if current_index > 1:
-                    current_index = 1
-            if lamp_index == 2: #limit NIR lamp to 50mA
-                if current_index > 3:
-                    current_index = 3
-            try:
-                if current_index == 0:
-                    self.lamp_off( lamp_index )
-                    return 0
-                else:
-                    self.lamp_on( lamp_index )
-                    self.swob.set_bulb_current( self.lamp_current_constant_list[ current_index-1 ], self.lamp_device_constant_list[ lamp_index ] )
-                    return self.lamp_current_mA_list[lamp_index][ current_index ]
-            except Exception as err:
-                print( "failed to set current:", err )
-                return False
+        print( "turn off the lamps")
+        for chip in range (0,3):
+            self.swob.device = chip
+            self.swob.driver_led = False
+
+
+
+    def lamp_on( self, chip_index ):
+        self.swob.device = chip_index
+        self.swob.driver_led = True
+
+    def lamp_off( self, chip_index ):
+        self.swob.device = chip_index
+        self.swob.driver_led = False
+
+    def set_lamp_current_mA( self, current_index, chip_index ):
+        self.swob.device = chip_index
+        if chip_index == 2: #limit UV lamp to 12.5mA
+            if current_index > 1:
+                current_index = 1
+        if chip_index == 1: #limit NIR lamp to 50mA
+            if current_index > 3:
+                current_index = 3
+        try:
+            if current_index == 0:
+                self.lamp_off( chip_index )
+                return 0
+            else:
+                self.lamp_on( chip_index )
+                self.swob.driver_led_current = self.lamp_current_mA_list[ current_index-1 ]
+                return self.swob.driver_led_current
+        except Exception as err:
+            print( "failed to set current:", err )
+            return False
 
 
 
