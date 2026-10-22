@@ -5,6 +5,7 @@ DEVICE_TYPE = "tcs3448_spectral_sensor"
 
 from adafruit_tcs3448 import TCS3448
 from .classm_device import Device
+import time
 
 
 def initialize_tcs3448_spectrometer( instrument, alt_bus = None ):
@@ -109,6 +110,9 @@ class tcs3448_Spectrometer( Device ):
         if self.swob:
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
+            self.lamp_on()
+            time.sleep(0.2)
+            self.lamp_off()
 
 
 
