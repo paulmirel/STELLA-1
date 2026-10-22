@@ -10,11 +10,11 @@ from .classm_device import Device
 def initialize_tcs3448_spectrometer( instrument, alt_bus = None ):
     tcs3448_spectrometer = False
     try:
-        tcs3448_spectrometer = Tcs3448_Spectrometer( instrument, alt_bus )
+        tcs3448_spectrometer = tcs3448_Spectrometer( instrument, alt_bus )
         instrument.welcome_page.announce( "initialize_tcs3448_spectrometer" )
         instrument.spectral_sensors_present.append( tcs3448_spectrometer )
     except Exception as err:
-        #print( "tcs3448_spectrometer_offline", err)
+        print( "tcs3448_spectrometer_offline", err)
         pass
     return tcs3448_spectrometer
 
@@ -30,7 +30,7 @@ def initialize_spectral_channel( name, sensor_unit, index ):
 class Spectral_Channel( Device ):
     def __init__( self, name, sensor_unit, index ):
         #super().__init__(name=name, sensor_group=sensor_group )
-        super().__init__(name = name, pn = "tcs3448", address = 0x39, swob = sensor_unit )
+        super().__init__(name = name, pn = "tcs3448", address = 0x59, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
         self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "ct_per_s_nm", "irradiance", "bandwidth_nm", "chip_temp_C"]
@@ -52,12 +52,13 @@ class Spectral_Channel( Device ):
 
 
     def read(self):
-        raw = self.sensor_unit.data_counts[self.index] #self.sensor_unit.read_counts_by_index( self.index )
+        #print(len(self.sensor_unit.data_counts), self.index)
+        raw = self.sensor_unit.data_counts[self.index]
         gain = self.sensor_unit.gain_list[self.sensor_unit.gain_index]
         int_time_ms = self.sensor_unit.integration_time_ms_list[self.sensor_unit.integration_time_index]
         bandwidth_nm = self.bandwidth_nm
         normal_ct_per_s_nm = round(1000*raw/(gain*int_time_ms*bandwidth_nm),3)
-        irradiance = round(raw/self.sensor_unit.steno_cal_counts_per_irradiance[self.index],3)
+        irradiance = 0
         chip_temp_C = 0
         self.values = [self.wavelength_nm,
                         gain,
@@ -67,6 +68,7 @@ class Spectral_Channel( Device ):
                         irradiance,
                         bandwidth_nm,
                         chip_temp_C]
+        #print(self.values)
 
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
@@ -77,7 +79,7 @@ class Spectral_Channel( Device ):
     def printlog(self):
         print( self.log())
 
-class Tcs3448_Spectrometer( Device ):
+class tcs3448_Spectrometer( Device ):
     def __init__( self, instrument, alt_bus = None ):
         if alt_bus is None:
             super().__init__(name = "tcs3448_spectrometer", pn = "tcs3448", address = 0x39, swob = TCS3448( instrument.i2c_bus ))
@@ -85,22 +87,17 @@ class Tcs3448_Spectrometer( Device ):
             super().__init__(name = "tcs3448_spectrometer", pn = "tcs3448", address = 0x39, swob = TCS3448( alt_bus ))
         self.instrument = instrument
         self.choice_label = "tcs3448 VIS"
-        self.wavelength_bands_nm = 415, 445, 480, 515, 555, 590, 630, 682
-        self.bandwidths_nm = 26, 30, 36, 39, 39, 40, 50, 52
-        self.chip_number = 1, 1, 1, 1, 1, 1, 1, 1
+        self.wavelength_bands_nm = 407, 424, 450, 473, 516, 560, 546, 596, 636, 687, 748, 855
+        self.band_designations = "F1", "F2", "FZ", "F3", "F4", "FY", "F5","FXL", "F6", "F7", "F8", "NIR"
+        self.bandwidths_nm = 28, 29, 67, 38, 48, 123, 44, 93, 58, 63, 77, 61
+        self.chip_number = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
         self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
         self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
-        self.colors = ["violet", "indigo", "blue", "cyan", "green", "yellow", "orange", "red"]
-        #self.tsis_cal_counts_per_irradiance = 1405.9, 2079.6, 2631.6, 3556.8, 4246.0, 5060.6, 6888.9, 9130.9
-        # first principles calibration by Sten Odenwald of NASA Heliophysics
-        # TBD print( "tcs3448 Sten O cal counts per irradiance at what gain?  TBD " )
-        # WHAT UNITS? Need calibration.
-        self.steno_cal_counts_per_irradiance = 4398.0, 6104.0, 7583.0, 9972.0, 11536.0, 13374.0, 17115.0, 20916.0
-        self.calibration_error = 0.6
-        self.irradiance = [0,0,0,0,0,0,0,0]
-        self.dict_stenocal = {}
+
+
         self.swob.led_current = 50
-        self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
+        self.irradiance = [0,0,0,0,0,0,0,0,0,0,0,0,0]
+        self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 ]
         self.gain_index = 5
         self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000]
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
@@ -108,10 +105,12 @@ class Tcs3448_Spectrometer( Device ):
         self.lamp_selection_list = ["Vis mA"]
         self.current_index = 6
         self.lamp_current_mA_list = [0,2,4,6,8,10,12,14,16,18,20,30,40,50,60,70,80,90,100 ]
-        self.data_counts = [0,0,0,0,0,0,0,0]
+        self.data_counts = [0,0,0,0,0,0,0,0,0,0,0,0,0]
         if self.swob:
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
+
+
 
     def make_spectral_channels( self ):
         index = 0
@@ -120,31 +119,16 @@ class Tcs3448_Spectrometer( Device ):
             spectral_channel = initialize_spectral_channel( name, self, index )
             index += 1
 
-    if False:
-        def read_counts_by_index( self, index ):
-            try:
-                if index == 0: counts = self.swob.channel_415nm
-                if index == 1: counts = self.swob.channel_445nm
-                if index == 2: counts = self.swob.channel_480nm
-                if index == 3: counts = self.swob.channel_515nm
-                if index == 4: counts = self.swob.channel_555nm
-                if index == 5: counts = self.swob.channel_590nm
-                if index == 6: counts = self.swob.channel_630nm
-                if index == 7: counts = self.swob.channel_680nm
-                self.data_counts[index] = counts
-                return counts
-            except Exception as err:
-                print( "read channel counts failed: ", err )
-                return False
-
     def read(self):
         try:
             self.raw = self.swob.all_channels
+            #print(self.raw)
             self.data_counts = []
-            for item in self.raw:
-                self.data_counts.append(item)
+            for index in range(0,len(self.raw)):
+                self.data_counts.append(self.raw[index])
+
         except Exception as err:
-            print("sensor read timeout")
+            print(err)
 
 
     def get_max_min_counts( self ):
@@ -153,11 +137,9 @@ class Tcs3448_Spectrometer( Device ):
         return self.max_counts, self.min_counts
 
     def set_gain(self, index):
-        # library sets gain to 128
-        gain_constant_list = [ TCS3448_Gain.GAIN_0_5X, TCS3448_Gain.GAIN_1X, TCS3448_Gain.GAIN_2X, TCS3448_Gain.GAIN_4X, TCS3448_Gain.GAIN_8X, TCS3448_Gain.GAIN_16X, TCS3448_Gain.GAIN_32X, TCS3448_Gain.GAIN_64X, TCS3448_Gain.GAIN_128X, TCS3448_Gain.GAIN_256X, TCS3448_Gain.GAIN_512X ]
         try:
-            self.swob._gain = gain_constant_list[ index ]
-            return self.gain_list[ self.swob._gain ]
+            self.swob.gain = index
+            return self.gain_list[ self.swob.gain ]
         except Exception as err:
             print( "failed to set gain: ", err )
             return False

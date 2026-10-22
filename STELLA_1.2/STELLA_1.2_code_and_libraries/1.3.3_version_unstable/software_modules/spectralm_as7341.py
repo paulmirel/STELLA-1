@@ -121,23 +121,6 @@ class as7341_Spectrometer( Device ):
             spectral_channel = initialize_spectral_channel( name, self, index )
             index += 1
 
-    if False:
-        def read_counts_by_index( self, index ):
-            try:
-                if index == 0: counts = self.swob.channel_415nm
-                if index == 1: counts = self.swob.channel_445nm
-                if index == 2: counts = self.swob.channel_480nm
-                if index == 3: counts = self.swob.channel_515nm
-                if index == 4: counts = self.swob.channel_555nm
-                if index == 5: counts = self.swob.channel_590nm
-                if index == 6: counts = self.swob.channel_630nm
-                if index == 7: counts = self.swob.channel_680nm
-                self.data_counts[index] = counts
-                return counts
-            except Exception as err:
-                print( "read channel counts failed: ", err )
-                return False
-
     def read(self):
         try:
             self.raw = self.swob.all_channels
