@@ -34,7 +34,7 @@ class Spectral_Channel( Device ):
         super().__init__(name = name, pn = "as7341", address = 0x39, swob = sensor_unit )
         self.sensor_unit = sensor_unit
         self.index = index
-        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "raw_counts", "ct_per_s_nm", "irradiance", "bandwidth_nm", "chip_temp_C"]
+        self.parameters = [ "wavelength_nm", "gain", "int_time_ms", "counts", "ct_per_s_nm", "irradiance", "bandwidth_nm", "chip_temp_C"]
         self.wavelength_nm = sensor_unit.wavelength_bands_nm[self.index]
         self.bandwidth_nm = sensor_unit.bandwidths_nm[self.index]
         self.values = [ self.wavelength_nm,

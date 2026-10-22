@@ -147,7 +147,7 @@ class Light_Page( Page ):
             data_dict_to_plot = {}
             # make a data dict to plot of the form key=band, value = tuple( counts, normal_counts, irradiance, bandwidth )
             for sensor in self.instrument.sensors_present:
-                if sensor.pn == "as7331" or sensor.pn == "as7265x" or sensor.pn == "as7341" or sensor.pn == "as7343":
+                if sensor.pn == "tcs3448" or sensor.pn == "as7331" or sensor.pn == "as7265x" or sensor.pn == "as7341" or sensor.pn == "as7343":
                     wl = sensor.get_wavelength()
                     values = sensor.get_plot_values()
                     data_dict_to_plot.update({wl:values})
