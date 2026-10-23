@@ -18,6 +18,7 @@ import adafruit_as5600
 from software_modules import spectralm_as7341
 from software_modules import spectralm_as7343
 from software_modules import spectralm_as7265x
+from software_modules import spectralm_tcs3448
 
 
 
@@ -69,31 +70,22 @@ class Calibration_Page( Page ):
         self.spectral_sensors = []
 
         for index in range (0,7):
-            try:
-                #print("try as7265x", index)
-                active_sensor = spectralm_as7265x.initialize_as7265x_spectrometer( self.instrument, alt_bus=self.mux_8_to_1[index] )
-                sensor_kind = 7265
-            except Exception as err:
-                #print(err)
-                sensor_kind = 0
-            try:
+            active_sensor = False
+            active_sensor = spectralm_as7265x.initialize_as7265x_spectrometer( self.instrument, alt_bus=self.mux_8_to_1[index] )
+            if not active_sensor:
                 active_sensor = spectralm_as7343.initialize_as7343_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
-                sensor_kind = 7343
-            except Exception as err:
-                #print (err)
-                sensor_kind = 0
-            try:
+            if not active_sensor:
                 active_sensor = spectralm_as7341.initialize_as7341_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
-                sensor_kind = 7341
-            except Exception as err:
-                #print (err)
-                sensor_kind = 0
+            if not active_sensor:
+                active_sensor = spectralm_tcs3448.initialize_tcs3448_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
 
-            self.spectral_sensors.append ( active_sensor )
-            if False:#sensor_kind == 7343 or sensor_kind == 7341 or sensor_kind == 3448:
-                active_sensor.lamp_on()
-                time.sleep(2)
-                active_sensor.lamp_off()
+            if active_sensor:
+                self.spectral_sensors.append ( active_sensor )
+                if active_sensor.pn == "as7341" or active_sensor.pn == "as7343" or active_sensor.pn == "tcs3448":
+                    print("blink")
+                    active_sensor.lamp_on()
+                    time.sleep(1)
+                    active_sensor.lamp_off()
 
 
 

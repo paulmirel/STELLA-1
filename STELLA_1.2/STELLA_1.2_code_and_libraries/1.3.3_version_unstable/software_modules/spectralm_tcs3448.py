@@ -15,7 +15,7 @@ def initialize_tcs3448_spectrometer( instrument, alt_bus = None ):
         instrument.welcome_page.announce( "initialize_tcs3448_spectrometer" )
         instrument.spectral_sensors_present.append( tcs3448_spectrometer )
     except Exception as err:
-        print( "tcs3448_spectrometer_offline", err)
+        #print( "tcs3448_spectrometer_offline", err)
         pass
     return tcs3448_spectrometer
 
@@ -110,11 +110,6 @@ class tcs3448_Spectrometer( Device ):
         if self.swob:
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
-            self.lamp_on()
-            time.sleep(0.2)
-            self.lamp_off()
-
-
 
     def make_spectral_channels( self ):
         index = 0
