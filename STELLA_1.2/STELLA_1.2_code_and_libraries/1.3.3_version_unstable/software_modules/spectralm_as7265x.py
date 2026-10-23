@@ -144,12 +144,6 @@ class as7265x_Spectrometer( Device ):
             self.set_lamp_current_mA(1,1)
             self.set_lamp_current_mA(1,2)
 
-        for chip in range (0,3):
-            print("chip {} lamp on".format(chip))
-            self.lamp_on(chip)
-            time.sleep(0.2)
-            print("chip {} lamp off".format(chip))
-            self.lamp_off(chip)
         self.chip_temperatures = [ 0,0,0 ]
 
     def make_spectral_channels( self ):
@@ -162,7 +156,6 @@ class as7265x_Spectrometer( Device ):
     def set_gain(self, new_gain_index):
         self.gain_index = new_gain_index
         new_gain = self.gain_list[ new_gain_index ]
-        print("new_gain",new_gain)
         try:
             self.swob.gain = new_gain
             return self.gain_index, self.swob.gain
@@ -323,7 +316,7 @@ class as7265x_Spectrometer( Device ):
         self.swob.driver_led = False
 
     def set_lamp_current_mA( self, current_index, chip_index ):
-        print ("chip_index", chip_index, "current_index", current_index, "current mA", self.lamp_current_mA_list[chip_index][ current_index ])
+        #print ("chip_index", chip_index, "current_index", current_index, "current mA", self.lamp_current_mA_list[chip_index][ current_index ])
         self.swob.device = chip_index
         if chip_index == 2: #limit UV lamp to 12.5mA
             if current_index > 1:

@@ -82,11 +82,13 @@ class Calibration_Page( Page ):
             if active_sensor:
                 self.spectral_sensors.append ( active_sensor )
                 if active_sensor.pn == "as7341" or active_sensor.pn == "as7343" or active_sensor.pn == "tcs3448":
-                    print("blink")
                     active_sensor.lamp_on()
                     time.sleep(1)
                     active_sensor.lamp_off()
-
+                if active_sensor.pn == "as7265x":
+                    active_sensor.lamp_on(0)
+                    time.sleep(1)
+                    active_sensor.lamp_off(0)
 
 
 
