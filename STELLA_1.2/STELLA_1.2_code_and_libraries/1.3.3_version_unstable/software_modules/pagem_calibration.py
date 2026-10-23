@@ -110,9 +110,20 @@ class Calibration_Page( Page ):
             from configuration_files import cal_lookup_wheel_5
             self.magnetic_angle_values = getattr(cal_lookup_wheel_5, "magnetic_angle_values", False)
             self.servo_position_values = getattr(cal_lookup_wheel_5, "servo_position_values", False)
+        print()
         print( "sensor_wheel_number =", self.sensor_wheel_number )
         print( "magnetic_angle_values =",self.magnetic_angle_values )
         print( "servo_position_values =",self.servo_position_values )
+        print()
+
+        from configuration_files import cal_lookup_wheel_F0
+        self.filter_wheel_number = "F0"
+        self.filter_wheel_magnetic_angle_values = getattr(cal_lookup_wheel_F0, "magnetic_angle_values", False)
+        self.filter_wheel_servo_position_values = getattr(cal_lookup_wheel_F0, "servo_position_values", False)
+
+        print( "filter_wheel_number =", self.filter_wheel_number )
+        print( "filter_wheel_magnetic_angle_values =",self.filter_wheel_magnetic_angle_values )
+        print( "filter_wheel_servo_position_values =",self.filter_wheel_servo_position_values )
 
     def integration_time_setting_test( self ):
         integration_setting_ms = 10
