@@ -201,6 +201,8 @@ class Calibration_Page( Page ):
         self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
         self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
         self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
+        self.text_areas[18].text = "{}".format( self.filter_wheel_number )
+        self.text_areas[19].text = "9" ### TBD"{}".format(len(self.filters))
         self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
 
     def action( self ):
@@ -361,7 +363,7 @@ class Calibration_Page( Page ):
                                                             height=height_2-2*select_width, x=154, y=line_y+height_1+select_width)
         self.group.append(self.status_highlight)
         line_names = ["battery", "inc", "  batch", "status", "self-test/reset" ]
-        line_values = ["---","B+","---", "----", "SELF-TS"] #RESET #_STOP_
+        line_values = ["---","B+","---", "----", " -- "] #SELF-TS #RESET #_STOP_
         line_selectable = [ False, True, False, False, True ]
         line_widths = [54,38,56,70,100]
         x = start_x
@@ -396,7 +398,7 @@ class Calibration_Page( Page ):
 
         line_y += line_spacing
         line_names = ["control", "gain", "integration", " exposure", "%DR" ]
-        line_values = ["AUTO","1024","200ms", "UNDER", "99"]
+        line_values = [" - "," - "," - ", " - ", "-"] #AUTO #MAN // #SAT #OVER #UNDER #GOOD
         line_selectable = [ True, True, True, False, False ]
         line_widths = [68,68,77,68,36]
         x = start_x
@@ -458,7 +460,7 @@ class Calibration_Page( Page ):
 
         line_y += line_spacing
         line_names = ["wheel", "filters", "position", " part number", "value"]
-        line_values = ["F0", "9","A","TBD", "TBD"]
+        line_values = ["-", "-","-","-", "-"]
         line_selectable = [ False, False, True, False, False ]
         line_widths = [44,50,56,100,60]
         x = start_x
@@ -489,7 +491,7 @@ class Calibration_Page( Page ):
 
         line_y += line_spacing - height_1
         line_names = ["", "", "", "", ""]
-        line_values = ["ALL", "RUN","PAUSE","ready", "PLOT"]
+        line_values = ["ALL", "RUN","PAUSE"," -- ", "PLOT"] #ready
         line_selectable = [ True, True, True, False, True ]
         line_widths = [50,52,74,78,62]
         x = start_x
