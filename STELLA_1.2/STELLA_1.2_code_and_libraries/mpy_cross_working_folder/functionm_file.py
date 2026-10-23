@@ -29,6 +29,17 @@ def write_line( instrument, system_log, line ):
         instrument.vfs = False
         return False
 
+def write_nonsystem_line( instrument, line ):
+    try:
+        with open( "/sd/{}".format( instrument.filename ), "a" ) as f:
+            f.write( "{}".format(line) )
+            f.write( "\n" )
+        return True
+    except Exception as err:
+        print( "failed to write to file: ", err )
+        instrument.vfs = False
+        return False
+
 def evaluate_sdcard_storage( vfs, bytes_per_hour, verbose ):
     try:
         sdcard_status = os.statvfs("/sd")

@@ -16,11 +16,12 @@ class Main_Menu_Page( Page ):
         self.palette = instrument.palette
         self.selection = 0
         self.last_selection = -1
-        self.selection_count = 1
+        self.selection_count = 0#1
         self.field_selected = False
     def make_group( self ):
-        menu_list = "Remote Sense", "Air Analyzer", "Sensors", "Time / Place", "*future use", "*future use", "*future use", "*future use"#, "* Air Analyz", "* Heat", "* Plants"
-        menu_color_list = 20, 12, 21, 14, 19, 19, 19, 19
+        #menu_list = "Light", "Heat", "*Air", "*Plants", "Soil", "Lab_Spec", "Time & Place", "Sensors"
+        menu_list = "Remote Sense", "Thermal", "Ambient Air", "*Soil", "*Plants", "Lab Spec", "Time & Place", "Sensors"
+        menu_color_list = 32, 11, 12, 24, 20, 29, 14, 21, 19, 19, 19
         self.group = displayio.Group()
         start_y = 54
         status_background = vectorio.Rectangle( pixel_shader=self.palette, color_index = 9, width=320, height=240-start_y, x=0, y=start_y )
@@ -41,7 +42,7 @@ class Main_Menu_Page( Page ):
         self.selection_rectangles = []
         self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x, y=selection_start_y))
         self.group.append( self.selection_rectangles[0] )
-        #self.selection_rectangles[0].hidden = True
+        self.selection_rectangles[0].hidden = True
         self.selection_rectangles.append( vectorio.Rectangle(pixel_shader=self.palette, color_index=0, width=158, height=36, x=selection_start_x+selection_offset_x, y=selection_start_y))
         self.group.append( self.selection_rectangles[1] )
         self.selection_rectangles[1].hidden = True
@@ -155,11 +156,14 @@ class Main_Menu_Page( Page ):
         self.group.append(status_group)
         self.selection_count += 1
 
-        more_text =   "*more.."
+        more_text =   "  Cal"
         more_group = displayio.Group(scale=2, x=footer_text_start_x+footer_offset_x, y=footer_text_y)
         more_text_area = label.Label(terminalio.FONT, text=more_text, color=self.palette[0])
         more_group.append(more_text_area)
         self.group.append(more_group)
+        self.selection_count += 1
+
+
         return_text = "RETURN"
         return_group = displayio.Group(scale=2, x=footer_text_start_x+2*footer_offset_x, y=footer_text_y)
         return_text_area = label.Label(terminalio.FONT, text=return_text, color=self.palette[0])
@@ -180,81 +184,28 @@ class Main_Menu_Page( Page ):
 
     def action( self ):
         if self.selection == 0:
-            self.instrument.active_page_number = self.instrument.pages_dict["Remote"]
+            self.instrument.active_page_number = self.instrument.pages_dict["Light"]
         if self.selection == 1:
+            self.instrument.active_page_number = self.instrument.pages_dict["Heat"]
+        if False: #self.selection == 2:
             self.instrument.active_page_number = self.instrument.pages_dict["Air"]
-        if self.selection == 2:
-            self.instrument.active_page_number = self.instrument.pages_dict["Generic"]
-        if self.selection == 3:
+        if False: #self.selection == 3:
+            self.instrument.active_page_number = self.instrument.pages_dict["Soil"]
+        if False:#self.selection == 4:
+            self.instrument.active_page_number = self.instrument.pages_dict["Plants"]
+        if self.selection == 5:
+            self.instrument.active_page_number = self.instrument.pages_dict["Lab_Spec"]
+        if self.selection == 6:
             self.instrument.active_page_number = self.instrument.pages_dict["Time"]
+        if self.selection == 7:
+            self.instrument.active_page_number = self.instrument.pages_dict["Sensors"]
         if self.selection == 8:
             self.instrument.active_page_number = self.instrument.pages_dict["Status"]
+        if self.selection == 9:
+            self.instrument.active_page_number = self.instrument.pages_dict["Calibration"]
         if self.selection == 10:
             print( "return whence")
             self.instrument.active_page_number = self.instrument.previous_page_number
-
-
-
-
-    def obsolete_update_values( self ):
-        if self.instrument.main_menu_select in range( 10, 13 ): ### skip future use choices
-            instrument.main_menu_select = 14
-        if self.instrument.main_menu_select == 15:  ### skip future use *more option
-            self.instrument.main_menu_select = 16
-
-        if self.instrument.main_menu_select == 6:
-            self.selection_rectangles[0].hidden = False
-            self.instrument.active_page_number = 9
-        else:
-            self.selection_rectangles[0].hidden = True
-        if self.instrument.main_menu_select == 7:
-            self.selection_rectangles[1].hidden = False
-            self.instrument.active_page_number = 8
-
-        else:
-            self.selection_rectangles[1].hidden = True
-        if self.instrument.main_menu_select == 8:
-            self.selection_rectangles[2].hidden = False
-            self.instrument.active_page_number = 5
-
-        else:
-            self.selection_rectangles[2].hidden = True
-        if self.instrument.main_menu_select == 9:
-            self.instrument.active_page_number = 7
-            self.selection_rectangles[3].hidden = False
-        else:
-            self.selection_rectangles[3].hidden = True
-        if self.instrument.main_menu_select == 10:
-            self.selection_rectangles[4].hidden = False
-        else:
-            self.selection_rectangles[4].hidden = True
-        if self.instrument.main_menu_select == 11:
-            self.selection_rectangles[5].hidden = False
-        else:
-            self.selection_rectangles[5].hidden = True
-        if self.instrument.main_menu_select == 12:
-            self.selection_rectangles[6].hidden = False
-        else:
-            self.selection_rectangles[6].hidden = True
-        if self.instrument.main_menu_select == 13:
-            self.selection_rectangles[7].hidden = False
-        else:
-            self.selection_rectangles[7].hidden = True
-        if self.instrument.main_menu_select == 14:
-            self.selection_rectangles[8].hidden = False
-            self.instrument.active_page_number = 3
-        else:
-            self.selection_rectangles[8].hidden = True
-        if self.instrument.main_menu_select == 15:
-            self.selection_rectangles[9].hidden = False
-        else:
-            self.selection_rectangles[9].hidden = True
-        if self.instrument.main_menu_select == 16:
-            self.selection_rectangles[10].hidden = False
-            print("TBD go back to previous page" )
-
-        else:
-            self.selection_rectangles[10].hidden = True
 
 
 def make_main_menu_page( instrument ):
