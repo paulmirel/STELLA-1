@@ -124,6 +124,9 @@ class Calibration_Page( Page ):
         print( "filter_wheel_number =", self.filter_wheel_number )
         print( "filter_wheel_magnetic_angle_values =",self.filter_wheel_magnetic_angle_values )
         print( "filter_wheel_servo_position_values =",self.filter_wheel_servo_position_values )
+        self.sensor_wheel_position = 0
+        self.filter_wheel_position = 0
+        self.filter_wheel_position_labels = ["A","B","C","D","E","F","G","H","i"]
 
     def integration_time_setting_test( self ):
         integration_setting_ms = 10
@@ -178,8 +181,9 @@ class Calibration_Page( Page ):
         timenow = self.precision_real_time_clock.datetime
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
-        self.text_areas[5].text = "{:3d}".format(self.instrument.batch_number)
         self.text_areas[3].text = "{}%".format(int(self.bat.percentage))
+        self.text_areas[5].text = "{:3d}".format(self.instrument.batch_number)
+
         if self.instrument.vfs:
             if self.status_index == 2:
                 self.status_highlight.color_index = 2
@@ -193,12 +197,21 @@ class Calibration_Page( Page ):
             self.status_index = 4
             self.status_highlight.color_index = 2
         self.text_areas[6].text = self.status_list[self.status_index]
+        self.text_areas[13].text = "{}".format(self.sensor_wheel_number)
+        self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
+        self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
+        self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
+        self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
 
     def action( self ):
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
                 if self.selection == 3:
                     pass
+                if self.selection == 6:
+                    self.sensor_wheel_position = (self.sensor_wheel_position + self.instrument.encoder_increment) % len(self.spectral_sensors)
+                if self.selection == 7:
+                    self.filter_wheel_position = (self.filter_wheel_position + self.instrument.encoder_increment) % 9
             self.instrument.encoder_increment = 0
             self.update_values()
 
@@ -217,13 +230,20 @@ class Calibration_Page( Page ):
             else:
                 self.field_selected = not self.field_selected
                 if self.selection == 3:
-                    pass
-                    if False:
-                        if self.field_selected:
-                            self.value_areas[3].color_index = self.field_selected_color_index
-                        else:
-                            self.value_areas[3].color_index = self.field_not_selected_color_index
-
+                    if self.field_selected:
+                        self.value_areas[3].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[3].color_index = self.field_not_selected_color_index
+                if self.selection == 6:
+                    if self.field_selected:
+                        self.value_areas[6].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[6].color_index = self.field_not_selected_color_index
+                if self.selection == 7:
+                    if self.field_selected:
+                        self.value_areas[7].color_index = self.field_selected_color_index
+                    else:
+                        self.value_areas[7].color_index = self.field_not_selected_color_index
             self.instrument.button_pressed = False
             self.update_values()
 
@@ -407,7 +427,7 @@ class Calibration_Page( Page ):
 
         line_y += line_spacing
         line_names = ["wheel", "sensors", "position", " part number", "tracking"]
-        line_values = ["5", "7","0","as7265x", "500"]
+        line_values = ["", "",""," --", " - "]
         line_selectable = [ False, False, True, False, False ]
         line_widths = [44,50,56,100,60]
         x = start_x
