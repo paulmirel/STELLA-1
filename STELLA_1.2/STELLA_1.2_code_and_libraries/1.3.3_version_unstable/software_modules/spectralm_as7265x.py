@@ -17,7 +17,8 @@ def initialize_as7265x_spectrometer( instrument, alt_bus=None ):
         time.sleep(0.1)
         #as7265x_spectrometer.all_lamps_off()
     except Exception as err:
-        print( "as7265x spectrometer failed: {}".format( err ))
+        pass
+        #print( "as7265x spectrometer failed: {}".format( err ))
     return as7265x_spectrometer
 
 

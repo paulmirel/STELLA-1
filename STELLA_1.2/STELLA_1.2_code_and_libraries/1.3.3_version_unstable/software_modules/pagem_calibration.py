@@ -70,12 +70,12 @@ class Calibration_Page( Page ):
 
         for index in range (0,7):
             try:
-                print("try as7265x", index)
+                #print("try as7265x", index)
                 active_sensor = spectralm_as7265x.initialize_as7265x_spectrometer( self.instrument, alt_bus=self.mux_8_to_1[index] )
                 sensor_kind = 7265
             except Exception as err:
-                print(err)
-
+                #print(err)
+                sensor_kind = 0
             try:
                 active_sensor = spectralm_as7343.initialize_as7343_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
                 sensor_kind = 7343
@@ -90,14 +90,11 @@ class Calibration_Page( Page ):
                 sensor_kind = 0
 
             self.spectral_sensors.append ( active_sensor )
-            if sensor_kind == 7343:
+            if False:#sensor_kind == 7343 or sensor_kind == 7341 or sensor_kind == 3448:
                 active_sensor.lamp_on()
                 time.sleep(2)
                 active_sensor.lamp_off()
-            if sensor_kind == 7341:
-                active_sensor.lamp_on()
-                time.sleep(2)
-                active_sensor.lamp_off()
+
 
 
 
