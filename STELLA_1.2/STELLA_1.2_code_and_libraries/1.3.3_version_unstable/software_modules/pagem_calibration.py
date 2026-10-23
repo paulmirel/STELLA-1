@@ -83,14 +83,36 @@ class Calibration_Page( Page ):
                 self.spectral_sensors.append ( active_sensor )
                 if active_sensor.pn == "as7341" or active_sensor.pn == "as7343" or active_sensor.pn == "tcs3448":
                     active_sensor.lamp_on()
-                    time.sleep(1)
+                    time.sleep(0.5)
                     active_sensor.lamp_off()
                 if active_sensor.pn == "as7265x":
                     active_sensor.lamp_on(0)
-                    time.sleep(1)
+                    time.sleep(0.5)
                     active_sensor.lamp_off(0)
-
-
+        self.sensor_wheel_number = False
+        if self.spectral_sensors[0].pn == "as7341":
+            self.sensor_wheel_number = 1
+            from configuration_files import cal_lookup_wheel_1
+            self.magnetic_angle_values = getattr(cal_lookup_wheel_1, "magnetic_angle_values", False)
+            self.servo_position_values = getattr(cal_lookup_wheel_1, "servo_position_values", False)
+        elif self.spectral_sensors[0].pn == "as7343":
+            self.sensor_wheel_number = 3
+            from configuration_files import cal_lookup_wheel_3
+            self.magnetic_angle_values = getattr(cal_lookup_wheel_3, "magnetic_angle_values", False)
+            self.servo_position_values = getattr(cal_lookup_wheel_3, "servo_position_values", False)
+        elif self.spectral_sensors[0].pn == "tcs3448":
+            self.sensor_wheel_number = 8
+            from configuration_files import cal_lookup_wheel_8
+            self.magnetic_angle_values = getattr(cal_lookup_wheel_8, "magnetic_angle_values", False)
+            self.servo_position_values = getattr(cal_lookup_wheel_8, "servo_position_values", False)
+        elif self.spectral_sensors[0].pn == "as7265x":
+            self.sensor_wheel_number = 5
+            from configuration_files import cal_lookup_wheel_5
+            self.magnetic_angle_values = getattr(cal_lookup_wheel_5, "magnetic_angle_values", False)
+            self.servo_position_values = getattr(cal_lookup_wheel_5, "servo_position_values", False)
+        print( "sensor_wheel_number =", self.sensor_wheel_number )
+        print( "magnetic_angle_values =",self.magnetic_angle_values )
+        print( "servo_position_values =",self.servo_position_values )
 
     def integration_time_setting_test( self ):
         integration_setting_ms = 10
