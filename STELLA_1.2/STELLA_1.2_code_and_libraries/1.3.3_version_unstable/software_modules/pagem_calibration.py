@@ -115,6 +115,10 @@ class Calibration_Page( Page ):
         print( "magnetic_angle_values =",self.magnetic_angle_values )
         print( "servo_position_values =",self.servo_position_values )
         print()
+        self.sensor_wheel_waypoints = []
+        for index in range (0, len(self.servo_position_values)-1):
+            self.sensor_wheel_waypoints.append(int((self.servo_position_values[index]+self.servo_position_values[index+1])/2))
+
 
         from configuration_files import cal_lookup_wheel_F0
         self.filter_wheel_number = "F0"
@@ -127,6 +131,18 @@ class Calibration_Page( Page ):
         self.sensor_wheel_position = 0
         self.filter_wheel_position = 0
         self.filter_wheel_position_labels = ["A","B","C","D","E","F","G","H","i"]
+        self.filter_wheel_waypoints = []
+        for index in range (0, len(self.filter_wheel_servo_position_values)-1):
+            self.filter_wheel_waypoints.append(int((self.filter_wheel_servo_position_values[index]+self.filter_wheel_servo_position_values[index+1])/2))
+
+        pca = PCA9685(self.instrument.i2c_bus)
+        pca.frequency = 60
+        self.filter_servo = pca.channels[0]
+        self.sensor_servo = pca.channels[15]
+        self.filter_servo.duty_cycle = 0
+        self.sensor_servo.duty_cycle = 0
+
+        self.sensor_wheel_angle_sensor = adafruit_as5600.AS5600(self.mux_8_to_1[7])
 
     def integration_time_setting_test( self ):
         integration_setting_ms = 10
@@ -212,6 +228,22 @@ class Calibration_Page( Page ):
                     pass
                 if self.selection == 6:
                     self.sensor_wheel_position = (self.sensor_wheel_position + self.instrument.encoder_increment) % len(self.spectral_sensors)
+                    print("twist")
+                    if self.sensor_wheel_position < 6:
+                        self.sensor_servo.duty_cycle = self.sensor_wheel_waypoints[self.sensor_wheel_position]
+                    else:
+                        self.sensor_servo.duty_cycle = self.sensor_wheel_waypoints[self.sensor_wheel_position-1]
+                    time.sleep(1)
+                    sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
+                    print("crawl")
+                    while sensor_wheel_angle < self.magnetic_angle_values[self.sensor_wheel_position]:
+                        if self.sensor_wheel_position < 6:
+                            self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle + 16
+                        else:
+                            self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle - 16
+                        time.sleep(0.02)
+                        sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
+                    self.sensor_servo.duty_cycle = 0
                 if self.selection == 7:
                     self.filter_wheel_position = (self.filter_wheel_position + self.instrument.encoder_increment) % 9
             self.instrument.encoder_increment = 0
