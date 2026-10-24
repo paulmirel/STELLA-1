@@ -94,21 +94,25 @@ class Calibration_Page( Page ):
             self.sensor_wheel_number = 1
             from configuration_files import cal_lookup_wheel_1
             self.magnetic_angle_values = getattr(cal_lookup_wheel_1, "magnetic_angle_values", False)
+            self.angle_offsets = getattr(cal_lookup_wheel_1, "magnetic_angle_offsets", False)
             self.servo_position_values = getattr(cal_lookup_wheel_1, "servo_position_values", False)
         elif self.spectral_sensors[0].pn == "as7343":
             self.sensor_wheel_number = 3
             from configuration_files import cal_lookup_wheel_3
             self.magnetic_angle_values = getattr(cal_lookup_wheel_3, "magnetic_angle_values", False)
+            self.angle_offsets = getattr(cal_lookup_wheel_3, "magnetic_angle_offsets", False)
             self.servo_position_values = getattr(cal_lookup_wheel_3, "servo_position_values", False)
         elif self.spectral_sensors[0].pn == "tcs3448":
             self.sensor_wheel_number = 8
             from configuration_files import cal_lookup_wheel_8
             self.magnetic_angle_values = getattr(cal_lookup_wheel_8, "magnetic_angle_values", False)
+            self.angle_offsets = getattr(cal_lookup_wheel_8, "magnetic_angle_offsets", False)
             self.servo_position_values = getattr(cal_lookup_wheel_8, "servo_position_values", False)
         elif self.spectral_sensors[0].pn == "as7265x":
             self.sensor_wheel_number = 5
             from configuration_files import cal_lookup_wheel_5
             self.magnetic_angle_values = getattr(cal_lookup_wheel_5, "magnetic_angle_values", False)
+            self.angle_offsets = getattr(cal_lookup_wheel_5, "magnetic_angle_offsets", False)
             self.servo_position_values = getattr(cal_lookup_wheel_5, "servo_position_values", False)
         print()
         print( "sensor_wheel_number =", self.sensor_wheel_number )
@@ -194,6 +198,8 @@ class Calibration_Page( Page ):
 
     def update_values( self ):
         self.bat.read()
+
+        print( self.sensor_servo.duty_cycle, self.sensor_wheel_angle_sensor.angle )
         timenow = self.precision_real_time_clock.datetime
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
@@ -228,21 +234,24 @@ class Calibration_Page( Page ):
                     pass
                 if self.selection == 6:
                     self.sensor_wheel_position = (self.sensor_wheel_position + self.instrument.encoder_increment) % len(self.spectral_sensors)
-                    print("twist")
                     if self.sensor_wheel_position < 6:
                         self.sensor_servo.duty_cycle = self.sensor_wheel_waypoints[self.sensor_wheel_position]
                     else:
                         self.sensor_servo.duty_cycle = self.sensor_wheel_waypoints[self.sensor_wheel_position-1]
-                    time.sleep(1)
+                    time.sleep(0.6)
                     sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
-                    print("crawl")
-                    while sensor_wheel_angle < self.magnetic_angle_values[self.sensor_wheel_position]:
-                        if self.sensor_wheel_position < 6:
-                            self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle + 16
-                        else:
+                    if self.sensor_wheel_position == 6:
+                        while sensor_wheel_angle > self.magnetic_angle_values[self.sensor_wheel_position]+self.angle_offsets[self.sensor_wheel_position]:
                             self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle - 16
-                        time.sleep(0.02)
-                        sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
+                            time.sleep(0.04)
+                            sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
+                            print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
+                    else:
+                        while sensor_wheel_angle < self.magnetic_angle_values[self.sensor_wheel_position]+self.angle_offsets[self.sensor_wheel_position]:
+                            self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle + 16
+                            time.sleep(0.04)
+                            sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
+                            print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
                     self.sensor_servo.duty_cycle = 0
                 if self.selection == 7:
                     self.filter_wheel_position = (self.filter_wheel_position + self.instrument.encoder_increment) % 9
