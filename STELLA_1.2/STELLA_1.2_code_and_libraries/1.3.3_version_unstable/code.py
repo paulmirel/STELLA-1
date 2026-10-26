@@ -413,6 +413,7 @@ def main():
         else:
             onboard_neopixel.fill(devicem_neopixel.RED)
         instrument.check_inputs()
+        instrument.check_calendar_day()
         while operational:
             loop_start = time.monotonic()
             instrument.show_active_page()
