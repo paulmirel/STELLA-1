@@ -150,6 +150,7 @@ class Calibration_Page( Page ):
         self.sensor_wheel_angle_sensor = adafruit_as5600.AS5600(self.mux_8_to_1[7])
         self.filter_wheel_angle_sensor = adafruit_as5600.AS5600(self.instrument.i2c_bus, address = 0x46 )
 
+
     def integration_time_setting_test( self ):
         integration_setting_ms = 10
         while integration_setting_ms < 24000:
@@ -201,7 +202,7 @@ class Calibration_Page( Page ):
     def update_values( self ):
         self.bat.read()
 
-        print( self.filter_servo.duty_cycle, self.filter_wheel_angle_sensor.angle )
+        #print( self.filter_servo.duty_cycle, self.filter_wheel_angle_sensor.angle )
         timenow = self.precision_real_time_clock.datetime
         self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
         self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
@@ -244,14 +245,15 @@ class Calibration_Page( Page ):
                 self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle - 16
                 time.sleep(0.03)
                 sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
-                print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
+                #print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
         else:
             while sensor_wheel_angle < self.magnetic_angle_values[position]+self.angle_offsets[position]:
                 self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle + 16
                 time.sleep(0.03)
                 sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
-                print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
+                #print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
         self.sensor_servo.duty_cycle = 0
+        self.sensor_wheel_position = position
         self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
         return position
 
@@ -260,25 +262,26 @@ class Calibration_Page( Page ):
         self.text_areas[20].text = " -"
         if position is None:
             position = self.filter_wheel_position
-        if self.filter_wheel_position != 8:
-            self.filter_servo.duty_cycle = self.filter_wheel_waypoints[self.filter_wheel_position]
+        if position != 8:
+            self.filter_servo.duty_cycle = self.filter_wheel_waypoints[position]
         else:
-            self.filter_servo.duty_cycle = self.filter_wheel_waypoints[self.filter_wheel_position-1]
+            self.filter_servo.duty_cycle = self.filter_wheel_waypoints[position-1]
         time.sleep(0.4)
         filter_wheel_angle = self.filter_wheel_angle_sensor.angle
-        if self.filter_wheel_position == 8:
-            while filter_wheel_angle > self.filter_wheel_magnetic_angle_values[self.filter_wheel_position]+self.filter_wheel_angle_offsets[self.filter_wheel_position]:
+        if position == 8:
+            while filter_wheel_angle > self.filter_wheel_magnetic_angle_values[position]+self.filter_wheel_angle_offsets[position]:
                 self.filter_servo.duty_cycle = self.filter_servo.duty_cycle - 16
                 time.sleep(0.04)
                 filter_wheel_angle = self.filter_wheel_angle_sensor.angle
-                print( self.filter_servo.duty_cycle, filter_wheel_angle )
+                #print( self.filter_servo.duty_cycle, filter_wheel_angle )
         else:
-            while filter_wheel_angle < self.filter_wheel_magnetic_angle_values[self.filter_wheel_position]+self.filter_wheel_angle_offsets[self.filter_wheel_position]:
+            while filter_wheel_angle < self.filter_wheel_magnetic_angle_values[position]+self.filter_wheel_angle_offsets[position]:
                 self.filter_servo.duty_cycle = self.filter_servo.duty_cycle + 16
                 time.sleep(0.04)
                 filter_wheel_angle = self.filter_wheel_angle_sensor.angle
-                print( self.filter_servo.duty_cycle, filter_wheel_angle )
+                #print( self.filter_servo.duty_cycle, filter_wheel_angle )
         self.filter_servo.duty_cycle = 0
+        self.filter_wheel_position = position
         self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
         return position
 
@@ -297,7 +300,7 @@ class Calibration_Page( Page ):
             self.update_values()
 
         if self.instrument.button_pressed:
-            if self.selection == 9 or self.selection == 10 or self.selection == 11 or not self.graph_group.hidden:
+            if False:#self.selection == 9 or self.selection == 10 or self.selection == 11 or not self.graph_group.hidden:
                 self.graph_group.hidden = not self.graph_group.hidden
                 if not self.graph_group.hidden:
                     self.plot()
@@ -305,8 +308,9 @@ class Calibration_Page( Page ):
                 self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             elif self.selection == 1:
                 self.instrument.update_batch()
-            elif self.selection == 2:
-                self.mmt_sequence_start = time.monotonic()
+            elif self.selection == 9:
+                #self.mmt_sequence_start = time.monotonic()
+                self.run_measurement_sequence()
 
             else:
                 self.field_selected = not self.field_selected
@@ -329,56 +333,63 @@ class Calibration_Page( Page ):
             self.update_values()
 
     def run_measurement_sequence(self):
-        self.as7341_spectrometer.set_integration_time( self.integration_time_index)
-        self.as7341_spectrometer.set_gain( self.gain_index)
-        if self.status_index == 0 or self.status_index == 2:
-            print( "gps has fix:", self.gps.has_fix )
-            self.mmt_number += 1
-            gc.collect()
-            measure_start_free = gc.mem_free()
-            uid = self.instrument.uid
-            mmt_time = self.instrument.iso_time
-            dec_time = self.instrument.decimal_time
+        for sensor_position in range(0, len(self.spectral_sensors)):
+            self.go_to_sensor_position(position = sensor_position)
+            for filter_position in range(0, 9):
+                self.go_to_filter_position(position = filter_position)
+                time.sleep(3)
 
-            self.bat.read()
+        if False:
+            self.as7341_spectrometer.set_integration_time( self.integration_time_index)
+            self.as7341_spectrometer.set_gain( self.gain_index)
+            if self.status_index == 0 or self.status_index == 2:
+                print( "gps has fix:", self.gps.has_fix )
+                self.mmt_number += 1
+                gc.collect()
+                measure_start_free = gc.mem_free()
+                uid = self.instrument.uid
+                mmt_time = self.instrument.iso_time
+                dec_time = self.instrument.decimal_time
 
-            header_line = "UID,iso8601,time hh.hh, 5V supply V,bat V,bat pct"
-            header_line += ",gps lat,gps long,gps alt"
+                self.bat.read()
 
-            try:
-                self.onboard_neopixel.fill(devicem_neopixel.GREEN)
-                functionm_file.write_nonsystem_line( self.instrument, header_line)
-                for row in range (0,self.lines_per_block):
-                    line = "{},".format(uid)
-                    line += "{},".format(mmt_time)
-                    line += "{},".format(dec_time)
-                    line += "{},".format(self.supply_5V.voltage)
-                    line += "{},".format(self.bat.voltage)
-                    line += "{},".format(self.bat.percentage)
-                    line += "{},".format(self.gps.latitude)
-                    line += "{},".format(self.gps.longitude)
-                    line += "{},".format(self.gps.altitude)
+                header_line = "UID,iso8601,time hh.hh, 5V supply V,bat V,bat pct"
+                header_line += ",gps lat,gps long,gps alt"
 
-                    functionm_file.write_nonsystem_line( self.instrument, line)
-                self.onboard_neopixel.fill(devicem_neopixel.OFF)
-                print("data written to file")
-            except Exception as err:
-                print("failed to write data to file:", err)
-                self.instrument.vfs = False
-                self.onboard_neopixel.fill(devicem_neopixel.RED)
-            print()
-            for row in range (0,self.lines_per_block):
-                for col in range (0,len(self.measurement_lists)):
-                    print( self.measurement_lists[col][row], end=", " )
+                try:
+                    self.onboard_neopixel.fill(devicem_neopixel.GREEN)
+                    functionm_file.write_nonsystem_line( self.instrument, header_line)
+                    for row in range (0,self.lines_per_block):
+                        line = "{},".format(uid)
+                        line += "{},".format(mmt_time)
+                        line += "{},".format(dec_time)
+                        line += "{},".format(self.supply_5V.voltage)
+                        line += "{},".format(self.bat.voltage)
+                        line += "{},".format(self.bat.percentage)
+                        line += "{},".format(self.gps.latitude)
+                        line += "{},".format(self.gps.longitude)
+                        line += "{},".format(self.gps.altitude)
+
+                        functionm_file.write_nonsystem_line( self.instrument, line)
+                    self.onboard_neopixel.fill(devicem_neopixel.OFF)
+                    print("data written to file")
+                except Exception as err:
+                    print("failed to write data to file:", err)
+                    self.instrument.vfs = False
+                    self.onboard_neopixel.fill(devicem_neopixel.RED)
                 print()
+                for row in range (0,self.lines_per_block):
+                    for col in range (0,len(self.measurement_lists)):
+                        print( self.measurement_lists[col][row], end=", " )
+                    print()
 
-            self.measurement_lists = []
-            if self.last_lamp_current_mA < self.low_current_warning_threshold_mA: self.status_index = 2
-            measure_stop_free = gc.mem_free()
+                self.measurement_lists = []
+                if self.last_lamp_current_mA < self.low_current_warning_threshold_mA: self.status_index = 2
+                measure_stop_free = gc.mem_free()
 
-        else:
-            print("error, not available to measure")
-            #set measure button to grey
+            else:
+                print("error, not available to measure")
+                #set measure button to grey
 
 
     def measure(self):
