@@ -134,6 +134,11 @@ class Calibration_Page( Page ):
         self.filter_wheel_magnetic_angle_values = getattr(cal_lookup_wheel_F0, "magnetic_angle_values", False)
         self.filter_wheel_angle_offsets = getattr(cal_lookup_wheel_F0, "magnetic_angle_offsets", False)
         self.filter_wheel_servo_position_values = getattr(cal_lookup_wheel_F0, "servo_position_values", False)
+        self.filter_part_numbers = getattr(cal_lookup_wheel_F0, "part_numbers", False)
+        self.filter_manufacturer = getattr(cal_lookup_wheel_F0, "manufacturer", False)
+        self.filter_optical_values = getattr(cal_lookup_wheel_F0, "optical_values", False)
+        self.filter_optical_value_abbreviations = getattr(cal_lookup_wheel_F0, "optical_value_abbreviations", False)
+
 
         print( "filter_wheel_number =", self.filter_wheel_number )
         print( "filter_wheel_magnetic_angle_values =",self.filter_wheel_magnetic_angle_values )
@@ -233,16 +238,24 @@ class Calibration_Page( Page ):
         self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
         if self.sensor_wheel_position_known:
             self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
+            self.text_areas[17].text = "{}".format(self.spectral_sensor_tracking_numbers[self.sensor_wheel_position])
         else:
             self.text_areas[15].text = " -"
+            self.text_areas[17].text = " -"
         self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
-        self.text_areas[17].text = "{}".format(self.spectral_sensor_tracking_numbers[self.sensor_wheel_position])
         self.text_areas[18].text = "{}".format( self.filter_wheel_number )
         self.text_areas[19].text = "9" ### TBD"{}".format(len(self.filters))
         if self.filter_wheel_position_known:
             self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
+            self.text_areas[21].text = self.filter_part_numbers[self.filter_wheel_position]
+            self.text_areas[22].text = self.filter_optical_value_abbreviations[self.filter_wheel_position]
         else:
             self.text_areas[20].text = " -"
+            self.text_areas[21].text = " -"
+            self.text_areas[22].text = " -"
+
+
+
     def go_to_sensor_position( self, position = None):
         self.sensor_wheel_position_known = True
         self.text_areas[15].text = " -"
@@ -350,10 +363,12 @@ class Calibration_Page( Page ):
     def run_measurement_sequence(self):
         for sensor_position in range(0, len(self.spectral_sensors)):
             self.go_to_sensor_position(position = sensor_position)
+            self.update_values()
             for filter_position in range(0, 9):
                 self.go_to_filter_position(position = filter_position)
-                time.sleep(3)
                 self.update_values()
+                time.sleep(3)
+
 
         if False:
             self.as7341_spectrometer.set_integration_time( self.integration_time_index)
