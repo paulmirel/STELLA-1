@@ -583,7 +583,7 @@ class Calibration_Page( Page ):
         line_names = ["wheel", "filters", "position", " part number", "value"]
         line_values = ["-", "-","-","-", "-"]
         line_selectable = [ False, False, True, False, False ]
-        line_widths = [44,50,56,100,60]
+        line_widths = [44,50,56,76,80]
         x = start_x
         for index in range(0, len(line_names)):
             text_group = displayio.Group(scale=1, x=x+offset_1, y=line_y+int(height_1/2))
