@@ -338,6 +338,7 @@ class Calibration_Page( Page ):
             for filter_position in range(0, 9):
                 self.go_to_filter_position(position = filter_position)
                 time.sleep(3)
+                self.update_values()
 
         if False:
             self.as7341_spectrometer.set_integration_time( self.integration_time_index)
