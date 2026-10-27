@@ -120,9 +120,9 @@ class Calibration_Page( Page ):
             self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_5, "tracking_numbers", False)
         print()
         print( "sensor_wheel_number =", self.sensor_wheel_number )
-        print( "magnetic_angle_values =",self.magnetic_angle_values )
-        print( "servo_position_values =",self.servo_position_values )
-        print( "spectral_sensor_tracking_numbers = ", self.spectral_sensor_tracking_numbers )
+        #print( "magnetic_angle_values =",self.magnetic_angle_values )
+        #print( "servo_position_values =",self.servo_position_values )
+        #print( "spectral_sensor_tracking_numbers = ", self.spectral_sensor_tracking_numbers )
         print()
         self.sensor_wheel_waypoints = []
         for index in range (0, len(self.servo_position_values)-1):
@@ -141,13 +141,9 @@ class Calibration_Page( Page ):
 
 
         print( "filter_wheel_number =", self.filter_wheel_number )
-        print( "filter_wheel_magnetic_angle_values =",self.filter_wheel_magnetic_angle_values )
-        print( "filter_wheel_servo_position_values =",self.filter_wheel_servo_position_values )
-        self.sensor_wheel_position_known = False
-        self.filter_wheel_position_known = False
-        self.sensor_wheel_position = 0
-        self.filter_wheel_position = 0
-        self.filter_wheel_position_labels = ["A","B","C","D","E","F","G","H","i"]
+        #print( "filter_wheel_magnetic_angle_values =",self.filter_wheel_magnetic_angle_values )
+        #print( "filter_wheel_servo_position_values =",self.filter_wheel_servo_position_values )
+
         self.filter_wheel_waypoints = []
         for index in range (0, len(self.filter_wheel_servo_position_values)-1):
             self.filter_wheel_waypoints.append(int((self.filter_wheel_servo_position_values[index]+self.filter_wheel_servo_position_values[index+1])/2))
@@ -162,6 +158,12 @@ class Calibration_Page( Page ):
         self.sensor_wheel_angle_sensor = adafruit_as5600.AS5600(self.mux_8_to_1[7])
         self.filter_wheel_angle_sensor = adafruit_as5600.AS5600(self.instrument.i2c_bus, address = 0x46 )
 
+        self.sensor_wheel_position_known = False
+        self.filter_wheel_position_known = False
+        self.sensor_wheel_position = 0
+        self.filter_wheel_position = 0
+        self.filter_wheel_position_labels = ["A","B","C","D","E","F","G","H","i"]
+        self.pause = False
 
     def integration_time_setting_test( self ):
         integration_setting_ms = 10
@@ -253,7 +255,10 @@ class Calibration_Page( Page ):
             self.text_areas[20].text = " -"
             self.text_areas[21].text = " -"
             self.text_areas[22].text = " -"
-
+        if self.pause:
+            self.text_areas[26].text = "pause"
+        else:
+            self.text_areas[26].text = " --"
 
 
     def go_to_sensor_position( self, position = None):
@@ -337,8 +342,12 @@ class Calibration_Page( Page ):
             elif self.selection == 1:
                 self.instrument.update_batch()
             elif self.selection == 9:
-                #self.mmt_sequence_start = time.monotonic()
-                self.run_measurement_sequence()
+                if self.pause:
+                    self.pause = False
+                if not self.measuring:
+                    self.run_measurement_sequence()
+            elif self.selection == 10:
+                self.pause = True
 
             else:
                 self.field_selected = not self.field_selected
@@ -361,6 +370,8 @@ class Calibration_Page( Page ):
             self.update_values()
 
     def run_measurement_sequence(self):
+        self.measuring = True
+        print("starting measurement sequence")
         for sensor_position in range(0, len(self.spectral_sensors)):
             self.go_to_sensor_position(position = sensor_position)
             self.update_values()
@@ -368,6 +379,11 @@ class Calibration_Page( Page ):
                 self.go_to_filter_position(position = filter_position)
                 self.update_values()
                 time.sleep(3)
+                self.instrument.handle_inputs()
+                while self.pause:
+                    self.instrument.handle_inputs()
+                    self.update_values()
+                    time.sleep(0.1)
 
 
         if False:
