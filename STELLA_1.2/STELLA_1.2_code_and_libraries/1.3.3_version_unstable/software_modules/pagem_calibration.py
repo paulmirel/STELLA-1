@@ -96,28 +96,33 @@ class Calibration_Page( Page ):
             self.magnetic_angle_values = getattr(cal_lookup_wheel_1, "magnetic_angle_values", False)
             self.angle_offsets = getattr(cal_lookup_wheel_1, "magnetic_angle_offsets", False)
             self.servo_position_values = getattr(cal_lookup_wheel_1, "servo_position_values", False)
+            self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_1, "tracking_numbers", False)
         elif self.spectral_sensors[0].pn == "as7343":
             self.sensor_wheel_number = 3
             from configuration_files import cal_lookup_wheel_3
             self.magnetic_angle_values = getattr(cal_lookup_wheel_3, "magnetic_angle_values", False)
             self.angle_offsets = getattr(cal_lookup_wheel_3, "magnetic_angle_offsets", False)
             self.servo_position_values = getattr(cal_lookup_wheel_3, "servo_position_values", False)
+            self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_3, "tracking_numbers", False)
         elif self.spectral_sensors[0].pn == "tcs3448":
             self.sensor_wheel_number = 8
             from configuration_files import cal_lookup_wheel_8
             self.magnetic_angle_values = getattr(cal_lookup_wheel_8, "magnetic_angle_values", False)
             self.angle_offsets = getattr(cal_lookup_wheel_8, "magnetic_angle_offsets", False)
             self.servo_position_values = getattr(cal_lookup_wheel_8, "servo_position_values", False)
+            self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_8, "tracking_numbers", False)
         elif self.spectral_sensors[0].pn == "as7265x":
             self.sensor_wheel_number = 5
             from configuration_files import cal_lookup_wheel_5
             self.magnetic_angle_values = getattr(cal_lookup_wheel_5, "magnetic_angle_values", False)
             self.angle_offsets = getattr(cal_lookup_wheel_5, "magnetic_angle_offsets", False)
             self.servo_position_values = getattr(cal_lookup_wheel_5, "servo_position_values", False)
+            self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_5, "tracking_numbers", False)
         print()
         print( "sensor_wheel_number =", self.sensor_wheel_number )
         print( "magnetic_angle_values =",self.magnetic_angle_values )
         print( "servo_position_values =",self.servo_position_values )
+        print( "spectral_sensor_tracking_numbers = ", self.spectral_sensor_tracking_numbers )
         print()
         self.sensor_wheel_waypoints = []
         for index in range (0, len(self.servo_position_values)-1):
@@ -133,6 +138,8 @@ class Calibration_Page( Page ):
         print( "filter_wheel_number =", self.filter_wheel_number )
         print( "filter_wheel_magnetic_angle_values =",self.filter_wheel_magnetic_angle_values )
         print( "filter_wheel_servo_position_values =",self.filter_wheel_servo_position_values )
+        self.sensor_wheel_position_known = False
+        self.filter_wheel_position_known = False
         self.sensor_wheel_position = 0
         self.filter_wheel_position = 0
         self.filter_wheel_position_labels = ["A","B","C","D","E","F","G","H","i"]
@@ -224,13 +231,20 @@ class Calibration_Page( Page ):
         self.text_areas[6].text = self.status_list[self.status_index]
         self.text_areas[13].text = "{}".format(self.sensor_wheel_number)
         self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
-        self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
+        if self.sensor_wheel_position_known:
+            self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
+        else:
+            self.text_areas[15].text = " -"
         self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
+        self.text_areas[17].text = "{}".format(self.spectral_sensor_tracking_numbers[self.sensor_wheel_position])
         self.text_areas[18].text = "{}".format( self.filter_wheel_number )
         self.text_areas[19].text = "9" ### TBD"{}".format(len(self.filters))
-        self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
-
+        if self.filter_wheel_position_known:
+            self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
+        else:
+            self.text_areas[20].text = " -"
     def go_to_sensor_position( self, position = None):
+        self.sensor_wheel_position_known = True
         self.text_areas[15].text = " -"
         if position is None:
             position = self.sensor_wheel_position
@@ -259,6 +273,7 @@ class Calibration_Page( Page ):
 
 
     def go_to_filter_position( self, position = None):
+        self.filter_wheel_position_known = True
         self.text_areas[20].text = " -"
         if position is None:
             position = self.filter_wheel_position
