@@ -236,7 +236,7 @@ class Calibration_Page( Page ):
             self.status_index = 4
             self.status_highlight.color_index = 2
         self.text_areas[6].text = self.status_list[self.status_index]
-        self.text_areas[7].text = " --"
+        #self.text_areas[7].text = " --"
         self.text_areas[8].text = "AUTO"
 
 
@@ -276,6 +276,10 @@ class Calibration_Page( Page ):
         else:
             self.text_areas[26].text = " --"
 
+    def reset(self):
+        self.cancel = True
+        self.go_to_sensor_position(0)
+        self.go_to_filter_position(0)
 
     def action( self ):
         if self.instrument.encoder_increment != 0:
@@ -297,9 +301,13 @@ class Calibration_Page( Page ):
                 if not self.graph_group.hidden:
                     self.plot()
             elif self.selection == 0:
-                self.instrument.active_page_number = self.instrument.pages_dict["Main"]
+                pass#self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             elif self.selection == 1:
                 self.instrument.update_batch()
+            elif self.selection == 2:
+                self.reset()
+            elif self.selection == 8:
+                self.make_a_single_measurement()
             elif self.selection == 9:
                 if self.pause:
                     self.pause = False
@@ -328,31 +336,46 @@ class Calibration_Page( Page ):
             self.instrument.button_pressed = False
             self.update_values()
 
-    def run_measurement_sequence(self):
+    def make_a_single_measurement(self):
         self.measuring = True
+        self.go_to_sensor_position()
+        self.go_to_filter_position()
+        self.latest_data_list = self.measure()
+        print("write single measurement to file")
+        self.measuring = False
+
+    def run_measurement_sequence(self):
+        self.cancel = False
+        self.measuring = True
+        self.instrument.update_batch()
         print("starting measurement sequence")
         for sensor_position in range(0, len(self.spectral_sensors)):
-            print("next sensor")
-            self.go_to_sensor_position(position = sensor_position)
-            self.update_values()
-            for filter_position in range(0, 9):
-                print("next filter")
-                self.go_to_filter_position(position = filter_position)
-                self.update_values()
-                print("Set exposure parmeters to low middle values")
-                print("make a one shot test exposure")
-                time.sleep(1)
-                print("calculate best exposure (if saturated, drop values and test expose again)")
-                print("set exposure parameters to best")
-                #print("(omit bracketing as not useful information, come back to it if I find out that I need it specifically)")
-                print("make a one shot exposure, save values")
-                time.sleep(1)
-                print("write values to file")
+            if not self.cancel:
+                data_list = []
+                print("next sensor")
+                self.go_to_sensor_position(position = sensor_position)
                 self.instrument.handle_inputs()
-                while self.pause:
-                    self.instrument.handle_inputs()
-                    self.update_values()
-                    time.sleep(0.1)
+                self.update_values()
+                for filter_position in range(0, 9):
+                    if not self.cancel:
+                        print("next filter")
+                        self.go_to_filter_position(position = filter_position)
+                        self.update_values()
+                        print("Set exposure parmeters to low middle values")
+                        temporary_data_list = self.measure()
+                        print("calculate best exposure (if saturated, drop values and test expose again)")
+                        print("set exposure parameters to best")
+                        #print("(omit bracketing as not useful information, come back to it if I find out that I need it specifically)")
+                        for cycle in range (0,3):
+                            print("measurement cycle", cycle)
+                            data_list.append( self.measure())
+                            time.sleep(1)
+                            print("write values to file")
+                            self.instrument.handle_inputs()
+                            while self.pause:
+                                self.instrument.handle_inputs()
+                                self.update_values()
+                                time.sleep(0.1)
         self.measuring = False
 
         if False:
@@ -406,7 +429,11 @@ class Calibration_Page( Page ):
 
 
     def measure(self):
-        pass
+        print("initiate single shot measurement on current detector")
+        print("wait for data ready")
+        print("store the measurement values")
+        self.latest_data_list = False #TBD
+        return self.latest_data_list
 
     def go_to_sensor_position( self, position = None):
         self.sensor_wheel_position_known = True
@@ -464,6 +491,7 @@ class Calibration_Page( Page ):
         self.filter_wheel_position = position
         self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
         return position
+
     def make_group( self ):
         self.group = displayio.Group()
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
@@ -522,7 +550,7 @@ class Calibration_Page( Page ):
                                                             height=height_2-2*select_width, x=154, y=line_y+height_1+select_width)
         self.group.append(self.status_highlight)
         line_names = ["battery", "inc", "  batch", "status", "self-test/reset" ]
-        line_values = ["---","B+","---", "----", " -- "] #SELF-TS #RESET #_STOP_
+        line_values = ["---","B+","---", "----", " RESET"] #SELF-TS #RESET #_STOP_
         line_selectable = [ False, True, False, False, True ]
         line_widths = [54,38,56,70,100]
         x = start_x
@@ -553,7 +581,7 @@ class Calibration_Page( Page ):
 
 
         self.value_areas[-2].color_index = 12
-        self.value_areas[-1].color_index = 5
+        self.value_areas[-1].color_index = 9
 
         line_y += line_spacing
         line_names = ["control", "gain", "integration", " exposure", "%DR" ]
@@ -650,7 +678,7 @@ class Calibration_Page( Page ):
 
         line_y += line_spacing - height_1
         line_names = ["", "", "", "", ""]
-        line_values = ["ALL", "RUN","PAUSE"," -- ", "PLOT"] #ready
+        line_values = ["ONE", "RUN","PAUSE"," -- ", "PLOT"] #ready
         line_selectable = [ True, True, True, False, True ]
         line_widths = [50,52,74,78,62]
         x = start_x
