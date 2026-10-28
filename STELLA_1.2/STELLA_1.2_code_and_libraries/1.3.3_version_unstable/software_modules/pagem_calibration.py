@@ -296,8 +296,8 @@ class Calibration_Page( Page ):
                         active_sensor.gain_index = (active_sensor.gain_index + self.instrument.encoder_increment) % len(active_sensor.gain_list)
                         active_sensor.set_gain()
                     if self.selection == 5:
-                        pass
-
+                        active_sensor.integration_time_index = (active_sensor.integration_time_index + self.instrument.encoder_increment) % len(active_sensor.integration_time_ms_list)
+                        active_sensor.set_integration_time()
                 if not self.measuring:
                     if self.selection == 6:
                         self.sensor_wheel_position = (self.sensor_wheel_position + self.instrument.encoder_increment) % len(self.spectral_sensors)

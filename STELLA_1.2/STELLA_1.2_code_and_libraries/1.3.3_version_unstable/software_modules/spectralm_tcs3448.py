@@ -151,7 +151,7 @@ class tcs3448_Spectrometer( Device ):
         return self.gain_list[ self.swob.gain ]#, self.gain_index
 
 
-    def set_integration_time( self, index ):
+    def set_integration_time( self, index = None ):
         #library sets atime = 100, astep = 999, which is an unusable combination, ADC saturated at 101000.
         # (astep, atime)
         integration_time_settings_list = [ (127,2),(127,27),(127,54),(127,82),(127,111),(127,140),
@@ -161,9 +161,13 @@ class tcs3448_Spectrometer( Device ):
                                             (825,239),(900,239),(975,239),(1050,239),(1125,239),(1200,239),(1275,239),
                                             (1350,239),(1425,239),(1500,239)]
         try:
-            self.swob.astep = integration_time_settings_list[index][0]
-            self.swob.atime = integration_time_settings_list[index][1]
-            self.integration_time_index = index
+            if index is None:
+                self.swob.astep = integration_time_settings_list[self.integration_time_index][0]
+                self.swob.atime = integration_time_settings_list[self.integration_time_index][1]
+            else:
+                self.swob.astep = integration_time_settings_list[index][0]
+                self.swob.atime = integration_time_settings_list[index][1]
+                self.integration_time_index = index
             return self.integration_time_ms_list[ self.integration_time_index ]
         except Exception as err:
             print( "tcs3448 set integration time failed: ", err )
