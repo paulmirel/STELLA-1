@@ -241,9 +241,6 @@ class Calibration_Page( Page ):
 
 
 
-
-
-
         self.text_areas[13].text = "{}".format(self.sensor_wheel_number)
         self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
         if self.sensor_wheel_position_known:
@@ -307,7 +304,8 @@ class Calibration_Page( Page ):
             elif self.selection == 2:
                 self.reset()
             elif self.selection == 8:
-                self.make_a_single_measurement()
+                if not self.measuring:
+                    self.make_a_single_measurement()
             elif self.selection == 9:
                 if self.pause:
                     self.pause = False
@@ -317,29 +315,34 @@ class Calibration_Page( Page ):
                 self.pause = True
 
             else:
-                self.field_selected = not self.field_selected
+                if not self.measuring:
+                    self.field_selected = not self.field_selected
                 if self.selection == 3:
                     if self.field_selected:
                         self.value_areas[3].color_index = self.field_selected_color_index
                     else:
                         self.value_areas[3].color_index = self.field_not_selected_color_index
                 if self.selection == 6:
-                    if self.field_selected:
-                        self.value_areas[6].color_index = self.field_selected_color_index
-                    else:
-                        self.value_areas[6].color_index = self.field_not_selected_color_index
+                    if not self.measuring:
+                        if self.field_selected:
+                            self.value_areas[6].color_index = self.field_selected_color_index
+                        else:
+                            self.value_areas[6].color_index = self.field_not_selected_color_index
                 if self.selection == 7:
-                    if self.field_selected:
-                        self.value_areas[7].color_index = self.field_selected_color_index
-                    else:
-                        self.value_areas[7].color_index = self.field_not_selected_color_index
+                    if not self.measuring:
+                        if self.field_selected:
+                            self.value_areas[7].color_index = self.field_selected_color_index
+                        else:
+                            self.value_areas[7].color_index = self.field_not_selected_color_index
             self.instrument.button_pressed = False
             self.update_values()
 
     def make_a_single_measurement(self):
         self.measuring = True
-        self.go_to_sensor_position()
-        self.go_to_filter_position()
+        if not self.sensor_wheel_position_known:
+            self.go_to_sensor_position()
+        if not self.filter_wheel_position_known:
+            self.go_to_filter_position()
         self.latest_data_list = self.measure()
         print("write single measurement to file")
         self.measuring = False
