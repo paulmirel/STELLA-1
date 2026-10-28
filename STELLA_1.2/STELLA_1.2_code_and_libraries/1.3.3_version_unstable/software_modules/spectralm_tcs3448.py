@@ -143,6 +143,11 @@ class tcs3448_Spectrometer( Device ):
             print( "failed to set gain: ", err )
             return False
 
+
+    def read_gain(self):
+        return self.gain_list[ self.swob.gain ]
+
+
     def set_integration_time( self, index ):
         #library sets atime = 100, astep = 999, which is an unusable combination, ADC saturated at 101000.
         # (astep, atime)

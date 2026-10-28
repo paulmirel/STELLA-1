@@ -163,6 +163,9 @@ class as7265x_Spectrometer( Device ):
             print( "failed to set gain: ", err )
             return False
 
+    def read_gain(self):
+        return self.swob.gain
+
     def set_integration_time( self, index ):
         # must wait for at least 5 seconds before sending integration time again. If not, signal goes to 0.
         integration_time_ms = self.integration_time_ms_list[ index ]

@@ -373,24 +373,34 @@ class Calibration_Page( Page ):
         self.measuring = True
         print("starting measurement sequence")
         for sensor_position in range(0, len(self.spectral_sensors)):
+            print("next sensor")
             self.go_to_sensor_position(position = sensor_position)
             self.update_values()
             for filter_position in range(0, 9):
+                print("next filter")
                 self.go_to_filter_position(position = filter_position)
                 self.update_values()
-                time.sleep(3)
+                print("Set exposure parmeters to low middle values")
+                print("make a one shot test exposure")
+                time.sleep(1)
+                print("calculate best exposure (if saturated, drop values and test expose again)")
+                print("set exposure parameters to best")
+                #print("(omit bracketing as not useful information, come back to it if I find out that I need it specifically)")
+                print("make a one shot exposure, save values")
+                time.sleep(1)
+                print("write values to file")
                 self.instrument.handle_inputs()
                 while self.pause:
                     self.instrument.handle_inputs()
                     self.update_values()
                     time.sleep(0.1)
-
+        self.measuring = False
 
         if False:
             self.as7341_spectrometer.set_integration_time( self.integration_time_index)
             self.as7341_spectrometer.set_gain( self.gain_index)
             if self.status_index == 0 or self.status_index == 2:
-                print( "gps has fix:", self.gps.has_fix )
+
                 self.mmt_number += 1
                 gc.collect()
                 measure_start_free = gc.mem_free()
@@ -400,8 +410,8 @@ class Calibration_Page( Page ):
 
                 self.bat.read()
 
-                header_line = "UID,iso8601,time hh.hh, 5V supply V,bat V,bat pct"
-                header_line += ",gps lat,gps long,gps alt"
+                header_line = "UID,iso8601,time hh.hh,bat_V,bat_pct"
+                header_line += ""
 
                 try:
                     self.onboard_neopixel.fill(devicem_neopixel.GREEN)
@@ -410,12 +420,9 @@ class Calibration_Page( Page ):
                         line = "{},".format(uid)
                         line += "{},".format(mmt_time)
                         line += "{},".format(dec_time)
-                        line += "{},".format(self.supply_5V.voltage)
                         line += "{},".format(self.bat.voltage)
                         line += "{},".format(self.bat.percentage)
-                        line += "{},".format(self.gps.latitude)
-                        line += "{},".format(self.gps.longitude)
-                        line += "{},".format(self.gps.altitude)
+
 
                         functionm_file.write_nonsystem_line( self.instrument, line)
                     self.onboard_neopixel.fill(devicem_neopixel.OFF)
