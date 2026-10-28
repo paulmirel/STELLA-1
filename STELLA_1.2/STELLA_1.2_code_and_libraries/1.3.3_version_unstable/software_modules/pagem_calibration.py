@@ -248,10 +248,16 @@ class Calibration_Page( Page ):
         self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
         if self.sensor_wheel_position_known:
             self.text_areas[9].text = "{}".format(self.spectral_sensors[self.sensor_wheel_position].read_gain())
+            intg_ms = self.spectral_sensors[self.sensor_wheel_position].read_integration_time_ms()
+            if intg_ms <1000:
+                self.text_areas[10].text = "{}ms".format(intg_ms)
+            else:
+                self.text_areas[10].text = "{}s".format(round(intg_ms/1000),1)
             self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
             self.text_areas[17].text = "{}".format(self.spectral_sensor_tracking_numbers[self.sensor_wheel_position])
         else:
             self.text_areas[9].text = " -"
+            self.text_areas[10].text = " -"
             self.text_areas[15].text = " -"
             self.text_areas[17].text = " -"
         self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
