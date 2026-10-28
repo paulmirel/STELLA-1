@@ -236,12 +236,22 @@ class Calibration_Page( Page ):
             self.status_index = 4
             self.status_highlight.color_index = 2
         self.text_areas[6].text = self.status_list[self.status_index]
+        self.text_areas[7].text = " --"
+        self.text_areas[8].text = "AUTO"
+
+
+
+
+
+
         self.text_areas[13].text = "{}".format(self.sensor_wheel_number)
         self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
         if self.sensor_wheel_position_known:
+            self.text_areas[9].text = "{}".format(self.spectral_sensors[self.sensor_wheel_position].read_gain())
             self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
             self.text_areas[17].text = "{}".format(self.spectral_sensor_tracking_numbers[self.sensor_wheel_position])
         else:
+            self.text_areas[9].text = " -"
             self.text_areas[15].text = " -"
             self.text_areas[17].text = " -"
         self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
@@ -260,63 +270,6 @@ class Calibration_Page( Page ):
         else:
             self.text_areas[26].text = " --"
 
-
-    def go_to_sensor_position( self, position = None):
-        self.sensor_wheel_position_known = True
-        self.text_areas[15].text = " -"
-        if position is None:
-            position = self.sensor_wheel_position
-        if position < 6:
-            self.sensor_servo.duty_cycle = self.sensor_wheel_waypoints[position]
-        else:
-            self.sensor_servo.duty_cycle = self.sensor_wheel_waypoints[position-1]
-        time.sleep(0.6)
-        sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
-        if position == 6:
-            while sensor_wheel_angle > self.magnetic_angle_values[position]+self.angle_offsets[position]:
-                self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle - 16
-                time.sleep(0.03)
-                sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
-                #print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
-        else:
-            while sensor_wheel_angle < self.magnetic_angle_values[position]+self.angle_offsets[position]:
-                self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle + 16
-                time.sleep(0.03)
-                sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
-                #print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
-        self.sensor_servo.duty_cycle = 0
-        self.sensor_wheel_position = position
-        self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
-        return position
-
-
-    def go_to_filter_position( self, position = None):
-        self.filter_wheel_position_known = True
-        self.text_areas[20].text = " -"
-        if position is None:
-            position = self.filter_wheel_position
-        if position != 8:
-            self.filter_servo.duty_cycle = self.filter_wheel_waypoints[position]
-        else:
-            self.filter_servo.duty_cycle = self.filter_wheel_waypoints[position-1]
-        time.sleep(0.4)
-        filter_wheel_angle = self.filter_wheel_angle_sensor.angle
-        if position == 8:
-            while filter_wheel_angle > self.filter_wheel_magnetic_angle_values[position]+self.filter_wheel_angle_offsets[position]:
-                self.filter_servo.duty_cycle = self.filter_servo.duty_cycle - 16
-                time.sleep(0.04)
-                filter_wheel_angle = self.filter_wheel_angle_sensor.angle
-                #print( self.filter_servo.duty_cycle, filter_wheel_angle )
-        else:
-            while filter_wheel_angle < self.filter_wheel_magnetic_angle_values[position]+self.filter_wheel_angle_offsets[position]:
-                self.filter_servo.duty_cycle = self.filter_servo.duty_cycle + 16
-                time.sleep(0.04)
-                filter_wheel_angle = self.filter_wheel_angle_sensor.angle
-                #print( self.filter_servo.duty_cycle, filter_wheel_angle )
-        self.filter_servo.duty_cycle = 0
-        self.filter_wheel_position = position
-        self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
-        return position
 
     def action( self ):
         if self.instrument.encoder_increment != 0:
@@ -449,6 +402,62 @@ class Calibration_Page( Page ):
     def measure(self):
         pass
 
+    def go_to_sensor_position( self, position = None):
+        self.sensor_wheel_position_known = True
+        self.text_areas[15].text = " -"
+        if position is None:
+            position = self.sensor_wheel_position
+        if position < 6:
+            self.sensor_servo.duty_cycle = self.sensor_wheel_waypoints[position]
+        else:
+            self.sensor_servo.duty_cycle = self.sensor_wheel_waypoints[position-1]
+        time.sleep(0.6)
+        sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
+        if position == 6:
+            while sensor_wheel_angle > self.magnetic_angle_values[position]+self.angle_offsets[position]:
+                self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle - 16
+                time.sleep(0.03)
+                sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
+                #print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
+        else:
+            while sensor_wheel_angle < self.magnetic_angle_values[position]+self.angle_offsets[position]:
+                self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle + 16
+                time.sleep(0.03)
+                sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
+                #print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
+        self.sensor_servo.duty_cycle = 0
+        self.sensor_wheel_position = position
+        self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
+        return position
+
+
+    def go_to_filter_position( self, position = None):
+        self.filter_wheel_position_known = True
+        self.text_areas[20].text = " -"
+        if position is None:
+            position = self.filter_wheel_position
+        if position != 8:
+            self.filter_servo.duty_cycle = self.filter_wheel_waypoints[position]
+        else:
+            self.filter_servo.duty_cycle = self.filter_wheel_waypoints[position-1]
+        time.sleep(0.4)
+        filter_wheel_angle = self.filter_wheel_angle_sensor.angle
+        if position == 8:
+            while filter_wheel_angle > self.filter_wheel_magnetic_angle_values[position]+self.filter_wheel_angle_offsets[position]:
+                self.filter_servo.duty_cycle = self.filter_servo.duty_cycle - 16
+                time.sleep(0.04)
+                filter_wheel_angle = self.filter_wheel_angle_sensor.angle
+                #print( self.filter_servo.duty_cycle, filter_wheel_angle )
+        else:
+            while filter_wheel_angle < self.filter_wheel_magnetic_angle_values[position]+self.filter_wheel_angle_offsets[position]:
+                self.filter_servo.duty_cycle = self.filter_servo.duty_cycle + 16
+                time.sleep(0.04)
+                filter_wheel_angle = self.filter_wheel_angle_sensor.angle
+                #print( self.filter_servo.duty_cycle, filter_wheel_angle )
+        self.filter_servo.duty_cycle = 0
+        self.filter_wheel_position = position
+        self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
+        return position
     def make_group( self ):
         self.group = displayio.Group()
         background = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=320, height=240, x=0, y=0)
