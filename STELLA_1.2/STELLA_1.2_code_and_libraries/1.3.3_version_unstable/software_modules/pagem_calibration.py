@@ -35,6 +35,7 @@ class Calibration_Page( Page ):
         self.selection_count = 0
         self.last_selection = 0
         self.field_selected = False
+        self.field_greyed_index = 19
         self.field_selected_color_index = 5
         self.field_not_selected_color_index = 9
         self.active_sensor_index = 0
@@ -68,6 +69,7 @@ class Calibration_Page( Page ):
         self.sync_system_clock()
         self.mux_8_to_1 = adafruit_tca9548a.TCA9548A(self.instrument.i2c_bus)
         self.spectral_sensors = []
+        self.auto_exposure = True
 
         for index in range (0,7):
             active_sensor = False
@@ -237,7 +239,10 @@ class Calibration_Page( Page ):
             self.status_highlight.color_index = 2
         self.text_areas[6].text = self.status_list[self.status_index]
         #self.text_areas[7].text = " --"
-        self.text_areas[8].text = "AUTO"
+        if self.auto_exposure:
+            self.text_areas[8].text = "AUTO"
+        else:
+            self.text_areas[8].text = "MAN"
 
 
 
@@ -275,6 +280,8 @@ class Calibration_Page( Page ):
 
     def reset(self):
         self.cancel = True
+        self.measuring = False
+        self.auto_exposure = True
         self.go_to_sensor_position(0)
         self.go_to_filter_position(0)
 
@@ -282,13 +289,14 @@ class Calibration_Page( Page ):
         if self.instrument.encoder_increment != 0:
             if self.field_selected:
                 if self.selection == 3:
-                    pass
-                if self.selection == 6:
-                    self.sensor_wheel_position = (self.sensor_wheel_position + self.instrument.encoder_increment) % len(self.spectral_sensors)
-                    self.go_to_sensor_position()
-                if self.selection == 7:
-                    self.filter_wheel_position = (self.filter_wheel_position + self.instrument.encoder_increment) % 9
-                    self.go_to_filter_position()
+                    self.auto_exposure = not self.auto_exposure
+                if not self.measuring:
+                    if self.selection == 6:
+                        self.sensor_wheel_position = (self.sensor_wheel_position + self.instrument.encoder_increment) % len(self.spectral_sensors)
+                        self.go_to_sensor_position()
+                    if self.selection == 7:
+                        self.filter_wheel_position = (self.filter_wheel_position + self.instrument.encoder_increment) % 9
+                        self.go_to_filter_position()
             self.instrument.encoder_increment = 0
             self.update_values()
 
@@ -315,25 +323,40 @@ class Calibration_Page( Page ):
                 self.pause = True
 
             else:
-                if not self.measuring:
-                    self.field_selected = not self.field_selected
+                self.field_selected = not self.field_selected
                 if self.selection == 3:
                     if self.field_selected:
                         self.value_areas[3].color_index = self.field_selected_color_index
                     else:
                         self.value_areas[3].color_index = self.field_not_selected_color_index
+                if self.auto_exposure:
+                    exposure_control_color_index = self.field_greyed_index
+                else:
+                   exposure_control_color_index =  self.field_selected_color_index
+                if self.selection == 4:
+                    if self.field_selected:
+                        self.value_areas[4].color_index = exposure_control_color_index
+                    else:
+                        self.value_areas[4].color_index = self.field_not_selected_color_index
+                if self.selection == 5:
+                    if self.field_selected:
+                        self.value_areas[5].color_index = exposure_control_color_index
+                    else:
+                        self.value_areas[5].color_index = self.field_not_selected_color_index
+                if self.measuring:
+                    position_control_color_index = self.field_greyed_index
+                else:
+                    position_control_color_index = self.field_selected_color_index
                 if self.selection == 6:
-                    if not self.measuring:
-                        if self.field_selected:
-                            self.value_areas[6].color_index = self.field_selected_color_index
-                        else:
-                            self.value_areas[6].color_index = self.field_not_selected_color_index
+                    if self.field_selected:
+                        self.value_areas[6].color_index = position_control_color_index
+                    else:
+                        self.value_areas[6].color_index = self.field_not_selected_color_index
                 if self.selection == 7:
-                    if not self.measuring:
-                        if self.field_selected:
-                            self.value_areas[7].color_index = self.field_selected_color_index
-                        else:
-                            self.value_areas[7].color_index = self.field_not_selected_color_index
+                    if self.field_selected:
+                        self.value_areas[7].color_index = position_control_color_index
+                    else:
+                        self.value_areas[7].color_index = self.field_not_selected_color_index
             self.instrument.button_pressed = False
             self.update_values()
 
@@ -552,7 +575,7 @@ class Calibration_Page( Page ):
         self.status_highlight = vectorio.Rectangle(pixel_shader=self.palette, color_index=5, width=54-2*select_width+14,
                                                             height=height_2-2*select_width, x=154, y=line_y+height_1+select_width)
         self.group.append(self.status_highlight)
-        line_names = ["battery", "inc", "  batch", "status", "self-test/reset" ]
+        line_names = ["battery", "inc", "  batch", "status", "   override" ]
         line_values = ["---","B+","---", "----", " RESET"] #SELF-TS #RESET #_STOP_
         line_selectable = [ False, True, False, False, True ]
         line_widths = [54,38,56,70,100]
