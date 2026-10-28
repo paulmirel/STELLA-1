@@ -153,10 +153,14 @@ class as7343_Spectrometer( Device ):
         try:
             self.swob.astep = integration_time_settings_list[index][0]
             self.swob.atime = integration_time_settings_list[index][1]
-            return self.integration_time_ms_list[ index ]
+            self.integration_time_index = index
+            return self.integration_time_ms_list[ self.integration_time_index ]
         except Exception as err:
             print( "as7343 set integration time failed: ", err )
             return False
+
+    def read_integration_time_ms(self):
+        return self.integration_time_ms_list[ self.integration_time_index ]
 
     def lamp_on(self):
         self.swob.led_enabled = True

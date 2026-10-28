@@ -175,6 +175,9 @@ class as7265x_Spectrometer( Device ):
         except Exception as err:
             print( "as7265x set integration time failed: ", err )
 
+    def read_integration_time_ms(self):
+        return self.swob.integration_time
+
     def acquire_measurement( self ):
         self.swob.take_measurements()
 
