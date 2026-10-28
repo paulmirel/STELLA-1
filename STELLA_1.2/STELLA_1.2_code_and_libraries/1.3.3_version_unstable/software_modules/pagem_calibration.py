@@ -290,6 +290,14 @@ class Calibration_Page( Page ):
             if self.field_selected:
                 if self.selection == 3:
                     self.auto_exposure = not self.auto_exposure
+                if not self.auto_exposure:
+                    active_sensor = self.spectral_sensors[self.sensor_wheel_position]
+                    if self.selection == 4:
+                        active_sensor.gain_index = (active_sensor.gain_index + self.instrument.encoder_increment) % len(active_sensor.gain_list)
+                        active_sensor.set_gain()
+                    if self.selection == 5:
+                        pass
+
                 if not self.measuring:
                     if self.selection == 6:
                         self.sensor_wheel_position = (self.sensor_wheel_position + self.instrument.encoder_increment) % len(self.spectral_sensors)

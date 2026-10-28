@@ -135,17 +135,20 @@ class tcs3448_Spectrometer( Device ):
         self.min_counts = min(self.data_counts)
         return self.max_counts, self.min_counts
 
-    def set_gain(self, index):
+    def set_gain(self, index = None):
         try:
-            self.swob.gain = index
+            if index is None:
+                self.swob.gain = self.gain_index
+            else:
+                self.swob.gain = index
+                self.gain_index = index
             return self.gain_list[ self.swob.gain ]
         except Exception as err:
             print( "failed to set gain: ", err )
             return False
 
-
     def read_gain(self):
-        return self.gain_list[ self.swob.gain ]
+        return self.gain_list[ self.swob.gain ]#, self.gain_index
 
 
     def set_integration_time( self, index ):
