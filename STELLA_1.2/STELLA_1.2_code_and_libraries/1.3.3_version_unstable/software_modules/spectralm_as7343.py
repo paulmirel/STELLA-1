@@ -128,11 +128,13 @@ class as7343_Spectrometer( Device ):
         self.min_counts = min(self.data_counts)
         return self.max_counts, self.min_counts
 
-    def set_gain(self, index):
+    def set_gain(self, index = None):
         # library sets gain to 128
         gain_constant_list = [AS7343_Gain.X0_5,AS7343_Gain.X1,AS7343_Gain.X2,AS7343_Gain.X4,AS7343_Gain.X8,AS7343_Gain.X16,AS7343_Gain.X32,AS7343_Gain.X64,AS7343_Gain.X128,AS7343_Gain.X256,AS7343_Gain.X512,AS7343_Gain.X1024,AS7343_Gain.X2048]
         try:
-            self.swob._gain = gain_constant_list[ index ]
+            if index is not None:
+                self.gain_index = index
+            self.swob._gain = gain_constant_list[ self.gain_index ]
             return self.gain_list[ self.swob._gain ]
         except Exception as err:
             print( "failed to set gain: ", err )
@@ -141,7 +143,7 @@ class as7343_Spectrometer( Device ):
     def read_gain(self):
         return self.gain_list[ self.swob._gain ]
 
-    def set_integration_time( self, index ):
+    def set_integration_time( self, index = None ):
         #library sets atime = 100, astep = 999, which is an unusable combination, ADC saturated at 101000.
         # (astep, atime)
         integration_time_settings_list = [ (127,2),(127,27),(127,54),(127,82),(127,111),(127,140),
@@ -150,10 +152,13 @@ class as7343_Spectrometer( Device ):
                                             (300,239),(376,239),(450,239),(525,239),(600,239),(675,239),(750,239),
                                             (825,239),(900,239),(975,239),(1050,239),(1125,239),(1200,239),(1275,239),
                                             (1350,239),(1425,239),(1500,239)]
-        try:
-            self.swob.astep = integration_time_settings_list[index][0]
-            self.swob.atime = integration_time_settings_list[index][1]
+        if index is None:
+            index = self.integration_time_index
+        else:
             self.integration_time_index = index
+        try:
+            self.swob.astep = integration_time_settings_list[self.integration_time_index][0]
+            self.swob.atime = integration_time_settings_list[self.integration_time_index][1]
             return self.integration_time_ms_list[ self.integration_time_index ]
         except Exception as err:
             print( "as7343 set integration time failed: ", err )
