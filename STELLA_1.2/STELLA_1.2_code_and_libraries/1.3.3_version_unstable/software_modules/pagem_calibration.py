@@ -402,34 +402,58 @@ class Calibration_Page( Page ):
         self.measuring = False
 
     def autoset_exposure(self):
+        active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
         maxed_out = False
-        gain_index = 3
-        integration_time_index = 3
-        gain_list = self.spectral_sensors[self.sensor_wheel_position].gain_list
-        integration_time_ms_list = self.spectral_sensors[self.sensor_wheel_position].integration_time_ms_list
-        self.spectral_sensors[self.sensor_wheel_position].set_gain(gain_index)
-        self.spectral_sensors[self.sensor_wheel_position].set_integration_time(integration_time_index)
+        gain_list = active_sensor.gain_list
+        integration_time_ms_list = active_sensor.integration_time_ms_list
+
+        starting_gain_value = 16
+        starting_integration_value_ms = 100
+        low_light_starting_gain_value = 32
+        low_light_starting_integration_value_ms = 200
+
+        gain_index = gain_list.index(starting_gain_value)
+        integration_time_index = integration_time_ms_list.index(starting_integration_value_ms)
+        gain_value = active_sensor.set_gain(gain_index)
+        intg_value_ms = active_sensor.set_integration_time(integration_time_index)
         temporary_data_list = self.measure()
         high_value = max(temporary_data_list)
-        while high_value < self.exposure_target_fraction_high * self.max_counts and not maxed_out:
-            if gain_index < len(gain_list)-1:
-                gain_index += 1
-            if integration_time_index < len(integration_time_ms_list)-2:
-                integration_time_index +=2
-            else:
-                maxed_out = True
-            print("increasing exposure, %dr = {}".format(int(100*high_value/self.max_counts)))
-            self.spectral_sensors[self.sensor_wheel_position].set_gain(gain_index)
-            self.spectral_sensors[self.sensor_wheel_position].set_integration_time(integration_time_index)
+        if high_value < 1000:
+            gain_index = gain_list.index(low_light_starting_gain_value)
+            integration_time_index = integration_time_ms_list.index(low_light_starting_integration_value_ms)
+            gain_value = active_sensor.set_gain(gain_index)
+            intg_value_ms = active_sensor.set_integration_time(integration_time_index)
             temporary_data_list = self.measure()
             high_value = max(temporary_data_list)
-            self.update_values()
-        if high_value >= self.max_counts:
-            gain_index += -1
-            self.spectral_sensors[self.sensor_wheel_position].set_gain(gain_index)
-            self.update_values()
-        print("calculate best exposure (if saturated, drop values and test expose again)")
+        multiplier = self.exposure_target_fraction_high * self.max_counts/ high_value
+        #print("multiplier", multiplier)
+        last_gain_value = gain_value
+        target_gain_value = last_gain_value * multiplier/2
+        gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
+        gain_index = gain_list.index(gain_value)
+        if gain_index >= len(gain_list)-1:
+            maxed_out = True
+            print("gain maxed out")
+        gain_value = active_sensor.set_gain(gain_index)
 
+        last_intg_value_ms = intg_value_ms
+        #print("last_intg_value_ms", last_intg_value_ms)
+        target_intg_value_ms = (last_intg_value_ms * multiplier) / (gain_value/last_gain_value)
+        print("target_intg_value_ms", target_intg_value_ms)
+        intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
+        #print("closest intg_value_ms", intg_value_ms)
+        integration_time_index = integration_time_ms_list.index(intg_value_ms)
+        if (intg_value_ms/last_intg_value_ms) * (gain_value/last_gain_value) > multiplier:
+            integration_time_index += -1
+        if integration_time_index >= len(integration_time_ms_list)-1:
+            maxed_out = True
+            print( "integration time maxed out")
+        intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+        if False:
+            temporary_data_list = self.measure()
+            high_value = max(temporary_data_list)
+            print(high_value)
+        self.update_values()
 
 
     def run_measurement_sequence(self):
@@ -927,6 +951,12 @@ class Calibration_Page( Page ):
             self.plot_points[index].y = y_pix[index]
             shading_points.append((self.plot_xpix[index], y_pix[index]))
         self.shading.points=shading_points
+
+    def stall(self):
+        print("intentionally stalled, press return to continue")
+        input_string = False
+        while input_string == False:
+            input_string = input().strip()
 
 class Calibration_Missing_Page( Page ):
     def __init__( self, instrument ):
