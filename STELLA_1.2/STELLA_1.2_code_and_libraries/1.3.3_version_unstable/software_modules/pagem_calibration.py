@@ -394,10 +394,43 @@ class Calibration_Page( Page ):
             self.go_to_sensor_position()
         if not self.filter_wheel_position_known:
             self.go_to_filter_position()
+        if self.auto_exposure:
+            self.autoset_exposure()
         self.latest_data_list = self.measure()
         print(self.latest_data_list)
         print("write single measurement to file")
         self.measuring = False
+
+    def autoset_exposure(self):
+        maxed_out = False
+        gain_index = 3
+        integration_time_index = 3
+        gain_list = self.spectral_sensors[self.sensor_wheel_position].gain_list
+        integration_time_ms_list = self.spectral_sensors[self.sensor_wheel_position].integration_time_ms_list
+        self.spectral_sensors[self.sensor_wheel_position].set_gain(gain_index)
+        self.spectral_sensors[self.sensor_wheel_position].set_integration_time(integration_time_index)
+        temporary_data_list = self.measure()
+        high_value = max(temporary_data_list)
+        while high_value < self.exposure_target_fraction_high * self.max_counts and not maxed_out:
+            if gain_index < len(gain_list)-1:
+                gain_index += 1
+            if integration_time_index < len(integration_time_ms_list)-2:
+                integration_time_index +=2
+            else:
+                maxed_out = True
+            print("increasing exposure, %dr = {}".format(int(100*high_value/self.max_counts)))
+            self.spectral_sensors[self.sensor_wheel_position].set_gain(gain_index)
+            self.spectral_sensors[self.sensor_wheel_position].set_integration_time(integration_time_index)
+            temporary_data_list = self.measure()
+            high_value = max(temporary_data_list)
+            self.update_values()
+        if high_value >= self.max_counts:
+            gain_index += -1
+            self.spectral_sensors[self.sensor_wheel_position].set_gain(gain_index)
+            self.update_values()
+        print("calculate best exposure (if saturated, drop values and test expose again)")
+
+
 
     def run_measurement_sequence(self):
         self.cancel = False
@@ -416,21 +449,18 @@ class Calibration_Page( Page ):
                         print("next filter")
                         self.go_to_filter_position(position = filter_position)
                         self.update_values()
-                        print("Set exposure parmeters to low middle values")
-                        temporary_data_list = self.measure()
-                        print("calculate best exposure (if saturated, drop values and test expose again)")
-                        print("set exposure parameters to best")
-                        #print("(omit bracketing as not useful information, come back to it if I find out that I need it specifically)")
+                        if self.auto_exposure:
+                            self.autoset_exposure()
                         for cycle in range (0,3):
                             print("measurement cycle", cycle)
                             data_list.append( self.measure())
-                            time.sleep(1)
                             print("write values to file")
                             self.instrument.handle_inputs()
                             while self.pause:
                                 self.instrument.handle_inputs()
                                 self.update_values()
                                 time.sleep(0.1)
+                print( data_list )
         self.measuring = False
 
         if False:
