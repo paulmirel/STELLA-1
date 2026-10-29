@@ -404,13 +404,12 @@ class Calibration_Page( Page ):
     def autoset_exposure(self):
         active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
         maxed_out = False
+        saturated = False
         gain_list = active_sensor.gain_list
         integration_time_ms_list = active_sensor.integration_time_ms_list
 
         starting_gain_value = 16
         starting_integration_value_ms = 100
-        low_light_starting_gain_value = 32
-        low_light_starting_integration_value_ms = 200
 
         gain_index = gain_list.index(starting_gain_value)
         integration_time_index = integration_time_ms_list.index(starting_integration_value_ms)
@@ -418,15 +417,34 @@ class Calibration_Page( Page ):
         intg_value_ms = active_sensor.set_integration_time(integration_time_index)
         temporary_data_list = self.measure()
         high_value = max(temporary_data_list)
-        if high_value < 1000:
-            gain_index = gain_list.index(low_light_starting_gain_value)
-            integration_time_index = integration_time_ms_list.index(low_light_starting_integration_value_ms)
+        if high_value >= self.max_counts:
+            saturated = True
+            gain_index = 0
+            integration_time_index = 0
             gain_value = active_sensor.set_gain(gain_index)
             intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+
             temporary_data_list = self.measure()
             high_value = max(temporary_data_list)
+
+        repetitions = 0
+        while high_value < 1000 or repetitions < 4:
+            target_gain_value = gain_value*2
+            gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
+            gain_index = gain_list.index(gain_value)
+            gain_value = active_sensor.set_gain(gain_index)
+
+            target_intg_value_ms = intg_value_ms*2
+            intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
+            integration_time_index = integration_time_ms_list.index(intg_value_ms)
+            intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+
+            temporary_data_list = self.measure()
+            high_value = max(temporary_data_list)
+
+            repetitions +=1
+
         multiplier = self.exposure_target_fraction_high * self.max_counts/ high_value
-        #print("multiplier", multiplier)
         last_gain_value = gain_value
         target_gain_value = last_gain_value * multiplier/2
         gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
@@ -437,11 +455,8 @@ class Calibration_Page( Page ):
         gain_value = active_sensor.set_gain(gain_index)
 
         last_intg_value_ms = intg_value_ms
-        #print("last_intg_value_ms", last_intg_value_ms)
         target_intg_value_ms = (last_intg_value_ms * multiplier) / (gain_value/last_gain_value)
-        print("target_intg_value_ms", target_intg_value_ms)
         intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
-        #print("closest intg_value_ms", intg_value_ms)
         integration_time_index = integration_time_ms_list.index(intg_value_ms)
         if (intg_value_ms/last_intg_value_ms) * (gain_value/last_gain_value) > multiplier:
             integration_time_index += -1
