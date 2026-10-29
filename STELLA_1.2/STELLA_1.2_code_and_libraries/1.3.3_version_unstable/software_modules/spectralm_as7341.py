@@ -103,7 +103,7 @@ class as7341_Spectrometer( Device ):
         self.swob.led_current = 50
         self.gain_list = [ 0.5, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 ]
         self.gain_index = 5
-        self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950,1000]
+        self.integration_time_ms_list = [1,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,750,800,850,900,950]
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
         self.integration_time_index = 8
         self.lamp_selection_list = ["Vis mA"]
@@ -127,8 +127,10 @@ class as7341_Spectrometer( Device ):
             self.data_counts = []
             for item in self.raw:
                 self.data_counts.append(item)
+            return self.data_counts
         except Exception as err:
             print("sensor read timeout")
+            return False
 
 
     def get_max_min_counts( self ):

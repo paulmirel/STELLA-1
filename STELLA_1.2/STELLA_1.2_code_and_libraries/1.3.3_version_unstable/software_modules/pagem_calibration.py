@@ -40,8 +40,11 @@ class Calibration_Page( Page ):
         self.field_not_selected_color_index = 9
         self.active_sensor_index = 0
         self.max_counts = 65535
+        self.high_value = False
+        self.exposure_quality = False
         self.exposure_target_fraction_high = 0.9
         self.exposure_target_fraction_low = 0.5
+        self.saturated = False
         self.status_index = 0
         self.status_list = ["OK","BUSY","TBD","LOWB","NOSD","FAIL"]
         self.adc_sensor = False
@@ -243,8 +246,25 @@ class Calibration_Page( Page ):
             self.text_areas[8].text = "AUTO"
         else:
             self.text_areas[8].text = "MAN"
-
-
+        if self.high_value:
+            if self.high_value > self.exposure_target_fraction_high * self.max_counts:
+                self.exposure_quality = "HIGH"
+            elif self.high_value > self.exposure_target_fraction_low * self.max_counts:
+                self.exposure_quality = "GOOD"
+            else:
+                self.exposure_quality = "LOW"
+            percent_of_dynamic_range = int(100*self.high_value/self.max_counts)
+            if percent_of_dynamic_range > 99:
+                self.exposure_quality = "SAT"
+                self.text_areas[12].text = "SA"
+                self.saturated = True
+            else:
+                self.saturated = False
+                self.text_areas[12].text = "{}".format(percent_of_dynamic_range)
+            self.text_areas[11].text = " {}".format(self.exposure_quality)
+        else:
+            self.text_areas[12].text = " -"
+            self.text_areas[11].text = " -"
 
         self.text_areas[13].text = "{}".format(self.sensor_wheel_number)
         self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
@@ -375,6 +395,7 @@ class Calibration_Page( Page ):
         if not self.filter_wheel_position_known:
             self.go_to_filter_position()
         self.latest_data_list = self.measure()
+        print(self.latest_data_list)
         print("write single measurement to file")
         self.measuring = False
 
@@ -463,10 +484,8 @@ class Calibration_Page( Page ):
 
 
     def measure(self):
-        print("initiate single shot measurement on current detector")
-        print("wait for data ready")
-        print("store the measurement values")
-        self.latest_data_list = False #TBD
+        self.latest_data_list = self.spectral_sensors[self.sensor_wheel_position].read()
+        self.high_value = max(self.latest_data_list)
         return self.latest_data_list
 
     def go_to_sensor_position( self, position = None):
