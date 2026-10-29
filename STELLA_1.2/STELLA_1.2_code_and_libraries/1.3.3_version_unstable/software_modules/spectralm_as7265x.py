@@ -153,9 +153,12 @@ class as7265x_Spectrometer( Device ):
             spectral_channel = initialize_spectral_channel( name, self, index )
             index += 1
 
-    def set_gain(self, new_gain_index):
-        self.gain_index = new_gain_index
-        new_gain = self.gain_list[ new_gain_index ]
+    def set_gain(self, index = None):
+        if index is None:
+            new_gain = self.gain_list[ self.gain_index ]
+        else:
+            self.gain_index = index
+            new_gain = self.gain_list[ index ]
         try:
             self.swob.gain = new_gain
             return self.gain_index, self.swob.gain
@@ -166,9 +169,13 @@ class as7265x_Spectrometer( Device ):
     def read_gain(self):
         return self.swob.gain
 
-    def set_integration_time( self, index ):
+    def set_integration_time( self, index = None ):
         # must wait for at least 5 seconds before sending integration time again. If not, signal goes to 0.
-        integration_time_ms = self.integration_time_ms_list[ index ]
+        if index is None:
+            integration_time_ms = self.integration_time_ms_list[self.integration_time_index]
+        else:
+            self.integration_time_index = index
+            integration_time_ms = self.integration_time_ms_list[ index ]
         try:
             self.swob.integration_time = integration_time_ms
             return self.swob.integration_time
