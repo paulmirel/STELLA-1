@@ -432,7 +432,7 @@ class AS7341:  # pylint:disable=too-many-instance-attributes, no-member
         _ = self._all_channels
         return self._channel_5_data
 
-    def _wait_for_data(self, timeout: float = 1.0) -> None:
+    def _wait_for_data(self, timeout: float = 2.0) -> None:
         """Wait for sensor data to be ready"""
         start = monotonic()
         while not self._data_ready_bit:
