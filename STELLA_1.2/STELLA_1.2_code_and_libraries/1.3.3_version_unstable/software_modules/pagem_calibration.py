@@ -412,9 +412,13 @@ class Calibration_Page( Page ):
         starting_integration_value_ms = 100
 
         gain_index = gain_list.index(starting_gain_value)
-        integration_time_index = integration_time_ms_list.index(starting_integration_value_ms)
         gain_value = active_sensor.set_gain(gain_index)
+
+        target_intg_value_ms = starting_integration_value_ms
+        intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
+        integration_time_index = integration_time_ms_list.index(intg_value_ms)
         intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+
         temporary_data_list = active_sensor.read()
         high_value = max(temporary_data_list)
         if high_value >= self.max_counts:
@@ -423,7 +427,6 @@ class Calibration_Page( Page ):
             integration_time_index = 0
             gain_value = active_sensor.set_gain(gain_index)
             intg_value_ms = active_sensor.set_integration_time(integration_time_index)
-
             temporary_data_list = active_sensor.read()
             high_value = max(temporary_data_list)
             self.update_values()

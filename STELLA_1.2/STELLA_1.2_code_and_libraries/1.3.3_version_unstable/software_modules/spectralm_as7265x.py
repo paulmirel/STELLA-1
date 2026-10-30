@@ -161,7 +161,7 @@ class as7265x_Spectrometer( Device ):
             new_gain = self.gain_list[ index ]
         try:
             self.swob.gain = new_gain
-            return self.gain_index, self.swob.gain
+            return self.swob.gain
         except Exception as err:
             print( "failed to set gain: ", err )
             return False
@@ -266,9 +266,10 @@ class as7265x_Spectrometer( Device ):
             return False
 
     def read( self ):
+        temporary_data_counts = []
         for index in range( 0, self.number_of_channels):
-            self.read_counts_by_index( index )
-        #print(self.data_counts)
+            temporary_data_counts.append(self.read_counts_by_index( index ))
+        return temporary_data_counts
 
     def report_counts_by_index( self, index ):
         pass
