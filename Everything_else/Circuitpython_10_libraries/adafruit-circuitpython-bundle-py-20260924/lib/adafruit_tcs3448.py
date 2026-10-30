@@ -426,7 +426,7 @@ class TCS3448:  # noqa: PLR0904
                 f"Failed to find TCS3448 at 0x{address:02X} - check wiring! Got ID 0x{chip_id:02X}"
             )
 
-        self.read_timeout: int = 1000
+        self.read_timeout: int = 2000
         """Milliseconds :attr:`measurement` waits for :attr:`data_ready`."""
 
         self.reset()

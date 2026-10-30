@@ -443,6 +443,7 @@ class Calibration_Page( Page ):
             high_value = max(temporary_data_list)
 
             self.update_values()
+        if high_value < 1: high_value = 1
         multiplier = self.exposure_target_fraction_high * self.max_counts/ high_value
         last_gain_value = gain_value
         target_gain_value = last_gain_value * multiplier/2
@@ -551,7 +552,10 @@ class Calibration_Page( Page ):
 
     def measure(self):
         self.latest_data_list = self.spectral_sensors[self.sensor_wheel_position].read()
-        self.high_value = max(self.latest_data_list)
+        if self.latest_data_list:
+            self.high_value = max(self.latest_data_list)
+        else:
+            self.high_value = 1
         self.update_values()
         return self.latest_data_list
 

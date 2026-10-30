@@ -3,7 +3,7 @@ DEVICE_TYPE = "tcs3448_spectral_sensor"
 # Copyright NASA 2026 under MIT license
 # Author Paul Mirel
 
-from adafruit_tcs3448 import TCS3448
+from adafruit_tcs3448_NASA_mod import TCS3448
 from .classm_device import Device
 import time
 
@@ -125,9 +125,10 @@ class tcs3448_Spectrometer( Device ):
             self.data_counts = []
             for index in range(0,len(self.raw)):
                 self.data_counts.append(self.raw[index])
-
+            return self.data_counts
         except Exception as err:
             print(err)
+            return False
 
 
     def get_max_min_counts( self ):
