@@ -497,7 +497,7 @@ class AS7343:
         self.led_enabled = False
 
         # Timeout in milliseconds used by the all_channels property
-        self.read_timeout: int = 1000
+        self.read_timeout: int = 4000
 
     # ── Bank switching ────────────────────────────────────────────────────────
     def _set_bank(self, bank1: bool) -> None:

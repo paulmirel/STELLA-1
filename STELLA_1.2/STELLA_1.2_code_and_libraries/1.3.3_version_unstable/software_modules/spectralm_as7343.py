@@ -3,8 +3,8 @@ DEVICE_TYPE = "as7343_spectral_sensor"
 # Copyright NASA 2026
 # Author Paul Mirel
 
-from adafruit_as7343 import AS7343
-from adafruit_as7343 import Gain as AS7343_Gain
+from adafruit_as7343_NASA_mod import AS7343
+from adafruit_as7343_NASA_mod import Gain as AS7343_Gain
 from .classm_device import Device
 
 
@@ -70,6 +70,7 @@ class Spectral_Channel( Device ):
                         bandwidth_nm,
                         chip_temp_C]
 
+
     def log(self):
         log = "{}, {}".format( self.name, self.pn )
         for index in range (0, len(self.parameters)):
@@ -118,10 +119,15 @@ class as7343_Spectrometer( Device ):
             index += 1
 
     def read(self):
-        self.raw = self.swob.all_channels
-        self.data_counts = []
-        for index in range(0, len(self.wavelength_bands_nm)):
-            self.data_counts.append(self.raw[self.readout_order[index]])
+        try:
+            self.raw = self.swob.all_channels
+            self.data_counts = []
+            for index in range(0, len(self.wavelength_bands_nm)):
+                self.data_counts.append(self.raw[self.readout_order[index]])
+            return self.data_counts
+        except Exception as err:
+            print("sensor read timeout", err)
+            return False
 
     def get_max_min_counts( self ):
         self.max_counts = max(self.data_counts)
