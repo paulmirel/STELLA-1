@@ -136,18 +136,21 @@ class as7343_Spectrometer( Device ):
 
     def set_gain(self, index = None):
         # library sets gain to 128
-        gain_constant_list = [AS7343_Gain.X0_5,AS7343_Gain.X1,AS7343_Gain.X2,AS7343_Gain.X4,AS7343_Gain.X8,AS7343_Gain.X16,AS7343_Gain.X32,AS7343_Gain.X64,AS7343_Gain.X128,AS7343_Gain.X256,AS7343_Gain.X512,AS7343_Gain.X1024,AS7343_Gain.X2048]
+        gain_constant_list = [AS7343_Gain.X0_5,AS7343_Gain.X1,AS7343_Gain.X2,
+                            AS7343_Gain.X4,AS7343_Gain.X8,AS7343_Gain.X16,
+                            AS7343_Gain.X32,AS7343_Gain.X64,AS7343_Gain.X128,
+                            AS7343_Gain.X256,AS7343_Gain.X512,AS7343_Gain.X1024,AS7343_Gain.X2048]
         try:
             if index is not None:
                 self.gain_index = index
-            self.swob._gain = gain_constant_list[ self.gain_index ]
-            return self.gain_list[ self.swob._gain ]
+            self.swob.gain = gain_constant_list[ self.gain_index ]
+            return self.gain_list[ self.gain_index ]
         except Exception as err:
             print( "failed to set gain: ", err )
             return False
 
     def read_gain(self):
-        return self.gain_list[ self.swob._gain ]
+        return self.gain_list[ self.swob.gain ]
 
     def set_integration_time( self, index = None ):
         #library sets atime = 100, astep = 999, which is an unusable combination, ADC saturated at 101000.

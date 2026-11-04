@@ -291,6 +291,8 @@ class Calibration_Page( Page ):
 
     def autoset_exposure(self):
         self.text_areas[26].text = "setexp"
+        self.text_areas[11].text = " -"
+        self.text_areas[12].text = "-"
         active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
         maxed_out = False
         saturated = False
@@ -308,8 +310,11 @@ class Calibration_Page( Page ):
         integration_time_index = integration_time_ms_list.index(intg_value_ms)
         intg_value_ms = active_sensor.set_integration_time(integration_time_index)
 
+
         temporary_data_list = active_sensor.read()
         high_value = max(temporary_data_list)
+        #print(high_value, gain_value, intg_value_ms)
+
         if high_value >= self.max_counts:
             saturated = True
             gain_index = 0
@@ -319,7 +324,7 @@ class Calibration_Page( Page ):
             temporary_data_list = active_sensor.read()
             high_value = max(temporary_data_list)
             self.update_values()
-        repetitions = 0
+
         if high_value < 1000:
             target_gain_value = gain_value*2
             gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
@@ -335,8 +340,11 @@ class Calibration_Page( Page ):
             high_value = max(temporary_data_list)
 
             self.update_values()
+        #print(high_value, gain_value, intg_value_ms)
         if high_value < 1: high_value = 1
         multiplier = self.exposure_target_fraction_high * self.max_counts/ high_value
+        #print(multiplier)
+
         last_gain_value = gain_value
         target_gain_value = last_gain_value * multiplier/2
         gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
@@ -344,18 +352,29 @@ class Calibration_Page( Page ):
         if gain_index >= len(gain_list)-1:
             maxed_out = True
             print("gain maxed out")
+
         gain_value = active_sensor.set_gain(gain_index)
 
         last_intg_value_ms = intg_value_ms
         target_intg_value_ms = (last_intg_value_ms * multiplier) / (gain_value/last_gain_value)
         intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
         integration_time_index = integration_time_ms_list.index(intg_value_ms)
-        if (intg_value_ms/last_intg_value_ms) * (gain_value/last_gain_value) > multiplier:
+        intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+        temporary_data_list = active_sensor.read()
+        high_value = max(temporary_data_list)
+        while high_value >= self.max_counts:
+            print("desaturating")
+            time.sleep(.1)
             integration_time_index += -1
+            intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+            time.sleep(.1)
+            temporary_data_list = active_sensor.read()
+            high_value = max(temporary_data_list)
+
         if integration_time_index >= len(integration_time_ms_list)-1:
             maxed_out = True
             print( "integration time maxed out")
-        intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+        #print(high_value, gain_value, intg_value_ms)
         if False:
             temporary_data_list = active_sensor.read()
             high_value = max(temporary_data_list)
