@@ -177,7 +177,7 @@ class Calibration_Page( Page ):
             print( "write metadata lines for each sensor")
 
 
-        data_header_line = "mmt,date,time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,filter_position,gain,intg_time_ms,WL,C0,C1,C2,C_avg,Value_normalized"
+        data_header_line = "mmt,date,time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,filter_position,gain,intg_time_ms,WL,BW,C0,C1,C2,C_avg,value_normalized_per_s,value_normalized_per_s_nm"
         if self.write_line( data_header_line ):
             print("successful write data header to cal file")
         else:
@@ -192,6 +192,8 @@ class Calibration_Page( Page ):
 
     def run_measurement_sequence(self):
         active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
+        number_of_channels = len(active_sensor.wavelength_bands_nm)
+        bandwidths = active_sensor.bandwidths_nm
         self.cancel = False
         self.measuring = True
         self.instrument.update_batch()
@@ -209,6 +211,7 @@ class Calibration_Page( Page ):
                         self.text_areas[26].text = "nextF"
                         self.go_to_filter_position(position = filter_position)
                         data_list = []
+                        data_list.append(active_sensor.wavelength_bands_nm)
                         data_list.append(self.get_date_and_time())
                         data_list.append(self.filter_wheel_number)
                         data_list.append(self.sensor_wheel_number)
@@ -227,12 +230,28 @@ class Calibration_Page( Page ):
                             print("measurement cycle", cycle)
                             self.text_areas[26].text = "C{}".format(cycle)
                             data_list.append( self.measure())
-                            print("write values to file")
                             self.instrument.handle_inputs()
                             while self.pause:
                                 self.instrument.handle_inputs()
                                 self.update_values()
                                 time.sleep(0.1)
+                        data_handles = [10,12,14]
+                        avg_values = []
+                        normalized_values_per_s = []
+                        normalized_values_per_s_nm = []
+                        for index in range (0, number_of_channels ):
+                            avg_values.append(0)
+                        for handle in data_handles:
+                            for index in range (0, number_of_channels):
+                                avg_values[index] += data_list[handle][index]
+                        for index in range (0, number_of_channels):
+                            avg_values[index] = round(avg_values[index]/3,3)
+                            norm_per_s = round(1000*avg_values[index]/gain_in_use/intg_time_ms_in_use,3)
+                            normalized_values_per_s.append(norm_per_s)
+                            normalized_values_per_s_nm.append(round(norm_per_s/ bandwidths[index],5))
+                        data_list.append(avg_values)
+                        data_list.append(normalized_values_per_s)
+                        data_list.append(normalized_values_per_s_nm)
                         print( data_list )
                         self.stall()
         self.measuring = False
