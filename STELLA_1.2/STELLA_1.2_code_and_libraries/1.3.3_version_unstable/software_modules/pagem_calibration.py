@@ -30,6 +30,7 @@ class Calibration_Page( Page ):
         super().__init__()
         self.page_name = "Calibration"
         self.palette = instrument.palette
+        self.onboard_neopixel = onboard_neopixel
         self.instrument = instrument
         self.selection = 0
         self.selection_count = 0
@@ -177,7 +178,7 @@ class Calibration_Page( Page ):
             print( "write metadata lines for each sensor")
 
 
-        data_header_line = "mmt,date,time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,filter_position,gain,intg_time_ms,WL,BW,C0,C1,C2,C_avg,value_normalized_per_s,value_normalized_per_s_nm"
+        data_header_line = "mmt,date_time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,filter_position,gain,intg_time_ms,WL,BW,C0,C1,C2,C_avg,value_normalized_per_s,value_normalized_per_s_nm"
         if self.write_line( data_header_line ):
             print("successful write data header to cal file")
         else:
@@ -219,10 +220,8 @@ class Calibration_Page( Page ):
                         data_list.append(sensor_position) #TBD
                         data_list.append(self.filter_wheel_position_labels[filter_position]) #TBD
                         if self.auto_exposure:
-                            self.autoset_exposure()
-                        gain_in_use = active_sensor.read_gain()
+                            gain_in_use, intg_time_ms_in_use = self.autoset_exposure()
                         data_list.append( gain_in_use )
-                        intg_time_ms_in_use = active_sensor.read_integration_time_ms()
                         data_list.append( intg_time_ms_in_use )
                         for cycle in range (0,3):
                             self.mmt_number +=1
@@ -252,58 +251,29 @@ class Calibration_Page( Page ):
                         data_list.append(avg_values)
                         data_list.append(normalized_values_per_s)
                         data_list.append(normalized_values_per_s_nm)
-                        print( data_list )
-                        self.stall()
+                        #print( data_list )
+                        for index in range (0, number_of_channels):
+                            line = "{},".format(data_list[9]) #mmt_number
+                            line += "{},".format(data_list[1]) #date_time
+                            line += "{},".format(data_list[2]) #filter wheel
+                            line += "{},".format(data_list[3]) #sensor wheel
+                            line += "{},".format(data_list[4]) #sensor pn
+                            line += "{},".format(data_list[5]) #sensor position
+                            #TBD sensor temperature
+                            line += "{},".format(data_list[6]) #filter position
+                            line += "{},".format(data_list[7]) #gain
+                            line += "{},".format(data_list[8]) #intg time ms
+                            line += "{},".format(data_list[0][index]) #channel WL nm
+                            line += "{},".format(bandwidths[index]) #channel BW nm
+                            line += "{},".format(data_list[data_handles[0]][index]) #C0
+                            line += "{},".format(data_list[data_handles[1]][index]) #C1
+                            line += "{},".format(data_list[data_handles[2]][index]) #C2
+                            line += "{},".format(data_list[15][index]) #averages
+                            line += "{},".format(data_list[16][index]) # norm per s
+                            line += "{},".format(data_list[17][index]) # norm per s nm
+                            print(line)
+                            self.write_line(line)
         self.measuring = False
-
-        if False:
-            self.as7341_spectrometer.set_integration_time( self.integration_time_index)
-            self.as7341_spectrometer.set_gain( self.gain_index)
-            if self.status_index == 0 or self.status_index == 2:
-
-                self.mmt_number += 1
-                gc.collect()
-                measure_start_free = gc.mem_free()
-                uid = self.instrument.uid
-                mmt_time = self.instrument.iso_time
-                dec_time = self.instrument.decimal_time
-
-                self.bat.read()
-
-                header_line = "UID,iso8601,time hh.hh,bat_V,bat_pct"
-                header_line += ""
-
-                try:
-                    self.onboard_neopixel.fill(devicem_neopixel.GREEN)
-                    functionm_file.write_nonsystem_line( self.instrument, header_line)
-                    for row in range (0,self.lines_per_block):
-                        line = "{},".format(uid)
-                        line += "{},".format(mmt_time)
-                        line += "{},".format(dec_time)
-                        line += "{},".format(self.bat.voltage)
-                        line += "{},".format(self.bat.percentage)
-
-
-                        functionm_file.write_nonsystem_line( self.instrument, line)
-                    self.onboard_neopixel.fill(devicem_neopixel.OFF)
-                    print("data written to file")
-                except Exception as err:
-                    print("failed to write data to file:", err)
-                    self.instrument.vfs = False
-                    self.onboard_neopixel.fill(devicem_neopixel.RED)
-                print()
-                for row in range (0,self.lines_per_block):
-                    for col in range (0,len(self.measurement_lists)):
-                        print( self.measurement_lists[col][row], end=", " )
-                    print()
-
-                self.measurement_lists = []
-                if self.last_lamp_current_mA < self.low_current_warning_threshold_mA: self.status_index = 2
-                measure_stop_free = gc.mem_free()
-
-            else:
-                print("error, not available to measure")
-                #set measure button to grey
 
 
     def make_a_single_measurement(self):
@@ -391,6 +361,7 @@ class Calibration_Page( Page ):
             high_value = max(temporary_data_list)
             print(high_value)
         self.update_values()
+        return gain_value, intg_value_ms
 
 
 
@@ -1004,9 +975,11 @@ class Calibration_Page( Page ):
 
     def write_line(self, line ):
         try:
+            self.onboard_neopixel.fill(devicem_neopixel.GREEN)
             with open( "/sd/{}".format( self.filename ), "a" ) as f:
                 f.write( "{}".format(line) )
                 f.write( "\n" )
+            self.onboard_neopixel.fill(devicem_neopixel.OFF)
             return True
         except Exception as err:
             print( "failed to write to file: ", err )
