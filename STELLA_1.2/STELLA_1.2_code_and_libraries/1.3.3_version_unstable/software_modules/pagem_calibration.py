@@ -42,7 +42,7 @@ class Calibration_Page( Page ):
         self.max_counts = 65535
         self.high_value = False
         self.exposure_quality = False
-        self.exposure_target_fraction_high = 0.9
+        self.exposure_target_fraction_high = 0.95
         self.exposure_target_fraction_low = 0.5
         self.saturated = False
         self.status_index = 0
@@ -61,14 +61,6 @@ class Calibration_Page( Page ):
         self.mmt_number = 0
         self.measuring = False
         self.precision_real_time_clock = adafruit_ds3231.DS3231(self.instrument.i2c_bus)
-        time_struture = self.precision_real_time_clock.datetime
-        self.year = time_struture.tm_year
-        self.month = time_struture.tm_mon
-        self.day = time_struture.tm_mday
-        self.hour = time_struture.tm_hour
-        self.minute = time_struture.tm_min
-        self.second = time_struture.tm_sec
-        print( self.year, self.month, self.day, self.hour, self.minute, self.second)
         self.sync_system_clock()
         self.mux_8_to_1 = adafruit_tca9548a.TCA9548A(self.instrument.i2c_bus)
         self.spectral_sensors = []
@@ -159,7 +151,6 @@ class Calibration_Page( Page ):
         self.sensor_servo = pca.channels[15]
         self.filter_servo.duty_cycle = 0
         self.sensor_servo.duty_cycle = 0
-
         self.sensor_wheel_angle_sensor = adafruit_as5600.AS5600(self.mux_8_to_1[7])
         self.filter_wheel_angle_sensor = adafruit_as5600.AS5600(self.instrument.i2c_bus, address = 0x46 )
 
@@ -170,51 +161,242 @@ class Calibration_Page( Page ):
         self.filter_wheel_position_labels = ["A","B","C","D","E","F","G","H","i"]
         self.pause = False
 
-    def integration_time_setting_test( self ):
-        integration_setting_ms = 10
-        while integration_setting_ms < 24000:
-            self.set_integration_time_ms( integration_setting_ms )
-            integration_setting_ms = round(integration_setting_ms * 1.1,1)
+
+        precision_date_time = self.get_date_and_time()
+        self.filename = "STELLA_cal_{}_{}.csv".format(self.spectral_sensors[0].pn, precision_date_time)
+        print("Filename =",self.filename)
+
+        if False: #add this after initial cal collection, or collect this data in a separate code
+            metadata_header_line = "metadata_header_line"
+            if self.write_line( metadata_header_line ):
+                print("successful write to cal file")
+            else:
+                print("cannot write to cal file")
+                self.stall()
+            print( "read sensor metadata" )
+            print( "write metadata lines for each sensor")
 
 
-    def set_integration_time_ms( self, integration_setting_ms ):
-        pass
+        data_header_line = "mmt,date,time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,filter_position,gain,intg_time_ms,WL,C0,C1,C2,C_avg,Value_normalized"
+        if self.write_line( data_header_line ):
+            print("successful write data header to cal file")
+        else:
+            print("cannot write to cal file")
+            self.stall()
+
+        self.mmt_number = 0
+
+
+
+
+
+    def run_measurement_sequence(self):
+        active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
+        self.cancel = False
+        self.measuring = True
+        self.instrument.update_batch()
+        print("starting measurement sequence")
+        self.text_areas[26].text = "start"
+        for sensor_position in range(0, len(self.spectral_sensors)):
+            if not self.cancel:
+                print("next sensor")
+                self.text_areas[26].text = "nextS"
+                self.go_to_sensor_position(position = sensor_position)
+                self.instrument.handle_inputs()
+                for filter_position in range(0, 9):
+                    if not self.cancel:
+                        print("next filter")
+                        self.text_areas[26].text = "nextF"
+                        self.go_to_filter_position(position = filter_position)
+                        data_list = []
+                        data_list.append(self.get_date_and_time())
+                        data_list.append(self.filter_wheel_number)
+                        data_list.append(self.sensor_wheel_number)
+                        data_list.append(active_sensor.pn) #TBD
+                        data_list.append(sensor_position) #TBD
+                        data_list.append(self.filter_wheel_position_labels[filter_position]) #TBD
+                        if self.auto_exposure:
+                            self.autoset_exposure()
+                        gain_in_use = active_sensor.read_gain()
+                        data_list.append( gain_in_use )
+                        intg_time_ms_in_use = active_sensor.read_integration_time_ms()
+                        data_list.append( intg_time_ms_in_use )
+                        for cycle in range (0,3):
+                            self.mmt_number +=1
+                            data_list.append( self.mmt_number)
+                            print("measurement cycle", cycle)
+                            self.text_areas[26].text = "C{}".format(cycle)
+                            data_list.append( self.measure())
+                            print("write values to file")
+                            self.instrument.handle_inputs()
+                            while self.pause:
+                                self.instrument.handle_inputs()
+                                self.update_values()
+                                time.sleep(0.1)
+                        print( data_list )
+                        self.stall()
+        self.measuring = False
+
         if False:
-            tolerance = 0.05
-            cycle_limit = 16
-            unit_integration_time_ms = 0.00278
-            integration_time_actual_ms = 0
-            astep_16_bit_value = 0
-            atime_8_bit_value = 127
-            calculating_integration_settings = True
-            #print("calculating")
-            cycle = 0
-            while calculating_integration_settings:
-                #print(".", end = "")
-                astep_16_bit_value = int( integration_setting_ms / (unit_integration_time_ms * (atime_8_bit_value + 1)))
-                if astep_16_bit_value < 1:
-                    atime_8_bit_value = int(atime_8_bit_value / 2)
-                if astep_16_bit_value > 65533:
-                    atime_8_bit_value = atime_8_bit_value * 2
-                if atime_8_bit_value < 1:
-                    astep_16_bit_value = astep_16_bit_value - 1
-                integration_time_actual_ms = (astep_16_bit_value+1) * (atime_8_bit_value+1) * unit_integration_time_ms
-                if (integration_time_actual_ms - integration_setting_ms)/integration_time_actual_ms > tolerance:
-                    atime_8_bit_value = atime_8_bit_value - 1
-                if (integration_setting_ms - integration_time_actual_ms)/integration_setting_ms > tolerance:
-                    atime_8_bit_value = atime_8_bit_value + 1
-                if astep_16_bit_value in range (0, 65534) and atime_8_bit_value in range (0, 255):
-                    if abs(integration_time_actual_ms - integration_setting_ms)/integration_time_actual_ms < tolerance:
-                        calculating_integration_settings = False
+            self.as7341_spectrometer.set_integration_time( self.integration_time_index)
+            self.as7341_spectrometer.set_gain( self.gain_index)
+            if self.status_index == 0 or self.status_index == 2:
 
-                #print(astep_16_bit_value, atime_8_bit_value)
-                cycle += 1
-                if cycle > cycle_limit:
-                    calculating_integration_settings = False
-            print( "set these:", int(integration_setting_ms), atime_8_bit_value, astep_16_bit_value, int(integration_time_actual_ms), round((integration_time_actual_ms-integration_setting_ms)/integration_setting_ms,2))
-            return integration_time_actual_ms
+                self.mmt_number += 1
+                gc.collect()
+                measure_start_free = gc.mem_free()
+                uid = self.instrument.uid
+                mmt_time = self.instrument.iso_time
+                dec_time = self.instrument.decimal_time
+
+                self.bat.read()
+
+                header_line = "UID,iso8601,time hh.hh,bat_V,bat_pct"
+                header_line += ""
+
+                try:
+                    self.onboard_neopixel.fill(devicem_neopixel.GREEN)
+                    functionm_file.write_nonsystem_line( self.instrument, header_line)
+                    for row in range (0,self.lines_per_block):
+                        line = "{},".format(uid)
+                        line += "{},".format(mmt_time)
+                        line += "{},".format(dec_time)
+                        line += "{},".format(self.bat.voltage)
+                        line += "{},".format(self.bat.percentage)
 
 
+                        functionm_file.write_nonsystem_line( self.instrument, line)
+                    self.onboard_neopixel.fill(devicem_neopixel.OFF)
+                    print("data written to file")
+                except Exception as err:
+                    print("failed to write data to file:", err)
+                    self.instrument.vfs = False
+                    self.onboard_neopixel.fill(devicem_neopixel.RED)
+                print()
+                for row in range (0,self.lines_per_block):
+                    for col in range (0,len(self.measurement_lists)):
+                        print( self.measurement_lists[col][row], end=", " )
+                    print()
+
+                self.measurement_lists = []
+                if self.last_lamp_current_mA < self.low_current_warning_threshold_mA: self.status_index = 2
+                measure_stop_free = gc.mem_free()
+
+            else:
+                print("error, not available to measure")
+                #set measure button to grey
+
+
+    def make_a_single_measurement(self):
+        self.measuring = True
+        if not self.sensor_wheel_position_known:
+            self.go_to_sensor_position()
+        if not self.filter_wheel_position_known:
+            self.go_to_filter_position()
+        if self.auto_exposure:
+            self.autoset_exposure()
+        self.latest_data_list = self.measure()
+        print(self.latest_data_list)
+        print("write single measurement to file")#TBD
+        self.measuring = False
+
+    def autoset_exposure(self):
+        self.text_areas[26].text = "setexp"
+        active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
+        maxed_out = False
+        saturated = False
+        gain_list = active_sensor.gain_list
+        integration_time_ms_list = active_sensor.integration_time_ms_list
+
+        starting_gain_value = 16
+        starting_integration_value_ms = 100
+
+        gain_index = gain_list.index(starting_gain_value)
+        gain_value = active_sensor.set_gain(gain_index)
+
+        target_intg_value_ms = starting_integration_value_ms
+        intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
+        integration_time_index = integration_time_ms_list.index(intg_value_ms)
+        intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+
+        temporary_data_list = active_sensor.read()
+        high_value = max(temporary_data_list)
+        if high_value >= self.max_counts:
+            saturated = True
+            gain_index = 0
+            integration_time_index = 0
+            gain_value = active_sensor.set_gain(gain_index)
+            intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+            temporary_data_list = active_sensor.read()
+            high_value = max(temporary_data_list)
+            self.update_values()
+        repetitions = 0
+        if high_value < 1000:
+            target_gain_value = gain_value*2
+            gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
+            gain_index = gain_list.index(gain_value)
+            gain_value = active_sensor.set_gain(gain_index)
+
+            target_intg_value_ms = intg_value_ms*2
+            intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
+            integration_time_index = integration_time_ms_list.index(intg_value_ms)
+            intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+
+            temporary_data_list = active_sensor.read()
+            high_value = max(temporary_data_list)
+
+            self.update_values()
+        if high_value < 1: high_value = 1
+        multiplier = self.exposure_target_fraction_high * self.max_counts/ high_value
+        last_gain_value = gain_value
+        target_gain_value = last_gain_value * multiplier/2
+        gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
+        gain_index = gain_list.index(gain_value)
+        if gain_index >= len(gain_list)-1:
+            maxed_out = True
+            print("gain maxed out")
+        gain_value = active_sensor.set_gain(gain_index)
+
+        last_intg_value_ms = intg_value_ms
+        target_intg_value_ms = (last_intg_value_ms * multiplier) / (gain_value/last_gain_value)
+        intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
+        integration_time_index = integration_time_ms_list.index(intg_value_ms)
+        if (intg_value_ms/last_intg_value_ms) * (gain_value/last_gain_value) > multiplier:
+            integration_time_index += -1
+        if integration_time_index >= len(integration_time_ms_list)-1:
+            maxed_out = True
+            print( "integration time maxed out")
+        intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+        if False:
+            temporary_data_list = active_sensor.read()
+            high_value = max(temporary_data_list)
+            print(high_value)
+        self.update_values()
+
+
+
+
+
+    def measure(self):
+        self.latest_data_list = self.spectral_sensors[self.sensor_wheel_position].read()
+        if self.latest_data_list:
+            self.high_value = max(self.latest_data_list)
+        else:
+            self.high_value = 1
+        self.update_values()
+        return self.latest_data_list
+
+
+
+    def get_date_and_time(self):
+        time_struture = self.precision_real_time_clock.datetime
+        year = time_struture.tm_year
+        month = time_struture.tm_mon
+        day = time_struture.tm_mday
+        hour = time_struture.tm_hour
+        minute = time_struture.tm_min
+        second = time_struture.tm_sec
+        return "{}{:02d}{:02d}_{:02d}{:02d}{:02d}".format(year,month,day,hour,minute,second)
 
 
 
@@ -296,7 +478,8 @@ class Calibration_Page( Page ):
         if self.pause:
             self.text_areas[26].text = "pause"
         else:
-            self.text_areas[26].text = " --"
+            if not self.measuring:
+                self.text_areas[26].text = " --"
 
     def reset(self):
         self.cancel = True
@@ -388,179 +571,7 @@ class Calibration_Page( Page ):
             self.instrument.button_pressed = False
             self.update_values()
 
-    def make_a_single_measurement(self):
-        self.measuring = True
-        if not self.sensor_wheel_position_known:
-            self.go_to_sensor_position()
-        if not self.filter_wheel_position_known:
-            self.go_to_filter_position()
-        if self.auto_exposure:
-            self.autoset_exposure()
-        self.latest_data_list = self.measure()
-        print(self.latest_data_list)
-        print("write single measurement to file")
-        self.measuring = False
 
-    def autoset_exposure(self):
-        active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
-        maxed_out = False
-        saturated = False
-        gain_list = active_sensor.gain_list
-        integration_time_ms_list = active_sensor.integration_time_ms_list
-
-        starting_gain_value = 16
-        starting_integration_value_ms = 100
-
-        gain_index = gain_list.index(starting_gain_value)
-        gain_value = active_sensor.set_gain(gain_index)
-
-        target_intg_value_ms = starting_integration_value_ms
-        intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
-        integration_time_index = integration_time_ms_list.index(intg_value_ms)
-        intg_value_ms = active_sensor.set_integration_time(integration_time_index)
-
-        temporary_data_list = active_sensor.read()
-        high_value = max(temporary_data_list)
-        if high_value >= self.max_counts:
-            saturated = True
-            gain_index = 0
-            integration_time_index = 0
-            gain_value = active_sensor.set_gain(gain_index)
-            intg_value_ms = active_sensor.set_integration_time(integration_time_index)
-            temporary_data_list = active_sensor.read()
-            high_value = max(temporary_data_list)
-            self.update_values()
-        repetitions = 0
-        if high_value < 1000:
-            target_gain_value = gain_value*2
-            gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
-            gain_index = gain_list.index(gain_value)
-            gain_value = active_sensor.set_gain(gain_index)
-
-            target_intg_value_ms = intg_value_ms*2
-            intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
-            integration_time_index = integration_time_ms_list.index(intg_value_ms)
-            intg_value_ms = active_sensor.set_integration_time(integration_time_index)
-
-            temporary_data_list = active_sensor.read()
-            high_value = max(temporary_data_list)
-
-            self.update_values()
-        if high_value < 1: high_value = 1
-        multiplier = self.exposure_target_fraction_high * self.max_counts/ high_value
-        last_gain_value = gain_value
-        target_gain_value = last_gain_value * multiplier/2
-        gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
-        gain_index = gain_list.index(gain_value)
-        if gain_index >= len(gain_list)-1:
-            maxed_out = True
-            print("gain maxed out")
-        gain_value = active_sensor.set_gain(gain_index)
-
-        last_intg_value_ms = intg_value_ms
-        target_intg_value_ms = (last_intg_value_ms * multiplier) / (gain_value/last_gain_value)
-        intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
-        integration_time_index = integration_time_ms_list.index(intg_value_ms)
-        if (intg_value_ms/last_intg_value_ms) * (gain_value/last_gain_value) > multiplier:
-            integration_time_index += -1
-        if integration_time_index >= len(integration_time_ms_list)-1:
-            maxed_out = True
-            print( "integration time maxed out")
-        intg_value_ms = active_sensor.set_integration_time(integration_time_index)
-        if False:
-            temporary_data_list = active_sensor.read()
-            high_value = max(temporary_data_list)
-            print(high_value)
-        self.update_values()
-
-
-    def run_measurement_sequence(self):
-        self.cancel = False
-        self.measuring = True
-        self.instrument.update_batch()
-        print("starting measurement sequence")
-        for sensor_position in range(0, len(self.spectral_sensors)):
-            if not self.cancel:
-                data_list = []
-                print("next sensor")
-                self.go_to_sensor_position(position = sensor_position)
-                self.instrument.handle_inputs()
-                for filter_position in range(0, 9):
-                    if not self.cancel:
-                        print("next filter")
-                        self.go_to_filter_position(position = filter_position)
-                        if self.auto_exposure:
-                            self.autoset_exposure()
-                        for cycle in range (0,3):
-                            print("measurement cycle", cycle)
-                            data_list.append( self.measure())
-                            print("write values to file")
-                            self.instrument.handle_inputs()
-                            while self.pause:
-                                self.instrument.handle_inputs()
-                                self.update_values()
-                                time.sleep(0.1)
-                print( data_list )
-        self.measuring = False
-
-        if False:
-            self.as7341_spectrometer.set_integration_time( self.integration_time_index)
-            self.as7341_spectrometer.set_gain( self.gain_index)
-            if self.status_index == 0 or self.status_index == 2:
-
-                self.mmt_number += 1
-                gc.collect()
-                measure_start_free = gc.mem_free()
-                uid = self.instrument.uid
-                mmt_time = self.instrument.iso_time
-                dec_time = self.instrument.decimal_time
-
-                self.bat.read()
-
-                header_line = "UID,iso8601,time hh.hh,bat_V,bat_pct"
-                header_line += ""
-
-                try:
-                    self.onboard_neopixel.fill(devicem_neopixel.GREEN)
-                    functionm_file.write_nonsystem_line( self.instrument, header_line)
-                    for row in range (0,self.lines_per_block):
-                        line = "{},".format(uid)
-                        line += "{},".format(mmt_time)
-                        line += "{},".format(dec_time)
-                        line += "{},".format(self.bat.voltage)
-                        line += "{},".format(self.bat.percentage)
-
-
-                        functionm_file.write_nonsystem_line( self.instrument, line)
-                    self.onboard_neopixel.fill(devicem_neopixel.OFF)
-                    print("data written to file")
-                except Exception as err:
-                    print("failed to write data to file:", err)
-                    self.instrument.vfs = False
-                    self.onboard_neopixel.fill(devicem_neopixel.RED)
-                print()
-                for row in range (0,self.lines_per_block):
-                    for col in range (0,len(self.measurement_lists)):
-                        print( self.measurement_lists[col][row], end=", " )
-                    print()
-
-                self.measurement_lists = []
-                if self.last_lamp_current_mA < self.low_current_warning_threshold_mA: self.status_index = 2
-                measure_stop_free = gc.mem_free()
-
-            else:
-                print("error, not available to measure")
-                #set measure button to grey
-
-
-    def measure(self):
-        self.latest_data_list = self.spectral_sensors[self.sensor_wheel_position].read()
-        if self.latest_data_list:
-            self.high_value = max(self.latest_data_list)
-        else:
-            self.high_value = 1
-        self.update_values()
-        return self.latest_data_list
 
     def go_to_sensor_position( self, position = None):
         self.sensor_wheel_position_known = True
@@ -971,6 +982,17 @@ class Calibration_Page( Page ):
             self.plot_points[index].y = y_pix[index]
             shading_points.append((self.plot_xpix[index], y_pix[index]))
         self.shading.points=shading_points
+
+    def write_line(self, line ):
+        try:
+            with open( "/sd/{}".format( self.filename ), "a" ) as f:
+                f.write( "{}".format(line) )
+                f.write( "\n" )
+            return True
+        except Exception as err:
+            print( "failed to write to file: ", err )
+            self.instrument.vfs = False
+            return False
 
     def stall(self):
         print("intentionally stalled, press return to continue")
