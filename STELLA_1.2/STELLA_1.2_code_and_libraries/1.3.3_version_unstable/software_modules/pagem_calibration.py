@@ -144,6 +144,7 @@ class Calibration_Page( Page ):
         print( "filter_wheel_number =", self.filter_wheel_number )
         #print( "filter_wheel_magnetic_angle_values =",self.filter_wheel_magnetic_angle_values )
         #print( "filter_wheel_servo_position_values =",self.filter_wheel_servo_position_values )
+        print()
 
         self.filter_wheel_waypoints = []
         for index in range (0, len(self.filter_wheel_servo_position_values)-1):
@@ -180,7 +181,7 @@ class Calibration_Page( Page ):
             print( "write metadata lines for each sensor")
 
 
-        data_header_line = "mmt,date_time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,filter_position,gain,intg_time_ms,WL,BW,C0,C1,C2,C_avg,value_normalized_per_s,value_normalized_per_s_nm"
+        data_header_line = "mmt,date_time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,chip_temperature,filter_position,filter_pn,filter_value,gain,intg_time_ms,WL,BW,C0,C1,C2,C_avg,value_normalized_per_s,value_normalized_per_s_nm"
         if self.write_line( data_header_line ):
             print("successful write data header to cal file")
         else:
@@ -218,9 +219,11 @@ class Calibration_Page( Page ):
                         data_list.append(self.get_date_and_time())
                         data_list.append(self.filter_wheel_number)
                         data_list.append(self.sensor_wheel_number)
-                        data_list.append(active_sensor.pn) #TBD
-                        data_list.append(sensor_position) #TBD
-                        data_list.append(self.filter_wheel_position_labels[filter_position]) #TBD
+                        data_list.append(active_sensor.pn)
+                        data_list.append(sensor_position)
+                        data_list.append(self.filter_wheel_position_labels[filter_position])
+                        data_list.append(self.filter_part_numbers[filter_position])
+                        data_list.append(self.filter_optical_values[filter_position])
                         if self.auto_exposure:
                             gain_in_use, intg_time_ms_in_use = self.autoset_exposure()
                         data_list.append( gain_in_use )
@@ -236,7 +239,7 @@ class Calibration_Page( Page ):
                                 self.instrument.handle_inputs()
                                 self.update_values()
                                 time.sleep(0.1)
-                        data_handles = [10,12,14]
+                        data_handles = [12,14,16]
                         avg_values = []
                         normalized_values_per_s = []
                         normalized_values_per_s_nm = []
@@ -255,24 +258,26 @@ class Calibration_Page( Page ):
                         data_list.append(normalized_values_per_s_nm)
                         #print( data_list )
                         for index in range (0, number_of_channels):
-                            line = "{},".format(data_list[9]) #mmt_number
+                            line = "{},".format(data_list[11]) #mmt_number
                             line += "{},".format(data_list[1]) #date_time
                             line += "{},".format(data_list[2]) #filter wheel
                             line += "{},".format(data_list[3]) #sensor wheel
                             line += "{},".format(data_list[4]) #sensor pn
                             line += "{},".format(data_list[5]) #sensor position
-                            #TBD sensor temperature
+                            line += "{},".format("chip temperature") #TBD sensor temperature
                             line += "{},".format(data_list[6]) #filter position
-                            line += "{},".format(data_list[7]) #gain
-                            line += "{},".format(data_list[8]) #intg time ms
+                            line += "{},".format(data_list[7]) #filter pn
+                            line += "{},".format(data_list[8]) #filter value
+                            line += "{},".format(data_list[9]) #gain
+                            line += "{},".format(data_list[10]) #intg time ms
                             line += "{},".format(data_list[0][index]) #channel WL nm
                             line += "{},".format(bandwidths[index]) #channel BW nm
                             line += "{},".format(data_list[data_handles[0]][index]) #C0
                             line += "{},".format(data_list[data_handles[1]][index]) #C1
                             line += "{},".format(data_list[data_handles[2]][index]) #C2
-                            line += "{},".format(data_list[15][index]) #averages
-                            line += "{},".format(data_list[16][index]) # norm per s
-                            line += "{},".format(data_list[17][index]) # norm per s nm
+                            line += "{},".format(data_list[17][index]) #averages
+                            line += "{},".format(data_list[18][index]) # norm per s
+                            line += "{},".format(data_list[19][index]) # norm per s nm
                             print(line)
                             self.write_line(line)
         self.measuring = False
