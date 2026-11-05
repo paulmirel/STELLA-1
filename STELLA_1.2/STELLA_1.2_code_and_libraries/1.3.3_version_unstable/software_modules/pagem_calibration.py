@@ -56,74 +56,83 @@ class Calibration_Page( Page ):
                 self.supply_5V = sensor
             if sensor.pn == "max1704x":
                 self.bat = sensor
-            if sensor.name == "gps":
-                self.gps = sensor
         self.mmt_number = 0
         self.measuring = False
         self.precision_real_time_clock = adafruit_ds3231.DS3231(self.instrument.i2c_bus)
         self.sync_system_clock()
-        self.mux_8_to_1 = adafruit_tca9548a.TCA9548A(self.instrument.i2c_bus)
+
+        if self.instrument.mux_detected:
+            self.mux_8_to_1 = adafruit_tca9548a.TCA9548A(self.instrument.i2c_bus)
+            self.external_sensor_mode = False
+        else:
+            self.mux_8_to_1 = False
+            self.auto_exposure = False
+            self.sensor_wheel_number = "none"
+            self.external_sensor_mode = True
+            print()
+            print("sensor mux not found, initiate external sensor mode")
         self.spectral_sensors = []
-        self.auto_exposure = True
+        if self.mux_8_to_1:
+            self.auto_exposure = True
 
-        for index in range (0,7):
-            active_sensor = False
-            active_sensor = spectralm_as7265x.initialize_as7265x_spectrometer( self.instrument, alt_bus=self.mux_8_to_1[index] )
-            if not active_sensor:
-                active_sensor = spectralm_as7343.initialize_as7343_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
-            if not active_sensor:
-                active_sensor = spectralm_as7341.initialize_as7341_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
-            if not active_sensor:
-                active_sensor = spectralm_tcs3448.initialize_tcs3448_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
+            for index in range (0,7):
+                active_sensor = False
+                active_sensor = spectralm_as7265x.initialize_as7265x_spectrometer( self.instrument, alt_bus=self.mux_8_to_1[index] )
+                if not active_sensor:
+                    active_sensor = spectralm_as7343.initialize_as7343_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
+                if not active_sensor:
+                    active_sensor = spectralm_as7341.initialize_as7341_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
+                if not active_sensor:
+                    active_sensor = spectralm_tcs3448.initialize_tcs3448_spectrometer(self.instrument, alt_bus=self.mux_8_to_1[index])
 
-            if active_sensor:
-                self.spectral_sensors.append ( active_sensor )
-                if active_sensor.pn == "as7341" or active_sensor.pn == "as7343" or active_sensor.pn == "tcs3448":
-                    active_sensor.lamp_on()
-                    time.sleep(0.5)
-                    active_sensor.lamp_off()
-                if active_sensor.pn == "as7265x":
-                    active_sensor.lamp_on(0)
-                    time.sleep(0.5)
-                    active_sensor.lamp_off(0)
-        self.sensor_wheel_number = False
-        if self.spectral_sensors[0].pn == "as7341":
-            self.sensor_wheel_number = 1
-            from configuration_files import cal_lookup_wheel_1
-            self.magnetic_angle_values = getattr(cal_lookup_wheel_1, "magnetic_angle_values", False)
-            self.angle_offsets = getattr(cal_lookup_wheel_1, "magnetic_angle_offsets", False)
-            self.servo_position_values = getattr(cal_lookup_wheel_1, "servo_position_values", False)
-            self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_1, "tracking_numbers", False)
-        elif self.spectral_sensors[0].pn == "as7343":
-            self.sensor_wheel_number = 3
-            from configuration_files import cal_lookup_wheel_3
-            self.magnetic_angle_values = getattr(cal_lookup_wheel_3, "magnetic_angle_values", False)
-            self.angle_offsets = getattr(cal_lookup_wheel_3, "magnetic_angle_offsets", False)
-            self.servo_position_values = getattr(cal_lookup_wheel_3, "servo_position_values", False)
-            self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_3, "tracking_numbers", False)
-        elif self.spectral_sensors[0].pn == "tcs3448":
-            self.sensor_wheel_number = 8
-            from configuration_files import cal_lookup_wheel_8
-            self.magnetic_angle_values = getattr(cal_lookup_wheel_8, "magnetic_angle_values", False)
-            self.angle_offsets = getattr(cal_lookup_wheel_8, "magnetic_angle_offsets", False)
-            self.servo_position_values = getattr(cal_lookup_wheel_8, "servo_position_values", False)
-            self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_8, "tracking_numbers", False)
-        elif self.spectral_sensors[0].pn == "as7265x":
-            self.sensor_wheel_number = 5
-            from configuration_files import cal_lookup_wheel_5
-            self.magnetic_angle_values = getattr(cal_lookup_wheel_5, "magnetic_angle_values", False)
-            self.angle_offsets = getattr(cal_lookup_wheel_5, "magnetic_angle_offsets", False)
-            self.servo_position_values = getattr(cal_lookup_wheel_5, "servo_position_values", False)
-            self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_5, "tracking_numbers", False)
-        print()
-        print( "sensor_wheel_number =", self.sensor_wheel_number )
-        #print( "magnetic_angle_values =",self.magnetic_angle_values )
-        #print( "servo_position_values =",self.servo_position_values )
-        #print( "spectral_sensor_tracking_numbers = ", self.spectral_sensor_tracking_numbers )
-        print()
-        self.sensor_wheel_waypoints = []
-        for index in range (0, len(self.servo_position_values)-1):
-            self.sensor_wheel_waypoints.append(int((self.servo_position_values[index]+self.servo_position_values[index+1])/2))
+                if active_sensor:
+                    self.spectral_sensors.append ( active_sensor )
+                    if active_sensor.pn == "as7341" or active_sensor.pn == "as7343" or active_sensor.pn == "tcs3448":
+                        active_sensor.lamp_on()
+                        time.sleep(0.5)
+                        active_sensor.lamp_off()
+                    if active_sensor.pn == "as7265x":
+                        active_sensor.lamp_on(0)
+                        time.sleep(0.5)
+                        active_sensor.lamp_off(0)
+            self.sensor_wheel_number = False
+            if self.spectral_sensors[0].pn == "as7341":
+                self.sensor_wheel_number = 1
+                from configuration_files import cal_lookup_wheel_1
+                self.magnetic_angle_values = getattr(cal_lookup_wheel_1, "magnetic_angle_values", False)
+                self.angle_offsets = getattr(cal_lookup_wheel_1, "magnetic_angle_offsets", False)
+                self.servo_position_values = getattr(cal_lookup_wheel_1, "servo_position_values", False)
+                self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_1, "tracking_numbers", False)
+            elif self.spectral_sensors[0].pn == "as7343":
+                self.sensor_wheel_number = 3
+                from configuration_files import cal_lookup_wheel_3
+                self.magnetic_angle_values = getattr(cal_lookup_wheel_3, "magnetic_angle_values", False)
+                self.angle_offsets = getattr(cal_lookup_wheel_3, "magnetic_angle_offsets", False)
+                self.servo_position_values = getattr(cal_lookup_wheel_3, "servo_position_values", False)
+                self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_3, "tracking_numbers", False)
+            elif self.spectral_sensors[0].pn == "tcs3448":
+                self.sensor_wheel_number = 8
+                from configuration_files import cal_lookup_wheel_8
+                self.magnetic_angle_values = getattr(cal_lookup_wheel_8, "magnetic_angle_values", False)
+                self.angle_offsets = getattr(cal_lookup_wheel_8, "magnetic_angle_offsets", False)
+                self.servo_position_values = getattr(cal_lookup_wheel_8, "servo_position_values", False)
+                self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_8, "tracking_numbers", False)
+            elif self.spectral_sensors[0].pn == "as7265x":
+                self.sensor_wheel_number = 5
+                from configuration_files import cal_lookup_wheel_5
+                self.magnetic_angle_values = getattr(cal_lookup_wheel_5, "magnetic_angle_values", False)
+                self.angle_offsets = getattr(cal_lookup_wheel_5, "magnetic_angle_offsets", False)
+                self.servo_position_values = getattr(cal_lookup_wheel_5, "servo_position_values", False)
+                self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_5, "tracking_numbers", False)
+            print()
+            print( "sensor_wheel_number =", self.sensor_wheel_number )
+            #print( "magnetic_angle_values =",self.magnetic_angle_values )
+            #print( "servo_position_values =",self.servo_position_values )
+            #print( "spectral_sensor_tracking_numbers = ", self.spectral_sensor_tracking_numbers )
+            print()
+            self.sensor_wheel_waypoints = []
+            for index in range (0, len(self.servo_position_values)-1):
+                self.sensor_wheel_waypoints.append(int((self.servo_position_values[index]+self.servo_position_values[index+1])/2))
 
         from configuration_files import cal_lookup_wheel_F0
         from configuration_files import cal_lookup_wheel_F1
@@ -156,7 +165,10 @@ class Calibration_Page( Page ):
         self.sensor_servo = pca.channels[15]
         self.filter_servo.duty_cycle = 0
         self.sensor_servo.duty_cycle = 0
-        self.sensor_wheel_angle_sensor = adafruit_as5600.AS5600(self.mux_8_to_1[7])
+        if self.external_sensor_mode:
+            self.sensor_wheel_angle_sensor = False
+        else:
+            self.sensor_wheel_angle_sensor = adafruit_as5600.AS5600(self.mux_8_to_1[7])
         self.filter_wheel_angle_sensor = adafruit_as5600.AS5600(self.instrument.i2c_bus, address = 0x46 )
 
         self.sensor_wheel_position_known = False
@@ -167,21 +179,15 @@ class Calibration_Page( Page ):
 
 
         precision_date_time = self.get_date_and_time()
-        self.filename = "STELLA_cal_{}_{}.csv".format(self.spectral_sensors[0].pn, precision_date_time)
+        if self.external_sensor_mode:
+            self.filename = "STELLA_cal_{}_{}.csv".format("external_sensor", precision_date_time)
+            data_header_line = "mmt,date_time,filter_wheel,filter_position,filter_pn,filter_value"
+        else:
+            self.filename = "STELLA_cal_{}_{}.csv".format(self.spectral_sensors[0].pn, precision_date_time)
+            data_header_line = "mmt,date_time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,filter_position,filter_pn,filter_value,gain,intg_time_ms,WL,BW,C0,C1,C2,C_avg,value_normalized_per_s,value_normalized_per_s_nm"
+
         print("Filename =",self.filename)
 
-        if False: #add this after initial cal collection, or collect this data in a separate code
-            metadata_header_line = "metadata_header_line"
-            if self.write_line( metadata_header_line ):
-                print("successful write to cal file")
-            else:
-                print("cannot write to cal file")
-                self.stall()
-            print( "read sensor metadata" )
-            print( "write metadata lines for each sensor")
-
-
-        data_header_line = "mmt,date_time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,filter_position,filter_pn,filter_value,gain,intg_time_ms,WL,BW,C0,C1,C2,C_avg,value_normalized_per_s,value_normalized_per_s_nm"
         if self.write_line( data_header_line ):
             print("successful write data header to cal file")
         else:
@@ -464,24 +470,26 @@ class Calibration_Page( Page ):
         else:
             self.text_areas[12].text = " -"
             self.text_areas[11].text = " -"
-
-        self.text_areas[13].text = "{}".format(self.sensor_wheel_number)
-        self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
-        if self.sensor_wheel_position_known:
-            self.text_areas[9].text = "{}".format(self.spectral_sensors[self.sensor_wheel_position].read_gain())
-            intg_ms = self.spectral_sensors[self.sensor_wheel_position].read_integration_time_ms()
-            if intg_ms <1000:
-                self.text_areas[10].text = "{}ms".format(intg_ms)
-            else:
-                self.text_areas[10].text = "{}s".format(round(intg_ms/1000),1)
-            self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
-            self.text_areas[17].text = "{}".format(self.spectral_sensor_tracking_numbers[self.sensor_wheel_position])
+        if self.external_sensor_mode:
+            pass
         else:
-            self.text_areas[9].text = " -"
-            self.text_areas[10].text = " -"
-            self.text_areas[15].text = " -"
-            self.text_areas[17].text = " -"
-        self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
+            self.text_areas[13].text = "{}".format(self.sensor_wheel_number)
+            self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
+            if self.sensor_wheel_position_known:
+                self.text_areas[9].text = "{}".format(self.spectral_sensors[self.sensor_wheel_position].read_gain())
+                intg_ms = self.spectral_sensors[self.sensor_wheel_position].read_integration_time_ms()
+                if intg_ms <1000:
+                    self.text_areas[10].text = "{}ms".format(intg_ms)
+                else:
+                    self.text_areas[10].text = "{}s".format(round(intg_ms/1000),1)
+                self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
+                self.text_areas[17].text = "{}".format(self.spectral_sensor_tracking_numbers[self.sensor_wheel_position])
+            else:
+                self.text_areas[9].text = " -"
+                self.text_areas[10].text = " -"
+                self.text_areas[15].text = " -"
+                self.text_areas[17].text = " -"
+            self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
         self.text_areas[18].text = "{}".format( self.filter_wheel_number )
         self.text_areas[19].text = "9" ### TBD"{}".format(len(self.filters))
         if self.filter_wheel_position_known:
@@ -510,7 +518,7 @@ class Calibration_Page( Page ):
             if self.field_selected:
                 if self.selection == 3:
                     self.auto_exposure = not self.auto_exposure
-                if not self.auto_exposure:
+                if not self.auto_exposure and not self.external_sensor_mode:
                     active_sensor = self.spectral_sensors[self.sensor_wheel_position]
                     if self.selection == 4:
                         active_sensor.gain_index = (active_sensor.gain_index + self.instrument.encoder_increment) % len(active_sensor.gain_list)
@@ -519,7 +527,7 @@ class Calibration_Page( Page ):
                         active_sensor.integration_time_index = (active_sensor.integration_time_index + self.instrument.encoder_increment) % len(active_sensor.integration_time_ms_list)
                         active_sensor.set_integration_time()
                 if not self.measuring:
-                    if self.selection == 6:
+                    if self.selection == 6 and not self.external_sensor_mode:
                         self.sensor_wheel_position = (self.sensor_wheel_position + self.instrument.encoder_increment) % len(self.spectral_sensors)
                         self.go_to_sensor_position()
                     if self.selection == 7:
