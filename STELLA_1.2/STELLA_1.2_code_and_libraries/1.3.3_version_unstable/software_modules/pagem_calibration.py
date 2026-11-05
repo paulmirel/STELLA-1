@@ -181,7 +181,7 @@ class Calibration_Page( Page ):
             print( "write metadata lines for each sensor")
 
 
-        data_header_line = "mmt,date_time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,chip_temperature,filter_position,filter_pn,filter_value,gain,intg_time_ms,WL,BW,C0,C1,C2,C_avg,value_normalized_per_s,value_normalized_per_s_nm"
+        data_header_line = "mmt,date_time,filter_wheel,sensor_wheel,sensor_pn,sensor_position,filter_position,filter_pn,filter_value,gain,intg_time_ms,WL,BW,C0,C1,C2,C_avg,value_normalized_per_s,value_normalized_per_s_nm"
         if self.write_line( data_header_line ):
             print("successful write data header to cal file")
         else:
@@ -264,7 +264,6 @@ class Calibration_Page( Page ):
                             line += "{},".format(data_list[3]) #sensor wheel
                             line += "{},".format(data_list[4]) #sensor pn
                             line += "{},".format(data_list[5]) #sensor position
-                            line += "{},".format("chip temperature") #TBD sensor temperature
                             line += "{},".format(data_list[6]) #filter position
                             line += "{},".format(data_list[7]) #filter pn
                             line += "{},".format(data_list[8]) #filter value
