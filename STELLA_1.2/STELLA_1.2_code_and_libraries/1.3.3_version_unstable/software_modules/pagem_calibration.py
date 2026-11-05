@@ -19,11 +19,10 @@ from software_modules import spectralm_as7341
 from software_modules import spectralm_as7343
 from software_modules import spectralm_as7265x
 from software_modules import spectralm_tcs3448
-
-
-
 import adafruit_ds3231
 from adafruit_pca9685 import PCA9685
+
+filter_wheel_F = 0 #1
 
 class Calibration_Page( Page ):
     def __init__( self, instrument, onboard_neopixel ):
@@ -126,18 +125,22 @@ class Calibration_Page( Page ):
         for index in range (0, len(self.servo_position_values)-1):
             self.sensor_wheel_waypoints.append(int((self.servo_position_values[index]+self.servo_position_values[index+1])/2))
 
-
         from configuration_files import cal_lookup_wheel_F0
-        self.filter_wheel_number = "F0"
-        self.filter_wheel_magnetic_angle_values = getattr(cal_lookup_wheel_F0, "magnetic_angle_values", False)
-        self.filter_wheel_angle_offsets = getattr(cal_lookup_wheel_F0, "magnetic_angle_offsets", False)
-        self.filter_wheel_servo_position_values = getattr(cal_lookup_wheel_F0, "servo_position_values", False)
-        self.filter_part_numbers = getattr(cal_lookup_wheel_F0, "part_numbers", False)
-        self.filter_manufacturer = getattr(cal_lookup_wheel_F0, "manufacturer", False)
-        self.filter_optical_values = getattr(cal_lookup_wheel_F0, "optical_values", False)
-        self.filter_optical_value_abbreviations = getattr(cal_lookup_wheel_F0, "optical_value_abbreviations", False)
+        from configuration_files import cal_lookup_wheel_F1
+        if filter_wheel_F == 0:
+            filter_config_file = cal_lookup_wheel_F0
+        if filter_wheel_F == 1:
+            filter_config_file = cal_lookup_wheel_F1
 
-
+        self.filter_wheel_number = "F{}".format(filter_wheel_F)
+        self.filter_wheel_magnetic_angle_values = getattr(filter_config_file, "magnetic_angle_values", False)
+        self.filter_wheel_angle_offsets = getattr(filter_config_file, "magnetic_angle_offsets", False)
+        self.filter_wheel_servo_position_values = getattr(filter_config_file, "servo_position_values", False)
+        self.filter_part_numbers = getattr(filter_config_file, "part_numbers", False)
+        self.filter_manufacturer = getattr(filter_config_file, "manufacturer", False)
+        self.filter_optical_values = getattr(filter_config_file, "optical_values", False)
+        self.filter_optical_value_abbreviations = getattr(filter_config_file, "optical_value_abbreviations", False)
+        self.filter_wheel_position_labels = getattr(filter_config_file, "filter_wheel_position_labels", False)
         print( "filter_wheel_number =", self.filter_wheel_number )
         #print( "filter_wheel_magnetic_angle_values =",self.filter_wheel_magnetic_angle_values )
         #print( "filter_wheel_servo_position_values =",self.filter_wheel_servo_position_values )
@@ -159,7 +162,6 @@ class Calibration_Page( Page ):
         self.filter_wheel_position_known = False
         self.sensor_wheel_position = 0
         self.filter_wheel_position = 0
-        self.filter_wheel_position_labels = ["A","B","C","D","E","F","G","H","i"]
         self.pause = False
 
 
@@ -291,6 +293,8 @@ class Calibration_Page( Page ):
 
     def autoset_exposure(self):
         self.text_areas[26].text = "setexp"
+        self.text_areas[9].text = "..."
+        self.text_areas[10].text = "..."
         self.text_areas[11].text = " -"
         self.text_areas[12].text = "-"
         active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
@@ -323,7 +327,7 @@ class Calibration_Page( Page ):
             intg_value_ms = active_sensor.set_integration_time(integration_time_index)
             temporary_data_list = active_sensor.read()
             high_value = max(temporary_data_list)
-            self.update_values()
+            #self.update_values()
 
         if high_value < 1000:
             target_gain_value = gain_value*2
@@ -339,7 +343,7 @@ class Calibration_Page( Page ):
             temporary_data_list = active_sensor.read()
             high_value = max(temporary_data_list)
 
-            self.update_values()
+            #self.update_values()
         #print(high_value, gain_value, intg_value_ms)
         if high_value < 1: high_value = 1
         multiplier = self.exposure_target_fraction_high * self.max_counts/ high_value
