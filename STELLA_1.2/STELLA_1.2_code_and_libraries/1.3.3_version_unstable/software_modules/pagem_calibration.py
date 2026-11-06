@@ -316,6 +316,8 @@ class Calibration_Page( Page ):
                                 self.write_line(line)
         self.measuring = False
         sequence_end = time.monotonic()
+        print()
+        print()
         print("measurement sequence elapsed time in minutes =", (sequence_end - sequence_start)/60)
 
 
