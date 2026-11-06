@@ -38,6 +38,7 @@ class Calibration_Page( Page ):
         self.field_greyed_index = 19
         self.field_selected_color_index = 5
         self.field_not_selected_color_index = 9
+        self.plot_active = False
         self.active_sensor_index = 0
         self.max_counts = 65535
         self.high_value = False
@@ -134,6 +135,9 @@ class Calibration_Page( Page ):
             self.sensor_wheel_waypoints = []
             for index in range (0, len(self.servo_position_values)-1):
                 self.sensor_wheel_waypoints.append(int((self.servo_position_values[index]+self.servo_position_values[index+1])/2))
+            self.latest_data_list =[]
+            for index in range (0, len(self.spectral_sensors[0].wavelength_bands_nm)-1):
+                self.latest_data_list.append(0)
 
         from configuration_files import cal_lookup_wheel_F0
         from configuration_files import cal_lookup_wheel_F1
@@ -595,11 +599,7 @@ class Calibration_Page( Page ):
             self.update_values()
 
         if self.instrument.button_pressed:
-            if False:#self.selection == 9 or self.selection == 10 or self.selection == 11 or not self.graph_group.hidden:
-                self.graph_group.hidden = not self.graph_group.hidden
-                if not self.graph_group.hidden:
-                    self.plot()
-            elif self.selection == 0:
+            if self.selection == 0:
                 pass#self.instrument.active_page_number = self.instrument.pages_dict["Main"]
             elif self.selection == 1:
                 self.instrument.update_batch()
@@ -615,7 +615,10 @@ class Calibration_Page( Page ):
                     self.run_measurement_sequence()
             elif self.selection == 10:
                 self.pause = True
-
+            elif self.selection == 11:
+                self.graph_group.hidden = not self.graph_group.hidden
+                if not self.graph_group.hidden:
+                    self.plot()
             else:
                 self.field_selected = not self.field_selected
                 if self.selection == 3:
@@ -962,7 +965,7 @@ class Calibration_Page( Page ):
         self.graph_group.append(y_min_group)
 
         x_units_group = displayio.Group(scale=1, x=26, y=self.ybottom_pix+14)
-        x_units_area = label.Label(terminalio.FONT, text="WL(nm)", color=self.palette[0])
+        x_units_area = label.Label(terminalio.FONT, text="nm", color=self.palette[0])
         x_units_group.append(x_units_area)
         self.graph_group.append(x_units_group)
 
@@ -976,9 +979,9 @@ class Calibration_Page( Page ):
         self.x_axis = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=xright_pix-xleft_pix, height=x_axis_pix, x=xleft_pix, y=self.ybottom_pix-int(x_axis_pix/2))
         self.graph_group.append(self.x_axis)
 
-        plot_xvalues = [415, 445, 480, 515, 555, 590, 630, 682]
-        plot_xmax = 700
-        plot_xmin = 400
+        plot_xvalues = self.spectral_sensors[0].wavelength_bands_nm
+        plot_xmax = max(plot_xvalues)
+        plot_xmin = min(plot_xvalues)
         plot_xspan = plot_xmax - plot_xmin
         self.plot_xpix = []
 
@@ -999,12 +1002,12 @@ class Calibration_Page( Page ):
             self.graph_group.append(circle)
         color_index_list = [25,26,28,29,31,32,33,35]
         for index in range( 0, len(self.plot_points)):
-            self.plot_points[index].color_index = color_index_list[index]
+            self.plot_points[index].color_index = 0#color_index_list[index]
             x_value_group = displayio.Group(scale=1, x=self.plot_xpix[index]-8, y=self.ybottom_pix+14)
             x_value_area = label.Label(terminalio.FONT, text="{}".format(plot_xvalues[index]), color=self.palette[0])
-
-            x_value_group.append(x_value_area)
-            self.graph_group.append(x_value_group)
+            if (index < 1) or (index == int(len(self.plot_points)/2)) or (index >len(self.plot_points)-2):
+                x_value_group.append(x_value_area)
+                self.graph_group.append(x_value_group)
 
         self.group.append(self.graph_group)
 
@@ -1028,25 +1031,22 @@ class Calibration_Page( Page ):
             print( "failed to synchronize system clock to precision hardware clock" )
 
     def plot(self):
-        self.plot_register = self.mmt_register[self.selection-9]
+        self.plot_register = self.latest_data_list
+        self.plot_active = True
         print("register contents")
         print(self.plot_register)
-        print(self.reference_register)
-        if False: #self.subtract_reference_to_plot: #TBD get this working correctly, don't subtract ref from ref, don't mess up the display data
-            for index in range (0, len(self.reference_register)):
-                self.plot_register[index+2] = self.plot_register[index+2] - self.reference_register[index]
-        print(self.plot_register)
+        print("wavelengths")
+        print(self.spectral_sensors[0].wavelength_bands_nm)
         plot_yvalues = self.plot_register[2:]
         plot_ymax = max(plot_yvalues)
         dr=int(100*plot_ymax/65535)
         plot_ymin = min(plot_yvalues)
         plot_yspan = plot_ymax - plot_ymin
-        print(plot_ymax, plot_ymin, plot_yspan)
+        print("ymax:",plot_ymax," ymin:", plot_ymin, " yspan:",plot_yspan)
         if dr >99:
             self.plot_title_area.text = "{}:{}:SATURATED".format(self.plot_register[0], self.plot_register[1])
         else:
             self.plot_title_area.text = "{} : {} : {}% dr".format(self.plot_register[0], self.plot_register[1],dr)
-        #TBD add -Rxx to plot title
         self.y_max_area.text = "{}".format(plot_ymax)
         self.y_min_area.text = "{}".format(plot_ymin)
         yspan_pix = self.ybottom_pix - self.ytop_pix
