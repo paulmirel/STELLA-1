@@ -1006,7 +1006,7 @@ class Calibration_Page( Page ):
             self.plot_points[index].color_index = 0#color_index_list[index]
             x_value_group = displayio.Group(scale=1, x=self.plot_xpix[index]-8, y=self.ybottom_pix+14)
             x_value_area = label.Label(terminalio.FONT, text="{}".format(plot_xvalues[index]), color=self.palette[0])
-            if (index < 1) or (index == int(len(self.plot_points)/2)) or (index >=len(self.plot_points)):
+            if (index < 1) or (index >= int(len(self.plot_points)/2)):
                 x_value_group.append(x_value_area)
                 self.graph_group.append(x_value_group)
 
@@ -1048,7 +1048,7 @@ class Calibration_Page( Page ):
         if dr >99:
             self.plot_title_area.text = "SATURATED"
         else:
-            self.plot_title_area.text = "{}:{} {}% dr".format(self.sensor_wheel_position, self.filter_optical_value_abbreviations[self.filter_wheel_position],dr)
+            self.plot_title_area.text = "S{}:{} {}% dr".format(self.sensor_wheel_position, self.filter_optical_value_abbreviations[self.filter_wheel_position],dr)
         self.y_max_area.text = "{}".format(plot_ymax)
         self.y_min_area.text = "{}".format(plot_ymin)
         yspan_pix = self.ybottom_pix - self.ytop_pix

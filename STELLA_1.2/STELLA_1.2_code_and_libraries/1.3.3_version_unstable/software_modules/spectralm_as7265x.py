@@ -204,32 +204,33 @@ class as7265x_Spectrometer( Device ):
 
     def read_counts_by_index( self, index ):
         counts = 0
-        try:
-            if index in [0,1,2,3,4,5]:
-                self.swob.device = 2
-                if index == 0: counts = self.swob.raw_channel0
-                if index == 1: counts = self.swob.raw_channel1
-                if index == 2: counts = self.swob.raw_channel2
-                if index == 3: counts = self.swob.raw_channel3
-                if index == 4: counts = self.swob.raw_channel4
-                if index == 5: counts = self.swob.raw_channel5
-            elif index in [6,7,9,11,16,17]:
-                self.swob.device = 1
-                if index == 6: counts = self.swob.raw_channel0
-                if index == 7: counts = self.swob.raw_channel1
-                if index == 9: counts = self.swob.raw_channel2
-                if index == 11: counts = self.swob.raw_channel3
-                if index == 16: counts = self.swob.raw_channel4
-                if index == 17: counts = self.swob.raw_channel5
-            elif index in [8,10,12,13,14,15]:
-                self.swob.device = 0
-                if index == 8: counts = self.swob.raw_channel0
-                if index == 10: counts = self.swob.raw_channel1
-                if index == 12: counts = self.swob.raw_channel2
-                if index == 13: counts = self.swob.raw_channel3
-                if index == 14: counts = self.swob.raw_channel4
-                if index == 15: counts = self.swob.raw_channel5
-            self.data_counts[index] = counts
+        if False:
+            try:
+                if index in [0,1,2,3,4,5]:
+                    self.swob.device = 2
+                    if index == 0: counts = self.swob.raw_channel0
+                    if index == 1: counts = self.swob.raw_channel1
+                    if index == 2: counts = self.swob.raw_channel2
+                    if index == 3: counts = self.swob.raw_channel3
+                    if index == 4: counts = self.swob.raw_channel4
+                    if index == 5: counts = self.swob.raw_channel5
+                elif index in [6,7,9,11,16,17]:
+                    self.swob.device = 1
+                    if index == 6: counts = self.swob.raw_channel0
+                    if index == 7: counts = self.swob.raw_channel1
+                    if index == 9: counts = self.swob.raw_channel2
+                    if index == 11: counts = self.swob.raw_channel3
+                    if index == 16: counts = self.swob.raw_channel4
+                    if index == 17: counts = self.swob.raw_channel5
+                elif index in [8,10,12,13,14,15]:
+                    self.swob.device = 0
+                    if index == 8: counts = self.swob.raw_channel0
+                    if index == 10: counts = self.swob.raw_channel1
+                    if index == 12: counts = self.swob.raw_channel2
+                    if index == 13: counts = self.swob.raw_channel3
+                    if index == 14: counts = self.swob.raw_channel4
+                    if index == 15: counts = self.swob.raw_channel5
+            self.data_counts[index] = 0 #counts
             return counts
         except Exception as err:
             print( "read channel counts failed: ", err )
@@ -237,41 +238,42 @@ class as7265x_Spectrometer( Device ):
 
     def read_calibrated_by_index( self, index ):
         value = 0
-
-        try:
-            if index in [0,1,2,3,4,5]:
-                self.swob.device = 2
-                if index == 0: value = self.swob.channel0
-                if index == 1: value = self.swob.channel1
-                if index == 2: value = self.swob.channel2
-                if index == 3: value = self.swob.channel3
-                if index == 4: value = self.swob.channel4
-                if index == 5: value = self.swob.channel5
-            elif index in [6,7,9,11,16,17]:
-                self.swob.device = 1
-                if index == 6: value = self.swob.channel0
-                if index == 7: value = self.swob.channel1
-                if index == 9: value = self.swob.channel2
-                if index == 11: value = self.swob.channel3
-                if index == 16: value = self.swob.channel4
-                if index == 17: value = self.swob.channel5
-            elif index in [8,10,12,13,14,15]:
-                self.swob.device = 0
-                if index == 8: value = self.swob.channel0
-                if index == 10: value = self.swob.channel1
-                if index == 12: value = self.swob.channel2
-                if index == 13: value = self.swob.channel3
-                if index == 14: value = self.swob.channel4
-                if index == 15: value = self.swob.channel5
-            cal_uW_per_cm2 = value
-            uW_per_W = 1000000
-            cm2_per_m2 = 10000
-            si_cal_W_per_m2 = round((cal_uW_per_cm2 * cm2_per_m2) / uW_per_W, 4)
-            self.data_calibrated[index] = si_cal_W_per_m2
-            return si_cal_W_per_m2
-        except Exception as err:
-            print( "read channel calibrated failed: ", err )
-            return False
+        pass
+        if False: #TBD Not tested
+            try:
+                if index in [0,1,2,3,4,5]:
+                    self.swob.device = 2
+                    if index == 0: value = self.swob.channel0
+                    if index == 1: value = self.swob.channel1
+                    if index == 2: value = self.swob.channel2
+                    if index == 3: value = self.swob.channel3
+                    if index == 4: value = self.swob.channel4
+                    if index == 5: value = self.swob.channel5
+                elif index in [6,7,9,11,16,17]:
+                    self.swob.device = 1
+                    if index == 6: value = self.swob.channel0
+                    if index == 7: value = self.swob.channel1
+                    if index == 9: value = self.swob.channel2
+                    if index == 11: value = self.swob.channel3
+                    if index == 16: value = self.swob.channel4
+                    if index == 17: value = self.swob.channel5
+                elif index in [8,10,12,13,14,15]:
+                    self.swob.device = 0
+                    if index == 8: value = self.swob.channel0
+                    if index == 10: value = self.swob.channel1
+                    if index == 12: value = self.swob.channel2
+                    if index == 13: value = self.swob.channel3
+                    if index == 14: value = self.swob.channel4
+                    if index == 15: value = self.swob.channel5
+                cal_uW_per_cm2 = value
+                uW_per_W = 1000000
+                cm2_per_m2 = 10000
+                si_cal_W_per_m2 = round((cal_uW_per_cm2 * cm2_per_m2) / uW_per_W, 4)
+                self.data_calibrated[index] = si_cal_W_per_m2
+                return si_cal_W_per_m2
+            except Exception as err:
+                print( "read channel calibrated failed: ", err )
+                return False
 
     def read( self ):
         #print("start measurement")
