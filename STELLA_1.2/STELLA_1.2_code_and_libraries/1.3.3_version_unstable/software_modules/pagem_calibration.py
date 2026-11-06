@@ -278,6 +278,7 @@ class Calibration_Page( Page ):
                                     self.instrument.handle_inputs()
                                     self.update_values()
                                     time.sleep(0.1)
+                            self.plot()
                             data_handles = [12,14,16]
                             avg_values = []
                             normalized_values_per_s = []
@@ -945,7 +946,7 @@ class Calibration_Page( Page ):
         self.ytop_pix = 72
 
         plot_title_group = displayio.Group(scale=2, x=80, y=54)
-        self.plot_title_area = label.Label(terminalio.FONT, text="Bxx : Mxx : xx%dr", color=self.palette[0])
+        self.plot_title_area = label.Label(terminalio.FONT, text="filter  xx%dr", color=self.palette[0])
         plot_title_group.append(self.plot_title_area)
         self.graph_group.append(plot_title_group)
 
@@ -960,7 +961,7 @@ class Calibration_Page( Page ):
         self.graph_group.append(y_max_group)
 
         y_min_group = displayio.Group(scale=1, x=26, y=self.ybottom_pix)
-        self.y_min_area = label.Label(terminalio.FONT, text="-65535", color=self.palette[0])
+        self.y_min_area = label.Label(terminalio.FONT, text="0", color=self.palette[0])
         y_min_group.append(self.y_min_area)
         self.graph_group.append(y_min_group)
 
@@ -972,7 +973,7 @@ class Calibration_Page( Page ):
         point_radius = 6
 
         xleft_pix = 64
-        xright_pix = 320-30
+        xright_pix = 320-30-30
         xspan_pix = xright_pix - xleft_pix
 
         x_axis_pix = 4
@@ -1005,7 +1006,7 @@ class Calibration_Page( Page ):
             self.plot_points[index].color_index = 0#color_index_list[index]
             x_value_group = displayio.Group(scale=1, x=self.plot_xpix[index]-8, y=self.ybottom_pix+14)
             x_value_area = label.Label(terminalio.FONT, text="{}".format(plot_xvalues[index]), color=self.palette[0])
-            if (index < 1) or (index == int(len(self.plot_points)/2)) or (index >len(self.plot_points)-2):
+            if (index < 1) or (index == int(len(self.plot_points)/2)) or (index >=len(self.plot_points)):
                 x_value_group.append(x_value_area)
                 self.graph_group.append(x_value_group)
 
@@ -1031,22 +1032,23 @@ class Calibration_Page( Page ):
             print( "failed to synchronize system clock to precision hardware clock" )
 
     def plot(self):
+        print("update the plot")
         self.plot_register = self.latest_data_list
         self.plot_active = True
-        print("register contents")
-        print(self.plot_register)
-        print("wavelengths")
-        print(self.spectral_sensors[0].wavelength_bands_nm)
-        plot_yvalues = self.plot_register[2:]
+        #print("register contents")
+        #print(self.plot_register)
+        #print("wavelengths")
+        #print(self.spectral_sensors[0].wavelength_bands_nm)
+        plot_yvalues = self.plot_register
         plot_ymax = max(plot_yvalues)
         dr=int(100*plot_ymax/65535)
         plot_ymin = min(plot_yvalues)
         plot_yspan = plot_ymax - plot_ymin
-        print("ymax:",plot_ymax," ymin:", plot_ymin, " yspan:",plot_yspan)
+        #print("ymax:",plot_ymax," ymin:", plot_ymin, " yspan:",plot_yspan)
         if dr >99:
-            self.plot_title_area.text = "{}:{}:SATURATED".format(self.plot_register[0], self.plot_register[1])
+            self.plot_title_area.text = "SATURATED"
         else:
-            self.plot_title_area.text = "{} : {} : {}% dr".format(self.plot_register[0], self.plot_register[1],dr)
+            self.plot_title_area.text = "{}:{} {}% dr".format(self.sensor_wheel_position, self.filter_optical_value_abbreviations[self.filter_wheel_position],dr)
         self.y_max_area.text = "{}".format(plot_ymax)
         self.y_min_area.text = "{}".format(plot_ymin)
         yspan_pix = self.ybottom_pix - self.ytop_pix
@@ -1060,7 +1062,9 @@ class Calibration_Page( Page ):
         shading_points = []
         shading_points.append((self.plot_xpix[-1], self.ytop_pix + yspan_pix))
         shading_points.append((self.plot_xpix[0], self.ytop_pix + yspan_pix))
-
+        #print("len(self.plot_xpix) = ",len(self.plot_xpix))
+        #print("y_pix", y_pix)
+        #print("self.plot_points",self.plot_points)
         for index in range (0, len(self.plot_xpix)):
             self.plot_points[index].y = y_pix[index]
             shading_points.append((self.plot_xpix[index], y_pix[index]))
