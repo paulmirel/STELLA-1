@@ -111,6 +111,7 @@ class Calibration_Page( Page ):
                 self.servo_position_values = getattr(cal_lookup_wheel_3, "servo_position_values", False)
                 self.spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_3, "tracking_numbers", False)
             elif self.spectral_sensors[0].pn == "tcs3448":
+                #self.max_counts = 61181
                 self.sensor_wheel_number = 8
                 from configuration_files import cal_lookup_wheel_8
                 self.magnetic_angle_values = getattr(cal_lookup_wheel_8, "magnetic_angle_values", False)
@@ -201,6 +202,7 @@ class Calibration_Page( Page ):
 
 
     def run_measurement_sequence(self):
+        sequence_start = time.monotonic()
         self.instrument.button_pressed = False
         self.cancel = False
         self.measuring = True
@@ -228,6 +230,10 @@ class Calibration_Page( Page ):
 
         else:
             active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
+            if active_sensor.pn == "tcs3448":
+                self.exclusion_indicies = 11, 7, 6
+            else:
+                self.exclusion_indicies = False
             number_of_channels = len(active_sensor.wavelength_bands_nm)
             bandwidths = active_sensor.bandwidths_nm
             print("starting measurement sequence")
@@ -309,6 +315,8 @@ class Calibration_Page( Page ):
                                 print(line)
                                 self.write_line(line)
         self.measuring = False
+        sequence_end = time.monotonic()
+        print("measurement sequence elapsed time in minutes =", (sequence_end - sequence_start)/60)
 
 
     def make_a_single_measurement(self):
@@ -321,10 +329,11 @@ class Calibration_Page( Page ):
             self.autoset_exposure()
         self.latest_data_list = self.measure()
         print(self.latest_data_list)
-        print("write single measurement to file")#TBD
+        print("TBD: write single measurement to file, not currently active")#TBD
         self.measuring = False
 
     def autoset_exposure(self):
+        include_all = True
         self.text_areas[26].text = "setexp"
         self.text_areas[9].text = "..."
         self.text_areas[10].text = "..."
@@ -336,7 +345,7 @@ class Calibration_Page( Page ):
         gain_list = active_sensor.gain_list
         integration_time_ms_list = active_sensor.integration_time_ms_list
 
-        starting_gain_value = 16
+        starting_gain_value = 1
         starting_integration_value_ms = 100
 
         gain_index = gain_list.index(starting_gain_value)
@@ -346,23 +355,23 @@ class Calibration_Page( Page ):
         intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
         integration_time_index = integration_time_ms_list.index(intg_value_ms)
         intg_value_ms = active_sensor.set_integration_time(integration_time_index)
-
+        self.update_values()
 
         temporary_data_list = active_sensor.read()
-        high_value = max(temporary_data_list)
+        self.high_value = self.get_high_value(temporary_data_list, include_all)
         #print(high_value, gain_value, intg_value_ms)
 
-        if high_value >= self.max_counts:
+        if self.high_value >= self.max_counts:
             saturated = True
             gain_index = 0
             integration_time_index = 0
             gain_value = active_sensor.set_gain(gain_index)
             intg_value_ms = active_sensor.set_integration_time(integration_time_index)
             temporary_data_list = active_sensor.read()
-            high_value = max(temporary_data_list)
-            #self.update_values()
-
-        if high_value < 1000:
+            self.high_value = self.get_high_value(temporary_data_list, include_all)
+            self.update_values()
+        print("after initial sat check",self.high_value)
+        if self.high_value < 1000:
             target_gain_value = gain_value*2
             gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
             gain_index = gain_list.index(gain_value)
@@ -374,14 +383,14 @@ class Calibration_Page( Page ):
             intg_value_ms = active_sensor.set_integration_time(integration_time_index)
 
             temporary_data_list = active_sensor.read()
-            high_value = max(temporary_data_list)
+            self.high_value = self.get_high_value(temporary_data_list, include_all)
 
-            #self.update_values()
+            self.update_values()
+        print("after low check",self.high_value)
         #print(high_value, gain_value, intg_value_ms)
-        if high_value < 1: high_value = 1
-        multiplier = self.exposure_target_fraction_high * self.max_counts/ high_value
-        #print(multiplier)
-
+        if self.high_value < 1: self.high_value = 1
+        multiplier = self.exposure_target_fraction_high * self.max_counts/ self.high_value
+        print("multiplier", multiplier)
         last_gain_value = gain_value
         target_gain_value = last_gain_value * multiplier/2
         gain_value = min(gain_list, key=lambda value:abs(value - target_gain_value))
@@ -389,38 +398,62 @@ class Calibration_Page( Page ):
         if gain_index >= len(gain_list)-1:
             maxed_out = True
             print("gain maxed out")
-
-        gain_value = active_sensor.set_gain(gain_index)
-
         last_intg_value_ms = intg_value_ms
         target_intg_value_ms = (last_intg_value_ms * multiplier) / (gain_value/last_gain_value)
         intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
         integration_time_index = integration_time_ms_list.index(intg_value_ms)
+
+        gain_value = active_sensor.set_gain(gain_index)
         intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+        predicted_high = self.high_value *gain_value/last_gain_value *intg_value_ms/last_intg_value_ms
+        print("predicted_high", predicted_high)
+
         temporary_data_list = active_sensor.read()
-        high_value = max(temporary_data_list)
-        while high_value >= self.max_counts:
+        self.high_value = self.get_high_value(temporary_data_list, include_all)
+        print("after adjust",self.high_value)
+        desat_cycles = 0
+        while self.high_value >= self.max_counts:
             print("desaturating")
             time.sleep(.1)
             integration_time_index += -1
+            if integration_time_index < 0 or desat_cycles>5:
+                integration_time_index = 0
+                gain_index += -1
+                gain_value = active_sensor.set_gain(gain_index)
+                print("drop gain, reset integration time high")
+                target_intg_value_ms = 1000
+                intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
+                integration_time_index = integration_time_ms_list.index(intg_value_ms)
+                desat_cycles = 0
             intg_value_ms = active_sensor.set_integration_time(integration_time_index)
             time.sleep(.1)
             temporary_data_list = active_sensor.read()
-            high_value = max(temporary_data_list)
+            self.high_value = self.get_high_value(temporary_data_list, include_all)
+            self.instrument.handle_inputs()
+            self.update_values()
+            desat_cycles +=1
 
         if integration_time_index >= len(integration_time_ms_list)-1:
             maxed_out = True
             print( "integration time maxed out")
         #print(high_value, gain_value, intg_value_ms)
-        if False:
-            temporary_data_list = active_sensor.read()
-            high_value = max(temporary_data_list)
-            print(high_value)
         self.update_values()
         return gain_value, intg_value_ms
 
 
-
+    def get_high_value( self, data_list, include_all ):
+        #print(data_list)
+        #print(max(data_list))
+        if include_all:
+            high_value = max(data_list)
+        else:
+            for index in self.exclusion_indicies:
+                del data_list[index]
+            #print(data_list)
+            high_value = max(data_list)
+            #print(max(data_list))
+        #self.stall()
+        return high_value
 
 
     def measure(self):

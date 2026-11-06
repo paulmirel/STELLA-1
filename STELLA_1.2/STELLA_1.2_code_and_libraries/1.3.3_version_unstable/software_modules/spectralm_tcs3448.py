@@ -88,9 +88,11 @@ class tcs3448_Spectrometer( Device ):
             super().__init__(name = "tcs3448_spectrometer", pn = "tcs3448", address = 0x39, swob = TCS3448( alt_bus ))
         self.instrument = instrument
         self.choice_label = "tcs3448 VIS"
-        self.wavelength_bands_nm = 407, 424, 450, 473, 516, 560, 546, 596, 636, 687, 748, 855
-        self.band_designations = "F1", "F2", "FZ", "F3", "F4", "FY", "F5","FXL", "F6", "F7", "F8", "NIR"
-        self.bandwidths_nm = 28, 29, 67, 38, 48, 123, 44, 93, 58, 63, 77, 61
+        self.wavelength_bands_nm =                 407, 424, 450, 473, 516, 546, 560, 596, 636, 687, 748, 855
+        self.bandwidths_nm =                       28,   29, 67,  38,   48,  44, 123,  93,  58,  63, 77,   61
+        self.band_designations =                  "F1","F2","FZ","F3","F4","F5","FY", "FXL","F6","F7","F8","NIR"
+        self.band_designations_in_readout_order = "FZ","FY","FXL","NIR","F2","F3","F4","F6","F1","F7","F8","F5"
+
         self.chip_number = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
         self.dict_chip_number = {key:value for key, value in zip(self.wavelength_bands_nm, self.chip_number )}
         self.dict_bandwidths = {key:value for key, value in zip(self.wavelength_bands_nm, self.bandwidths_nm )}
@@ -121,10 +123,22 @@ class tcs3448_Spectrometer( Device ):
     def read(self):
         try:
             self.raw = self.swob.all_channels
-            #print(self.raw)
+            #print("self.raw",self.raw)
             self.data_counts = []
             for index in range(0,len(self.raw)):
-                self.data_counts.append(self.raw[index])
+                if index == 4 or index == 5 or index == 10 or index == 11 or index == 16 or index == 17: #remove the data from the clear channels
+                    pass
+                else:
+                    self.data_counts.append(self.raw[index])
+            keys = self.band_designations_in_readout_order
+            values = self.data_counts
+            dictionary = {k: v for k, v in zip(keys, values)}
+            #print("self.data_counts",self.data_counts)
+            self.data_counts = []
+            for item in self.band_designations:
+                self.data_counts.append(dictionary.get(item))
+            #print("channel wavelengths in nm order",self.wavelength_bands_nm)
+            #print("data_counts in wavelength order",self.data_counts)
             return self.data_counts
         except Exception as err:
             print(err)

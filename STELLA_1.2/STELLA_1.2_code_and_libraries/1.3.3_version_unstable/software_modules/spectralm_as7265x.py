@@ -111,23 +111,26 @@ class as7265x_Spectrometer( Device ):
         self.min_counts = 0
         self.gain_list = [ 1, 3.7, 16, 64 ]
         self.gain_index = 3
+        if False:
+            self.integration_time_ms_step = 2.78
+            self.integration_time_index_maximum = 256
+            self.integration_time_ms_maximum = self.integration_time_ms_step * self.integration_time_index_maximum
+            self.integration_time_number_of_choices = 32
+            self.integration_time_index_per_choice = self.integration_time_index_maximum/ self.integration_time_number_of_choices
+            self.integration_time_ms_list = []
+            self.integration_time_index = 15#int( self.integration_time_number_of_choices / 2)
+            self.integration_time_ms_list.append( 4 )
+            for index in range( 0, self.integration_time_number_of_choices + 1 ):
+                integration_time_ms = ((index+1) * self.integration_time_index_per_choice * self.integration_time_ms_step)
+                if integration_time_ms < 100:
+                    integration_time_ms = round(integration_time_ms, 1)
+                else:
+                    integration_time_ms = int( integration_time_ms)
+                self.integration_time_ms_list.append( integration_time_ms )
 
-        self.integration_time_ms_step = 2.78
-        self.integration_time_index_maximum = 256
-        self.integration_time_ms_maximum = self.integration_time_ms_step * self.integration_time_index_maximum
-        self.integration_time_number_of_choices = 16
-        self.integration_time_index_per_choice = self.integration_time_index_maximum/ self.integration_time_number_of_choices
-        self.integration_time_ms_list = []
-        self.integration_time_index = 15#int( self.integration_time_number_of_choices / 2)
-        self.integration_time_ms_list.append( self.integration_time_ms_step )
-        for index in range( 1, self.integration_time_number_of_choices + 1 ):
-            integration_time_ms = ((index) * self.integration_time_index_per_choice * self.integration_time_ms_step)
-            if integration_time_ms < 100:
-                integration_time_ms = round(integration_time_ms, 1)
-            else:
-                integration_time_ms = int( integration_time_ms)
-            self.integration_time_ms_list.append( integration_time_ms )
-
+        self.integration_time_index = 11
+        self.integration_time_ms_list = [4,10,20,30,40,50,60,70,80,90,100,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,711]
+        self.integration_time_number_of_choices = len(self.integration_time_ms_list)
         if self.swob:
             self.swob.indicator_led = True #needed to establish control
             self.swob.indicator_led = False
@@ -145,6 +148,9 @@ class as7265x_Spectrometer( Device ):
             self.set_lamp_current_mA(1,2)
 
         self.chip_temperatures = [ 0,0,0 ]
+        self.swob.conversion_mode=3 #ONE_SHOT
+        #print("conversion mode =", self.swob.conversion_mode)
+
 
     def make_spectral_channels( self ):
         index = 0
@@ -176,6 +182,8 @@ class as7265x_Spectrometer( Device ):
         else:
             self.integration_time_index = index
             integration_time_ms = self.integration_time_ms_list[ index ]
+        if integration_time_ms < 4: integration_time_ms = 4
+        if integration_time_ms >711: integration_time_ms = 711
         try:
             self.swob.integration_time = integration_time_ms
             return self.swob.integration_time
@@ -266,6 +274,21 @@ class as7265x_Spectrometer( Device ):
             return False
 
     def read( self ):
+        #print("start measurement")
+        start = time.monotonic()
+        self.swob.start_measurement()
+        now = time.monotonic()
+        data_ready = False
+        #print(now-start, data_ready)
+        #print("waiting for data ready")
+        data_ready = False
+        timeout = 2
+        while not data_ready and now < start + timeout:
+            #print(".", end = [])
+            now = time.monotonic()
+            data_ready = self.swob.data_ready
+            #print(now-start, data_ready)
+            time.sleep(0.1)
         temporary_data_counts = []
         for index in range( 0, self.number_of_channels):
             temporary_data_counts.append(self.read_counts_by_index( index ))
