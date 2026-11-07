@@ -22,7 +22,7 @@ from software_modules import spectralm_tcs3448
 import adafruit_ds3231
 from adafruit_pca9685 import PCA9685
 
-filter_wheel_F = 0 #1
+filter_wheel_F = 1
 
 class Calibration_Page( Page ):
     def __init__( self, instrument, onboard_neopixel ):
@@ -543,7 +543,7 @@ class Calibration_Page( Page ):
                 self.text_areas[9].text = "{}".format(self.spectral_sensors[self.sensor_wheel_position].read_gain())
                 intg_ms = self.spectral_sensors[self.sensor_wheel_position].read_integration_time_ms()
                 if intg_ms <1000:
-                    self.text_areas[10].text = "{}ms".format(intg_ms)
+                    self.text_areas[10].text = "{}ms".format(int(intg_ms))
                 else:
                     self.text_areas[10].text = "{}s".format(round(intg_ms/1000),1)
                 self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
@@ -1007,7 +1007,7 @@ class Calibration_Page( Page ):
             self.plot_points[index].color_index = 0#color_index_list[index]
             x_value_group = displayio.Group(scale=1, x=self.plot_xpix[index]-8, y=self.ybottom_pix+14)
             x_value_area = label.Label(terminalio.FONT, text="{}".format(plot_xvalues[index]), color=self.palette[0])
-            if (index < 1) or (index >= int(len(self.plot_points)/2)):
+            if (index < 1) or (index%4==0):
                 x_value_group.append(x_value_area)
                 self.graph_group.append(x_value_group)
 

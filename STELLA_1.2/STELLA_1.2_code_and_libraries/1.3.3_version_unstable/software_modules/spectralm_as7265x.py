@@ -4,7 +4,8 @@ DEVICE_TYPE = "as7265x_spectral_sensor"
 # Author Paul Mirel
 
 import time
-from sparkfun_triad import AS7265x_I2C
+import AS7265X_sparkfun
+from AS7265X_sparkfun import AS7265X
 from .classm_device import Device
 
 def initialize_as7265x_spectrometer( instrument, alt_bus=None ):
@@ -86,9 +87,9 @@ class Spectral_Channel( Device ):
 class as7265x_Spectrometer( Device ):
     def __init__( self, instrument, alt_bus=None ):
         if alt_bus is None:
-            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = AS7265x_I2C(instrument.i2c_bus))
+            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = AS7265X(instrument.i2c_bus))
         else:
-            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = AS7265x_I2C(alt_bus))
+            super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = AS7265X(alt_bus))
         self.choice_label = "as7256x V+NIR"
         self.instrument = instrument
 
@@ -134,11 +135,13 @@ class as7265x_Spectrometer( Device ):
 
         self.integration_time_index = 11
         self.integration_time_ms_list = [4,10,20,30,40,50,60,70,80,90,100,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,711]
+        self.integration_time_settings_list = []
+        for time_ms in self.integration_time_ms_list:
+            self.integration_time_settings_list.append(int(time_ms/2.78))
         self.integration_time_number_of_choices = len(self.integration_time_ms_list)
         if self.swob:
-            self.swob.indicator_led = True #needed to establish control
-            self.swob.indicator_led = False
-            self.swob.conversion_mode = 3 #"ONE_SHOT" #2 CONTINUOUS ALL
+            self.swob.disable_indicator()
+            self.swob.set_measurement_mode(3) #"ONE_SHOT" #2 CONTINUOUS ALL
             #print("conversion mode =", self.swob.conversion_mode)
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
@@ -157,7 +160,7 @@ class as7265x_Spectrometer( Device ):
     def read( self ):
         #print("start measurement")
         start = time.monotonic()
-        self.swob.start_measurement()
+        self.swob.take_measurements()
         now = time.monotonic()
         data_ready = False
         #print(now-start, data_ready)
@@ -167,41 +170,83 @@ class as7265x_Spectrometer( Device ):
         while not data_ready and now < start + timeout:
             #print(".", end = "")
             now = time.monotonic()
-            data_ready = self.swob.data_ready
+            data_ready = self.swob.data_available()
             #print(now-start, data_ready)
             time.sleep(0.1)
         #print()
         for key in self.wavelength_bands_nm:
             entry = self.dictionary.get(key)
-            #print(key,entry)
-            device = entry[0]-1
-            self.swob.device = device
-            time.sleep(0.01)
-            channel = entry[1]
-            counts = entry[2]
-            if channel == 0:
-                counts = self.swob.raw_channel0
-            elif channel == 1:
-                counts = self.swob.raw_channel1
-            elif channel == 2:
-                counts = self.swob.raw_channel2
-            elif channel == 3:
-                counts = self.swob.raw_channel3
-            elif channel == 4:
-                counts = self.swob.raw_channel4
-            elif channel == 5:
-                counts = self.swob.raw_channel5
-            else:
-                counts = 0
+            counts = 0
+            calibrated = 0
+            channel = entry[6]
+            if channel == "A":
+                counts = self.swob.get_A()
+                calibrated = self.swob.get_calibrated_A()
+            if channel == "B":
+                counts = self.swob.get_B()
+                calibrated = self.swob.get_calibrated_B()
+            if channel == "C":
+                counts = self.swob.get_C()
+                calibrated = self.swob.get_calibrated_C()
+            if channel == "D":
+                counts = self.swob.get_D()
+                calibrated = self.swob.get_calibrated_D()
+            if channel == "E":
+                counts = self.swob.get_E()
+                calibrated = self.swob.get_calibrated_E()
+            if channel == "F":
+                counts = self.swob.get_F()
+                calibrated = self.swob.get_calibrated_F()
+            if channel == "G":
+                counts = self.swob.get_G()
+                calibrated = self.swob.get_calibrated_G()
+            if channel == "H":
+                counts = self.swob.get_H()
+                calibrated = self.swob.get_calibrated_H()
+            if channel == "i":
+                counts = self.swob.get_I()
+                calibrated = self.swob.get_calibrated_I()
+            if channel == "J":
+                counts = self.swob.get_J()
+                calibrated = self.swob.get_calibrated_J()
+            if channel == "K":
+                counts = self.swob.get_K()
+                calibrated = self.swob.get_calibrated_K()
+            if channel == "L":
+                counts = self.swob.get_L()
+                calibrated = self.swob.get_calibrated_L()
+            if channel == "R":
+                counts = self.swob.get_R()
+                calibrated = self.swob.get_calibrated_R()
+            if channel == "S":
+                counts = self.swob.get_S()
+                calibrated = self.swob.get_calibrated_S()
+            if channel == "T":
+                counts = self.swob.get_T()
+                calibrated = self.swob.get_calibrated_T()
+            if channel == "U":
+                counts = self.swob.get_U()
+                calibrated = self.swob.get_calibrated_U()
+            if channel == "V":
+                counts = self.swob.get_V()
+                calibrated = self.swob.get_calibrated_V()
+            if channel == "W":
+                counts = self.swob.get_W()
+                calibrated = self.swob.get_calibrated_W()
             entry[2] = counts
+            entry[3] = calibrated
             self.dictionary[key] = entry
             entry_check = self.dictionary.get(key)
             #print("key",key," device", device, " channel", channel," counts", entry_check[2], " entry_check", entry_check)
 
         temporary_data_counts = []
+        temporary_data_calibrated = []
         for wavelength in self.wavelength_bands_nm:
             entry = self.dictionary[wavelength]
             temporary_data_counts.append(entry[2]) #look up the count values in the dictionary
+            temporary_data_calibrated.append(entry[3])
+        print(temporary_data_counts )
+        print(temporary_data_calibrated )
         return temporary_data_counts
 
     def make_spectral_channels( self ):
@@ -218,31 +263,28 @@ class as7265x_Spectrometer( Device ):
             self.gain_index = index
             new_gain = self.gain_list[ index ]
         try:
-            self.swob.gain = new_gain
+            self.swob.set_gain(self.gain_index)
         except Exception as err:
             print( "failed to set gain: ", err )
             return False
-        return self.swob.gain
+        return self.gain_list[ self.gain_index ]
 
     def read_gain(self):
-        return self.swob.gain
+        return self.gain_list[ self.gain_index ]
 
     def set_integration_time( self, index = None ):
         if index is None:
-            integration_time_ms = self.integration_time_ms_list[self.integration_time_index]
+            pass
         else:
             self.integration_time_index = index
-            integration_time_ms = self.integration_time_ms_list[ index ]
-        if integration_time_ms < 4: integration_time_ms = 4
-        if integration_time_ms >711: integration_time_ms = 711
         try:
-            self.swob.integration_time = integration_time_ms
+            self.swob.set_integration_cycles(self.integration_time_settings_list[self.integration_time_index])
         except Exception as err:
             print( "as7265x set integration time failed: ", err )
-        return self.swob.integration_time
+        return 2.78 * self.integration_time_settings_list[self.integration_time_index]
 
     def read_integration_time_ms(self):
-        return self.swob.integration_time
+        return 2.78 * self.integration_time_settings_list[self.integration_time_index]
 
 
 
@@ -297,12 +339,11 @@ class as7265x_Spectrometer( Device ):
             self.lamp_off(chip)
 
     def lamp_on( self, chip_index ):
-        self.swob.device = chip_index
-        self.swob.driver_led = True
+        self.swob.enable_bulb(chip_index)
 
     def lamp_off( self, chip_index ):
-        self.swob.device = chip_index
-        self.swob.driver_led = False
+        self.swob.disable_bulb(chip_index)
+
 
     def set_lamp_current_mA( self, current_index, chip_index ):
         #print ("chip_index", chip_index, "current_index", current_index, "current mA", self.lamp_current_mA_list[chip_index][ current_index ])
