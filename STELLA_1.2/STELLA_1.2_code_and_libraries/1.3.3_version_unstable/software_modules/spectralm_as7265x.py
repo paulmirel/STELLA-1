@@ -245,8 +245,8 @@ class as7265x_Spectrometer( Device ):
             entry = self.dictionary[wavelength]
             temporary_data_counts.append(entry[2]) #look up the count values in the dictionary
             temporary_data_calibrated.append(entry[3])
-        print(temporary_data_counts )
-        print(temporary_data_calibrated )
+        #print(temporary_data_counts )
+        #print(temporary_data_calibrated )
         return temporary_data_counts
 
     def make_spectral_channels( self ):
