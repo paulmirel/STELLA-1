@@ -1007,7 +1007,7 @@ class Calibration_Page( Page ):
             self.plot_points[index].color_index = 0#color_index_list[index]
             x_value_group = displayio.Group(scale=1, x=self.plot_xpix[index]-8, y=self.ybottom_pix+14)
             x_value_area = label.Label(terminalio.FONT, text="{}".format(plot_xvalues[index]), color=self.palette[0])
-            if (index < 1) or (index%4==0):
+            if (index < 1) or (index%3==0):
                 x_value_group.append(x_value_area)
                 self.graph_group.append(x_value_group)
 
@@ -1043,7 +1043,7 @@ class Calibration_Page( Page ):
         plot_yvalues = self.plot_register
         plot_ymax = max(plot_yvalues)
         dr=int(100*plot_ymax/65535)
-        plot_ymin = min(plot_yvalues)
+        plot_ymin = 0 #min(plot_yvalues)
         plot_yspan = plot_ymax - plot_ymin
         #print("ymax:",plot_ymax," ymin:", plot_ymin, " yspan:",plot_yspan)
         if dr >99:

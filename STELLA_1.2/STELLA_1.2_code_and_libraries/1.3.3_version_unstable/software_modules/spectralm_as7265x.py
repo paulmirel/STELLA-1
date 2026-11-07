@@ -16,7 +16,7 @@ def initialize_as7265x_spectrometer( instrument, alt_bus=None ):
         instrument.spectral_sensors_present.append( as7265x_spectrometer )
     except Exception as err:
         pass
-        print( "as7265x spectrometer failed: {}".format( err ))
+        #print( "as7265x spectrometer failed: {}".format( err ))
     return as7265x_spectrometer
 
 
