@@ -94,39 +94,43 @@ class as7265x_Spectrometer( Device ):
             super().__init__(name = "spectral", pn = "as7265x", address = 0x49, swob = AS7265x_I2C(alt_bus))
         self.choice_label = "as7256x V+NIR"
         self.instrument = instrument
-        #self.wavelength_bands_nm = [(610, 680, 730, 760, 810, 860), (560, 585, 645, 705, 900, 940), (410, 435, 460, 485, 510, 535)]
-        self.band_designations = [("R", "S", "T", "U", "V", "W"), ("G", "H", "I", "J", "K", "L"), ("A", "B", "C", "D", "E", "F" )]
+
+        # dictionary data from datasheet. key is wavelength, entry is: (chip_number, channel_number, raw_value, calibrated_value, temperature, bandwidth, designation)
+        self.dictionary = {}
+        self.dictionary[410] = (3,0,0,0,0,20,"A")
+        self.dictionary[435] = (3,1,0,0,0,20,"B")
+        self.dictionary[460] = (3,2,0,0,0,20,"C")
+        self.dictionary[485] = (3,3,0,0,0,20,"D")
+        self.dictionary[510] = (3,4,0,0,0,20,"E")
+        self.dictionary[535] = (3,5,0,0,0,20,"F")
+        self.dictionary[560] = (2,0,0,0,0,20,"G")
+        self.dictionary[585] = (2,1,0,0,0,20,"H")
+        self.dictionary[610] = (1,0,0,0,0,20,"R")
+        self.dictionary[645] = (2,2,0,0,0,20,"i")
+        self.dictionary[680] = (1,1,0,0,0,20,"S")
+        self.dictionary[705] = (2,3,0,0,0,20,"J")
+        self.dictionary[730] = (1,2,0,0,0,20,"T")
+        self.dictionary[760] = (1,3,0,0,0,20,"U")
+        self.dictionary[810] = (1,4,0,0,0,20,"V")
+        self.dictionary[860] = (1,5,0,0,0,20,"W")
+        self.dictionary[900] = (2,4,0,0,0,20,"K")
+        self.dictionary[940] = (2,5,0,0,0,20,"L")
+
         self.bandwidths_nm = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
         self.wavelength_bands_nm = 410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 940
         self.number_of_channels = len( self.wavelength_bands_nm )
         self.band_designations_in_wavelength_order = "A","B","C","D","E","F","G","H","R","I","S","J","T","U","V","W","K","L"
         self.chip_number_in_wavelength_order = [2,2,2,2,2,2,1,1,0,1,0,1,0,0,0,0,1,1]
+
         self.data_counts = []
         self.data_calibrated = []
         for index in range( 0, self.number_of_channels+1):
             self.data_counts.append(0)
             self.data_calibrated.append(0)
-
         self.max_counts = 0
         self.min_counts = 0
         self.gain_list = [ 1, 3.7, 16, 64 ]
         self.gain_index = 3
-        if False:
-            self.integration_time_ms_step = 2.78
-            self.integration_time_index_maximum = 256
-            self.integration_time_ms_maximum = self.integration_time_ms_step * self.integration_time_index_maximum
-            self.integration_time_number_of_choices = 32
-            self.integration_time_index_per_choice = self.integration_time_index_maximum/ self.integration_time_number_of_choices
-            self.integration_time_ms_list = []
-            self.integration_time_index = 15#int( self.integration_time_number_of_choices / 2)
-            self.integration_time_ms_list.append( 4 )
-            for index in range( 0, self.integration_time_number_of_choices + 1 ):
-                integration_time_ms = ((index+1) * self.integration_time_index_per_choice * self.integration_time_ms_step)
-                if integration_time_ms < 100:
-                    integration_time_ms = round(integration_time_ms, 1)
-                else:
-                    integration_time_ms = int( integration_time_ms)
-                self.integration_time_ms_list.append( integration_time_ms )
 
         self.integration_time_index = 11
         self.integration_time_ms_list = [4,10,20,30,40,50,60,70,80,90,100,120,130,140,150,160,170,180,200,250,300,350,400,450,500,550,600,650,700,711]
@@ -134,7 +138,8 @@ class as7265x_Spectrometer( Device ):
         if self.swob:
             self.swob.indicator_led = True #needed to establish control
             self.swob.indicator_led = False
-            self.swob.conversion_mode = AS7265x_I2C.MODE_2
+            self.swob.conversion_mode = 3 #"ONE_SHOT" #2 CONTINUOUS ALL
+            #print("conversion mode =", self.swob.conversion_mode)
             self.set_gain( self.gain_index )
             self.set_integration_time( self.integration_time_index )
         self.uncertainty_percent = 12
@@ -148,9 +153,62 @@ class as7265x_Spectrometer( Device ):
             self.set_lamp_current_mA(1,2)
 
         self.chip_temperatures = [ 0,0,0 ]
-        self.swob.conversion_mode=3 #ONE_SHOT
-        #print("conversion mode =", self.swob.conversion_mode)
 
+        self.read()
+
+    def read( self ):
+        #print("start measurement")
+        start = time.monotonic()
+        self.swob.start_measurement()
+        now = time.monotonic()
+        data_ready = False
+        #print(now-start, data_ready)
+        #print("waiting for data ready")
+        data_ready = False
+        timeout = 2
+        while not data_ready and now < start + timeout:
+            #print(".", end = "")
+            now = time.monotonic()
+            data_ready = self.swob.data_ready
+            #print(now-start, data_ready)
+            time.sleep(0.1)
+        #print()
+        for key in self.wavelength_bands_nm:
+            entry = self.dictionary.get(key)
+            #print(key,entry)
+            device = entry[0]-1
+            self.swob.device = device
+            time.sleep(0.01)
+            channel = entry[1]
+            counts = entry[2]
+            print("key",key," device", device, " channel", channel," counts", counts)
+            counts = 0
+            if channel == 0:
+                counts = self.swob.raw_channel0
+            elif channel == 1:
+                counts = self.swob.raw_channel1
+            elif channel == 2:
+                counts = self.swob.raw_channel2
+            elif channel == 3:
+                counts = self.swob.raw_channel3
+            elif channel == 4:
+                counts = self.swob.raw_channel4
+            elif channel == 5:
+                counts = self.swob.raw_channel5
+            else:
+                pass
+            if False:
+                entry[2] = counts
+                print("key",key," device", device, " channel", channel," counts", counts, " entry", entry)
+
+                self.dictionary[key] = entry
+                entry = self.dictionary.get(key)
+                print("key",key," device", device, " channel", channel," counts", entry[2], " entry", entry)
+
+        temporary_data_counts = []
+        for wavelength in self.wavelength_bands_nm:
+            temporary_data_counts.append(wavelength) #look up the count values in the dictionary
+        return temporary_data_counts
 
     def make_spectral_channels( self ):
         index = 0
@@ -193,108 +251,7 @@ class as7265x_Spectrometer( Device ):
     def read_integration_time_ms(self):
         return self.swob.integration_time
 
-    def acquire_measurement( self ):
-        self.swob.take_measurements()
 
-
-    def read_counts_by_wavelength( self, wavelength ):
-        index = self.wavelength_bands_nm.index(wavelength)
-        return self.read_counts_by_index( index )
-
-
-    def read_counts_by_index( self, index ):
-        counts = 0
-        if False:
-            try:
-                if index in [0,1,2,3,4,5]:
-                    self.swob.device = 2
-                    if index == 0: counts = self.swob.raw_channel0
-                    if index == 1: counts = self.swob.raw_channel1
-                    if index == 2: counts = self.swob.raw_channel2
-                    if index == 3: counts = self.swob.raw_channel3
-                    if index == 4: counts = self.swob.raw_channel4
-                    if index == 5: counts = self.swob.raw_channel5
-                elif index in [6,7,9,11,16,17]:
-                    self.swob.device = 1
-                    if index == 6: counts = self.swob.raw_channel0
-                    if index == 7: counts = self.swob.raw_channel1
-                    if index == 9: counts = self.swob.raw_channel2
-                    if index == 11: counts = self.swob.raw_channel3
-                    if index == 16: counts = self.swob.raw_channel4
-                    if index == 17: counts = self.swob.raw_channel5
-                elif index in [8,10,12,13,14,15]:
-                    self.swob.device = 0
-                    if index == 8: counts = self.swob.raw_channel0
-                    if index == 10: counts = self.swob.raw_channel1
-                    if index == 12: counts = self.swob.raw_channel2
-                    if index == 13: counts = self.swob.raw_channel3
-                    if index == 14: counts = self.swob.raw_channel4
-                    if index == 15: counts = self.swob.raw_channel5
-            self.data_counts[index] = 0 #counts
-            return counts
-        except Exception as err:
-            print( "read channel counts failed: ", err )
-            return False
-
-    def read_calibrated_by_index( self, index ):
-        value = 0
-        pass
-        if False: #TBD Not tested
-            try:
-                if index in [0,1,2,3,4,5]:
-                    self.swob.device = 2
-                    if index == 0: value = self.swob.channel0
-                    if index == 1: value = self.swob.channel1
-                    if index == 2: value = self.swob.channel2
-                    if index == 3: value = self.swob.channel3
-                    if index == 4: value = self.swob.channel4
-                    if index == 5: value = self.swob.channel5
-                elif index in [6,7,9,11,16,17]:
-                    self.swob.device = 1
-                    if index == 6: value = self.swob.channel0
-                    if index == 7: value = self.swob.channel1
-                    if index == 9: value = self.swob.channel2
-                    if index == 11: value = self.swob.channel3
-                    if index == 16: value = self.swob.channel4
-                    if index == 17: value = self.swob.channel5
-                elif index in [8,10,12,13,14,15]:
-                    self.swob.device = 0
-                    if index == 8: value = self.swob.channel0
-                    if index == 10: value = self.swob.channel1
-                    if index == 12: value = self.swob.channel2
-                    if index == 13: value = self.swob.channel3
-                    if index == 14: value = self.swob.channel4
-                    if index == 15: value = self.swob.channel5
-                cal_uW_per_cm2 = value
-                uW_per_W = 1000000
-                cm2_per_m2 = 10000
-                si_cal_W_per_m2 = round((cal_uW_per_cm2 * cm2_per_m2) / uW_per_W, 4)
-                self.data_calibrated[index] = si_cal_W_per_m2
-                return si_cal_W_per_m2
-            except Exception as err:
-                print( "read channel calibrated failed: ", err )
-                return False
-
-    def read( self ):
-        #print("start measurement")
-        start = time.monotonic()
-        self.swob.start_measurement()
-        now = time.monotonic()
-        data_ready = False
-        #print(now-start, data_ready)
-        #print("waiting for data ready")
-        data_ready = False
-        timeout = 2
-        while not data_ready and now < start + timeout:
-            #print(".", end = [])
-            now = time.monotonic()
-            data_ready = self.swob.data_ready
-            #print(now-start, data_ready)
-            time.sleep(0.1)
-        temporary_data_counts = []
-        for index in range( 0, self.number_of_channels):
-            temporary_data_counts.append(self.read_counts_by_index( index ))
-        return temporary_data_counts
 
     def report_counts_by_index( self, index ):
         pass

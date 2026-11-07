@@ -96,6 +96,7 @@ class Calibration_Page( Page ):
                         active_sensor.lamp_on(0)
                         time.sleep(0.5)
                         active_sensor.lamp_off(0)
+                self.stall()
             self.sensor_wheel_number = False
             if self.spectral_sensors[0].pn == "as7341":
                 self.sensor_wheel_number = 1
