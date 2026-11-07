@@ -13,12 +13,9 @@ def initialize_as7265x_spectrometer( instrument, alt_bus=None ):
         as7265x_spectrometer = as7265x_Spectrometer( instrument, alt_bus)
         instrument.welcome_page.announce( "initialize_as7265x_spectrometer" )
         instrument.spectral_sensors_present.append( as7265x_spectrometer )
-        #as7265x_spectrometer.all_lamps_on()
-        time.sleep(0.1)
-        #as7265x_spectrometer.all_lamps_off()
     except Exception as err:
         pass
-        #print( "as7265x spectrometer failed: {}".format( err ))
+        print( "as7265x spectrometer failed: {}".format( err ))
     return as7265x_spectrometer
 
 
@@ -97,27 +94,30 @@ class as7265x_Spectrometer( Device ):
 
         # dictionary data from datasheet. key is wavelength, entry is: (chip_number, channel_number, raw_value, calibrated_value, temperature, bandwidth, designation)
         self.dictionary = {}
-        self.dictionary[410] = (3,0,0,0,0,20,"A")
-        self.dictionary[435] = (3,1,0,0,0,20,"B")
-        self.dictionary[460] = (3,2,0,0,0,20,"C")
-        self.dictionary[485] = (3,3,0,0,0,20,"D")
-        self.dictionary[510] = (3,4,0,0,0,20,"E")
-        self.dictionary[535] = (3,5,0,0,0,20,"F")
-        self.dictionary[560] = (2,0,0,0,0,20,"G")
-        self.dictionary[585] = (2,1,0,0,0,20,"H")
-        self.dictionary[610] = (1,0,0,0,0,20,"R")
-        self.dictionary[645] = (2,2,0,0,0,20,"i")
-        self.dictionary[680] = (1,1,0,0,0,20,"S")
-        self.dictionary[705] = (2,3,0,0,0,20,"J")
-        self.dictionary[730] = (1,2,0,0,0,20,"T")
-        self.dictionary[760] = (1,3,0,0,0,20,"U")
-        self.dictionary[810] = (1,4,0,0,0,20,"V")
-        self.dictionary[860] = (1,5,0,0,0,20,"W")
-        self.dictionary[900] = (2,4,0,0,0,20,"K")
-        self.dictionary[940] = (2,5,0,0,0,20,"L")
+        self.dictionary[410] = [3,0,0,0,0,20,"A"]
+        self.dictionary[435] = [3,1,0,0,0,20,"B"]
+        self.dictionary[460] = [3,2,0,0,0,20,"C"]
+        self.dictionary[485] = [3,3,0,0,0,20,"D"]
+        self.dictionary[510] = [3,4,0,0,0,20,"E"]
+        self.dictionary[535] = [3,5,0,0,0,20,"F"]
+        self.dictionary[560] = [2,0,0,0,0,20,"G"]
+        self.dictionary[585] = [2,1,0,0,0,20,"H"]
+        self.dictionary[610] = [1,0,0,0,0,20,"R"]
+        self.dictionary[645] = [2,2,0,0,0,20,"i"]
+        self.dictionary[680] = [1,1,0,0,0,20,"S"]
+        self.dictionary[705] = [2,3,0,0,0,20,"J"]
+        self.dictionary[730] = [1,2,0,0,0,20,"T"]
+        self.dictionary[760] = [1,3,0,0,0,20,"U"]
+        self.dictionary[810] = [1,4,0,0,0,20,"V"]
+        self.dictionary[860] = [1,5,0,0,0,20,"W"]
+        self.dictionary[900] = [2,4,0,0,0,20,"K"]
+        self.dictionary[940] = [2,5,0,0,0,20,"L"]
 
+        wavelength_bands = [key for key in self.dictionary]
+        wavelength_bands.sort()
+        self.wavelength_bands_nm = wavelength_bands
         self.bandwidths_nm = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
-        self.wavelength_bands_nm = 410, 435, 460, 485, 510, 535, 560, 585, 610, 645, 680, 705, 730, 760, 810, 860, 900, 940
+
         self.number_of_channels = len( self.wavelength_bands_nm )
         self.band_designations_in_wavelength_order = "A","B","C","D","E","F","G","H","R","I","S","J","T","U","V","W","K","L"
         self.chip_number_in_wavelength_order = [2,2,2,2,2,2,1,1,0,1,0,1,0,0,0,0,1,1]
@@ -154,8 +154,6 @@ class as7265x_Spectrometer( Device ):
 
         self.chip_temperatures = [ 0,0,0 ]
 
-        self.read()
-
     def read( self ):
         #print("start measurement")
         start = time.monotonic()
@@ -181,8 +179,6 @@ class as7265x_Spectrometer( Device ):
             time.sleep(0.01)
             channel = entry[1]
             counts = entry[2]
-            print("key",key," device", device, " channel", channel," counts", counts)
-            counts = 0
             if channel == 0:
                 counts = self.swob.raw_channel0
             elif channel == 1:
@@ -196,18 +192,16 @@ class as7265x_Spectrometer( Device ):
             elif channel == 5:
                 counts = self.swob.raw_channel5
             else:
-                pass
-            if False:
-                entry[2] = counts
-                print("key",key," device", device, " channel", channel," counts", counts, " entry", entry)
-
-                self.dictionary[key] = entry
-                entry = self.dictionary.get(key)
-                print("key",key," device", device, " channel", channel," counts", entry[2], " entry", entry)
+                counts = 0
+            entry[2] = counts
+            self.dictionary[key] = entry
+            entry_check = self.dictionary.get(key)
+            #print("key",key," device", device, " channel", channel," counts", entry_check[2], " entry_check", entry_check)
 
         temporary_data_counts = []
         for wavelength in self.wavelength_bands_nm:
-            temporary_data_counts.append(wavelength) #look up the count values in the dictionary
+            entry = self.dictionary[wavelength]
+            temporary_data_counts.append(entry[2]) #look up the count values in the dictionary
         return temporary_data_counts
 
     def make_spectral_channels( self ):
