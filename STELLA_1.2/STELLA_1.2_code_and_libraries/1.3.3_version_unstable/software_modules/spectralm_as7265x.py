@@ -16,17 +16,19 @@ def initialize_as7265x_spectrometer( instrument, alt_bus=None ):
         instrument.spectral_sensors_present.append( as7265x_spectrometer )
     except Exception as err:
         pass
-        #print( "as7265x spectrometer failed: {}".format( err ))
+        print( "as7265x spectrometer failed: {}".format( err ))
     return as7265x_spectrometer
 
 
 def initialize_spectral_channel( name, sensor_unit, index ):
-    #try:
-    spectral_channel = Spectral_Channel( name, sensor_unit, index)
-    sensor_unit.instrument.welcome_page.announce( "initialize_spectral_channel {}".format( name ) )
-    sensor_unit.instrument.sensors_present.append( spectral_channel )
-    return spectral_channel
-
+    try:
+        spectral_channel = Spectral_Channel( name, sensor_unit, index)
+        sensor_unit.instrument.welcome_page.announce( "initialize_spectral_channel {}".format( name ) )
+        sensor_unit.instrument.sensors_present.append( spectral_channel )
+        return spectral_channel
+    except Exception as err:
+        pass
+        print( "as7265x channel failed: {}".format( err ))
 
 class Spectral_Channel( Device ):
     def __init__( self, name, sensor_unit, index ):
@@ -154,6 +156,8 @@ class as7265x_Spectrometer( Device ):
             self.set_lamp_current_mA(1,0)
             self.set_lamp_current_mA(1,1)
             self.set_lamp_current_mA(1,2)
+        for device in range (0,3):
+            self.swob.disable_bulb(device)
 
         self.chip_temperatures = [ 0,0,0 ]
 
@@ -241,9 +245,11 @@ class as7265x_Spectrometer( Device ):
 
         temporary_data_counts = []
         temporary_data_calibrated = []
+        self.data_counts = []
         for wavelength in self.wavelength_bands_nm:
             entry = self.dictionary[wavelength]
             temporary_data_counts.append(entry[2]) #look up the count values in the dictionary
+            self.data_counts.append(entry[2])
             temporary_data_calibrated.append(entry[3])
         #print(temporary_data_counts )
         #print(temporary_data_calibrated )
@@ -311,6 +317,11 @@ class as7265x_Spectrometer( Device ):
             self.swob.device = chip_number
             self.chip_temperatures.append( self.swob.temperature )
         return self.chip_temperatures
+
+    def read_chip_temperature_by_chip_number( self, chip_number ):
+        chip_temperature = 0
+        chip_temperature= self.swob.get_temperature(chip_number)
+        return chip_temperature
 
     def read_irradiances_all_channels( self ):
         pass
