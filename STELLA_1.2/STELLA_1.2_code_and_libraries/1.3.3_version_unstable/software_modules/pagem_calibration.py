@@ -44,6 +44,7 @@ class Calibration_Page( Page ):
         self.high_value = False
         self.exposure_quality = False
         self.exposure_target_fraction_high = 0.95
+        self.exposure_target_fraction_list = [0.95, 0.6]
         self.exposure_target_fraction_low = 0.5
         self.saturated = False
         self.status_index = 0
@@ -254,72 +255,75 @@ class Calibration_Page( Page ):
                             print("next filter")
                             self.text_areas[26].text = "nextF"
                             self.go_to_filter_position(position = filter_position)
-                            data_list = []
-                            data_list.append(active_sensor.wavelength_bands_nm)
-                            data_list.append(self.get_date_and_time())
-                            data_list.append(self.filter_wheel_number)
-                            data_list.append(self.sensor_wheel_number)
-                            data_list.append(active_sensor.pn)
-                            data_list.append(sensor_position)
-                            data_list.append(self.filter_wheel_position_labels[filter_position])
-                            data_list.append(self.filter_part_numbers[filter_position])
-                            data_list.append(self.filter_optical_values[filter_position])
-                            if self.auto_exposure:
-                                gain_in_use, intg_time_ms_in_use = self.autoset_exposure()
-                            data_list.append( gain_in_use )
-                            data_list.append( intg_time_ms_in_use )
-                            for cycle in range (0,3):
-                                self.mmt_number +=1
-                                data_list.append( self.mmt_number)
-                                print("measurement cycle", cycle)
-                                self.text_areas[26].text = "C{}".format(cycle)
-                                data_list.append( self.measure())
-                                self.instrument.handle_inputs()
-                                while self.pause:
+                            for fraction in self.exposure_target_fraction_list: ## experimental
+                                self.exposure_target_fraction_high = fraction ## experimental
+                                print( "exposure_target_fraction_high", self.exposure_target_fraction_high ) ## experimental
+                                data_list = []
+                                data_list.append(active_sensor.wavelength_bands_nm)
+                                data_list.append(self.get_date_and_time())
+                                data_list.append(self.filter_wheel_number)
+                                data_list.append(self.sensor_wheel_number)
+                                data_list.append(active_sensor.pn)
+                                data_list.append(sensor_position)
+                                data_list.append(self.filter_wheel_position_labels[filter_position])
+                                data_list.append(self.filter_part_numbers[filter_position])
+                                data_list.append(self.filter_optical_values[filter_position])
+                                if self.auto_exposure:
+                                    gain_in_use, intg_time_ms_in_use = self.autoset_exposure()
+                                data_list.append( gain_in_use )
+                                data_list.append( intg_time_ms_in_use )
+                                for cycle in range (0,3):
+                                    self.mmt_number +=1
+                                    data_list.append( self.mmt_number)
+                                    print("measurement cycle", cycle)
+                                    self.text_areas[26].text = "C{}".format(cycle)
+                                    data_list.append( self.measure())
                                     self.instrument.handle_inputs()
-                                    self.update_values()
-                                    time.sleep(0.1)
-                            self.plot()
-                            data_handles = [12,14,16]
-                            avg_values = []
-                            normalized_values_per_s = []
-                            normalized_values_per_s_nm = []
-                            for index in range (0, number_of_channels ):
-                                avg_values.append(0)
-                            for handle in data_handles:
+                                    while self.pause:
+                                        self.instrument.handle_inputs()
+                                        self.update_values()
+                                        time.sleep(0.1)
+                                self.plot()
+                                data_handles = [12,14,16]
+                                avg_values = []
+                                normalized_values_per_s = []
+                                normalized_values_per_s_nm = []
+                                for index in range (0, number_of_channels ):
+                                    avg_values.append(0)
+                                for handle in data_handles:
+                                    for index in range (0, number_of_channels):
+                                        avg_values[index] += data_list[handle][index]
                                 for index in range (0, number_of_channels):
-                                    avg_values[index] += data_list[handle][index]
-                            for index in range (0, number_of_channels):
-                                avg_values[index] = round(avg_values[index]/3,3)
-                                norm_per_s = round(1000*avg_values[index]/gain_in_use/intg_time_ms_in_use,3)
-                                normalized_values_per_s.append(norm_per_s)
-                                normalized_values_per_s_nm.append(round(norm_per_s/ bandwidths[index],5))
-                            data_list.append(avg_values)
-                            data_list.append(normalized_values_per_s)
-                            data_list.append(normalized_values_per_s_nm)
-                            #print( data_list )
-                            for index in range (0, number_of_channels):
-                                line = "{},".format(data_list[11]) #mmt_number
-                                line += "{},".format(data_list[1]) #date_time
-                                line += "{},".format(data_list[2]) #filter wheel
-                                line += "{},".format(data_list[3]) #sensor wheel
-                                line += "{},".format(data_list[4]) #sensor pn
-                                line += "{},".format(data_list[5]) #sensor position
-                                line += "{},".format(data_list[6]) #filter position
-                                line += "{},".format(data_list[7]) #filter pn
-                                line += "{},".format(data_list[8]) #filter value
-                                line += "{},".format(data_list[9]) #gain
-                                line += "{},".format(data_list[10]) #intg time ms
-                                line += "{},".format(data_list[0][index]) #channel WL nm
-                                line += "{},".format(bandwidths[index]) #channel BW nm
-                                line += "{},".format(data_list[data_handles[0]][index]) #C0
-                                line += "{},".format(data_list[data_handles[1]][index]) #C1
-                                line += "{},".format(data_list[data_handles[2]][index]) #C2
-                                line += "{},".format(data_list[17][index]) #averages
-                                line += "{},".format(data_list[18][index]) # norm per s
-                                line += "{}".format(data_list[19][index]) # norm per s nm
-                                print(line)
-                                self.write_line(line)
+                                    avg_values[index] = round(avg_values[index]/3,3)
+                                    norm_per_s = round(1000*avg_values[index]/gain_in_use/intg_time_ms_in_use,3)
+                                    normalized_values_per_s.append(norm_per_s)
+                                    normalized_values_per_s_nm.append(round(norm_per_s/ bandwidths[index],5))
+                                data_list.append(avg_values)
+                                data_list.append(normalized_values_per_s)
+                                data_list.append(normalized_values_per_s_nm)
+                                #print( data_list )
+                                for index in range (0, number_of_channels):
+                                    line = "{},".format(data_list[11]) #mmt_number
+                                    line += "{},".format(data_list[1]) #date_time
+                                    line += "{},".format(data_list[2]) #filter wheel
+                                    line += "{},".format(data_list[3]) #sensor wheel
+                                    line += "{},".format(data_list[4]) #sensor pn
+                                    line += "{},".format(data_list[5]) #sensor position
+                                    line += "{},".format(data_list[6]) #filter position
+                                    line += "{},".format(data_list[7]) #filter pn
+                                    line += "{},".format(data_list[8]) #filter value
+                                    line += "{},".format(data_list[9]) #gain
+                                    line += "{},".format(data_list[10]) #intg time ms
+                                    line += "{},".format(data_list[0][index]) #channel WL nm
+                                    line += "{},".format(bandwidths[index]) #channel BW nm
+                                    line += "{},".format(data_list[data_handles[0]][index]) #C0
+                                    line += "{},".format(data_list[data_handles[1]][index]) #C1
+                                    line += "{},".format(data_list[data_handles[2]][index]) #C2
+                                    line += "{},".format(data_list[17][index]) #averages
+                                    line += "{},".format(data_list[18][index]) # norm per s
+                                    line += "{}".format(data_list[19][index]) # norm per s nm
+                                    print(line)
+                                    self.write_line(line)
         self.measuring = False
         sequence_end = time.monotonic()
         print()
