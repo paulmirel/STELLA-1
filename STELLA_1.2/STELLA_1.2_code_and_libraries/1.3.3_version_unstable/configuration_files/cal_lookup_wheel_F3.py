@@ -5,7 +5,7 @@ magnetic_angle_offsets = [    -3,    -3,    -2,    0,    2,    3,    3,    4,   
 servo_position_values = [ 10032, 8992, 8064, 7072, 6176, 5280, 4352, 3520, 2560 ]
 filter_wheel_position_labels = ["3A","3B","3C","3D","3E","3F","3G","3H","3i"]
 
-part_numbers = ["empty", "TBD", "TBD", "TBD", "TBD", "TBD", "TBD", "TBD", "TBD"]
+part_numbers = ["empty", "15454", "15222", "15455", "15223", "15224", "15225", "15226", "15227"]
 
 manufacturer = [ "empty","Edmund","Edmund","Edmund","Edmund","Edmund","Edmund","Edmund","Edmund"]
 
