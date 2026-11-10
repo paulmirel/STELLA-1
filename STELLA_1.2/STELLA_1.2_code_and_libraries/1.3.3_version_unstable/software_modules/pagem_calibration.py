@@ -22,7 +22,7 @@ from software_modules import spectralm_tcs3448
 import adafruit_ds3231
 from adafruit_pca9685 import PCA9685
 
-filter_wheel_F = 0#1
+filter_wheel_F = 1
 
 class Calibration_Page( Page ):
     def __init__( self, instrument, onboard_neopixel ):
