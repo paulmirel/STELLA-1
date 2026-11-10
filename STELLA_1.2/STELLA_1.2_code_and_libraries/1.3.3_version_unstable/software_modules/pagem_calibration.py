@@ -22,7 +22,7 @@ from software_modules import spectralm_tcs3448
 import adafruit_ds3231
 from adafruit_pca9685 import PCA9685
 
-filter_wheel_F = 1
+filter_wheel_F = 0#1
 
 class Calibration_Page( Page ):
     def __init__( self, instrument, onboard_neopixel ):
@@ -985,37 +985,38 @@ class Calibration_Page( Page ):
         self.x_axis = vectorio.Rectangle(pixel_shader=self.palette, color_index=9, width=xright_pix-xleft_pix, height=x_axis_pix, x=xleft_pix, y=self.ybottom_pix-int(x_axis_pix/2))
         self.graph_group.append(self.x_axis)
 
-        plot_xvalues = self.spectral_sensors[0].wavelength_bands_nm
-        plot_xmax = max(plot_xvalues)
-        plot_xmin = min(plot_xvalues)
-        plot_xspan = plot_xmax - plot_xmin
-        self.plot_xpix = []
+        if not self.external_sensor_mode:
+            plot_xvalues = self.spectral_sensors[0].wavelength_bands_nm
+            plot_xmax = max(plot_xvalues)
+            plot_xmin = min(plot_xvalues)
+            plot_xspan = plot_xmax - plot_xmin
+            self.plot_xpix = []
 
-        for xvalue in plot_xvalues:
-            self.plot_xpix.append(int((xspan_pix*(xvalue-plot_xmin)/plot_xspan)+xleft_pix))
-        #print(plot_xpix)
-        self.shading_points = []
-        for xpix in self.plot_xpix:
-            self.shading_points.append((xpix, 0))
+            for xvalue in plot_xvalues:
+                self.plot_xpix.append(int((xspan_pix*(xvalue-plot_xmin)/plot_xspan)+xleft_pix))
+            #print(plot_xpix)
+            self.shading_points = []
+            for xpix in self.plot_xpix:
+                self.shading_points.append((xpix, 0))
 
-        self.shading = vectorio.Polygon(pixel_shader=self.palette, color_index=8,points=self.shading_points)
-        self.graph_group.append(self.shading)
+            self.shading = vectorio.Polygon(pixel_shader=self.palette, color_index=8,points=self.shading_points)
+            self.graph_group.append(self.shading)
 
-        self.plot_points=[]
-        for xpix in self.plot_xpix:
-            circle = vectorio.Circle(pixel_shader=self.palette, color_index=9, radius = point_radius, x=xpix, y=self.ybottom_pix)
-            self.plot_points.append(circle)
-            self.graph_group.append(circle)
-        color_index_list = [25,26,28,29,31,32,33,35]
-        for index in range( 0, len(self.plot_points)):
-            self.plot_points[index].color_index = 0#color_index_list[index]
-            x_value_group = displayio.Group(scale=1, x=self.plot_xpix[index]-8, y=self.ybottom_pix+14)
-            x_value_area = label.Label(terminalio.FONT, text="{}".format(plot_xvalues[index]), color=self.palette[0])
-            if (index < 1) or (index%3==0):
-                x_value_group.append(x_value_area)
-                self.graph_group.append(x_value_group)
+            self.plot_points=[]
+            for xpix in self.plot_xpix:
+                circle = vectorio.Circle(pixel_shader=self.palette, color_index=9, radius = point_radius, x=xpix, y=self.ybottom_pix)
+                self.plot_points.append(circle)
+                self.graph_group.append(circle)
+            color_index_list = [25,26,28,29,31,32,33,35]
+            for index in range( 0, len(self.plot_points)):
+                self.plot_points[index].color_index = 0#color_index_list[index]
+                x_value_group = displayio.Group(scale=1, x=self.plot_xpix[index]-8, y=self.ybottom_pix+14)
+                x_value_area = label.Label(terminalio.FONT, text="{}".format(plot_xvalues[index]), color=self.palette[0])
+                if (index < 1) or (index%3==0):
+                    x_value_group.append(x_value_area)
+                    self.graph_group.append(x_value_group)
 
-        self.group.append(self.graph_group)
+            self.group.append(self.graph_group)
 
         return self.group
 
