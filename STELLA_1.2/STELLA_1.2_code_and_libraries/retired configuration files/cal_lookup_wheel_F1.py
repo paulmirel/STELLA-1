@@ -1,4 +1,4 @@
-# calibration configuration file for filter selection wheel F0
+# calibration configuration file for filter selection wheel F1
 
 magnetic_angle_values = [  3076, 2825, 2568, 2306, 2046, 1787, 1531, 1275, 1022 ]
 magnetic_angle_offsets = [    -3,    -3,    -2,    0,    2,    3,    3,    4,     6]
