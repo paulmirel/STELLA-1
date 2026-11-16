@@ -22,7 +22,7 @@ from software_modules import spectralm_tcs3448
 import adafruit_ds3231
 from adafruit_pca9685 import PCA9685
 
-filter_wheel_F = 1
+filter_wheel_F = 2 #2, 3, 4
 
 class Calibration_Page( Page ):
     def __init__( self, instrument, onboard_neopixel ):
@@ -141,12 +141,18 @@ class Calibration_Page( Page ):
             for index in range (0, len(self.spectral_sensors[0].wavelength_bands_nm)-1):
                 self.latest_data_list.append(0)
 
-        from configuration_files import cal_lookup_wheel_F0
-        from configuration_files import cal_lookup_wheel_F1
-        if filter_wheel_F == 0:
-            filter_config_file = cal_lookup_wheel_F0
-        if filter_wheel_F == 1:
-            filter_config_file = cal_lookup_wheel_F1
+
+
+
+        if filter_wheel_F == 2:
+            from configuration_files import cal_lookup_wheel_F2
+            filter_config_file = cal_lookup_wheel_F2
+        if filter_wheel_F == 3:
+            from configuration_files import cal_lookup_wheel_F3
+            filter_config_file = cal_lookup_wheel_F3
+        if filter_wheel_F == 4:
+            from configuration_files import cal_lookup_wheel_F4
+            filter_config_file = cal_lookup_wheel_F4
 
         self.filter_wheel_number = "F{}".format(filter_wheel_F)
         self.filter_wheel_magnetic_angle_values = getattr(filter_config_file, "magnetic_angle_values", False)
