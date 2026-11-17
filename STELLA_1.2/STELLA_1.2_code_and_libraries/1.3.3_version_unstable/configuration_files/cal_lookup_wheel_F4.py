@@ -1,8 +1,8 @@
 # calibration configuration file for filter selection wheel F4
 
-magnetic_angle_values = [  3076, 2825, 2568, 2306, 2046, 1787, 1531, 1275, 1022 ]
-magnetic_angle_offsets = [    -3,    -3,    -2,    0,    2,    3,    3,    4,     6]
-servo_position_values = [ 10032, 8992, 8064, 7072, 6176, 5280, 4352, 3520, 2560 ]
+magnetic_angle_values = [  3071, 2818, 2564, 2302, 2047, 1787, 1533, 1274, 1022 ]
+magnetic_angle_offsets = [    0,    0,    0,    0,    0,    0,    0,    0,    0 ]
+servo_position_values = [ 10344, 9256, 8328, 7384, 6408, 5464, 4600, 3704, 2792 ]
 filter_wheel_position_labels = ["4A","4B","4C","4D","4E","4F","4G","4H","4i"]
 
 part_numbers = ["empty", "15228", "15229", "15230", "15462", "15232", "15233", "15463", "15261"]
