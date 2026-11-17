@@ -186,7 +186,11 @@ def main():
     instrument.spectral_sensors_detected = False
     # initialize spectral sensors
     if ('0x40') in devices_present_hex:
-        pass
+        if ('0x70') in devices_present_hex:
+            instrument.mux_detected = True
+        else:
+            instrument.mux_detected = False
+
     else:
         if True:
             if ('0x74') in devices_present_hex:

@@ -1,8 +1,8 @@
 # calibration configuration file for filter selection wheel F2
 
-magnetic_angle_values = [  3076, 2825, 2568, 2306, 2046, 1787, 1531, 1275, 1022 ]
-magnetic_angle_offsets = [    1,    0,    -1,    0,    0,    0,    0,    0,    3 ]
-servo_position_values = [ 10032, 8992, 8064, 7072, 6176, 5280, 4352, 3520, 2560 ]
+magnetic_angle_values = [  3082, 2821, 2566, 2310, 2051, 1788, 1532, 1271, 1019 ]
+magnetic_angle_offsets = [    0,    0,    0,    0,    0,    0,    0,    0,    0 ]
+servo_position_values = [ 9960, 8968, 7992, 7080, 6136, 5240, 4392, 3480, 2568 ]
 filter_wheel_position_labels = ["2A","2B","2C","2D","2E","2F","2G","2H","2i"]
 
 part_numbers = ["EMPTY", "NE02B", "NE04B", "NE06B", "NE08B", "NE10B", "custom","custom","custom", ]

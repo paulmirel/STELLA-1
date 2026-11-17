@@ -1,7 +1,7 @@
 # calibration configuration file for sensor selection wheel 5
 
-magnetic_angle_values = [ 3057, 2719, 2380, 2038, 1695, 1353, 1009 ]
-magnetic_angle_offsets = [-2,     -2,   -4,   -3,   -3,   -3,    2 ]
-servo_position_values = [ 9440, 8352, 6976, 5872, 4640, 3360, 2224 ]
-tracking_number = [504, 503, 500, 506, 505, 502, 508]
+magnetic_angle_values = [ 3055, 2716, 2378, 2034, 1690, 1350, 1012 ]
+magnetic_angle_offsets = [0,     0,   0,   0,   0,   0,    0 ]
+servo_position_values = [ 9528, 8184, 7016, 5800, 4552, 3400, 2152 ]
+tracking_numbers = [504, 503, 500, 506, 505, 502, 508]
 

@@ -24,10 +24,13 @@ mux_8_to_1 = adafruit_tca9548a.TCA9548A(i2c_bus)
 filter_servo = pca.channels[0]
 sensor_servo = pca.channels[15]
 sensor_wheel_angle_sensor = adafruit_as5600.AS5600(mux_8_to_1[7])
+filter_wheel_angle_sensor = adafruit_as5600.AS5600(i2c_bus, address = 0x46)
 
 filter_servo.duty_cycle = 0
 sensor_servo.duty_cycle = 0
-value = 12000
+value = 5800
+
+sensor_wheel_in_use = False
 while True:
     rotary_encoder.read_encoder()
     if rotary_encoder.encoder_flag:
@@ -36,9 +39,14 @@ while True:
         encoder_increment = 0
         rotary_encoder.encoder_flag = False
         print( "servo value =", value, end = ", "  )
-        #filter_servo.duty_cycle = value
-        sensor_servo.duty_cycle = value
-        print("magnetic angle value =",sensor_wheel_angle_sensor.angle)
+
+        if sensor_wheel_in_use:
+            sensor_servo.duty_cycle = value
+            print("magnetic angle value =",sensor_wheel_angle_sensor.angle)
+        else:
+            filter_servo.duty_cycle = value
+            print("magnetic angle value =",filter_wheel_angle_sensor.angle)
+
         #print(f"Magnitude: {sensor_wheel_angle_sensor.magnitude}")
 
     time.sleep( 0.05 )
