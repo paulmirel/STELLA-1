@@ -12,6 +12,11 @@ import rotaryio
 from software_modules import devicem_rotary_encoder
 
 def main():
+
+    filter_wheel_F = 2 #2, 3, 4
+
+    sensor_wheel = 1 #1, 3, 5, 8
+
     rotary_encoder = devicem_rotary_encoder.initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
     encoder_increment = 0
     button_pressed = False
@@ -30,10 +35,6 @@ def main():
     filter_servo.duty_cycle = 0
     sensor_servo.duty_cycle = 0
     value = 5800
-
-    sensor_wheel_in_use = False
-
-    sensor_wheel_number = 1 #1, 3, 5, 8
 
     if sensor_wheel_number == 1:
         from configuration_files import cal_lookup_wheel_1
