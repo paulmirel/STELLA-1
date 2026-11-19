@@ -1,7 +1,7 @@
 # calibration configuration file for filter selection wheel F2
 
 magnetic_angle_values = [  3082, 2821, 2566, 2310, 2051, 1788, 1532, 1271, 1019 ]
-magnetic_angle_offsets = [    0,    0,    0,    0,    0,    0,    0,    0,    0 ]
+magnetic_angle_offsets = [    -4,    2,    2,    2,    0,    8,    7,    7,    6 ]
 servo_position_values = [ 9960, 8968, 7992, 7080, 6136, 5240, 4392, 3480, 2568 ]
 filter_wheel_position_labels = ["2A","2B","2C","2D","2E","2F","2G","2H","2i"]
 

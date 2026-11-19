@@ -1,4 +1,4 @@
-# STELLA-1.2 wheel positions setter
+# STELLA-1.2 filter wheel positions setter
 
 
 import time
@@ -13,9 +13,7 @@ from software_modules import devicem_rotary_encoder
 
 def main():
 
-    filter_wheel_F = 2 #2, 3, 4
-
-    sensor_wheel = 1 #1, 3, 5, 8
+    filter_wheel_F = 4 #2, 3, 4
 
     rotary_encoder = devicem_rotary_encoder.initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
     encoder_increment = 0
@@ -32,69 +30,71 @@ def main():
     sensor_wheel_angle_sensor = adafruit_as5600.AS5600(mux_8_to_1[7])
     filter_wheel_angle_sensor = adafruit_as5600.AS5600(i2c_bus, address = 0x46)
 
+    if filter_wheel_angle_sensor.max_gain_overflow is True:
+        print("ALERT Magnet is too weak")
+    if filter_wheel_angle_sensor.min_gain_overflow is True:
+        print("ALERT Magnet is too strong")
+
     filter_servo.duty_cycle = 0
     sensor_servo.duty_cycle = 0
     value = 5800
 
-    if sensor_wheel == 1:
-        from configuration_files import cal_lookup_wheel_1
-        magnetic_angle_values = getattr(cal_lookup_wheel_1, "magnetic_angle_values", False)
-        angle_offsets = getattr(cal_lookup_wheel_1, "magnetic_angle_offsets", False)
-        servo_position_values = getattr(cal_lookup_wheel_1, "servo_position_values", False)
-        spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_1, "tracking_numbers", False)
-    elif  sensor_wheel == 3:
-        from configuration_files import cal_lookup_wheel_3
-        magnetic_angle_values = getattr(cal_lookup_wheel_3, "magnetic_angle_values", False)
-        angle_offsets = getattr(cal_lookup_wheel_3, "magnetic_angle_offsets", False)
-        servo_position_values = getattr(cal_lookup_wheel_3, "servo_position_values", False)
-        spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_3, "tracking_numbers", False)
-    elif  sensor_wheel == 8:
-        from configuration_files import cal_lookup_wheel_8
-        magnetic_angle_values = getattr(cal_lookup_wheel_8, "magnetic_angle_values", False)
-        angle_offsets = getattr(cal_lookup_wheel_8, "magnetic_angle_offsets", False)
-        servo_position_values = getattr(cal_lookup_wheel_8, "servo_position_values", False)
-        spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_8, "tracking_numbers", False)
-    elif sensor_wheel == 5:
-        from configuration_files import cal_lookup_wheel_5
-        magnetic_angle_values = getattr(cal_lookup_wheel_5, "magnetic_angle_values", False)
-        angle_offsets = getattr(cal_lookup_wheel_5, "magnetic_angle_offsets", False)
-        servo_position_values = getattr(cal_lookup_wheel_5, "servo_position_values", False)
-        spectral_sensor_tracking_numbers = getattr(cal_lookup_wheel_5, "tracking_numbers", False)
+    if filter_wheel_F == 2:
+        from configuration_files import cal_lookup_wheel_F2
+        filter_config_file = cal_lookup_wheel_F2
+    if filter_wheel_F == 3:
+        from configuration_files import cal_lookup_wheel_F3
+        filter_config_file = cal_lookup_wheel_F3
+    if filter_wheel_F == 4:
+        from configuration_files import cal_lookup_wheel_F4
+        filter_config_file = cal_lookup_wheel_F4
+
+    magnetic_angle_values = getattr(filter_config_file, "magnetic_angle_values", False)
+    angle_offsets = getattr(filter_config_file, "magnetic_angle_offsets", False)
+    servo_position_values = getattr(filter_config_file, "servo_position_values", False)
+
     print( "magnetic_angle_values", magnetic_angle_values)
     print( "magnetic_angle_offsets", angle_offsets)
     print( "servo_position_values", servo_position_values)
-    sensor_wheel_waypoints = []
+    waypoints = []
     for index in range (0, len(servo_position_values)-1):
-        sensor_wheel_waypoints.append(int((servo_position_values[index]+servo_position_values[index+1])/2))
-    print( "sensor_wheel_waypoints", sensor_wheel_waypoints)
-
+        waypoints.append(int((servo_position_values[index]+servo_position_values[index+1])/2))
+    print( "waypoints", waypoints)
+    dwell = 0.06 #0.07
     position = 0
+    rotary_encoder.encoder_flag = True
     while True:
         rotary_encoder.read_encoder()
         if rotary_encoder.encoder_flag:
             encoder_increment = rotary_encoder.last_value
-            position = (position + encoder_increment) % 7
+            position = (position + encoder_increment) % 9
             encoder_increment = 0
             rotary_encoder.encoder_flag = False
             print("position", position)
-            if position < 6:
-                sensor_servo.duty_cycle =  sensor_wheel_waypoints[position]
+            if position < 8:
+                filter_servo.duty_cycle =  waypoints[position]
             else:
-                sensor_servo.duty_cycle =  sensor_wheel_waypoints[position-1]
+                filter_servo.duty_cycle =  waypoints[position-1]
             time.sleep(0.6)
-            sensor_wheel_angle = sensor_wheel_angle_sensor.angle
-            if position == 6:
-                while sensor_wheel_angle >  magnetic_angle_values[position]+ angle_offsets[position]:
-                    sensor_servo.duty_cycle =  sensor_servo.duty_cycle - 16
-                    time.sleep(0.03)
-                    sensor_wheel_angle =  sensor_wheel_angle_sensor.angle
+            wheel_angle = filter_wheel_angle_sensor.angle
+            if position == 8:
+                while wheel_angle >  magnetic_angle_values[position]+ angle_offsets[position]:
+                    filter_servo.duty_cycle =  filter_servo.duty_cycle - 16
+                    time.sleep(dwell)
+                    wheel_angle =  filter_wheel_angle_sensor.angle
             else:
-                while sensor_wheel_angle <  magnetic_angle_values[position]+ angle_offsets[position]:
-                    sensor_servo.duty_cycle =  sensor_servo.duty_cycle + 16
-                    time.sleep(0.03)
-                    sensor_wheel_angle =  sensor_wheel_angle_sensor.angle
-                    #print(  sensor_servo.duty_cycle, sensor_wheel_angle )
-            sensor_servo.duty_cycle = 0
+                while wheel_angle <  magnetic_angle_values[position]+ angle_offsets[position]:
+                    filter_servo.duty_cycle =  filter_servo.duty_cycle + 16
+                    time.sleep(dwell)
+                    wheel_angle =  filter_wheel_angle_sensor.angle
+            filter_servo.duty_cycle = 0
+            print( "wheel angle reading:", filter_wheel_angle_sensor.angle )
+        last_angle = filter_wheel_angle_sensor.angle
+        time.sleep(0.1)
+        angle = filter_wheel_angle_sensor.angle
+        angle_difference = last_angle - angle
+        if angle_difference != 0:
+            print( angle - magnetic_angle_values[position] )
 
 
     filter_servo.duty_cycle = 0
@@ -104,30 +104,4 @@ def main():
     print("done")
 
 
-def go_to_filter_position( self, position = None):
-    filter_wheel_position_known = True
-    text_areas[20].text = " -"
-    if position is None:
-        position =  filter_wheel_position
-    if position != 8:
-        filter_servo.duty_cycle =  filter_wheel_waypoints[position]
-    else:
-        filter_servo.duty_cycle =  filter_wheel_waypoints[position-1]
-    time.sleep(0.4)
-    filter_wheel_angle =  filter_wheel_angle_sensor.angle
-    if position == 8:
-        while filter_wheel_angle >  filter_wheel_magnetic_angle_values[position]+ filter_wheel_angle_offsets[position]:
-            filter_servo.duty_cycle =  filter_servo.duty_cycle - 16
-            time.sleep(0.04)
-            filter_wheel_angle =  filter_wheel_angle_sensor.angle
-            #print(  filter_servo.duty_cycle, filter_wheel_angle )
-    else:
-        while filter_wheel_angle <  filter_wheel_magnetic_angle_values[position]+ filter_wheel_angle_offsets[position]:
-            filter_servo.duty_cycle =  filter_servo.duty_cycle + 16
-            time.sleep(0.04)
-            filter_wheel_angle =  filter_wheel_angle_sensor.angle
-            #print(  filter_servo.duty_cycle, filter_wheel_angle )
-    filter_servo.duty_cycle = 0
-    filter_wheel_position = position
-    return position
 main()

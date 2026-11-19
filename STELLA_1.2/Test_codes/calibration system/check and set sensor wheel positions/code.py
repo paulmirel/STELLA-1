@@ -13,7 +13,7 @@ from software_modules import devicem_rotary_encoder
 
 def main():
 
-    sensor_wheel = 8 #1, 3, 5, 8
+    sensor_wheel = 1 #1, 3, 5, 8
 
     rotary_encoder = devicem_rotary_encoder.initialize_rotary_encoder( pin_a = board.A3, pin_b = board.A4, pin_button = board.A2 )
     encoder_increment = 0

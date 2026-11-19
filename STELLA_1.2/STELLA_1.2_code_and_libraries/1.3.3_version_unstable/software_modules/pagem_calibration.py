@@ -734,6 +734,7 @@ class Calibration_Page( Page ):
 
 
     def go_to_sensor_position( self, position = None):
+        dwell = 0.06
         self.sensor_wheel_position_known = True
         self.text_areas[15].text = " -"
         if position is None:
@@ -747,13 +748,13 @@ class Calibration_Page( Page ):
         if position == 6:
             while sensor_wheel_angle > self.magnetic_angle_values[position]+self.angle_offsets[position]:
                 self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle - 16
-                time.sleep(0.03)
+                time.sleep(dwell)
                 sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
                 #print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
         else:
             while sensor_wheel_angle < self.magnetic_angle_values[position]+self.angle_offsets[position]:
                 self.sensor_servo.duty_cycle = self.sensor_servo.duty_cycle + 16
-                time.sleep(0.03)
+                time.sleep(dwell)
                 sensor_wheel_angle = self.sensor_wheel_angle_sensor.angle
                 #print( self.sensor_servo.duty_cycle, sensor_wheel_angle )
         self.sensor_servo.duty_cycle = 0
@@ -763,6 +764,7 @@ class Calibration_Page( Page ):
 
 
     def go_to_filter_position( self, position = None):
+        dwell = 0.06
         self.filter_wheel_position_known = True
         self.text_areas[20].text = " -"
         if position is None:
@@ -776,13 +778,13 @@ class Calibration_Page( Page ):
         if position == 8:
             while filter_wheel_angle > self.filter_wheel_magnetic_angle_values[position]+self.filter_wheel_angle_offsets[position]:
                 self.filter_servo.duty_cycle = self.filter_servo.duty_cycle - 16
-                time.sleep(0.04)
+                time.sleep(dwell)
                 filter_wheel_angle = self.filter_wheel_angle_sensor.angle
                 #print( self.filter_servo.duty_cycle, filter_wheel_angle )
         else:
             while filter_wheel_angle < self.filter_wheel_magnetic_angle_values[position]+self.filter_wheel_angle_offsets[position]:
                 self.filter_servo.duty_cycle = self.filter_servo.duty_cycle + 16
-                time.sleep(0.04)
+                time.sleep(dwell)
                 filter_wheel_angle = self.filter_wheel_angle_sensor.angle
                 #print( self.filter_servo.duty_cycle, filter_wheel_angle )
         self.filter_servo.duty_cycle = 0
