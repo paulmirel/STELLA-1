@@ -291,7 +291,6 @@ class Calibration_Page( Page ):
                                         print( "Gain time index:", gain_index)
                                         if gain_index < 1 :
                                             gain_index = 0
-                                            gain_sweep = False
                                             sweep = False
                                         gain_in_use = active_sensor.set_gain(gain_index)
                                         print( "Gain value:", gain_in_use)
@@ -387,7 +386,6 @@ class Calibration_Page( Page ):
                         print( "filter cycle time: {}s".format( filter_stop - filter_start ))
                     sensor_stop = time.monotonic()
                     print( "Sensor cycle time: {}s".format( sensor_stop - sensor_start ))
-                sweep = False
         self.measuring = False
         sequence_end = time.monotonic()
         print()
