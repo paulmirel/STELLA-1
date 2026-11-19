@@ -292,6 +292,7 @@ class Calibration_Page( Page ):
                                         if gain_index < 1 :
                                             gain_index = 0
                                             gain_sweep = False
+                                            sweep = False
                                         gain_in_use = active_sensor.set_gain(gain_index)
                                         print( "Gain value:", gain_in_use)
                                         self.update_values()
