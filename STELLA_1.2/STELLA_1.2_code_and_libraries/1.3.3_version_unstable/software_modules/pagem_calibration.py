@@ -283,12 +283,13 @@ class Calibration_Page( Page ):
                                 self.auto_exposure = True
 
                             #### loop
-                            while sweep or once_thru and not self.cancel:
+                            while (sweep or once_thru) and not self.cancel:
                                 if sweep and not once_thru:
                                     self.auto_exposure = False
                                     if gain_sweep:
                                         gain_index = active_sensor.gain_index - 1
-                                        print( "Gain time index:", gain_index)
+                                        print()
+                                        print( "Gain index:", gain_index)
                                         if gain_index < 1 :
                                             gain_index = 0
                                             sweep = False
@@ -306,6 +307,7 @@ class Calibration_Page( Page ):
                                         self.update_values()
                                     if integration_sweep:
                                         integration_time_index = active_sensor.integration_time_index - 3
+                                        print()
                                         print( "Integration time index:", integration_time_index)
                                         if integration_time_index < 1 :
                                             integration_time_index = 0
@@ -341,6 +343,7 @@ class Calibration_Page( Page ):
                                         self.update_values()
                                         time.sleep(0.1)
                                 self.plot()
+                                self.update_values()
                                 data_handles = [12,14,16]
                                 avg_values = []
                                 normalized_values_per_s = []
@@ -381,6 +384,7 @@ class Calibration_Page( Page ):
                                     line += "{}".format(data_list[19][index]) # norm per s nm
                                     print(line)
                                     self.write_line(line)
+                                    self.instrument.check_inputs()
                                 once_thru = False
                         filter_stop = time.monotonic()
                         print( "filter cycle time: {}s".format( filter_stop - filter_start ))
@@ -391,6 +395,7 @@ class Calibration_Page( Page ):
         print()
         print()
         print("measurement sequence elapsed time in minutes =", (sequence_end - sequence_start)/60)
+        print("measurement number = ", self.mmt_number)
 
 
     def make_a_single_measurement(self):
@@ -479,6 +484,7 @@ class Calibration_Page( Page ):
 
         gain_value = active_sensor.set_gain(gain_index)
         intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+        self.update_values()
         predicted_high = self.high_value *gain_value/last_gain_value *intg_value_ms/last_intg_value_ms
         print("predicted_high", predicted_high)
         if self.exposure_target_fraction_high > 0.9:
@@ -1100,7 +1106,7 @@ class Calibration_Page( Page ):
             print( "failed to synchronize system clock to precision hardware clock" )
 
     def plot(self):
-        print("update the plot")
+        #print("update the plot")
         self.plot_register = self.latest_data_list
         self.plot_active = True
         #print("register contents")
