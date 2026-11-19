@@ -63,6 +63,11 @@ def main():
     print( "magnetic_angle_values", magnetic_angle_values)
     print( "magnetic_angle_offsets", angle_offsets)
     print( "servo_position_values", servo_position_values)
+    sensor_wheel_waypoints = []
+    for index in range (0, len(servo_position_values)-1):
+        sensor_wheel_waypoints.append(int((servo_position_values[index]+servo_position_values[index+1])/2))
+    print( "sensor_wheel_waypoints", sensor_wheel_waypoints)
+
 
     if False:
 
