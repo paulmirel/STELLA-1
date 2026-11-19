@@ -22,7 +22,7 @@ from software_modules import spectralm_tcs3448
 import adafruit_ds3231
 from adafruit_pca9685 import PCA9685
 
-filter_wheel_F = 2 #2, 3, 4
+filter_wheel_F = 2 #2, 3, 4 ## Must set manually here, filter wheels do not autorecognize
 
 class Calibration_Page( Page ):
     def __init__( self, instrument, onboard_neopixel ):
@@ -252,18 +252,67 @@ class Calibration_Page( Page ):
             self.text_areas[26].text = "start"
             for sensor_position in range(0, len(self.spectral_sensors)):
                 if not self.cancel:
-                    print("next sensor")
+                    sensor_start = time.monotonic()
+                    print("next sensor: {}".format(sensor_position))
                     self.text_areas[26].text = "nextS"
                     self.go_to_sensor_position(position = sensor_position)
                     self.instrument.handle_inputs()
-                    for filter_position in range(0, 9):
+                    filter_max = 9
+                    if active_sensor.pn == "as7265x" and filter_wheel_F == 2: filter_max = 6
+                    for filter_position in range(0, filter_max):
                         if not self.cancel:
-                            print("next filter")
+                            filter_start = time.monotonic()
+                            print("next filter: {}".format(filter_position))
                             self.text_areas[26].text = "nextF"
                             self.go_to_filter_position(position = filter_position)
-                            for fraction in self.exposure_target_fraction_list: ## experimental
-                                self.exposure_target_fraction_high = fraction ## experimental
-                                print( "exposure_target_fraction_high", self.exposure_target_fraction_high ) ## experimental
+                            #### setup
+                            once_thru = True
+                            if filter_wheel_F == 2:
+                                sweep = True
+                                self.exposure_target_fraction_high = 0.95
+                                self.auto_exposure = True
+                                best_exposure_gain = 0
+                                best_exposure_integration_time_ms = 0
+                                integration_sweep = True
+                                gain_sweep = False
+                            else:
+                                sweep = False
+                                integration_sweep = False
+                                gain_sweep = False
+                                self.exposure_target_fraction_high = 0.85
+                                self.auto_exposure = True
+
+                            #### loop
+                            while sweep or once_thru:
+                                if sweep and not once_thru:
+                                    self.auto_exposure = False
+                                    if gain_sweep:
+                                        gain_index = active_sensor.gain_index - 1
+                                        print( "Gain time index:", gain_index)
+                                        if gain_index < 1 :
+                                            gain_index = 0
+                                            gain_sweep = False
+                                        gain_in_use = active_sensor.set_gain(gain_index)
+                                        print( "Gain value:", gain_in_use)
+                                        self.update_values()
+                                    if not integration_sweep and not gain_sweep:
+                                        gain_sweep = True
+                                        gain_index = active_sensor.gain_list.index(best_exposure_gain)
+                                        gain_in_use = active_sensor.set_gain(gain_index)
+                                        target_intg_value_ms = best_exposure_integration_time_ms
+                                        intg_value_ms = min(active_sensor.integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
+                                        integration_time_index = active_sensor.integration_time_ms_list.index(intg_value_ms)
+                                        intg_time_ms_in_use = active_sensor.set_integration_time(integration_time_index)
+                                        self.update_values()
+                                    if integration_sweep:
+                                        integration_time_index = active_sensor.integration_time_index - 3
+                                        print( "Integration time index:", integration_time_index)
+                                        if integration_time_index < 1 :
+                                            integration_time_index = 0
+                                            integration_sweep = False
+                                        intg_time_ms_in_use = active_sensor.set_integration_time(integration_time_index)
+                                        print( "Integration time value ms:", intg_time_ms_in_use)
+                                        self.update_values()
                                 data_list = []
                                 data_list.append(active_sensor.wavelength_bands_nm)
                                 data_list.append(self.get_date_and_time())
@@ -276,6 +325,8 @@ class Calibration_Page( Page ):
                                 data_list.append(self.filter_optical_values[filter_position])
                                 if self.auto_exposure:
                                     gain_in_use, intg_time_ms_in_use = self.autoset_exposure()
+                                    best_exposure_gain = gain_in_use
+                                    best_exposure_integration_time_ms = intg_time_ms_in_use
                                 data_list.append( gain_in_use )
                                 data_list.append( intg_time_ms_in_use )
                                 for cycle in range (0,3):
@@ -330,6 +381,12 @@ class Calibration_Page( Page ):
                                     line += "{}".format(data_list[19][index]) # norm per s nm
                                     print(line)
                                     self.write_line(line)
+                                once_thru = False
+                        filter_stop = time.monotonic()
+                        print( "filter cycle time: {}s".format( filter_stop - filter_start ))
+                    sensor_stop = time.monotonic()
+                    print( "Sensor cycle time: {}s".format( sensor_stop - sensor_start ))
+                sweep = False
         self.measuring = False
         sequence_end = time.monotonic()
         print()
@@ -425,31 +482,31 @@ class Calibration_Page( Page ):
         intg_value_ms = active_sensor.set_integration_time(integration_time_index)
         predicted_high = self.high_value *gain_value/last_gain_value *intg_value_ms/last_intg_value_ms
         print("predicted_high", predicted_high)
-
-        temporary_data_list = active_sensor.read()
-        self.high_value = self.get_high_value(temporary_data_list, include_all)
-        print("after adjust",self.high_value)
-        desat_cycles = 0
-        while self.high_value >= self.max_counts:
-            print("desaturating")
-            time.sleep(.1)
-            integration_time_index += -1
-            if integration_time_index < 0 or desat_cycles>5:
-                integration_time_index = 0
-                gain_index += -1
-                gain_value = active_sensor.set_gain(gain_index)
-                print("drop gain, reset integration time high")
-                target_intg_value_ms = 1000
-                intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
-                integration_time_index = integration_time_ms_list.index(intg_value_ms)
-                desat_cycles = 0
-            intg_value_ms = active_sensor.set_integration_time(integration_time_index)
-            time.sleep(.1)
+        if self.exposure_target_fraction_high > 0.9:
             temporary_data_list = active_sensor.read()
             self.high_value = self.get_high_value(temporary_data_list, include_all)
-            self.instrument.handle_inputs()
-            self.update_values()
-            desat_cycles +=1
+            print("after adjust",self.high_value)
+            desat_cycles = 0
+            while self.high_value >= self.max_counts:
+                print("desaturating")
+                time.sleep(.1)
+                integration_time_index += -1
+                if integration_time_index < 0 or desat_cycles>5:
+                    integration_time_index = 0
+                    gain_index += -1
+                    gain_value = active_sensor.set_gain(gain_index)
+                    print("drop gain, reset integration time high")
+                    target_intg_value_ms = 1000
+                    intg_value_ms = min(integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
+                    integration_time_index = integration_time_ms_list.index(intg_value_ms)
+                    desat_cycles = 0
+                intg_value_ms = active_sensor.set_integration_time(integration_time_index)
+                time.sleep(.1)
+                temporary_data_list = active_sensor.read()
+                self.high_value = self.get_high_value(temporary_data_list, include_all)
+                self.instrument.handle_inputs()
+                self.update_values()
+                desat_cycles +=1
 
         if integration_time_index >= len(integration_time_ms_list)-1:
             maxed_out = True
