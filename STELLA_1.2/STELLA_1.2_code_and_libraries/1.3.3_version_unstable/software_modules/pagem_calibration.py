@@ -283,7 +283,7 @@ class Calibration_Page( Page ):
                                 self.auto_exposure = True
 
                             #### loop
-                            while sweep or once_thru:
+                            while sweep or once_thru and not self.cancel:
                                 if sweep and not once_thru:
                                     self.auto_exposure = False
                                     if gain_sweep:
