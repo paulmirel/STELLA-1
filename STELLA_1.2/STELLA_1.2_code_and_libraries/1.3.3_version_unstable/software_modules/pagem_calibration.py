@@ -258,7 +258,7 @@ class Calibration_Page( Page ):
                     self.instrument.handle_inputs()
                     filter_max = 9
                     if active_sensor.pn == "as7265x" and filter_wheel_F == 2: filter_max = 6
-                    filter_max = 1 ### TBD remove this ---- this is here to cycle sensors only, on the empty filter position
+                    #filter_max = 1 ### TBD remove this ---- this is here to cycle sensors only, on the empty filter position
                     for filter_position in range(0, filter_max):
                         if not self.cancel:
                             filter_start = time.monotonic()
