@@ -239,18 +239,17 @@ class Calibration_Page( Page ):
                         self.instrument.handle_inputs()
                         self.update_values()
                         time.sleep(0.1)
-
         else:
-            active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
-            if active_sensor.pn == "tcs3448":
-                self.exclusion_indicies = 11, 7, 6
-            else:
-                self.exclusion_indicies = False
-            number_of_channels = len(active_sensor.wavelength_bands_nm)
-            bandwidths = active_sensor.bandwidths_nm
             print("starting measurement sequence")
             self.text_areas[26].text = "start"
             for sensor_position in range(0, len(self.spectral_sensors)):
+                active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
+                if active_sensor.pn == "tcs3448":
+                    self.exclusion_indicies = 11, 7, 6
+                else:
+                    self.exclusion_indicies = False
+                number_of_channels = len(active_sensor.wavelength_bands_nm)
+                bandwidths = active_sensor.bandwidths_nm
                 if not self.cancel:
                     sensor_start = time.monotonic()
                     print("next sensor: {}".format(sensor_position))
@@ -259,6 +258,7 @@ class Calibration_Page( Page ):
                     self.instrument.handle_inputs()
                     filter_max = 9
                     if active_sensor.pn == "as7265x" and filter_wheel_F == 2: filter_max = 6
+                    filter_max = 1 ### TBD remove this ---- this is here to cycle sensors only, on the empty filter position
                     for filter_position in range(0, filter_max):
                         if not self.cancel:
                             filter_start = time.monotonic()
@@ -408,7 +408,7 @@ class Calibration_Page( Page ):
             self.autoset_exposure()
         self.latest_data_list = self.measure()
         print(self.latest_data_list)
-        print("TBD: write single measurement to file, not currently active")#TBD
+        #print("TBD: write single measurement to file, not currently active")#TBD
         self.measuring = False
 
     def autoset_exposure(self):
