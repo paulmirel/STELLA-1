@@ -243,18 +243,18 @@ class Calibration_Page( Page ):
             print("starting measurement sequence")
             self.text_areas[26].text = "start"
             for sensor_position in range(0, len(self.spectral_sensors)):
-                active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
-                if active_sensor.pn == "tcs3448":
-                    self.exclusion_indicies = 11, 7, 6
-                else:
-                    self.exclusion_indicies = False
-                number_of_channels = len(active_sensor.wavelength_bands_nm)
-                bandwidths = active_sensor.bandwidths_nm
                 if not self.cancel:
                     sensor_start = time.monotonic()
                     print("next sensor: {}".format(sensor_position))
                     self.text_areas[26].text = "nextS"
                     self.go_to_sensor_position(position = sensor_position)
+                    active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
+                    if active_sensor.pn == "tcs3448":
+                        self.exclusion_indicies = 11, 7, 6
+                    else:
+                        self.exclusion_indicies = False
+                    number_of_channels = len(active_sensor.wavelength_bands_nm)
+                    bandwidths = active_sensor.bandwidths_nm
                     self.instrument.handle_inputs()
                     filter_max = 9
                     if active_sensor.pn == "as7265x" and filter_wheel_F == 2: filter_max = 6
