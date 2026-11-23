@@ -24,6 +24,8 @@ from adafruit_pca9685 import PCA9685
 
 filter_wheel_F = 2 #2, 3, 4 ## Must set manually here, filter wheels do not autorecognize
 
+start_at_sensor_position = 0 ## to restart a cycle in the middle after an unfortunate reboot. Change this back to 0 for any new wheel.
+
 class Calibration_Page( Page ):
     def __init__( self, instrument, onboard_neopixel ):
         super().__init__()
@@ -220,7 +222,7 @@ class Calibration_Page( Page ):
         self.measuring = True
         self.instrument.update_batch()
         if self.external_sensor_mode:
-            for filter_position in range(0, 9):
+            for filter_position in range(start_at_sensor_position, 9):
                 if not self.cancel:
                     print("next filter")
                     self.text_areas[26].text = "nextF"
