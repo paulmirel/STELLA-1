@@ -245,7 +245,7 @@ class Calibration_Page( Page ):
             for sensor_position in range(0, len(self.spectral_sensors)):
                 if not self.cancel:
                     sensor_start = time.monotonic()
-                    print("next sensor: {}".format(sensor_position))
+                    print("next sensor: {} (if it stalls here, check that the sensor motor is connected to the driver)".format(sensor_position))
                     self.text_areas[26].text = "nextS"
                     self.go_to_sensor_position(position = sensor_position)
                     active_sensor =  self.spectral_sensors[self.sensor_wheel_position]
@@ -262,7 +262,7 @@ class Calibration_Page( Page ):
                     for filter_position in range(0, filter_max):
                         if not self.cancel:
                             filter_start = time.monotonic()
-                            print("next filter: {}".format(filter_position))
+                            print("next filter: {} (if it stalls here, check that the filter motor is connected to the driver)".format(filter_position))
                             self.text_areas[26].text = "nextF"
                             self.go_to_filter_position(position = filter_position)
                             #### setup
@@ -318,6 +318,7 @@ class Calibration_Page( Page ):
                                             integration_sweep = False
                                         intg_time_ms_in_use = active_sensor.set_integration_time(integration_time_index)
                                         print( "Integration time value ms:", intg_time_ms_in_use)
+                                        time.sleep(0.1)
                                         self.update_values()
                                 data_list = []
                                 data_list.append(active_sensor.wavelength_bands_nm)
@@ -567,87 +568,90 @@ class Calibration_Page( Page ):
 
 
     def update_values( self ):
-        self.bat.read()
+        try:
+            self.bat.read()
 
-        #print( self.filter_servo.duty_cycle, self.filter_wheel_angle_sensor.angle )
-        timenow = self.precision_real_time_clock.datetime
-        self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
-        self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
-        self.text_areas[3].text = "{}%".format(int(self.bat.percentage))
-        self.text_areas[5].text = "{:3d}".format(self.instrument.batch_number)
+            #print( self.filter_servo.duty_cycle, self.filter_wheel_angle_sensor.angle )
+            timenow = self.precision_real_time_clock.datetime
+            self.text_areas[0].text = "{}-{:02}-{:02}".format(timenow.tm_year,timenow.tm_mon, timenow.tm_mday)
+            self.text_areas[1].text = "{:02}:{:02}:{:02}".format(timenow.tm_hour, timenow.tm_min,timenow.tm_sec)
+            self.text_areas[3].text = "{}%".format(int(self.bat.percentage))
+            self.text_areas[5].text = "{:3d}".format(self.instrument.batch_number)
 
-        if self.instrument.vfs:
-            if self.status_index == 2:
-                self.status_highlight.color_index = 2
-            elif self.measuring:
-                self.status_index = 1
-                self.status_highlight.color_index = 3
-            else:
-                self.status_index = 0
-                self.status_highlight.color_index = 5
-        else:
-            self.status_index = 4
-            self.status_highlight.color_index = 2
-        self.text_areas[6].text = self.status_list[self.status_index]
-        #self.text_areas[7].text = " --"
-        if self.auto_exposure:
-            self.text_areas[8].text = "AUTO"
-        else:
-            self.text_areas[8].text = "MAN"
-        if self.high_value:
-            if self.high_value > self.exposure_target_fraction_high * self.max_counts:
-                self.exposure_quality = "HIGH"
-            elif self.high_value > self.exposure_target_fraction_low * self.max_counts:
-                self.exposure_quality = "GOOD"
-            else:
-                self.exposure_quality = "LOW"
-            percent_of_dynamic_range = int(100*self.high_value/self.max_counts)
-            if percent_of_dynamic_range > 99:
-                self.exposure_quality = "SAT"
-                self.text_areas[12].text = "SA"
-                self.saturated = True
-            else:
-                self.saturated = False
-                self.text_areas[12].text = "{}".format(percent_of_dynamic_range)
-            self.text_areas[11].text = "{}".format(self.exposure_quality)
-        else:
-            self.text_areas[12].text = " -"
-            self.text_areas[11].text = " -"
-        if self.external_sensor_mode:
-            self.text_areas[13].text = "Ext"
-        else:
-            self.text_areas[13].text = "{}".format(self.sensor_wheel_number)
-            self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
-            if self.sensor_wheel_position_known:
-                self.text_areas[9].text = "{}".format(self.spectral_sensors[self.sensor_wheel_position].read_gain())
-                intg_ms = self.spectral_sensors[self.sensor_wheel_position].read_integration_time_ms()
-                if intg_ms <1000:
-                    self.text_areas[10].text = "{}ms".format(int(intg_ms))
+            if self.instrument.vfs:
+                if self.status_index == 2:
+                    self.status_highlight.color_index = 2
+                elif self.measuring:
+                    self.status_index = 1
+                    self.status_highlight.color_index = 3
                 else:
-                    self.text_areas[10].text = "{}s".format(round(intg_ms/1000),1)
-                self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
-                self.text_areas[17].text = "{}".format(self.spectral_sensor_tracking_numbers[self.sensor_wheel_position])
+                    self.status_index = 0
+                    self.status_highlight.color_index = 5
             else:
-                self.text_areas[9].text = " -"
-                self.text_areas[10].text = " -"
-                self.text_areas[15].text = " -"
-                self.text_areas[17].text = " -"
-            self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
-        self.text_areas[18].text = "{}".format( self.filter_wheel_number )
-        self.text_areas[19].text = "9" ### TBD"{}".format(len(self.filters))
-        if self.filter_wheel_position_known:
-            self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
-            self.text_areas[21].text = self.filter_part_numbers[self.filter_wheel_position]
-            self.text_areas[22].text = self.filter_optical_value_abbreviations[self.filter_wheel_position]
-        else:
-            self.text_areas[20].text = " -"
-            self.text_areas[21].text = " -"
-            self.text_areas[22].text = " -"
-        if self.pause:
-            self.text_areas[26].text = "pause"
-        else:
-            if not self.measuring:
-                self.text_areas[26].text = " --"
+                self.status_index = 4
+                self.status_highlight.color_index = 2
+            self.text_areas[6].text = self.status_list[self.status_index]
+            #self.text_areas[7].text = " --"
+            if self.auto_exposure:
+                self.text_areas[8].text = "AUTO"
+            else:
+                self.text_areas[8].text = "MAN"
+            if self.high_value:
+                if self.high_value > self.exposure_target_fraction_high * self.max_counts:
+                    self.exposure_quality = "HIGH"
+                elif self.high_value > self.exposure_target_fraction_low * self.max_counts:
+                    self.exposure_quality = "GOOD"
+                else:
+                    self.exposure_quality = "LOW"
+                percent_of_dynamic_range = int(100*self.high_value/self.max_counts)
+                if percent_of_dynamic_range > 99:
+                    self.exposure_quality = "SAT"
+                    self.text_areas[12].text = "SA"
+                    self.saturated = True
+                else:
+                    self.saturated = False
+                    self.text_areas[12].text = "{}".format(percent_of_dynamic_range)
+                self.text_areas[11].text = "{}".format(self.exposure_quality)
+            else:
+                self.text_areas[12].text = " -"
+                self.text_areas[11].text = " -"
+            if self.external_sensor_mode:
+                self.text_areas[13].text = "Ext"
+            else:
+                self.text_areas[13].text = "{}".format(self.sensor_wheel_number)
+                self.text_areas[14].text = "{}".format(len(self.spectral_sensors))
+                if self.sensor_wheel_position_known:
+                    self.text_areas[9].text = "{}".format(self.spectral_sensors[self.sensor_wheel_position].read_gain())
+                    intg_ms = self.spectral_sensors[self.sensor_wheel_position].read_integration_time_ms()
+                    if intg_ms <1000:
+                        self.text_areas[10].text = "{}ms".format(int(intg_ms))
+                    else:
+                        self.text_areas[10].text = "{}s".format(round(intg_ms/1000),1)
+                    self.text_areas[15].text = "{}".format(self.sensor_wheel_position)
+                    self.text_areas[17].text = "{}".format(self.spectral_sensor_tracking_numbers[self.sensor_wheel_position])
+                else:
+                    self.text_areas[9].text = " -"
+                    self.text_areas[10].text = " -"
+                    self.text_areas[15].text = " -"
+                    self.text_areas[17].text = " -"
+                self.text_areas[16].text = self.spectral_sensors[self.sensor_wheel_position].pn
+            self.text_areas[18].text = "{}".format( self.filter_wheel_number )
+            self.text_areas[19].text = "9" ### TBD"{}".format(len(self.filters))
+            if self.filter_wheel_position_known:
+                self.text_areas[20].text = "{}".format(self.filter_wheel_position_labels[self.filter_wheel_position])
+                self.text_areas[21].text = self.filter_part_numbers[self.filter_wheel_position]
+                self.text_areas[22].text = self.filter_optical_value_abbreviations[self.filter_wheel_position]
+            else:
+                self.text_areas[20].text = " -"
+                self.text_areas[21].text = " -"
+                self.text_areas[22].text = " -"
+            if self.pause:
+                self.text_areas[26].text = "pause"
+            else:
+                if not self.measuring:
+                    self.text_areas[26].text = " --"
+        except Exception as err:
+            print( "update_values failed", err )
 
     def reset(self):
         self.cancel = True
