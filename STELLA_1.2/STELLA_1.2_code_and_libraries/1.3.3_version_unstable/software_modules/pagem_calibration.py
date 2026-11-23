@@ -283,6 +283,7 @@ class Calibration_Page( Page ):
                                 self.auto_exposure = True
 
                             #### loop
+                            hold = False
                             while (sweep or once_thru) and not self.cancel:
                                 if sweep and not once_thru:
                                     self.auto_exposure = False
@@ -300,11 +301,14 @@ class Calibration_Page( Page ):
                                         gain_sweep = True
                                         gain_index = active_sensor.gain_list.index(best_exposure_gain)
                                         gain_in_use = active_sensor.set_gain(gain_index)
+                                        time.sleep(0.1)
                                         target_intg_value_ms = best_exposure_integration_time_ms
                                         intg_value_ms = min(active_sensor.integration_time_ms_list, key=lambda value:abs(value - target_intg_value_ms))
                                         integration_time_index = active_sensor.integration_time_ms_list.index(intg_value_ms)
                                         intg_time_ms_in_use = active_sensor.set_integration_time(integration_time_index)
+                                        self.measure() #make a throw away measurement, needed to clear the registers.
                                         self.update_values()
+                                        #hold = True
                                     if integration_sweep:
                                         integration_time_index = active_sensor.integration_time_index - 3
                                         print()
@@ -386,6 +390,9 @@ class Calibration_Page( Page ):
                                     self.write_line(line)
                                     self.instrument.check_inputs()
                                 once_thru = False
+                                if hold:
+                                    self.stall()
+                                    hold = False
                         filter_stop = time.monotonic()
                         print( "filter cycle time: {}s".format( filter_stop - filter_start ))
                     sensor_stop = time.monotonic()
